@@ -6,11 +6,15 @@
 
 这是 DeepSeek Harness（DSH）Web GUI 插件包。增强与建议是两项独立功能，可分别启用，也可同时启用。设置位于左侧栏页面，不是输入框弹窗。
 
-> **GitHub 分发版：** `v1.2.6` 携带预构建文件。Windows 上的独立 DSH `0.2.1-rc.1` profile 已通过安装、schema 导入、Host 启动及已认证插件接口冒烟检查，未调用模型。完整界面/服务商流程及 macOS/Linux 运行时尚未验收。本项目未发布 npm，也未申请社区目录收录。
+> **GitHub 分发版：** `v1.2.7` 携带预构建文件。Windows 上的独立 DSH `0.2.1-rc.1` profile 已通过安装、schema 导入、Host 启动及已认证插件接口冒烟检查，未调用模型。完整界面/服务商流程及 macOS/Linux 运行时尚未验收。本项目未发布 npm，也未申请社区目录收录。
+
+## 兼容策略
+
+版本声明使用 `engines.dsh: >=0.2.1-rc.1`，允许后续 RC、补丁、次版本与主版本尝试加载，不代表所有未来版本都已测试。插件挂载前检查所需 Host 能力，Fast 接入点保留严格接口检查；缺失能力会在报错中明确列出。CI 同时检查版本放行规则及两个当前核验版本的真实适配器契约。
 
 ## 环境要求
 
-- **仅声明兼容 DSH `0.2.1-rc.1`。** 其他版本不在当前兼容范围内，不要忽略风险直接绕过版本拒绝。
+- **最低支持 DSH `0.2.1-rc.1`，不设置未来版本上限。** 启用前检查必要 Host 接口及 Fast 适配器接入点，而不是按次版本号拦截。当前核验目标为 `0.2.1-rc.1` 与 `0.2.1-rc.2`；新版本号本身不导致拒绝，但真实接口变化仍可能需要适配。不使用版本豁免。
 - 已在 DSH 中配置服务商和模型；插件不提供 API 凭证。
 - 安装时能够访问 GitHub，生成时能够访问所选服务商。
 - **Node.js 22+ 与 pnpm 仅供开发。** 分发版本包含预构建产物，普通安装无需自行构建。
@@ -20,7 +24,7 @@
 在 DSH 的 **插件** 页面选择安装，填写：
 
 ```text
-github:Syngnat/dsh-prompt-assist#v1.2.6
+github:Syngnat/dsh-prompt-assist#v1.2.7
 ```
 
 如果当前环境提供并授权使用插件管理工具，等价调用为：
@@ -28,7 +32,7 @@ github:Syngnat/dsh-prompt-assist#v1.2.6
 ```js
 plugin_manager({
   action: "install_bundle",
-  target: "github:Syngnat/dsh-prompt-assist#v1.2.6"
+  target: "github:Syngnat/dsh-prompt-assist#v1.2.7"
 })
 ```
 

@@ -146,3 +146,10 @@ test('bridge refuses incompatible/double installation and cleanup does not clobb
   const { options, snapshot } = request();
   assert.equal((await output(new Adapter(), options, snapshot)).service_tier, undefined);
 });
+
+test('adapter capability failures name the missing integration seam',()=>{
+ assert.throws(()=>installFastBridge(undefined,()=>false,[]),/PiAiAdapter.prototype/);
+ assert.throws(()=>installFastBridge(class {},()=>false,[]),/streamWithSnapshot/);
+ assert.throws(()=>installFastBridge(class {streamWithSnapshot(o,snapshot){return snapshot.models.streamSimple();}},()=>false,[]),/modelOf/);
+ assert.throws(()=>installFastBridge(class {modelOf(){} streamWithSnapshot(){}},()=>false,[]),/payload hook/);
+});

@@ -22,4 +22,22 @@ jobs:
       - run: pnpm install --frozen-lockfile --ignore-scripts
       - run: node build.mjs
       - run: node --test tests/*.test.js
-      - run: git diff --exit-code -- client.js client-runtime.js host-v1.2.6.js
+      - run: git diff --exit-code -- client.js client-runtime.js host-v1.2.7.js
+  dsh-contract:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        dsh: ['0.2.1-rc.1', '0.2.1-rc.2']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - uses: pnpm/action-setup@v4
+        with:
+          version: '11.28.5'
+      - run: pnpm install --frozen-lockfile --ignore-scripts
+      - run: node -e "require('fs').mkdirSync('.compat-runtime',{recursive:true});require('fs').writeFileSync('.compat-runtime/package.json',JSON.stringify({private:true}))"
+      - run: pnpm --dir .compat-runtime add --ignore-scripts @deepseek-ai/dsh@${{ matrix.dsh }}
+      - run: node scripts/check-dsh-compatibility.mjs .compat-runtime/node_modules/@deepseek-ai/dsh/package.json

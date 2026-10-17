@@ -23,13 +23,13 @@ export function priorityModels(models) {
 
 /** Version-bound native adapter seam; payload transformation still adds only tier. */
 export function installFastBridge(Adapter, enabledFor, providers) {
-  const prototype = Adapter.prototype;
-  const descriptor = Object.getOwnPropertyDescriptor(prototype, 'streamWithSnapshot');
+  const prototype = Adapter?.prototype;
+  const descriptor = prototype && Object.getOwnPropertyDescriptor(prototype, 'streamWithSnapshot');
   const original = descriptor?.value;
-  if (typeof original !== 'function' || original[OWNER] || typeof prototype.modelOf !== 'function'
-    || !String(original).includes('snapshot.models.streamSimple')) {
-    throw new Error('OpenAI Fast: incompatible pi-ai adapter; enablement refused');
-  }
+  const missing = !prototype ? 'PiAiAdapter.prototype' : typeof original !== 'function' ? 'streamWithSnapshot'
+    : original[OWNER] ? 'unwrapped adapter (already wrapped)' : typeof prototype.modelOf !== 'function' ? 'modelOf'
+    : !String(original).includes('snapshot.models.streamSimple') ? 'snapshot.models.streamSimple payload hook' : null;
+  if (missing) throw new Error('OpenAI Fast: incompatible pi-ai adapter; required capability unavailable: ' + missing);
   let active = true;
   function streamWithFast(options, snapshot) {
     if (!active || options.purpose || !options.sessionId || !isOpenAISelection(options, providers)) {

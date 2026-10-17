@@ -6,11 +6,15 @@ Provides prompt enhancement, next-question suggestions, and OpenAI Fast accelera
 
 A plugin bundle for the DeepSeek Harness (DSH) Web GUI. Enhancement and suggestions are independent features: enable either or both for the conversation you choose. Settings live on the sidebar page, not in a composer popup.
 
-> **GitHub distribution:** `v1.2.6` includes prebuilt runtime files. On Windows, a clean DSH `0.2.1-rc.1` profile passed package installation, schema import, startup, and an authenticated plugin RPC smoke test without a model call. Full GUI/provider acceptance and macOS/Linux runtime testing remain unverified. This is not an npm release or a community-catalog listing.
+> **GitHub distribution:** `v1.2.7` includes prebuilt runtime files. On Windows, a clean DSH `0.2.1-rc.1` profile passed package installation, schema import, startup, and an authenticated plugin RPC smoke test without a model call. Full GUI/provider acceptance and macOS/Linux runtime testing remain unverified. This is not an npm release or a community-catalog listing.
+
+## Compatibility policy
+
+Version admission uses `engines.dsh: >=0.2.1-rc.1`. This admits newer RC, patch, minor and major versions without asserting they have all been tested. Before mounting, the plugin checks the required Host capabilities; the Fast bridge retains its fail-closed adapter check. Missing capabilities are named in the error rather than guessed from a version number. CI checks version admission and real adapter contracts for both current verification targets.
 
 ## Requirements
 
-- **DSH `0.2.1-rc.1` exactly.** Other DSH versions are outside the declared compatibility range. Do not bypass a version refusal without evaluating the risk.
+- **Minimum DSH: `0.2.1-rc.1`, with no future-version ceiling.** Runtime capability checks—not a minor-version cutoff—guard the required Host APIs and Fast adapter seam. DSH `0.2.1-rc.1` and `0.2.1-rc.2` are the current verification targets; a newer version number alone is not rejected, but an actual API break may still require an integration update. No version exemption is used.
 - A configured provider and model in DSH. This plugin does not supply API credentials.
 - Network access to GitHub for installation and to your selected provider for generation.
 - **Node.js 22+ and pnpm are for development only.** The distributable includes prebuilt runtime artifacts; ordinary users do not need to build the plugin.
@@ -20,7 +24,7 @@ A plugin bundle for the DeepSeek Harness (DSH) Web GUI. Enhancement and suggesti
 Open **Plugins** in DSH, choose the install action, and enter this package target:
 
 ```text
-github:Syngnat/dsh-prompt-assist#v1.2.6
+github:Syngnat/dsh-prompt-assist#v1.2.7
 ```
 
 The agent-facing equivalent, when plugin management is available and authorized, is:
@@ -28,7 +32,7 @@ The agent-facing equivalent, when plugin management is available and authorized,
 ```js
 plugin_manager({
   action: "install_bundle",
-  target: "github:Syngnat/dsh-prompt-assist#v1.2.6"
+  target: "github:Syngnat/dsh-prompt-assist#v1.2.7"
 })
 ```
 

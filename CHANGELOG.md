@@ -2,6 +2,15 @@
 
 [English](<README.md>) | [简体中文](<README.zh-CN.md>)
 
+## 1.2.7 — Capability-based compatibility
+
+- Replace the exact DSH prerelease pin with a minimum-only requirement: `>=0.2.1-rc.1`. No upper-version cutoff or compatibility exemption.
+- Check required Host capabilities before mounting. Keep the strict Fast adapter guard and report the missing integration seam.
+- Add version-admission regressions and CI against real DSH rc.1/rc.2 adapter exports without model calls.
+- Preserve package/persistence identities, existing settings, layout, and request behavior.
+
+中文：取消精确版本锁与未来版本上限，改为最低支持版本加实际接口检查；修复 DSH rc.2 的版本拒绝，不改变已有配置和功能。
+
 ## 1.2.6 — First public GitHub distribution
 
 **Validation:** 221 offline tests passed on Windows. A clean DSH 0.2.1-rc.1 profile passed archive installation, complete schema import, Host startup and authenticated plugin RPC smoke without a model call. Full GUI/provider acceptance and macOS/Linux runtime tests remain unverified.

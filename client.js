@@ -1586,7 +1586,7 @@ function createFast(require2) {
         name: "conversation.input.right",
         id: "local-openai-fast",
         order: 1020,
-        label: "OpenAI Fast 1.2.6",
+        label: "OpenAI Fast 1.2.7",
         locale: NS2,
         inject(sessionId) {
           const binding = ctx.sessions.binding(sessionId);

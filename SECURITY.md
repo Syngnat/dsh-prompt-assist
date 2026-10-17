@@ -4,7 +4,7 @@
 
 ## Scope and compatibility
 
-The first public distribution is `v1.2.6`, targeting DSH `0.2.1-rc.1` exactly. Include the exact plugin tag/commit and DSH version in a report; do not assume another DSH version is compatible. No independent security audit, penetration test, or complete secret-detection guarantee is claimed.
+From `v1.2.7`, the minimum supported DSH version is `0.2.1-rc.1`, with no future-version ceiling. Required Host and adapter capabilities are checked before use. Include the exact plugin tag/commit and DSH version in a report; version admission does not mean every future runtime has been tested. No independent security audit, penetration test, or complete secret-detection guarantee is claimed.
 
 This policy covers this plugin. Vulnerabilities in DSH itself, a provider, or an unrelated plugin should also be reported to the relevant maintainer.
 
@@ -34,7 +34,7 @@ Do not test against other users or production services without authorization. Do
 
 ## 中文要点
 
-- 当前首个公开分发版本为 `v1.2.6`，仅声明兼容 DSH `0.2.1-rc.1`；不声称已完成独立安全审计。
+- 从 `v1.2.7` 起最低支持 DSH `0.2.1-rc.1`，不设置未来版本上限；启用前检查必要 Host 与适配器能力，版本放行不等于所有未来版本均已测试；不声称已完成独立安全审计。
 - 草稿、选定完整 QA、可见引用名和明确授权的文件内容会发给 DSH 中选定的模型服务商；本插件不上传开发者服务器，不新增遥测。服务商及 DSH 自身的日志、留存和收费策略另行适用。
 - 文件必须明确选择，每个最多 64 KiB、合计 128 KiB；不递归文件夹，不读取会话引用内容或上传图片/附件内容。敏感文件检查不等于全面防泄漏保障。
 - 取消不能撤回已经发出的数据，也不能保证上游立即停止或不收费。

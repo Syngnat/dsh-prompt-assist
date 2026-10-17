@@ -1,3 +1,4 @@
+import {assertRuntimeContract} from './runtime-contract.js';
 import { createRequire } from "node:module";
 import { pathToFileURL } from "node:url";
 import { resolveAdapterEntry } from "./adapter-locator.js";
