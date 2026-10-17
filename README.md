@@ -6,7 +6,7 @@ Provides prompt enhancement, next-question suggestions, and OpenAI Fast accelera
 
 A plugin bundle for the DeepSeek Harness (DSH) Web GUI. Enhancement and suggestions are independent features: enable either or both for the conversation you choose. Settings live on the sidebar page, not in a composer popup.
 
-> **v1.2.8:** adds an explicit stable-release check and manual-upgrade guidance. It never downloads or installs an update. The default branch is the stable distribution channel; development stays on separate branches.
+> **v1.2.9:** fixes clipped enhancement previews in the first-conversation composer. Short results expand naturally; long results scroll while action buttons keep their space. Stable-update checks remain manual and never install updates.
 
 ## Compatibility policy
 
@@ -133,6 +133,10 @@ The build emits the versioned Host artifact and the Client artifacts declared by
 Tests use Node built-ins and mocked/offline transports. Passing unit tests is not a visual acceptance result and does not verify a live model route. Do not add paid model requests to routine tests.
 
 Maintainers: follow the gated [stable release procedure](<RELEASING.md>). Never commit candidate work directly to `main`.
+
+### Composer layout regression
+
+Use an isolated DSH Web profile and a fresh, unsent conversation, with a disposable Playwright CLI session. After dismissing onboarding and entering a harmless two-line draft, run `node scripts/test-preview-layout.mjs --session <session-name>`. The probe renders the real Preview component with synthetic results in the native hero composer and checks five viewport sizes across eight states. It checks button bounds, hit targets, horizontal overflow and composer reachability; it never calls a model or applies text. It restores the viewport and removes its test DOM/CSS. Run only in the isolated page, not a user conversation. Reports go to ignored `output/playwright/`. This browser check is separate from the default offline Node test suite.
 
 ## Validation status
 

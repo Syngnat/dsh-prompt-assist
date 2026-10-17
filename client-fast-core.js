@@ -165,7 +165,7 @@ export function createFast(require) {
         const readyBindings = new WeakSet();
         ctx.slots.inject('conversation.input.right', () => ctx.slots.register({
           name: 'conversation.input.right', id: 'local-openai-fast', order: 1020,
-          label: 'OpenAI Fast 1.2.8', locale: NS,
+          label: 'OpenAI Fast 1.2.9', locale: NS,
           inject(sessionId) {
             const binding = ctx.sessions.binding(sessionId);
             if (!binding) throw new Error('OpenAI Fast: no retained session binding');

@@ -44,7 +44,7 @@ const sums=resolve(out,'SHA256SUMS.txt');writeFileSync(sums,`${sum}  ${archive.s
 // Draft and assets are prepared before main is promoted. No force-push or tag rewriting.
 run('git',['tag','-a',plan.tag,'-m',`Stable release ${plan.version}`]);
 run('git',['push','origin',`refs/tags/${plan.tag}`]);
-run('gh',['release','create',plan.tag,archive,sums,'--repo',REPOSITORY,'--verify-tag','--draft','--title',`${plan.tag} — Stable update notices`,'--notes-file',notes]);
+run('gh',['release','create',plan.tag,archive,sums,'--repo',REPOSITORY,'--verify-tag','--draft','--title',`${plan.tag} — Stable release`,'--notes-file',notes]);
 try{
   run('git',['push','origin','HEAD:refs/heads/main']);
   run('gh',['release','edit',plan.tag,'--repo',REPOSITORY,'--draft=false','--latest']);

@@ -2,6 +2,15 @@
 
 [English](<README.md>) | [简体中文](<README.zh-CN.md>)
 
+## 1.2.9 — First-conversation preview layout
+
+- Prevent the complete result card from shrinking inside the native hero flex layout; retain space for header and action buttons.
+- Let long result text absorb height pressure and scroll; bound expanded details without changing generation/apply/undo behavior.
+- Add three offline sizing regressions and a real-browser native-hero layout probe covering five viewports and eight states, with synthetic results and no model calls.
+- Preserve package identity, stored settings, manual update checks and the unversioned install target.
+
+中文：修复新会话首屏结果框被压成窄条和操作按钮裁切；新增40组浏览器布局检查，不改生成逻辑和已保存配置。
+
 ## 1.2.8 — Manual stable-update checks
 
 - Add a global Plugin updates section to the Prompt assist settings page: explicit checks, current/latest stable versions, check time, release link, copyable unversioned address and manual-upgrade instructions.
