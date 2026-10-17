@@ -1,0 +1,63 @@
+{
+  "name": "@local/dsh-openai-fast",
+  "version": "1.2.6",
+  "private": true,
+  "description": "Provides prompt enhancement, next-question suggestions, and OpenAI Fast acceleration, with per-session configuration of models, reasoning effort, and auxiliary Fast.",
+  "type": "module",
+  "license": "MIT",
+  "engines": {
+    "dsh": "=0.2.1-rc.1",
+    "node": ">=22"
+  },
+  "exports": {
+    ".": "./host-v1.2.6.js",
+    "./client": "./client-runtime.js",
+    "./locale/*.json": "./locale/*.json",
+    "./icon": "./icon.svg"
+  },
+  "files": [
+    "host-v1.2.6.js",
+    "client-runtime.js",
+    "client.js",
+    "cordis.patch.yml",
+    "locale/*.json",
+    "icon.svg",
+    "README.md",
+    "README.zh-CN.md",
+    "LICENSE",
+    "SECURITY.md",
+    "CHANGELOG.md"
+  ],
+  "scripts": {
+    "test": "node --test tests/*.test.js",
+    "build": "node build.mjs"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "immediately": true,
+      "inject": [
+        "@deepseek-ai/dsh-client-ui-conversation",
+        "@deepseek-ai/dsh-api-remotes",
+        "@deepseek-ai/dsh-client-locale"
+      ]
+    }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Syngnat/dsh-prompt-assist.git"
+  },
+  "homepage": "https://github.com/Syngnat/dsh-prompt-assist#readme",
+  "bugs": {
+    "url": "https://github.com/Syngnat/dsh-prompt-assist/issues"
+  },
+  "author": "Syngnat",
+  "devDependencies": {
+    "esbuild": "0.28.2",
+    "react": "18.3.1",
+    "react-dom": "18.3.1"
+  }
+}

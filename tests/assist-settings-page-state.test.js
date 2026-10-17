@@ -1,0 +1,7 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {createSettingsDraft,editSettingsDraft,acceptSettingsSave,createSettingsRequests} from '../assist/client/settings-page-state.js';
+test('late saved acknowledgement preserves edits made during the request',()=>{let draft=createSettingsDraft({rounds:1});draft=editSettingsDraft(draft,{...draft.config,rounds:3});const submitted=draft;draft=editSettingsDraft(draft,{...draft.config,rounds:5});assert.equal(acceptSettingsSave(draft,submitted.version,submitted.config),draft);assert.equal(draft.config.rounds,5);assert.equal(draft.dirty,true);});
+test('matching acknowledgement marks only that feature draft clean',()=>{const a=editSettingsDraft(createSettingsDraft(),{enabled:true,rounds:3}),b=createSettingsDraft({rounds:5});const saved=acceptSettingsSave(a,a.version,a.config);assert.equal(saved.dirty,false);assert.equal(b.config.rounds,5);assert.equal(b.config.enabled,false);});
+test('page/card unmount aborts active work and rejects late publication',()=>{const scope=createSettingsRequests();const request=scope.begin();assert.equal(request.valid(),true);scope.close();assert.equal(request.signal.aborted,true);assert.equal(request.valid(),false);assert.equal(scope.begin().valid(),false);});
+test('effect remount creates an independent request scope',()=>{const first=createSettingsRequests();first.close();const second=createSettingsRequests();const request=second.begin();assert.equal(request.valid(),true);request.finish();second.close();assert.equal(request.valid(),false);});

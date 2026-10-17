@@ -1,0 +1,9 @@
+- insert:
+    - id: local-openai-fast
+      name: '@local/dsh-openai-fast'
+      config:
+        providers: [openai, openai-codex, cpa]
+        modelCapabilities:
+          - provider: cpa
+            model: gpt-6.1-sol
+            efforts: [low, medium, high, xhigh, max]

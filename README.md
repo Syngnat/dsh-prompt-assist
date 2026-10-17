@@ -1,0 +1,137 @@
+[English](<README.md>) | [简体中文](<README.zh-CN.md>)
+
+# Prompt Assistance & Fast Acceleration
+
+Provides prompt enhancement, next-question suggestions, and OpenAI Fast acceleration, with per-session configuration of models, reasoning effort, and auxiliary Fast.
+
+A plugin bundle for the DeepSeek Harness (DSH) Web GUI. Enhancement and suggestions are independent features: enable either or both for the conversation you choose. Settings live on the sidebar page, not in a composer popup.
+
+> **GitHub distribution:** `v1.2.6` includes prebuilt runtime files. On Windows, a clean DSH `0.2.1-rc.1` profile passed package installation, schema import, startup, and an authenticated plugin RPC smoke test without a model call. Full GUI/provider acceptance and macOS/Linux runtime testing remain unverified. This is not an npm release or a community-catalog listing.
+
+## Requirements
+
+- **DSH `0.2.1-rc.1` exactly.** Other DSH versions are outside the declared compatibility range. Do not bypass a version refusal without evaluating the risk.
+- A configured provider and model in DSH. This plugin does not supply API credentials.
+- Network access to GitHub for installation and to your selected provider for generation.
+- **Node.js 22+ and pnpm are for development only.** The distributable includes prebuilt runtime artifacts; ordinary users do not need to build the plugin.
+
+## Install from GitHub
+
+Open **Plugins** in DSH, choose the install action, and enter this package target:
+
+```text
+github:Syngnat/dsh-prompt-assist#v1.2.6
+```
+
+The agent-facing equivalent, when plugin management is available and authorized, is:
+
+```js
+plugin_manager({
+  action: "install_bundle",
+  target: "github:Syngnat/dsh-prompt-assist#v1.2.6"
+})
+```
+
+For an immutable commit pin, use:
+
+```text
+git+https://github.com/Syngnat/dsh-prompt-assist.git#<full-40-character-commit-SHA>
+```
+
+Do not enter a GitHub `/tree/` page or the bare `Syngnat/dsh-prompt-assist` shorthand. DSH accepts a `github:` target or a Git repository URL with a tag/commit fragment.
+
+Read the installation result. `application: applied` confirms Host activation; `restart-required` needs a DSH restart. A successful package download alone does not prove that the browser UI works. If dependency scripts are blocked, review the returned package names before approving them; do not enable scripts globally.
+
+The package identifier remains `@local/dsh-openai-fast`, even though this repository is named `dsh-prompt-assist`. Its `private: true` flag prevents accidental npm publication; it does not prevent GitHub installation.
+
+## Use
+
+### Configure the intended conversation
+
+1. Open the conversation you want to configure.
+2. Select **Prompt assist** in the left sidebar. Check the conversation identifier shown on the page.
+3. Configure **Enhance prompt** and **Next-question suggestions** separately. Each has its own enabled state, provider/model, native reasoning effort, auxiliary Fast switch, and Q&A round count.
+4. Save each feature you change, then choose **Back to conversation**. Both features can remain enabled.
+
+Features start disabled. Following the session follows only its model and reasoning effort; auxiliary Fast always remains an independent setting. Choose 1, 3, 5, or a custom **1–20 complete Q&A rounds**. Invalid values are rejected, not silently clamped. A model change that invalidates a saved effort requires an explicit new choice; the plugin does not silently lower the effort.
+
+### Enhance a draft
+
+Write the original text in the composer and click the enhancement icon button. Enhancement improves that text; recent complete Q&A supplies background, not a replacement task. It can run while the main conversation is busy, provided the composer remains editable and the session grants access. It does not send the enhanced text as a chat message.
+
+Review the inline result, compare the original when needed, then copy or apply it. Pure-text application checks the original draft and revision, creates one undoable text edit, and leaves attachments unchanged. Editing the draft cancels obsolete work. Undo is offered only while the applied text and revision still match.
+
+### Suggest the next question
+
+Automatic suggestions use the latest selected complete Q&A pairs. They run only after a **new** complete Q&A becomes available, while the conversation is idle and the draft contains no text, references, or attachments. Mounting or reopening the UI establishes a baseline; it does not replay an old Q&A. The toolbar suggestion button can request a suggestion from existing complete Q&A when eligible.
+
+Suggestions are unavailable while the main conversation is busy. If typing, settings, model, conversation, or Q&A changes invalidate a request, its result is discarded. A cancelled automatic attempt is not silently repeated; use the manual button when needed.
+
+### Fast
+
+The main **Fast** icon button sits next to the model selector. It applies Priority handling only to explicitly allowed OpenAI model routes, subject to upstream support. It may incur extra charges; it is not a guarantee of lower latency. Supported subagents inherit the parent preference until they override it.
+
+The Fast switch for each auxiliary feature is separate from the main Fast button and from the other auxiliary feature. Enabling one does not enable the others. Unsupported routes cannot enable auxiliary Fast, and an already checked switch can still be turned off.
+
+### Files and references
+
+- Existing file references are not read automatically. Explicitly select the files you want the current enhancement request to read.
+- Limits are **64 KiB per file** and **128 KiB total** (65,536 and 131,072 bytes). Oversized inputs are rejected, not silently truncated.
+- Folders are not traversed. Session references and uploaded images/attachments are not read as file content. Unsupported or sensitive files may be refused.
+- Visible reference names may be included as context. A draft containing structured references or a command supports preview/copy only: structured apply is not supported.
+
+### Preview and timing limits
+
+Results stay in the allocated inline composer area instead of a floating overlay. Settings use a separate sidebar page; return to the conversation to edit the draft. Apply becomes available only after generation completes. Displayed durations use seconds rounded **down**, so a subsecond duration appears as 0 seconds. A cache hit shows the timing of the original generation.
+
+This release does **not** implement native Ghost text, ArrowRight acceptance, or a new Ctrl+Alt+E shortcut. Use the explicit buttons. Output/token and wait limits can stop a request; reasoning may consume the same output budget. The plugin does not automatically retry paid requests or change the reasoning effort to work around a limit.
+
+## Privacy and security
+
+Generation sends the draft, the selected complete Q&A context, visible reference names, and any explicitly authorized file content to **the provider you selected in DSH**. Review those contents before requesting assistance.
+
+This plugin does not send data to a developer-operated server and does not add telemetry. DSH and your provider may have their own logging and retention policies. Installing a DSH Host plugin permits local code execution with the host user permissions; it is not a workspace sandbox boundary. Model output is untrusted and should be reviewed before use. No independent security audit is claimed. See [Security policy](<SECURITY.md>).
+
+## Upgrade and remove
+
+1. Keep a normal backup of your DSH profile and session data. Record any custom feature settings you need.
+2. In **Plugins**, identify the existing bundle by its manifest name, `@local/dsh-openai-fast`. If DSH reports it already installed, remove that dependency before installing the new tagged target.
+3. Install the new tag and follow the returned restart/application status. Do not repoint an existing release tag to new code.
+
+For existing local users, the package and projection identities are retained. Upgrading the plugin dependency does not delete session records or require rewriting your provider/source configuration. Existing profile overrides can still affect activation. Profiles without live reload may require stopping DSH before removal and restarting after installation. A backup remains prudent; this is not a guarantee of compatibility with future DSH versions.
+
+### Moving from an existing local-directory installation
+
+A long-running DSH process can retain the old local package directory after switching the same package name to an archive or GitHub source. If installation reports an old-path ENOENT, do not copy generated files into that old directory. Remove the old dependency, fully quit and restart DSH, then install the tagged GitHub target. Session records and feature identities are unchanged.
+
+## Development
+
+Use a standalone checkout with Node.js 22+ and pnpm:
+
+```sh
+git clone https://github.com/Syngnat/dsh-prompt-assist.git
+cd dsh-prompt-assist
+pnpm install --ignore-scripts
+node build.mjs
+node --test tests/*.test.js
+```
+
+The build emits the versioned Host artifact and the Client artifacts declared by the [package manifest](<package.json>). Keep React and Harness Client modules external. Commit the distributable artifacts with the release tag so installation does not depend on a local checkout or an installation-time build script.
+
+Tests use Node built-ins and mocked/offline transports. Passing unit tests is not a visual acceptance result and does not verify a live model route. Do not add paid model requests to routine tests.
+
+## Validation status
+
+| Area | Release status |
+| --- | --- |
+| GitHub distribution | Prebuilt tag and release assets; see the GitHub release for download verification |
+| Clean Windows installation on DSH `0.2.1-rc.1` | Passed: package install, complete schema import, fresh Host startup and authenticated RPC smoke |
+| Windows settings, inline results, and provider workflow | Pending recorded end-to-end/UI acceptance |
+| macOS and Linux | Not tested |
+| Independent security audit | Not performed/claimed |
+
+The release was built and passed 221 offline tests on Windows. The runtime smoke used an isolated home/profile and made no model request; it is not a visual or paid-model acceptance test.
+
+## License
+
+[MIT](<LICENSE>), copyright 2026 Syngnat. See the [changelog](<CHANGELOG.md>) for release notes.
