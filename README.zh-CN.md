@@ -127,10 +127,10 @@ node --test tests/*.test.js
 | GitHub 分发 | 预构建 tag 与发布附件；下载验证见 GitHub Release |
 | Windows / DSH `0.2.1-rc.1` 干净安装 | 已通过包安装、完整 schema 导入、全新 Host 启动和已认证接口冒烟 |
 | Windows 设置页、行内结果与服务商使用流程 | 待补端到端/界面验收记录 |
-| macOS / Linux | 未测试 |
+| macOS / Linux | CI 构建与 221 项离线测试通过；DSH 运行时未测试 |
 | 独立安全审计 | 未进行，不作此声明 |
 
-Windows 下构建及 221 项离线测试通过。运行时冒烟使用独立 home/profile，没有发送模型请求；不等同于视觉或收费模型验收。
+Windows、macOS、Linux 的构建与 221 项离线测试均在 [GitHub Actions](https://github.com/Syngnat/dsh-prompt-assist/actions/runs/39039987244) 通过。运行时冒烟使用独立 home/profile，没有发送模型请求；不等同于视觉或收费模型验收。
 
 ## 许可证
 

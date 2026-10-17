@@ -127,10 +127,10 @@ Tests use Node built-ins and mocked/offline transports. Passing unit tests is no
 | GitHub distribution | Prebuilt tag and release assets; see the GitHub release for download verification |
 | Clean Windows installation on DSH `0.2.1-rc.1` | Passed: package install, complete schema import, fresh Host startup and authenticated RPC smoke |
 | Windows settings, inline results, and provider workflow | Pending recorded end-to-end/UI acceptance |
-| macOS and Linux | Not tested |
+| macOS and Linux | CI build and 221 offline tests passed; DSH runtime not tested |
 | Independent security audit | Not performed/claimed |
 
-The release was built and passed 221 offline tests on Windows. The runtime smoke used an isolated home/profile and made no model request; it is not a visual or paid-model acceptance test.
+Build and 221 offline tests passed on Windows, macOS and Linux in [GitHub Actions](https://github.com/Syngnat/dsh-prompt-assist/actions/runs/39039987244). The runtime smoke used an isolated home/profile and made no model request; it is not a visual or paid-model acceptance test.
 
 ## License
 
