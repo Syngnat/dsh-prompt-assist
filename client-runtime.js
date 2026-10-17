@@ -201,6 +201,14 @@ var init_style = __esm({
 .lpa-settings-feedback{display:grid;gap:6px;min-height:1.5em}
 @supports(grid-template-rows:subgrid){.lpa-settings-cards .lpa-feature{display:grid;grid-row:span 4;grid-template-rows:subgrid;align-content:normal}}
 @media(max-width:520px){.lpa-grid{grid-template-columns:minmax(0,1fr)}.lpa-inline{padding:8px}}
+
+.lpa-update-panel{display:grid;gap:12px;margin-top:28px;padding:20px;border:1px solid var(--dsw-alias-border-l1);border-radius:9px;background:var(--dsw-alias-bg-layer-1);min-width:0}
+.lpa-update-title{font:inherit;font-size:16px;font-weight:600;margin:0}
+.lpa-update-versions{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(180px,100%),1fr));gap:12px;margin:0}
+.lpa-update-field{min-width:0}.lpa-update-field dt{font-size:11px;color:var(--dsw-alias-label-secondary);margin-bottom:4px}.lpa-update-field dd{margin:0;overflow-wrap:anywhere}
+.lpa-update-install{display:flex;align-items:center;gap:8px;flex-wrap:wrap;min-width:0}.lpa-update-install code{overflow-wrap:anywhere;user-select:text}
+.lpa-update-guide summary{cursor:pointer;color:var(--dsw-alias-label-secondary)}.lpa-update-guide ol{padding-inline-start:20px;margin:10px 0}.lpa-update-guide li{margin:7px 0;line-height:1.5}
+.lpa-update-panel a.lpa-button{text-decoration:none;display:inline-flex;align-items:center}
 `;
   }
 });
@@ -330,6 +338,43 @@ var init_messages = __esm({
     NS = "local-prompt-assist";
     dictionaries = {
       zh: {
+        "updates.title": "\u7248\u672C\u4E0E\u66F4\u65B0",
+        "updates.readOnly": "\u6B64\u5904\u53EA\u68C0\u67E5\u66F4\u65B0\uFF0C\u4E0D\u4F1A\u4E0B\u8F7D\u6216\u5B89\u88C5\uFF0C\u4E5F\u4E0D\u4F1A\u81EA\u52A8\u5347\u7EA7\u3002",
+        "updates.installedVersion": "\u672C\u5730\u7248\u672C",
+        "updates.latestVersion": "\u6700\u65B0\u7A33\u5B9A\u7248",
+        "updates.checkedAt": "\u4E0A\u6B21\u68C0\u67E5\u65F6\u95F4\uFF08UTC\uFF09",
+        "updates.unknown": "\u672A\u77E5",
+        "updates.notChecked": "\u5C1A\u65E0\u8BB0\u5F55",
+        "updates.idle": "\u5C1A\u672A\u68C0\u67E5\u66F4\u65B0\uFF0C\u8BF7\u6309\u9700\u70B9\u51FB\u68C0\u67E5\u6309\u94AE\u3002",
+        "updates.loading": "\u6B63\u5728\u8BFB\u53D6 Host \u7F13\u5B58\u72B6\u6001\uFF0C\u4E0D\u8BBF\u95EE GitHub\u2026",
+        "updates.checking": "\u6B63\u5728\u5411 GitHub \u68C0\u67E5\u516C\u5F00\u7A33\u5B9A\u7248\u4FE1\u606F\u2026",
+        "updates.current": "\u672C\u5730\u7248\u672C\u4E0E\u4E0A\u6B21\u68C0\u67E5\u5230\u7684\u6700\u65B0\u7A33\u5B9A\u7248\u4E00\u81F4\u3002",
+        "updates.update-available": "\u53D1\u73B0\u8F83\u65B0\u7684\u7A33\u5B9A\u7248\uFF0C\u8BF7\u6309\u4E0B\u65B9\u6B65\u9AA4\u624B\u52A8\u5347\u7EA7\u3002",
+        "updates.ahead": "\u672C\u5730\u7248\u672C\u9886\u5148\u4E8E\u6700\u65B0\u7A33\u5B9A\u7248\uFF0C\u53EF\u80FD\u662F\u5F00\u53D1\u6216\u5019\u9009\u6784\u5EFA\uFF1B\u5F53\u524D\u4E0D\u63D0\u793A\u7A33\u5B9A\u7248\u5347\u7EA7\u3002",
+        "updates.error": "\u66F4\u65B0\u68C0\u67E5\u672A\u5B8C\u6210\uFF0C\u4E0D\u80FD\u786E\u8BA4\u662F\u5426\u5DF2\u662F\u6700\u65B0\u7248\u672C\u3002",
+        "updates.cancelled": "\u672C\u6B21\u8BFB\u53D6\u6216\u68C0\u67E5\u5DF2\u53D6\u6D88\uFF0C\u6CA1\u6709\u4E0B\u8F7D\u6216\u5B89\u88C5\u4EFB\u4F55\u5185\u5BB9\u3002",
+        "updates.error.network": "\u7F51\u7EDC\u8FDE\u63A5\u5931\u8D25\uFF0C\u8BF7\u7A0D\u540E\u624B\u52A8\u91CD\u8BD5\u3002",
+        "updates.error.timeout": "\u68C0\u67E5\u8D85\u65F6\uFF0C\u8BF7\u7A0D\u540E\u624B\u52A8\u91CD\u8BD5\u3002",
+        "updates.error.rate-limited": "GitHub \u6682\u65F6\u9650\u5236\u8BF7\u6C42\uFF0C\u8BF7\u7A0D\u540E\u624B\u52A8\u91CD\u8BD5\u3002",
+        "updates.error.not-found": "\u672A\u627E\u5230\u516C\u5F00\u7A33\u5B9A\u7248\uFF0C\u8BF7\u6838\u5BF9\u53D1\u5E03\u72B6\u6001\u540E\u91CD\u8BD5\u3002",
+        "updates.error.invalid-response": "\u7248\u672C\u54CD\u5E94\u65E0\u6548\uFF0C\u672A\u5C06\u5B83\u4F5C\u4E3A\u6709\u6548\u66F4\u65B0\u7ED3\u679C\u3002",
+        "updates.checkButton": "\u68C0\u67E5\u66F4\u65B0",
+        "updates.checkingButton": "\u6B63\u5728\u68C0\u67E5\u2026",
+        "updates.cancel": "\u53D6\u6D88",
+        "updates.reloadStatus": "\u91CD\u8BFB\u672C\u5730\u72B6\u6001",
+        "updates.releaseLink": "\u5728 GitHub \u67E5\u770B\u7248\u672C",
+        "updates.privacy": "\u53EA\u6709\u70B9\u51FB\u201C\u68C0\u67E5\u66F4\u65B0\u201D\u624D\u4F1A\u8BA9 Host \u8BFB\u53D6 GitHub \u7684\u516C\u5F00\u7248\u672C\u4FE1\u606F\uFF1B\u4E0D\u4F1A\u53D1\u9001\u4F1A\u8BDD\u3001\u8349\u7A3F\u6216\u6587\u4EF6\u5185\u5BB9\u3002",
+        "updates.cacheNote": "\u4E3A\u9075\u5B88 GitHub \u8BF7\u6C42\u9650\u5236\uFF0C\u77ED\u65F6\u95F4\u5185\u91CD\u590D\u68C0\u67E5\u53EF\u80FD\u590D\u7528 Host \u7F13\u5B58\uFF1B\u4E0D\u4F1A\u5B9A\u65F6\u81EA\u52A8\u68C0\u67E5\u3002",
+        "updates.installAddress": "\u65E0 tag \u5B89\u88C5\u5730\u5740",
+        "updates.copy": "\u590D\u5236\u5730\u5740",
+        "updates.copied": "\u5730\u5740\u5DF2\u590D\u5236",
+        "updates.copyFailed": "\u65E0\u6CD5\u81EA\u52A8\u590D\u5236\uFF0C\u8BF7\u624B\u52A8\u9009\u62E9\u5E76\u590D\u5236\u4E0A\u65B9\u5730\u5740\u3002",
+        "updates.manualUpgrade": "\u5982\u4F55\u624B\u52A8\u5347\u7EA7",
+        "updates.stepSave": "\u5148\u4FDD\u5B58\u8349\u7A3F\u548C\u4E24\u9879\u529F\u80FD\u8BBE\u7F6E\uFF0C\u8BB0\u5F55\u9700\u8981\u4FDD\u7559\u7684\u914D\u7F6E\u3002",
+        "updates.stepRemove": "\u8FDB\u5165 DSH \u63D2\u4EF6\u7BA1\u7406\uFF0C\u79FB\u9664\u65E7\u63D2\u4EF6\u4F9D\u8D56\uFF08\u6309\u5305\u540D\uFF09\uFF1A",
+        "updates.stepInstall": "\u4F7F\u7528\u4EE5\u4E0B\u65E0 tag \u5B89\u88C5\u5730\u5740\u91CD\u65B0\u6DFB\u52A0\u63D2\u4EF6\uFF1A",
+        "updates.stepRestart": "\u6309\u5B89\u88C5\u7ED3\u679C\u63D0\u793A\u64CD\u4F5C\uFF1B\u5982\u679C\u9700\u8981\u6216\u4ECD\u52A0\u8F7D\u65E7\u6A21\u5757\uFF0C\u8BF7\u5B8C\u5168\u9000\u51FA\u5E76\u91CD\u542F DSH\uFF0C\u4EC5\u5237\u65B0\u6D4F\u89C8\u5668\u4E0D\u8DB3\u4EE5\u91CD\u8F7D Host\u3002",
+        "updates.backup": "\u6B64\u68C0\u67E5\u5668\u4E0D\u4F1A\u4FEE\u6539\u670D\u52A1\u5546/source \u6570\u636E\u3002\u624B\u52A8\u5347\u7EA7\u524D\u4ECD\u5EFA\u8BAE\u5E38\u89C4\u5907\u4EFD DSH \u914D\u7F6E\u548C\u4F1A\u8BDD\u6570\u636E\u3002",
         secondsUnit: "\u79D2",
         streamingShort: "\u751F\u6210\u4E2D",
         showOriginal: "\u67E5\u770B\u539F\u6587",
@@ -423,6 +468,43 @@ var init_messages = __esm({
         cached: "\u547D\u4E2D\u672C\u4F1A\u8BDD\u7F13\u5B58\uFF0C\u4E0B\u5217\u8017\u65F6\u4E3A\u539F\u751F\u6210\u8017\u65F6\u3002"
       },
       en: {
+        "updates.title": "Version and updates",
+        "updates.readOnly": "This section only checks updates. It never downloads, installs, or automatically upgrades the plugin.",
+        "updates.installedVersion": "Installed version",
+        "updates.latestVersion": "Latest stable release",
+        "updates.checkedAt": "Last check (UTC)",
+        "updates.unknown": "Unknown",
+        "updates.notChecked": "Not recorded",
+        "updates.idle": "Updates have not been checked. Use the button when needed.",
+        "updates.loading": "Reading the Host cache without contacting GitHub\u2026",
+        "updates.checking": "Checking public stable-release information on GitHub\u2026",
+        "updates.current": "The installed version matches the latest stable release from the last check.",
+        "updates.update-available": "A newer stable release is available. Follow the manual upgrade steps below.",
+        "updates.ahead": "The installed version is ahead of the latest stable release and may be a development or candidate build. No stable upgrade is offered.",
+        "updates.error": "The update check did not complete. The latest version is not confirmed.",
+        "updates.cancelled": "This read or check was cancelled. Nothing was downloaded or installed.",
+        "updates.error.network": "The network connection failed. Retry manually later.",
+        "updates.error.timeout": "The check timed out. Retry manually later.",
+        "updates.error.rate-limited": "GitHub temporarily limited requests. Retry manually later.",
+        "updates.error.not-found": "No public stable release was found. Check the release status and retry.",
+        "updates.error.invalid-response": "The version response was invalid and was not accepted as an update result.",
+        "updates.checkButton": "Check for updates",
+        "updates.checkingButton": "Checking\u2026",
+        "updates.cancel": "Cancel",
+        "updates.reloadStatus": "Reload local status",
+        "updates.releaseLink": "View release on GitHub",
+        "updates.privacy": "Only clicking Check for updates asks the Host to read public GitHub release information. No conversation, draft, or file contents are sent.",
+        "updates.cacheNote": "A recent Host result may be reused to respect GitHub limits. There are no scheduled automatic checks.",
+        "updates.installAddress": "Installation address (no tag)",
+        "updates.copy": "Copy address",
+        "updates.copied": "Address copied",
+        "updates.copyFailed": "Automatic copy failed. Select and copy the address above manually.",
+        "updates.manualUpgrade": "How to upgrade manually",
+        "updates.stepSave": "Save the draft and both feature settings first. Record configuration you want to retain.",
+        "updates.stepRemove": "Open DSH plugin management and remove the old dependency by package name:",
+        "updates.stepInstall": "Add the plugin again using this installation address without a tag:",
+        "updates.stepRestart": "Follow the installation result. If required, or if old modules remain loaded, fully quit and restart DSH. A browser refresh alone does not reload the Host.",
+        "updates.backup": "This checker does not change provider/source data. Back up normal DSH configuration and session data before a manual upgrade.",
         secondsUnit: "s",
         streamingShort: "Generating",
         showOriginal: "View original",
@@ -857,7 +939,7 @@ function useAssistRuntime(p) {
     controller.configurationEdited();
     setSaving(true);
     setNotice(null);
-    const version = editVersions.current[feature];
+    const version2 = editVersions.current[feature];
     const owner = p.sessionId;
     const abort = new AbortController();
     saves.current.add(abort);
@@ -868,7 +950,7 @@ function useAssistRuntime(p) {
       setHost({ sessionId: owner, value });
       await p.refreshAssist();
       if (!valid()) return;
-      if (editVersions.current[feature] === version) {
+      if (editVersions.current[feature] === version2) {
         setDirtyFeatures((old) => old.filter((key) => key !== feature));
         setNotice("saved");
         return true;
@@ -1091,14 +1173,274 @@ var init_panel = __esm({
   }
 });
 
+// assist/client/update-state.js
+function safeReleaseUrl(value) {
+  if (typeof value !== "string" || value.length > 500) return null;
+  try {
+    const url = new URL(value);
+    if (url.protocol !== "https:" || url.hostname !== "github.com" || url.port || url.username || url.password || url.search || url.hash) return null;
+    const parts = url.pathname.split("/");
+    if (parts.length !== 6 || parts[1].toLowerCase() !== "syngnat" || parts[2].toLowerCase() !== "dsh-prompt-assist" || parts[3] !== "releases" || parts[4] !== "tag") return null;
+    const tag = decodeURIComponent(parts[5]);
+    if (!/^v?\d+\.\d+\.\d+(?:\+[a-zA-Z0-9.-]+)?$/.test(tag)) return null;
+    return url.href;
+  } catch {
+    return null;
+  }
+}
+function formatCheckedAt(value) {
+  if (typeof value !== "number" || !Number.isFinite(value) || value < 0) return null;
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? null : date.toISOString();
+}
+function normalizeUpdateState(value) {
+  if (!value || typeof value !== "object" || !version(value.currentVersion) || !STATUSES.has(value.status)) throw invalid();
+  if (value.latestVersion !== null && (!version(value.latestVersion) || !/^v?\d+\.\d+\.\d+(?:\+[a-zA-Z0-9.-]+)?$/.test(value.latestVersion))) throw invalid();
+  if (value.checkedAt !== null && formatCheckedAt(value.checkedAt) === null) throw invalid();
+  if (value.error !== null && !ERRORS.has(value.error)) throw invalid();
+  if (value.status === "error" !== (value.error !== null)) throw invalid();
+  if (["current", "update-available", "ahead"].includes(value.status) && (!value.latestVersion || value.checkedAt === null)) throw invalid();
+  return Object.freeze({
+    currentVersion: value.currentVersion,
+    status: value.status,
+    latestVersion: value.latestVersion,
+    releaseUrl: safeReleaseUrl(value.releaseUrl),
+    checkedAt: value.checkedAt,
+    error: value.error,
+    installSpec: INSTALL_SPEC
+  });
+}
+function initialUpdateSnapshot() {
+  return { data: null, pending: "load", localError: null, cancelled: false };
+}
+function updateDisplay(snapshot) {
+  const error = snapshot.localError ?? (snapshot.data?.status === "error" ? snapshot.data.error : null);
+  const status = snapshot.pending === "check" ? "checking" : snapshot.pending === "load" ? "loading" : snapshot.cancelled ? "cancelled" : error ? "error" : snapshot.data?.status ?? "idle";
+  return {
+    status,
+    error,
+    message: "updates." + status,
+    releaseUrl: safeReleaseUrl(snapshot.data?.releaseUrl),
+    checkedAt: formatCheckedAt(snapshot.data?.checkedAt)
+  };
+}
+function createUpdateController(fetcher = globalThis.fetch) {
+  let state = initialUpdateSnapshot();
+  let disposed = true;
+  let epoch = 0;
+  let flight = null;
+  const listeners = /* @__PURE__ */ new Set();
+  const publish = (patch) => {
+    state = { ...state, ...patch };
+    for (const listener of listeners) listener();
+  };
+  const invalidate = () => {
+    epoch += 1;
+    flight?.abort();
+    flight = null;
+  };
+  async function request(method) {
+    if (disposed || method === "POST" && state.pending === "check") return false;
+    invalidate();
+    const revision = epoch;
+    const abort = new AbortController();
+    flight = abort;
+    publish({ pending: method === "POST" ? "check" : "load", localError: null, cancelled: false });
+    try {
+      const response = await fetcher(UPDATE_ENDPOINT, {
+        method,
+        credentials: "same-origin",
+        signal: abort.signal,
+        ...method === "POST" ? { headers: { "Content-Type": "application/json" }, body: "{}" } : {}
+      });
+      let body;
+      try {
+        body = await response.json();
+      } catch {
+        throw invalid();
+      }
+      const data = normalizeUpdateState(body);
+      if (!response.ok && data.status !== "error") throw invalid();
+      if (disposed || abort.signal.aborted || epoch !== revision) return false;
+      publish({ data, localError: null });
+      return true;
+    } catch (error) {
+      if (disposed || abort.signal.aborted || epoch !== revision) return false;
+      const code = ERRORS.has(error?.code) ? error.code : error?.name === "TimeoutError" ? "timeout" : "network";
+      publish({ localError: code });
+      return false;
+    } finally {
+      if (!disposed && epoch === revision) {
+        flight = null;
+        publish({ pending: null });
+      }
+    }
+  }
+  return {
+    getSnapshot: () => state,
+    subscribe(listener) {
+      listeners.add(listener);
+      return () => listeners.delete(listener);
+    },
+    start() {
+      disposed = false;
+      return request("GET");
+    },
+    load() {
+      return request("GET");
+    },
+    check() {
+      return request("POST");
+    },
+    cancel() {
+      if (!disposed) {
+        invalidate();
+        publish({ pending: null, cancelled: true, localError: null });
+      }
+    },
+    dispose() {
+      disposed = true;
+      invalidate();
+    }
+  };
+}
+async function copyInstallSpec(clipboard = globalThis.navigator?.clipboard) {
+  if (typeof clipboard?.writeText !== "function") throw new Error("clipboard-unavailable");
+  await clipboard.writeText(INSTALL_SPEC);
+}
+var UPDATE_ENDPOINT, INSTALL_SPEC, STATUSES, ERRORS, VERSION, version, invalid;
+var init_update_state = __esm({
+  "assist/client/update-state.js"() {
+    UPDATE_ENDPOINT = "/api/local-openai-fast.updates";
+    INSTALL_SPEC = "github:Syngnat/dsh-prompt-assist";
+    STATUSES = /* @__PURE__ */ new Set(["idle", "current", "update-available", "ahead", "error"]);
+    ERRORS = /* @__PURE__ */ new Set(["network", "timeout", "rate-limited", "not-found", "invalid-response"]);
+    VERSION = /^v?\d+\.\d+\.\d+(?:-[a-zA-Z0-9.-]+)?(?:\+[a-zA-Z0-9.-]+)?$/;
+    version = (value) => typeof value === "string" && value.length <= 80 && VERSION.test(value);
+    invalid = () => Object.assign(new Error("invalid-response"), { code: "invalid-response" });
+  }
+});
+
+// assist/client/update-panel.js
+function UpdatePanelContent({ snapshot = initialUpdateSnapshot(), t, onCheck, onReload, onCancel, onCopy, copyStatus }) {
+  const view = updateDisplay(snapshot);
+  const data = snapshot.data;
+  const button = (key, onClick, disabled = false) => h6("button", { type: "button", className: "lpa-button", onClick, disabled }, t(key));
+  const field = (label, value) => h6(
+    "div",
+    { className: "lpa-update-field", key: label },
+    h6("dt", null, t(label)),
+    h6("dd", null, value)
+  );
+  return h6(
+    "section",
+    { className: "lpa-update-panel", "aria-label": t("updates.title") },
+    h6("h2", { className: "lpa-update-title" }, t("updates.title")),
+    h6("p", { className: "lpa-note" }, t("updates.readOnly")),
+    h6(
+      "dl",
+      { className: "lpa-update-versions" },
+      field("updates.installedVersion", data?.currentVersion ?? t("updates.unknown")),
+      field("updates.latestVersion", data?.latestVersion ?? t("updates.unknown")),
+      field("updates.checkedAt", view.checkedAt ? h6("time", { dateTime: view.checkedAt }, view.checkedAt) : t("updates.notChecked"))
+    ),
+    h6(
+      "p",
+      {
+        className: view.status === "error" ? "lpa-error" : "lpa-note",
+        role: view.status === "error" ? "alert" : "status",
+        "aria-live": "polite",
+        "aria-atomic": true
+      },
+      t(view.message),
+      view.status === "error" && view.error ? " " + t("updates.error." + view.error) : null
+    ),
+    h6(
+      "div",
+      { className: "lpa-row" },
+      button(snapshot.pending === "check" ? "updates.checkingButton" : "updates.checkButton", onCheck, snapshot.pending === "check"),
+      snapshot.pending ? button("updates.cancel", onCancel) : null,
+      snapshot.localError ? button("updates.reloadStatus", onReload) : null,
+      view.releaseUrl ? h6("a", { className: "lpa-button", href: view.releaseUrl, target: "_blank", rel: "noopener noreferrer" }, t("updates.releaseLink")) : null
+    ),
+    h6("p", { className: "lpa-note" }, t("updates.privacy")),
+    h6("p", { className: "lpa-note" }, t("updates.cacheNote")),
+    h6(
+      "div",
+      { className: "lpa-update-install" },
+      h6("span", null, t("updates.installAddress")),
+      h6("code", null, INSTALL_SPEC),
+      button("updates.copy", onCopy),
+      copyStatus ? h6("span", { className: "lpa-note", role: "status" }, t("updates." + copyStatus)) : null
+    ),
+    h6(
+      "details",
+      { className: "lpa-update-guide" },
+      h6("summary", null, t("updates.manualUpgrade")),
+      h6(
+        "ol",
+        null,
+        h6("li", null, t("updates.stepSave")),
+        h6("li", null, t("updates.stepRemove"), " ", h6("code", null, "@local/dsh-openai-fast")),
+        h6("li", null, t("updates.stepInstall"), " ", h6("code", null, INSTALL_SPEC)),
+        h6("li", null, t("updates.stepRestart"))
+      ),
+      h6("p", { className: "lpa-note" }, t("updates.backup"))
+    )
+  );
+}
+function UpdatePanel({ t, fetcher = globalThis.fetch }) {
+  const controller = import_react7.default.useMemo(() => createUpdateController(fetcher), [fetcher]);
+  const snapshot = import_react7.default.useSyncExternalStore(controller.subscribe, controller.getSnapshot, controller.getSnapshot);
+  const [copyStatus, setCopyStatus] = import_react7.default.useState(null);
+  const copyEpoch = import_react7.default.useRef(0);
+  import_react7.default.useEffect(() => {
+    void controller.start();
+    return () => {
+      copyEpoch.current += 1;
+      controller.dispose();
+    };
+  }, [controller]);
+  async function copy() {
+    const revision = ++copyEpoch.current;
+    try {
+      await copyInstallSpec();
+      if (copyEpoch.current === revision) setCopyStatus("copied");
+    } catch {
+      if (copyEpoch.current === revision) setCopyStatus("copyFailed");
+    }
+  }
+  return h6(UpdatePanelContent, {
+    snapshot,
+    t,
+    copyStatus,
+    onCopy: copy,
+    onCheck: () => {
+      void controller.check();
+    },
+    onReload: () => {
+      void controller.load();
+    },
+    onCancel: () => controller.cancel()
+  });
+}
+var import_react7, h6;
+var init_update_panel = __esm({
+  "assist/client/update-panel.js"() {
+    import_react7 = __toESM(require("react"), 1);
+    init_update_state();
+    h6 = import_react7.default.createElement;
+  }
+});
+
 // assist/client/settings.js
 function Settings(p) {
   const { t, config: v, catalog: c, capabilities: cap } = p;
   const change = (patch) => p.onChange({ ...v, ...patch });
-  const field = (key, node) => h6("label", { className: "lpa-field" }, t(key), node);
-  const check = (key, checked, change2, disabled = false) => h6("label", { className: "lpa-check" }, h6("input", { type: "checkbox", checked, disabled, onChange: (e) => change2(e.target.checked) }), t(key));
-  const [custom, setCustom] = import_react7.default.useState(![1, 3, 5].includes(v.rounds));
-  const [error, setError] = import_react7.default.useState(null);
+  const field = (key, node) => h7("label", { className: "lpa-field" }, t(key), node);
+  const check = (key, checked, change2, disabled = false) => h7("label", { className: "lpa-check" }, h7("input", { type: "checkbox", checked, disabled, onChange: (e) => change2(e.target.checked) }), t(key));
+  const [custom, setCustom] = import_react8.default.useState(![1, 3, 5].includes(v.rounds));
+  const [error, setError] = import_react8.default.useState(null);
   const efforts = cap?.efforts ?? [];
   const invalidEffort = !v.followSession && cap && v.reasoningEffort && !efforts.some((e) => e.id === v.reasoningEffort);
   const invalidFast = cap && v.fast && !cap.fastEligible;
@@ -1108,41 +1450,41 @@ function Settings(p) {
     setError(problem === "rounds" ? "roundsError" : problem ? "modelError" : null);
     if (!problem && (!v.enabled || !invalidEffort && !invalidFast)) p.save(v);
   };
-  const select = (key, value, items, change2) => field(key, h6("select", { value, onChange: (e) => change2(e.target.value) }, items.map((item) => h6("option", { key: item.id, value: item.id }, item.name))));
-  return h6(
+  const select = (key, value, items, change2) => field(key, h7("select", { value, onChange: (e) => change2(e.target.value) }, items.map((item) => h7("option", { key: item.id, value: item.id }, item.name))));
+  return h7(
     "form",
     { onSubmit: submit },
-    h6("div", { className: "lpa-row" }, check("enabled", v.enabled, (enabled) => change({ enabled })), check("follow", v.followSession, (followSession) => change({ followSession }))),
-    h6("p", { className: "lpa-note" }, t("followHint")),
-    !v.followSession ? h6(
+    h7("div", { className: "lpa-row" }, check("enabled", v.enabled, (enabled) => change({ enabled })), check("follow", v.followSession, (followSession) => change({ followSession }))),
+    h7("p", { className: "lpa-note" }, t("followHint")),
+    !v.followSession ? h7(
       "div",
       { className: "lpa-grid" },
       select("provider", v.provider, [{ id: "", name: t("selectProvider") }, ...c.providers], (provider) => change({ provider, model: "" })),
       select("model", v.model, [{ id: "", name: t("selectModel") }, ...c.models.filter((m) => m.provider === v.provider)], (model) => change({ model })),
       select("effort", v.reasoningEffort, [{ id: "", name: t("nativeDefault") }, ...invalidEffort ? [{ id: v.reasoningEffort, name: v.reasoningEffort }] : [], ...efforts], (reasoningEffort) => change({ reasoningEffort }))
     ) : null,
-    invalidEffort ? h6("p", { className: "lpa-error", role: "alert" }, t("effortInvalid")) : null,
+    invalidEffort ? h7("p", { className: "lpa-error", role: "alert" }, t("effortInvalid")) : null,
     check("fast", v.fast, (fast2) => change({ fast: fast2 }), !v.fast && cap?.fastEligible !== true),
-    invalidFast ? h6("p", { className: "lpa-error", role: "alert" }, t("fastUnsupported")) : null,
-    h6(
+    invalidFast ? h7("p", { className: "lpa-error", role: "alert" }, t("fastUnsupported")) : null,
+    h7(
       "div",
       { className: "lpa-grid" },
       select("rounds", custom ? "custom" : String(v.rounds), [1, 3, 5].map((n) => ({ id: String(n), name: n })).concat({ id: "custom", name: t("custom") }), (value) => {
         setCustom(value === "custom");
         if (value !== "custom") change({ rounds: Number(value) });
       }),
-      custom ? field("custom", h6("input", { type: "number", min: 1, max: 20, step: 1, value: Number.isFinite(v.rounds) ? v.rounds : "", onChange: (e) => change({ rounds: e.target.value === "" ? NaN : Number(e.target.value) }) })) : null
+      custom ? field("custom", h7("input", { type: "number", min: 1, max: 20, step: 1, value: Number.isFinite(v.rounds) ? v.rounds : "", onChange: (e) => change({ rounds: e.target.value === "" ? NaN : Number(e.target.value) }) })) : null
     ),
-    error ? h6("p", { role: "alert", className: "lpa-error" }, t(error)) : null,
-    h6("button", { className: "lpa-button lpa-button--primary", type: "submit", disabled: p.saving || !p.allowed }, t(p.saving ? "saving" : "save"))
+    error ? h7("p", { role: "alert", className: "lpa-error" }, t(error)) : null,
+    h7("button", { className: "lpa-button lpa-button--primary", type: "submit", disabled: p.saving || !p.allowed }, t(p.saving ? "saving" : "save"))
   );
 }
-var import_react7, h6;
+var import_react8, h7;
 var init_settings = __esm({
   "assist/client/settings.js"() {
-    import_react7 = __toESM(require("react"), 1);
+    import_react8 = __toESM(require("react"), 1);
     init_api();
-    h6 = import_react7.default.createElement;
+    h7 = import_react8.default.createElement;
   }
 });
 
@@ -1153,9 +1495,9 @@ function createSettingsDraft(config) {
 function editSettingsDraft(state, config) {
   return { config: { ...config }, version: state.version + 1, dirty: true };
 }
-function acceptSettingsSave(state, version, config) {
-  if (state.version !== version) return state;
-  return { config: { ...config }, version, dirty: false };
+function acceptSettingsSave(state, version2, config) {
+  if (state.version !== version2) return state;
+  return { config: { ...config }, version: version2, dirty: false };
 }
 function createSettingsRequests() {
   let closed = false;
@@ -1186,12 +1528,12 @@ var init_settings_page_state = __esm({
 
 // assist/client/settings-page.js
 function FeatureSettings({ feature, host, sessionId, p, allowed, onSaved }) {
-  const [draft, setDraft] = import_react8.default.useState(() => createSettingsDraft(host.settings[feature]));
-  const current = import_react8.default.useRef(draft);
+  const [draft, setDraft] = import_react9.default.useState(() => createSettingsDraft(host.settings[feature]));
+  const current = import_react9.default.useRef(draft);
   current.current = draft;
-  const [saving, setSaving] = import_react8.default.useState(false), [notice, setNotice] = import_react8.default.useState(null);
-  const scope = import_react8.default.useRef(null), inFlight = import_react8.default.useRef(false);
-  import_react8.default.useEffect(() => {
+  const [saving, setSaving] = import_react9.default.useState(false), [notice, setNotice] = import_react9.default.useState(null);
+  const scope = import_react9.default.useRef(null), inFlight = import_react9.default.useRef(false);
+  import_react9.default.useEffect(() => {
     scope.current = createSettingsRequests();
     inFlight.current = false;
     return () => scope.current.close();
@@ -1206,7 +1548,7 @@ function FeatureSettings({ feature, host, sessionId, p, allowed, onSaved }) {
   };
   async function save(config) {
     if (!allowed || inFlight.current || !scope.current) return;
-    const request = scope.current.begin(), version = current.current.version;
+    const request = scope.current.begin(), version2 = current.current.version;
     inFlight.current = true;
     setSaving(true);
     setNotice(null);
@@ -1214,7 +1556,7 @@ function FeatureSettings({ feature, host, sessionId, p, allowed, onSaved }) {
       const value = await p.assistSend("save", sessionId, { feature, config }, request.signal);
       if (!request.valid()) return;
       onSaved(feature, value);
-      const next = acceptSettingsSave(current.current, version, value.settings[feature]);
+      const next = acceptSettingsSave(current.current, version2, value.settings[feature]);
       current.current = next;
       setDraft(next);
       if (!next.dirty) setNotice("saved");
@@ -1231,24 +1573,24 @@ function FeatureSettings({ feature, host, sessionId, p, allowed, onSaved }) {
     }
   }
   const noticeValue = notice ?? options.error;
-  return h7(
+  return h8(
     "section",
     { className: "lpa-feature", "aria-label": p.t(feature) },
-    h7("h2", { className: "lpa-feature-title" }, p.t(feature)),
-    h7("p", { className: "lpa-note" }, p.t(feature === "suggest" ? "suggestContext" : "enhanceOriginal")),
-    h7(Settings, { t: p.t, config: draft.config, catalog: options.catalog, capabilities: options.capabilities, allowed, saving, onChange: edit, save }),
-    h7(
+    h8("h2", { className: "lpa-feature-title" }, p.t(feature)),
+    h8("p", { className: "lpa-note" }, p.t(feature === "suggest" ? "suggestContext" : "enhanceOriginal")),
+    h8(Settings, { t: p.t, config: draft.config, catalog: options.catalog, capabilities: options.capabilities, allowed, saving, onChange: edit, save }),
+    h8(
       "div",
       { className: "lpa-settings-feedback" },
-      draft.dirty ? h7("p", { className: "lpa-note" }, p.t("settingsChanged")) : null,
-      noticeValue ? h7("p", { role: "status", className: noticeValue === "saved" ? "lpa-note" : "lpa-error" }, p.t(typeof noticeValue === "string" ? noticeValue : errorKey(noticeValue))) : null
+      draft.dirty ? h8("p", { className: "lpa-note" }, p.t("settingsChanged")) : null,
+      noticeValue ? h8("p", { role: "status", className: noticeValue === "saved" ? "lpa-note" : "lpa-error" }, p.t(typeof noticeValue === "string" ? noticeValue : errorKey(noticeValue))) : null
     )
   );
 }
 function SessionSettings({ sessionId, p }) {
   const allowed = p.useSessionAccess(sessionId, "commands/execute");
-  const [host, setHost] = import_react8.default.useState(null), [error, setError] = import_react8.default.useState(null);
-  import_react8.default.useEffect(() => {
+  const [host, setHost] = import_react9.default.useState(null), [error, setError] = import_react9.default.useState(null);
+  import_react9.default.useEffect(() => {
     const abort = new AbortController();
     setHost(null);
     setError(null);
@@ -1260,35 +1602,37 @@ function SessionSettings({ sessionId, p }) {
     return () => abort.abort();
   }, [sessionId, p.assistSend]);
   const onSaved = (feature, value) => setHost((old) => ({ ...old, settings: { ...old.settings, [feature]: value.settings[feature] } }));
-  return h7(
-    import_react8.default.Fragment,
+  return h8(
+    import_react9.default.Fragment,
     null,
-    h7("p", { className: "lpa-note" }, p.t("editingSession"), ": ", h7("code", null, sessionId)),
-    !allowed ? h7("p", { className: "lpa-note" }, p.t("access")) : null,
-    error ? h7("p", { className: "lpa-error", role: "alert" }, p.t(errorKey(error))) : null,
-    !host && !error ? h7("p", { role: "status" }, p.t("loading")) : null,
-    host ? h7("div", { className: "lpa-settings-cards" }, ["suggest", "enhance"].map((feature) => h7(FeatureSettings, { key: feature, feature, host, sessionId, p, allowed, onSaved }))) : null
+    h8("p", { className: "lpa-note" }, p.t("editingSession"), ": ", h8("code", null, sessionId)),
+    !allowed ? h8("p", { className: "lpa-note" }, p.t("access")) : null,
+    error ? h8("p", { className: "lpa-error", role: "alert" }, p.t(errorKey(error))) : null,
+    !host && !error ? h8("p", { role: "status" }, p.t("loading")) : null,
+    host ? h8("div", { className: "lpa-settings-cards" }, ["suggest", "enhance"].map((feature) => h8(FeatureSettings, { key: feature, feature, host, sessionId, p, allowed, onSaved }))) : null
   );
 }
 function SettingsPage(p) {
-  const target = import_react8.default.useSyncExternalStore(p.targetSource.subscribe, p.targetSource.getSnapshot, p.targetSource.getSnapshot);
-  return h7(
+  const target = import_react9.default.useSyncExternalStore(p.targetSource.subscribe, p.targetSource.getSnapshot, p.targetSource.getSnapshot);
+  return h8(
     "section",
     { className: "lpa lpa-settings-page", "aria-label": p.t("title") },
-    h7("header", { className: "lpa-settings-header" }, h7("h1", null, p.t("title")), h7("button", { type: "button", className: "lpa-button", onClick: p.returnToConversation }, p.t("returnConversation"))),
-    h7("p", { className: "lpa-note" }, p.t("sessionScope")),
-    target.sessionId ? h7(SessionSettings, { key: target.sessionId, sessionId: target.sessionId, p }) : h7("p", { role: "status" }, p.t("chooseSession"))
+    h8("header", { className: "lpa-settings-header" }, h8("h1", null, p.t("title")), h8("button", { type: "button", className: "lpa-button", onClick: p.returnToConversation }, p.t("returnConversation"))),
+    h8("p", { className: "lpa-note" }, p.t("sessionScope")),
+    target.sessionId ? h8(SessionSettings, { key: target.sessionId, sessionId: target.sessionId, p }) : h8("p", { role: "status" }, p.t("chooseSession")),
+    h8(UpdatePanel, { t: p.t })
   );
 }
-var import_react8, h7;
+var import_react9, h8;
 var init_settings_page = __esm({
   "assist/client/settings-page.js"() {
-    import_react8 = __toESM(require("react"), 1);
+    init_update_panel();
+    import_react9 = __toESM(require("react"), 1);
     init_settings();
     init_runtime();
     init_api();
     init_settings_page_state();
-    h7 = import_react8.default.createElement;
+    h8 = import_react9.default.createElement;
   }
 });
 
@@ -1316,10 +1660,10 @@ __export(client_exports, {
   installAssist: () => installAssist
 });
 function AssistIcon({ size = 20 }) {
-  return h8("svg", { width: size, height: size, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: 1.7, "aria-hidden": true }, h8("path", { d: "M4 5h10M4 10h7M4 15h6M14 4v4m-2-2h4M17 10l3 3-7 7H10v-3Z" }));
+  return h9("svg", { width: size, height: size, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: 1.7, "aria-hidden": true }, h9("path", { d: "M4 5h10M4 10h7M4 15h6M14 4v4m-2-2h4M17 10l3 3-7 7H10v-3Z" }));
 }
 function SettingsSurface(p) {
-  return h8(import_react9.default.Fragment, null, h8("style", null, css), h8(SettingsPage, p));
+  return h9(import_react10.default.Fragment, null, h9("style", null, css), h9(SettingsPage, p));
 }
 function installAssist(ctx) {
   ctx.effect(() => ctx.locale.register(NS, dictionaries));
@@ -1350,10 +1694,10 @@ function installAssist(ctx) {
   ctx.slots.inject("conversation.input.right", () => ctx.slots.register({ name: "conversation.input.right", id: "local-next-question-action", order: 1010, label: dictionaries.en.suggest, locale: NS, inject: inject2 }, SuggestButton));
   ctx.slots.inject("conversation.input.dock", () => ctx.slots.register({ name: "conversation.input.dock", id: "local-prompt-assist-results", order: 50, label, locale: NS, inject: inject2 }, AssistPanel));
 }
-var import_react9, h8;
+var import_react10, h9;
 var init_client = __esm({
   "assist/client/index.js"() {
-    import_react9 = __toESM(require("react"), 1);
+    import_react10 = __toESM(require("react"), 1);
     init_enhance_action();
     init_enhance_button();
     init_suggest_button();
@@ -1364,7 +1708,7 @@ var init_client = __esm({
     init_settings_page();
     init_style();
     init_settings_target();
-    h8 = import_react9.default.createElement;
+    h9 = import_react10.default.createElement;
   }
 });
 
@@ -1384,8 +1728,8 @@ init_identity();
 
 // client-fast-core.js
 function createFast(require2) {
-  let React10;
-  let h9;
+  let React11;
+  let h10;
   const NS2 = "local-openai-fast";
   const quietCommandNames2 = Object.freeze(["openai-fast", "openai-fast-ui-health"]);
   function HiddenFastCommand2() {
@@ -1480,8 +1824,8 @@ function createFast(require2) {
       .local-openai-fast__error{position:absolute;bottom:34px;right:0;max-width:240px;width:max-content;padding:8px 10px;border:1px solid var(--dsw-alias-border-l2);border-radius:7px;background:var(--dsw-alias-bg-overlay);color:var(--dsw-alias-state-error-primary);font-size:12px;line-height:18px;z-index:20}
     `;
   function useDefaultSelection(remote) {
-    const [selection, setSelection] = React10.useState(null);
-    React10.useEffect(() => {
+    const [selection, setSelection] = React11.useState(null);
+    React11.useEffect(() => {
       let active = true;
       remote.session.modelCatalog().then((result) => {
         if (active && result.ok) setSelection(result.value.default);
@@ -1494,24 +1838,24 @@ function createFast(require2) {
     return selection;
   }
   function FastToggle(props) {
-    const fastState = React10.useSyncExternalStore(props.fastSource.subscribe, props.fastSource.getSnapshot, props.fastSource.getSnapshot);
-    const modelState = React10.useSyncExternalStore(props.modelSource.subscribe, props.modelSource.getSnapshot, props.modelSource.getSnapshot);
+    const fastState = React11.useSyncExternalStore(props.fastSource.subscribe, props.fastSource.getSnapshot, props.fastSource.getSnapshot);
+    const modelState = React11.useSyncExternalStore(props.modelSource.subscribe, props.modelSource.getSnapshot, props.modelSource.getSnapshot);
     const selected = modelState?.next ?? null;
     const defaultSelection = useDefaultSelection(props.remote);
-    const sessionState = React10.useSyncExternalStore(props.sessionSource.subscribe, props.sessionSource.getSnapshot, props.sessionSource.getSnapshot);
+    const sessionState = React11.useSyncExternalStore(props.sessionSource.subscribe, props.sessionSource.getSnapshot, props.sessionSource.getSnapshot);
     const unavailable = Boolean(sessionState?.subagent) || sessionState?.removed === true;
     const allowed = props.useAccess("commands/execute");
     const { visible, enabled } = derivePresentation2(fastState, selected, defaultSelection);
-    const [interaction, setInteraction] = React10.useState({ enabled: null, pending: false });
-    const [error, setError] = React10.useState("");
-    const alive = React10.useRef(true);
-    React10.useEffect(() => {
+    const [interaction, setInteraction] = React11.useState({ enabled: null, pending: false });
+    const [error, setError] = React11.useState("");
+    const alive = React11.useRef(true);
+    React11.useEffect(() => {
       alive.current = true;
       return () => {
         alive.current = false;
       };
     }, []);
-    const controller = React10.useMemo(() => createToggleController2({
+    const controller = React11.useMemo(() => createToggleController2({
       initial: enabled,
       send: async (next) => {
         const result = await props.remote.commands.execute(
@@ -1533,7 +1877,7 @@ function createFast(require2) {
         });
       }
     }), [props.remote, props.sessionId]);
-    React10.useEffect(() => controller.sync(enabled), [controller, enabled]);
+    React11.useEffect(() => controller.sync(enabled), [controller, enabled]);
     const checked = interaction.enabled ?? enabled;
     if (!visible || unavailable) return null;
     function toggle() {
@@ -1541,11 +1885,11 @@ function createFast(require2) {
       controller.toggle().catch(() => {
       });
     }
-    return h9(
+    return h10(
       "span",
       { className: "local-openai-fast" },
-      h9("style", null, css2),
-      h9("button", {
+      h10("style", null, css2),
+      h10("button", {
         type: "button",
         role: "switch",
         className: "local-openai-fast__button",
@@ -1555,10 +1899,10 @@ function createFast(require2) {
         disabled: !allowed,
         title: props.t(interaction.pending ? "saving" : checked ? "on" : "off"),
         onClick: toggle
-      }, h9(
+      }, h10(
         "svg",
         { viewBox: "0 0 20 20", width: 14, height: 14, fill: "none", "aria-hidden": true },
-        h9("path", {
+        h10("path", {
           d: "M11.5 2 4 11h5l-.5 7L16 8h-5l.5-6Z",
           stroke: "currentColor",
           strokeWidth: 1.5,
@@ -1566,7 +1910,7 @@ function createFast(require2) {
           fill: checked ? "currentColor" : "none"
         })
       ), props.t("label")),
-      error ? h9("span", { role: "alert", className: "local-openai-fast__error" }, error) : null
+      error ? h10("span", { role: "alert", className: "local-openai-fast__error" }, error) : null
     );
   }
   return {
@@ -1577,8 +1921,8 @@ function createFast(require2) {
     HiddenFastCommand: HiddenFastCommand2,
     inject: ["slots", "locale", "sessions", "remote", "remote.commands", "remote.session"],
     apply(ctx) {
-      React10 = require2("react");
-      h9 = React10.createElement;
+      React11 = require2("react");
+      h10 = React11.createElement;
       ctx.effect(() => ctx.locale.register(NS2, dictionaries2));
       ctx.slots.inject("conversation.chat.commandview", () => quietCommandNames2.map((key) => ctx.slots.register({ name: "conversation.chat.commandview", key }, HiddenFastCommand2)));
       const readyBindings = /* @__PURE__ */ new WeakSet();
@@ -1586,7 +1930,7 @@ function createFast(require2) {
         name: "conversation.input.right",
         id: "local-openai-fast",
         order: 1020,
-        label: "OpenAI Fast 1.2.7",
+        label: "OpenAI Fast 1.2.8",
         locale: NS2,
         inject(sessionId) {
           const binding = ctx.sessions.binding(sessionId);

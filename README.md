@@ -6,7 +6,7 @@ Provides prompt enhancement, next-question suggestions, and OpenAI Fast accelera
 
 A plugin bundle for the DeepSeek Harness (DSH) Web GUI. Enhancement and suggestions are independent features: enable either or both for the conversation you choose. Settings live on the sidebar page, not in a composer popup.
 
-> **v1.2.7:** removes the exact prerelease lock and future-version ceiling. Activation, settings reads and Client slot registration were verified on Windows DSH `0.2.1-rc.2`. Real adapter checks cover rc.1 and rc.2; full GUI/provider acceptance and macOS/Linux DSH runtime remain unverified. This is not an npm release or a community-catalog listing.
+> **v1.2.8:** adds an explicit stable-release check and manual-upgrade guidance. It never downloads or installs an update. The default branch is the stable distribution channel; development stays on separate branches.
 
 ## Compatibility policy
 
@@ -24,7 +24,7 @@ Version admission uses `engines.dsh: >=0.2.1-rc.1`. This admits newer RC, patch,
 Open **Plugins** in DSH, choose the install action, and enter this package target:
 
 ```text
-github:Syngnat/dsh-prompt-assist#v1.2.7
+github:Syngnat/dsh-prompt-assist
 ```
 
 The agent-facing equivalent, when plugin management is available and authorized, is:
@@ -32,17 +32,13 @@ The agent-facing equivalent, when plugin management is available and authorized,
 ```js
 plugin_manager({
   action: "install_bundle",
-  target: "github:Syngnat/dsh-prompt-assist#v1.2.7"
+  target: "github:Syngnat/dsh-prompt-assist"
 })
 ```
 
-For an immutable commit pin, use:
+No version number is needed. DSH installs the default branch, not GitHub Releases automatically. This repository keeps `main` at the latest validated stable release, including prebuilt runtime files. Development and candidates stay on other branches. An existing installation does not automatically follow new commits.
 
-```text
-git+https://github.com/Syngnat/dsh-prompt-assist.git#<full-40-character-commit-SHA>
-```
-
-Do not enter a GitHub `/tree/` page or the bare `Syngnat/dsh-prompt-assist` shorthand. DSH accepts a `github:` target or a Git repository URL with a tag/commit fragment.
+Do not enter a GitHub `/tree/` page or the bare `Syngnat/dsh-prompt-assist` shorthand.
 
 Read the installation result. `application: applied` confirms Host activation; `restart-required` needs a DSH restart. A successful package download alone does not prove that the browser UI works. If dependency scripts are blocked, review the returned package names before approving them; do not enable scripts globally.
 
@@ -90,6 +86,17 @@ Results stay in the allocated inline composer area instead of a floating overlay
 
 This release does **not** implement native Ghost text, ArrowRight acceptance, or a new Ctrl+Alt+E shortcut. Use the explicit buttons. Output/token and wait limits can stop a request; reasoning may consume the same output budget. The plugin does not automatically retry paid requests or change the reasoning effort to work around a limit.
 
+## Check for stable updates
+
+Open **Prompt assist** in the sidebar and find **Version and updates** below the feature settings. No conversation selection is required for this global section.
+
+- Opening the page reads only the Host's in-memory status. There is no startup check, background polling or scheduled network check.
+- Click **Check for updates** to query this repository's public GitHub latest-release endpoint. Drafts and prereleases are rejected. The result distinguishes a newer stable version, the same version, a locally newer version, and a failed check.
+- The section shows current/latest versions, the check time, a release link, the fixed installation address and manual-upgrade instructions. A failed check is not reported as up to date.
+- Checks time out after 10 seconds, limit response size, coalesce concurrent requests and use a short 30-second cooldown. The shared status is ephemeral and resets when the Host/plugin restarts.
+- Checking sends no conversation, draft, file, provider credentials or model request. GitHub receives ordinary network metadata such as the Host IP and request headers.
+- **No update is downloaded or installed.** The built-in DSH plugin page is not given an automatic update capability by this feature.
+
 ## Privacy and security
 
 Generation sends the draft, the selected complete Q&A context, visible reference names, and any explicitly authorized file content to **the provider you selected in DSH**. Review those contents before requesting assistance.
@@ -98,23 +105,24 @@ This plugin does not send data to a developer-operated server and does not add t
 
 ## Upgrade and remove
 
-1. Keep a normal backup of your DSH profile and session data. Record any custom feature settings you need.
-2. In **Plugins**, identify the existing bundle by its manifest name, `@local/dsh-openai-fast`. If DSH reports it already installed, remove that dependency before installing the new tagged target.
-3. Install the new tag and follow the returned restart/application status. Do not repoint an existing release tag to new code.
+1. Keep a normal backup of your DSH profile and session data. Save drafts and feature settings before upgrading.
+2. In **Plugins**, identify the existing bundle by its manifest name, `@local/dsh-openai-fast`. Remove the old plugin dependency before adding the same unversioned GitHub target again. Do not delete profile or session data.
+3. Install using `github:Syngnat/dsh-prompt-assist` and follow the returned restart/application status. New releases do not silently update an existing installation.
 
 For existing local users, the package and projection identities are retained. Upgrading the plugin dependency does not delete session records or require rewriting your provider/source configuration. Existing profile overrides can still affect activation. Profiles without live reload may require stopping DSH before removal and restarting after installation. A backup remains prudent; this is not a guarantee of compatibility with future DSH versions.
 
 ### Moving from an existing local-directory installation
 
-A long-running DSH process can retain the old local package directory after switching the same package name to an archive or GitHub source. If installation reports an old-path ENOENT, do not copy generated files into that old directory. Remove the old dependency, fully quit and restart DSH, then install the tagged GitHub target. Session records and feature identities are unchanged.
+A long-running DSH process can retain the old local package directory after switching the same package name to an archive or GitHub source. If installation reports an old-path ENOENT, do not copy generated files into that old directory. Remove the old dependency, fully quit and restart DSH, then install the unversioned GitHub target. Session records and feature identities are unchanged.
 
 ## Development
 
-Use a standalone checkout with Node.js 22+ and pnpm:
+Use a standalone checkout with Node.js 22+ and pnpm. Create a development branch before editing:
 
 ```sh
 git clone https://github.com/Syngnat/dsh-prompt-assist.git
 cd dsh-prompt-assist
+git switch -c feat/my-change
 pnpm install --ignore-scripts
 node build.mjs
 node --test tests/*.test.js
@@ -124,6 +132,8 @@ The build emits the versioned Host artifact and the Client artifacts declared by
 
 Tests use Node built-ins and mocked/offline transports. Passing unit tests is not a visual acceptance result and does not verify a live model route. Do not add paid model requests to routine tests.
 
+Maintainers: follow the gated [stable release procedure](<RELEASING.md>). Never commit candidate work directly to `main`.
+
 ## Validation status
 
 | Area | Release status |
@@ -131,11 +141,12 @@ Tests use Node built-ins and mocked/offline transports. Passing unit tests is no
 | GitHub distribution | Prebuilt tag and release assets; see the GitHub release for download verification |
 | Windows DSH `0.2.1-rc.2` | Host activation, retained settings and live Client slot registration verified |
 | Real DSH rc.1 / rc.2 adapter contracts | Both CI jobs passed without model calls |
-| Windows settings, inline results, and provider workflow | Pending recorded end-to-end/UI acceptance |
-| macOS and Linux | CI build and 239 offline tests passed; DSH runtime not tested |
+| Windows update section | Real Chrome click → authenticated Host route → GitHub stable metadata verified in an isolated DSH rc.2 profile; guide and rendered layout checked |
+| Existing assistance/provider workflow | No new paid-model end-to-end test in this release |
+| macOS and Linux | CI build and the offline test suite passed; DSH runtime not tested |
 | Independent security audit | Not performed/claimed |
 
-Build and 239 offline tests passed on Windows, macOS and Linux in [GitHub Actions](https://github.com/Syngnat/dsh-prompt-assist/actions/runs/39042244474). The runtime smoke used an isolated home/profile and made no model request; it is not a visual or paid-model acceptance test.
+Build and 239 offline tests passed on Windows, macOS and Linux in [GitHub Actions](https://github.com/Syngnat/dsh-prompt-assist/actions). The update check was exercised in a real isolated DSH rc.2 Web UI with Chrome, including the rendered section and manual guide, with no browser console errors. No paid-model request was made; this is not full acceptance of all existing assistance features.
 
 ## License
 

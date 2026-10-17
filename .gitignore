@@ -4,3 +4,6 @@ node_modules/
 .release-check/
 
 .compat-runtime/
+
+output/playwright/
+.playwright-cli/

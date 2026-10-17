@@ -22,7 +22,7 @@ jobs:
       - run: pnpm install --frozen-lockfile --ignore-scripts
       - run: node build.mjs
       - run: node --test tests/*.test.js
-      - run: git diff --exit-code -- client.js client-runtime.js host-v1.2.7.js
+      - run: node scripts/check-built-artifacts.mjs
   dsh-contract:
     runs-on: ubuntu-latest
     strategy:

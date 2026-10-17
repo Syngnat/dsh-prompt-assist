@@ -1,3 +1,4 @@
+import {installUpdateHost} from './updates/host.js';
 import {assertRuntimeContract} from './runtime-contract.js';
 import { createRequire } from "node:module";
 import { pathToFileURL } from "node:url";
@@ -8,6 +9,7 @@ import { DEFAULT_PROVIDERS } from "./policy.js";
 import { installAssistHost } from "./assist/bootstrap.js";
 export const inject = [...fastInject, "webServer", "connection", "fs", "workingDirectory", "fileUploads", "attachments", "sessionController"];
 export async function apply(ctx, config = {}) {
+  assertRuntimeContract(ctx);
   const adapterEntry = await resolveAdapterEntry(ctx, config);
   await applyFast(ctx, { ...config, adapterEntry });
   const requireAdapter = createRequire(pathToFileURL(adapterEntry));
@@ -17,4 +19,5 @@ export async function apply(ctx, config = {}) {
   const providers = config.providers ?? [...DEFAULT_PROVIDERS];
   const fastService = new OpenAIFastService(ctx, providers, key => key);
   await installAssistHost(ctx, { z, fastService, providers, createUserMessage });
+  installUpdateHost(ctx);
 }

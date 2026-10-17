@@ -2,6 +2,16 @@
 
 [English](<README.md>) | [简体中文](<README.zh-CN.md>)
 
+## 1.2.8 — Manual stable-update checks
+
+- Add a global Plugin updates section to the Prompt assist settings page: explicit checks, current/latest stable versions, check time, release link, copyable unversioned address and manual-upgrade instructions.
+- No startup/background checks, automatic downloads, installs or one-click-upgrade workflow. UI and read-only tool share one bounded Host service; errors never mean up to date.
+- Keep main as the verified stable channel. Development/candidates use other branches, with exact-commit CI gates and a maintainer-only publishing script that verifies main/tag/latest Release consistency.
+- Connect the existing Host capability preflight to the actual entry before any adapter resolution or mounting, with an entry-level regression test.
+- Keep plugin/persistence identities, auxiliary configuration, main Fast and existing layout unchanged.
+
+中文：新增手动检查稳定版和新版提示；不自动下载安装。对外统一无版本号地址，默认分支只保留已验证稳定版。原配置和功能保持不变。
+
 ## 1.2.7 — Capability-based compatibility
 
 - Replace the exact DSH prerelease pin with a minimum-only requirement: `>=0.2.1-rc.1`. No upper-version cutoff or compatibility exemption.

@@ -1,3 +1,4 @@
+import {UpdatePanel} from "./update-panel.js";
 import React from 'react';
 import {Settings} from './settings.js';
 import {useModelOptions} from './runtime.js';
@@ -58,5 +59,6 @@ export function SettingsPage(p){
  return h('section',{className:'lpa lpa-settings-page','aria-label':p.t('title')},
   h('header',{className:'lpa-settings-header'},h('h1',null,p.t('title')),h('button',{type:'button',className:'lpa-button',onClick:p.returnToConversation},p.t('returnConversation'))),
   h('p',{className:'lpa-note'},p.t('sessionScope')),
-  target.sessionId?h(SessionSettings,{key:target.sessionId,sessionId:target.sessionId,p}):h('p',{role:'status'},p.t('chooseSession')));
+  target.sessionId?h(SessionSettings,{key:target.sessionId,sessionId:target.sessionId,p}):h('p',{role:'status'},p.t('chooseSession')),
+   h(UpdatePanel,{t:p.t}));
 }

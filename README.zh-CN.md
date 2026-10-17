@@ -6,7 +6,7 @@
 
 这是 DeepSeek Harness（DSH）Web GUI 插件包。增强与建议是两项独立功能，可分别启用，也可同时启用。设置位于左侧栏页面，不是输入框弹窗。
 
-> **v1.2.7：** 取消精确预发布版本锁和未来版本上限。Windows DSH `0.2.1-rc.2` 上已验证启用、配置读取和 Client 槽位注册；真实适配器检查覆盖 rc.1 与 rc.2。完整界面/服务商流程及 macOS/Linux DSH 运行时尚未验收。未发布 npm，也未申请社区目录收录。
+> **v1.2.8：** 新增手动检查稳定版和手动升级说明，绝不自动下载安装。默认分支作为稳定分发渠道，开发与候选版本留在其他分支。
 
 ## 兼容策略
 
@@ -24,7 +24,7 @@
 在 DSH 的 **插件** 页面选择安装，填写：
 
 ```text
-github:Syngnat/dsh-prompt-assist#v1.2.7
+github:Syngnat/dsh-prompt-assist
 ```
 
 如果当前环境提供并授权使用插件管理工具，等价调用为：
@@ -32,17 +32,13 @@ github:Syngnat/dsh-prompt-assist#v1.2.7
 ```js
 plugin_manager({
   action: "install_bundle",
-  target: "github:Syngnat/dsh-prompt-assist#v1.2.7"
+  target: "github:Syngnat/dsh-prompt-assist"
 })
 ```
 
-需要固定到不可变 commit 时使用：
+不需要填写版本号。DSH 安装的是仓库默认分支，并非自动解析 GitHub 最新 Release。本仓库通过发布流程确保 `main` 只保留已验证的最新稳定版和预构建文件；开发与候选版本在其他分支。已安装的插件不会自动跟随新提交。
 
-```text
-git+https://github.com/Syngnat/dsh-prompt-assist.git#<完整40位commit-SHA>
-```
-
-不要填写 GitHub `/tree/` 页面地址或裸 `Syngnat/dsh-prompt-assist`。DSH 接受 `github:` 安装目标，或带 tag/commit 片段的 Git 仓库地址。
+不要填写 GitHub `/tree/` 页面地址或裸 `Syngnat/dsh-prompt-assist`。
 
 请检查安装返回结果：`application: applied` 表示 Host 已激活；`restart-required` 表示需要重启 DSH。依赖下载成功不等于浏览器界面已验收。如果依赖构建脚本被阻止，应先核对返回的包名再决定是否授权，不要全局放行脚本。
 
@@ -90,6 +86,17 @@ git+https://github.com/Syngnat/dsh-prompt-assist.git#<完整40位commit-SHA>
 
 当前**不支持**原生 Ghost、→ 采纳，也不新增 Ctrl+Alt+E 快捷键，请使用明确按钮。单次输出预算与等待上限可能中止请求，推理也可能占用输出预算；插件不会自动重试收费请求或修改推理档位来绕过限制。
 
+## 检查稳定版更新
+
+在左侧 **提示词辅助** 页面底部使用 **版本与更新** 区域。这是插件级功能，无需先选择会话。
+
+- 打开页面只读取 Host 内存中的状态，不在启动时检查、不轮询，也没有定时联网任务。
+- 点击 **检查更新** 后才查询本仓库的 GitHub 最新发布信息；拒绝草稿和预发布版本，区分有新稳定版、版本相同、本地版本较新以及检查失败。
+- 展示当前/最新版本、检查时间、发布页链接、固定安装地址和手动升级步骤；检查失败不会被显示为已是最新版。
+- 单次检查最长10秒，限制响应体积，合并并发请求，并有30秒短冷却。结果仅在内存中保留，Host/插件重启后重置。
+- 不发送会话、草稿、文件或服务商凭证，也不调用模型。GitHub仍会收到Host的IP及常规HTTP请求头等网络信息。
+- **不下载或安装更新。** 此功能不会给DSH原生插件管理页新增自动升级能力。
+
 ## 隐私与安全
 
 请求会把草稿、选定的完整 QA 上下文、可见引用名，以及明确授权读取的文件内容发送到 **DSH 中选择的服务商**。请在请求前确认这些内容适合发送。
@@ -98,15 +105,15 @@ git+https://github.com/Syngnat/dsh-prompt-assist.git#<完整40位commit-SHA>
 
 ## 升级与移除
 
-1. 按常规备份 DSH profile 和会话数据，记录需要保留的自定义功能设置。
-2. 在 **插件** 页面按 manifest 包名 `@local/dsh-openai-fast` 找到已安装包。若提示已安装，先移除该依赖，再安装新的 tag。
-3. 依据返回的 application / 重启提示完成更新。不要把已有发布 tag 重新指向另一份代码。
+1. 按常规备份 DSH profile 和会话数据，先保存草稿和功能设置。
+2. 在 **插件** 页面按 manifest 包名 `@local/dsh-openai-fast` 找到已安装包。先移除旧插件依赖，再使用同一个无版本号地址添加；不要删除profile或会话数据。
+3. 使用 `github:Syngnat/dsh-prompt-assist` 安装，依据 application / 重启提示完成更新；发布新版不会自动修改现有安装。
 
 已有本机用户的包标识与投影标识保持不变。替换插件依赖不会删除会话记录，也不要求重写已有服务商/source 配置；既有 profile override 仍可能影响启用状态。不支持热重载的 profile 可能需要先停止 DSH 再移除，安装后重新启动。仍建议备份，这不代表承诺未来 DSH 版本兼容。
 
 ### 从旧本地目录版本迁移
 
-长期运行的 DSH 可能在同包名由本地目录切换至压缩包/GitHub 源时仍缓存旧目录。若出现指向旧目录的 ENOENT，不要往旧目录补放产物掩盖问题。先移除旧依赖，完全退出并重启 DSH，再安装带 tag 的 GitHub 目标。会话记录和功能标识保持不变。
+长期运行的 DSH 可能在同包名由本地目录切换至压缩包/GitHub 源时仍缓存旧目录。若出现指向旧目录的 ENOENT，不要往旧目录补放产物掩盖问题。先移除旧依赖，完全退出并重启 DSH，再安装无版本号的 GitHub 目标。会话记录和功能标识保持不变。
 
 ## 开发
 
@@ -115,6 +122,7 @@ git+https://github.com/Syngnat/dsh-prompt-assist.git#<完整40位commit-SHA>
 ```sh
 git clone https://github.com/Syngnat/dsh-prompt-assist.git
 cd dsh-prompt-assist
+git switch -c feat/my-change
 pnpm install --ignore-scripts
 node build.mjs
 node --test tests/*.test.js
@@ -124,6 +132,8 @@ node --test tests/*.test.js
 
 测试采用 Node 内置测试与模拟/离线传输。单测通过不等于视觉验收，也不验证真实模型路由；不要给常规测试加入真实收费模型请求。
 
+维护者请遵守[稳定版发布流程](<RELEASING.md>)，不要把开发或候选改动直接提交到 `main`。
+
 ## 验收状态
 
 | 项目 | 发布状态 |
@@ -131,11 +141,12 @@ node --test tests/*.test.js
 | GitHub 分发 | 预构建 tag 与发布附件；下载验证见 GitHub Release |
 | Windows / DSH `0.2.1-rc.2` | 已验证 Host 启用、原配置读取和实时 Client 槽位注册 |
 | 真实 DSH rc.1 / rc.2 适配器契约 | 两个 CI 任务均通过，无模型调用 |
-| Windows 设置页、行内结果与服务商使用流程 | 待补端到端/界面验收记录 |
-| macOS / Linux | CI 构建与 239 项离线测试通过；DSH 运行时未测试 |
+| Windows 更新区 | 已在独立 DSH rc.2 中完成真实 Chrome 点击→已认证 Host→GitHub 稳定版查询，并检查实际渲染和手动指南 |
+| 原有辅助/服务商流程 | 本次未新增真实收费模型端到端验收 |
+| macOS / Linux | CI 构建与 离线测试套件通过；DSH 运行时未测试 |
 | 独立安全审计 | 未进行，不作此声明 |
 
-Windows、macOS、Linux 的构建与 239 项离线测试均在 [GitHub Actions](https://github.com/Syngnat/dsh-prompt-assist/actions/runs/39042244474) 通过。运行时冒烟使用独立 home/profile，没有发送模型请求；不等同于视觉或收费模型验收。
+Windows、macOS、Linux 的构建与 239 项离线测试均在 [GitHub Actions](https://github.com/Syngnat/dsh-prompt-assist/actions) 通过。更新区已在独立 DSH rc.2 的真实 Chrome 页面验证点击、接口、渲染与手动指南，浏览器控制台无错误。没有发送模型请求；不代表原有全部辅助功能的收费模型端到端验收。
 
 ## 许可证
 
