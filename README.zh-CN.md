@@ -6,7 +6,7 @@
 
 这是 DeepSeek Harness（DSH）Web GUI 插件包。增强与建议是两项独立功能，可分别启用，也可同时启用。设置位于左侧栏页面，不是输入框弹窗。
 
-> **GitHub 分发版：** `v1.2.7` 携带预构建文件。Windows 上的独立 DSH `0.2.1-rc.1` profile 已通过安装、schema 导入、Host 启动及已认证插件接口冒烟检查，未调用模型。完整界面/服务商流程及 macOS/Linux 运行时尚未验收。本项目未发布 npm，也未申请社区目录收录。
+> **v1.2.7：** 取消精确预发布版本锁和未来版本上限。Windows DSH `0.2.1-rc.2` 上已验证启用、配置读取和 Client 槽位注册；真实适配器检查覆盖 rc.1 与 rc.2。完整界面/服务商流程及 macOS/Linux DSH 运行时尚未验收。未发布 npm，也未申请社区目录收录。
 
 ## 兼容策略
 
@@ -129,12 +129,13 @@ node --test tests/*.test.js
 | 项目 | 发布状态 |
 | --- | --- |
 | GitHub 分发 | 预构建 tag 与发布附件；下载验证见 GitHub Release |
-| Windows / DSH `0.2.1-rc.1` 干净安装 | 已通过包安装、完整 schema 导入、全新 Host 启动和已认证接口冒烟 |
+| Windows / DSH `0.2.1-rc.2` | 已验证 Host 启用、原配置读取和实时 Client 槽位注册 |
+| 真实 DSH rc.1 / rc.2 适配器契约 | 两个 CI 任务均通过，无模型调用 |
 | Windows 设置页、行内结果与服务商使用流程 | 待补端到端/界面验收记录 |
-| macOS / Linux | CI 构建与 221 项离线测试通过；DSH 运行时未测试 |
+| macOS / Linux | CI 构建与 239 项离线测试通过；DSH 运行时未测试 |
 | 独立安全审计 | 未进行，不作此声明 |
 
-Windows、macOS、Linux 的构建与 221 项离线测试均在 [GitHub Actions](https://github.com/Syngnat/dsh-prompt-assist/actions/runs/39039987244) 通过。运行时冒烟使用独立 home/profile，没有发送模型请求；不等同于视觉或收费模型验收。
+Windows、macOS、Linux 的构建与 239 项离线测试均在 [GitHub Actions](https://github.com/Syngnat/dsh-prompt-assist/actions/runs/39042244474) 通过。运行时冒烟使用独立 home/profile，没有发送模型请求；不等同于视觉或收费模型验收。
 
 ## 许可证
 

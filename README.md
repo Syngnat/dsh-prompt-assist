@@ -6,7 +6,7 @@ Provides prompt enhancement, next-question suggestions, and OpenAI Fast accelera
 
 A plugin bundle for the DeepSeek Harness (DSH) Web GUI. Enhancement and suggestions are independent features: enable either or both for the conversation you choose. Settings live on the sidebar page, not in a composer popup.
 
-> **GitHub distribution:** `v1.2.7` includes prebuilt runtime files. On Windows, a clean DSH `0.2.1-rc.1` profile passed package installation, schema import, startup, and an authenticated plugin RPC smoke test without a model call. Full GUI/provider acceptance and macOS/Linux runtime testing remain unverified. This is not an npm release or a community-catalog listing.
+> **v1.2.7:** removes the exact prerelease lock and future-version ceiling. Activation, settings reads and Client slot registration were verified on Windows DSH `0.2.1-rc.2`. Real adapter checks cover rc.1 and rc.2; full GUI/provider acceptance and macOS/Linux DSH runtime remain unverified. This is not an npm release or a community-catalog listing.
 
 ## Compatibility policy
 
@@ -129,12 +129,13 @@ Tests use Node built-ins and mocked/offline transports. Passing unit tests is no
 | Area | Release status |
 | --- | --- |
 | GitHub distribution | Prebuilt tag and release assets; see the GitHub release for download verification |
-| Clean Windows installation on DSH `0.2.1-rc.1` | Passed: package install, complete schema import, fresh Host startup and authenticated RPC smoke |
+| Windows DSH `0.2.1-rc.2` | Host activation, retained settings and live Client slot registration verified |
+| Real DSH rc.1 / rc.2 adapter contracts | Both CI jobs passed without model calls |
 | Windows settings, inline results, and provider workflow | Pending recorded end-to-end/UI acceptance |
-| macOS and Linux | CI build and 221 offline tests passed; DSH runtime not tested |
+| macOS and Linux | CI build and 239 offline tests passed; DSH runtime not tested |
 | Independent security audit | Not performed/claimed |
 
-Build and 221 offline tests passed on Windows, macOS and Linux in [GitHub Actions](https://github.com/Syngnat/dsh-prompt-assist/actions/runs/39039987244). The runtime smoke used an isolated home/profile and made no model request; it is not a visual or paid-model acceptance test.
+Build and 239 offline tests passed on Windows, macOS and Linux in [GitHub Actions](https://github.com/Syngnat/dsh-prompt-assist/actions/runs/39042244474). The runtime smoke used an isolated home/profile and made no model request; it is not a visual or paid-model acceptance test.
 
 ## License
 
