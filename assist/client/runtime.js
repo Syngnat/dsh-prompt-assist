@@ -8,7 +8,7 @@ export function useAssistRuntime(p) {
  const wire=React.useSyncExternalStore(p.assistSource.subscribe,p.assistSource.getSnapshot,p.assistSource.getSnapshot);
  const selection=React.useSyncExternalStore(p.assistModel.subscribe,p.assistModel.getSnapshot,p.assistModel.getSnapshot);
  const [host,setHost]=React.useState(null);
- const [result,setResult]=React.useState({pending:null,preview:null,error:null});
+ const [result,setResult]=React.useState({pending:null,preview:null,noSuggestion:null,error:null});
  const [notice,setNotice]=React.useState(null);
  const [saving,setSaving]=React.useState(false);
  const [dirtyFeatures,setDirtyFeatures]=React.useState([]);
@@ -26,7 +26,7 @@ export function useAssistRuntime(p) {
  const route=selection?.next??state?.current;
  const routeKey=JSON.stringify(route??null);
  React.useEffect(()=>{
-  alive.current=true;controller.mount();setHost(null);setDirtyFeatures([]);setNotice(null);setSaving(false);setResult({pending:null,preview:null,error:null});
+  alive.current=true;controller.mount();setHost(null);setDirtyFeatures([]);setNotice(null);setSaving(false);setResult({pending:null,preview:null,noSuggestion:null,error:null});
   p.refreshAssist().catch(()=>{});
   return()=>{alive.current=false;for(const save of saves.current)save.abort();saves.current.clear();controller.dispose();};
  },[p.sessionId,controller,send]);

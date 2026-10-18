@@ -34,7 +34,7 @@ function fixture(t) {
         return { config: Object.freeze({ ...config, reasoningEffort: config.reasoningEffort ?? "high" }), async *stream(options) {
           streams.push(options); const data = JSON.parse(options.messages[0].content[0].text);
           await hooks.stream?.(options, data); options.signal?.throwIfAborted();
-          yield { type: "text-delta", index: 0, text: `generated ${options.sessionId} ${data.draft}` };
+          yield { type: "text-delta", index: 0, text: data.feature === "suggest" ? JSON.stringify({kind:"suggestion",text:`generated ${options.sessionId} ${data.draft}`}) : `generated ${options.sessionId} ${data.draft}` };
           yield { type: "finish", reason: { kind: "stop" } };
         } };
       },

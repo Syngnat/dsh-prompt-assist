@@ -378,6 +378,7 @@ var init_messages = __esm({
         "updates.stepInstall": "\u4F7F\u7528\u4EE5\u4E0B\u65E0 tag \u5B89\u88C5\u5730\u5740\u91CD\u65B0\u6DFB\u52A0\u63D2\u4EF6\uFF1A",
         "updates.stepRestart": "\u6309\u5B89\u88C5\u7ED3\u679C\u63D0\u793A\u64CD\u4F5C\uFF1B\u5982\u679C\u9700\u8981\u6216\u4ECD\u52A0\u8F7D\u65E7\u6A21\u5757\uFF0C\u8BF7\u5B8C\u5168\u9000\u51FA\u5E76\u91CD\u542F DSH\uFF0C\u4EC5\u5237\u65B0\u6D4F\u89C8\u5668\u4E0D\u8DB3\u4EE5\u91CD\u8F7D Host\u3002",
         "updates.backup": "\u6B64\u68C0\u67E5\u5668\u4E0D\u4F1A\u4FEE\u6539\u670D\u52A1\u5546/source \u6570\u636E\u3002\u624B\u52A8\u5347\u7EA7\u524D\u4ECD\u5EFA\u8BAE\u5E38\u89C4\u5907\u4EFD DSH \u914D\u7F6E\u548C\u4F1A\u8BDD\u6570\u636E\u3002",
+        noSuggestion: "\u6682\u65E0\u4E0B\u4E00\u95EE\u5EFA\u8BAE\u3002\u4F60\u53EF\u4EE5\u76F4\u63A5\u8F93\u5165\u65B0\u7684\u95EE\u9898\u3002",
         secondsUnit: "\u79D2",
         streamingShort: "\u751F\u6210\u4E2D",
         showOriginal: "\u67E5\u770B\u539F\u6587",
@@ -508,6 +509,7 @@ var init_messages = __esm({
         "updates.stepInstall": "Add the plugin again using this installation address without a tag:",
         "updates.stepRestart": "Follow the installation result. If required, or if old modules remain loaded, fully quit and restart DSH. A browser refresh alone does not reload the Host.",
         "updates.backup": "This checker does not change provider/source data. Back up normal DSH configuration and session data before a manual upgrade.",
+        noSuggestion: "No next-question suggestion for now. You can type a new question.",
         secondsUnit: "s",
         streamingShort: "Generating",
         showOriginal: "View original",
@@ -619,7 +621,7 @@ var init_result_layout = __esm({
 function shouldShowPanel({ open, result, undo, input, sessionId }) {
   const preview = ownsResult(result?.preview, sessionId);
   const actionableUndo = ownsResult(undo, sessionId) && input.draft === undo.original && input.draftRev === undo.draftRev;
-  return Boolean(open || preview || result?.pending || result?.error || actionableUndo);
+  return Boolean(open || preview || ownsResult(result?.noSuggestion, sessionId) || result?.pending || result?.error || actionableUndo);
 }
 var init_panel_visibility = __esm({
   "assist/client/panel-visibility.js"() {
@@ -692,12 +694,21 @@ var init_api = __esm({
 // assist/client/stream-preview.js
 function streamPreview({ isCurrent, publish, snapshot, sessionId, qaId, feature }) {
   return (text) => {
-    if (!isCurrent() || typeof text !== "string" || text.length > 65536) return;
+    if (feature === "suggest" || !isCurrent() || typeof text !== "string" || text.length > 65536) return;
     publish({ preview: { text, original: snapshot.original, draftRev: snapshot.draftRev, sessionId, qaId, feature, streaming: true, snapshot } });
   };
 }
 var init_stream_preview = __esm({
   "assist/client/stream-preview.js"() {
+  }
+});
+
+// assist/suggestion-result.js
+function isNoSuggestionPlaceholder(text) {
+  return typeof text === "string" && /^(?:暂无(?:下一问)?建议|no suggestions?(?: available)?)[。.!！]?$/iu.test(text.trim());
+}
+var init_suggestion_result = __esm({
+  "assist/suggestion-result.js"() {
   }
 });
 
@@ -716,7 +727,7 @@ function createAssistController(deps) {
   let epoch = 0;
   let disposed = false;
   const requested = /* @__PURE__ */ new Set();
-  const state = { pending: null, preview: null, error: null, trigger: null };
+  const state = { pending: null, preview: null, noSuggestion: null, error: null, trigger: null };
   const publish = (patch) => {
     Object.assign(state, patch);
     deps.publish({ ...state });
@@ -729,7 +740,7 @@ function createAssistController(deps) {
     epoch += 1;
     flight?.abort();
     flight = null;
-    if (state.pending) publish({ pending: null, ...state.preview?.streaming ? { preview: null } : {} });
+    if (state.pending || state.noSuggestion) publish({ pending: null, noSuggestion: null, ...state.preview?.streaming ? { preview: null } : {} });
   };
   const configured = (feature) => current?.settings?.[feature]?.enabled === true && (current.settings[feature].followSession || Boolean(current.settings[feature].provider && current.settings[feature].model));
   function observe(next) {
@@ -822,11 +833,19 @@ function createAssistController(deps) {
         feature
       }));
       if (disposed || abort.signal.aborted || revision !== epoch) return false;
-      if (result.draftRev !== snapshot.draftRev || result.original !== snapshot.original || result.feature !== feature || feature === "suggest" && result.qaId !== qaId || typeof result.text !== "string") {
+      if (!result || result.draftRev !== snapshot.draftRev || result.original !== snapshot.original || result.feature !== feature || feature === "suggest" && result.qaId !== qaId) {
         publish({ error: "stale", preview: null });
         return false;
       }
-      publish({ preview: { ...result, sessionId, snapshot: { ...snapshot, structured: snapshot.structured || result.structured === true } } });
+      const noSuggestion = result.outcome === "no-suggestion";
+      const validText = typeof result.text === "string" && result.text.trim() !== "";
+      const validOutcome = noSuggestion ? feature === "suggest" && result.text === "" : validText && (feature === "suggest" ? (result.outcome === void 0 || result.outcome === "suggestion") && !isNoSuggestionPlaceholder(result.text) : result.outcome === void 0);
+      if (!validOutcome) {
+        publish({ error: "requestError", preview: null, noSuggestion: null });
+        return false;
+      }
+      const receipt = { ...result, sessionId, snapshot: { ...snapshot, structured: snapshot.structured || result.structured === true } };
+      publish(noSuggestion ? { noSuggestion: receipt, preview: null } : { preview: receipt, noSuggestion: null });
       return true;
     } catch (error) {
       if (!disposed && !abort.signal.aborted && revision === epoch) publish({ error, preview: null });
@@ -846,7 +865,7 @@ function createAssistController(deps) {
       current = void 0;
       knownQA = false;
       candidate = null;
-      Object.assign(state, { pending: null, preview: null, error: null, trigger: null });
+      Object.assign(state, { pending: null, preview: null, noSuggestion: null, error: null, trigger: null });
     },
     cancel() {
       candidate = null;
@@ -872,6 +891,7 @@ function createAssistController(deps) {
 var init_controller = __esm({
   "assist/client/controller.js"() {
     init_stream_preview();
+    init_suggestion_result();
     init_api();
     init_editor();
   }
@@ -884,7 +904,7 @@ function useAssistRuntime(p) {
   const wire = import_react3.default.useSyncExternalStore(p.assistSource.subscribe, p.assistSource.getSnapshot, p.assistSource.getSnapshot);
   const selection = import_react3.default.useSyncExternalStore(p.assistModel.subscribe, p.assistModel.getSnapshot, p.assistModel.getSnapshot);
   const [host, setHost] = import_react3.default.useState(null);
-  const [result, setResult] = import_react3.default.useState({ pending: null, preview: null, error: null });
+  const [result, setResult] = import_react3.default.useState({ pending: null, preview: null, noSuggestion: null, error: null });
   const [notice, setNotice] = import_react3.default.useState(null);
   const [saving, setSaving] = import_react3.default.useState(false);
   const [dirtyFeatures, setDirtyFeatures] = import_react3.default.useState([]);
@@ -911,7 +931,7 @@ function useAssistRuntime(p) {
     setDirtyFeatures([]);
     setNotice(null);
     setSaving(false);
-    setResult({ pending: null, preview: null, error: null });
+    setResult({ pending: null, preview: null, noSuggestion: null, error: null });
     p.refreshAssist().catch(() => {
     });
     return () => {
@@ -1026,9 +1046,20 @@ var init_duration = __esm({
 });
 
 // assist/client/preview.js
+function NoSuggestion({ runtime: r, t }) {
+  const value = r.result.noSuggestion;
+  if (!ownsResult(value, r.sessionId) || value.feature !== "suggest" || value.outcome !== "no-suggestion" || value.text !== "") return null;
+  return h3(
+    "div",
+    { className: "lpa-row lpa-note", role: "status" },
+    h3("span", null, t("noSuggestion")),
+    h3("button", { type: "button", className: "lpa-button", onClick: () => r.controller.dismiss() }, t("dismiss"))
+  );
+}
 function Preview({ runtime: r, actions, t, onApplied }) {
   const value = r.result.preview;
   if (!value || !ownsResult(value, r.sessionId)) return null;
+  if (value.feature === "suggest" && (value.outcome !== void 0 && value.outcome !== "suggestion" || typeof value.text !== "string" || !value.text.trim() || isNoSuggestionPlaceholder(value.text))) return null;
   const blocked = value.snapshot.structured;
   const button = (key, action, disabled = false, primary = false) => h3("button", { type: "button", className: "lpa-button" + (primary ? " lpa-button--primary" : ""), onClick: action, disabled }, t(key));
   function apply2() {
@@ -1080,6 +1111,7 @@ function Preview({ runtime: r, actions, t, onApplied }) {
 var import_react4, h3;
 var init_preview = __esm({
   "assist/client/preview.js"() {
+    init_suggestion_result();
     import_react4 = __toESM(require("react"), 1);
     init_duration();
     init_editor();
@@ -1154,6 +1186,7 @@ function AssistPanel(p) {
       setFiles((old) => ({ ...old, [key]: entry }));
     } }),
     r.result.pending && !r.result.preview ? h5("div", { className: "lpa-row lpa-pending", role: "status" }, h5("span", { className: "lpa-pending-mark", "aria-hidden": true }), t(r.result.pending === "suggest" ? "generatingSuggest" : "generating"), button("cancel", () => r.controller.cancel())) : null,
+    h5(NoSuggestion, { runtime: r, t }),
     h5(Preview, { runtime: r, actions: p.inputActions, t, onApplied: setUndo }),
     validUndo ? h5("div", { className: "lpa-undo-actions" }, button("undo", undoApply, !r.allowed)) : null,
     visible && notice ? h5("div", { className: "lpa-row", role: "status" }, h5("span", { className: r.result.error ? "lpa-error" : "lpa-note" }, t(typeof notice === "string" ? notice : errorKey(notice))), button("dismiss", dismiss)) : null
@@ -1933,7 +1966,7 @@ function createFast(require2) {
         name: "conversation.input.right",
         id: "local-openai-fast",
         order: 1020,
-        label: "OpenAI Fast 1.2.9",
+        label: "OpenAI Fast 1.2.10",
         locale: NS2,
         inject(sessionId) {
           const binding = ctx.sessions.binding(sessionId);

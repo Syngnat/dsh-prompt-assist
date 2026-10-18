@@ -1,10 +1,19 @@
+import {isNoSuggestionPlaceholder} from '../suggestion-result.js';
 import React from 'react';
 import {formatDuration} from './duration.js';
 import {applyText,ownsResult} from './editor.js';
 const h=React.createElement;
+export function NoSuggestion({runtime:r,t}){
+ const value=r.result.noSuggestion;
+ if(!ownsResult(value,r.sessionId)||value.feature!=='suggest'||value.outcome!=='no-suggestion'||value.text!=='')return null;
+ return h('div',{className:'lpa-row lpa-note',role:'status'},
+  h('span',null,t('noSuggestion')),
+  h('button',{type:'button',className:'lpa-button',onClick:()=>r.controller.dismiss()},t('dismiss')));
+}
 export function Preview({runtime:r,actions,t,onApplied}){
  const value=r.result.preview;
  if(!value||!ownsResult(value,r.sessionId))return null;
+  if(value.feature==='suggest'&&((value.outcome!==undefined&&value.outcome!=='suggestion')||typeof value.text!=='string'||!value.text.trim()||isNoSuggestionPlaceholder(value.text)))return null;
  const blocked=value.snapshot.structured;
  const button=(key,action,disabled=false,primary=false)=>h('button',{type:'button',className:'lpa-button'+(primary?' lpa-button--primary':''),onClick:action,disabled},t(key));
  function apply(){

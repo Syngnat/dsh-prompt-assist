@@ -2,6 +2,17 @@
 
 [English](<README.md>) | [简体中文](<README.zh-CN.md>)
 
+## 1.2.10 — User-perspective drafting and normal abstention
+
+- Enhancement uses confirmed context, preserves user-to-assistant intent, and retains unresolved core wording instead of inventing self-questions or clarification steps.
+- Next-question rules preserve original user questions and authorization limits; unconfirmed assistant advice is not promoted to user intent.
+- Add a strict suggestion/none model-output protocol. Valid none is a successful, empty-text outcome; empty, malformed, truncated, cancelled and failed responses are not silently converted to none.
+- Buffer suggestion output until validated; show a neutral dismissible no-suggestion status without adopt/copy actions. Enhancement streaming remains unchanged. Context/configuration/session changes invalidate stale results.
+- Add two nine-case semantic reference corpora and offline protocol/cache/transport/controller/SSR regressions: 402 total tests. Reference examples are not real-model results; live semantic and protocol-adherence acceptance remains unperformed.
+- No changes to saved configuration, main Fast, manual update installation policy or time formatting.
+
+中文：修正增强和建议的用户视角；无依据时建议可正常返回“暂无建议”，不作为可采用正文。测试验证机制，不宣称真实模型语义验收通过。
+
 ## 1.2.9 — First-conversation preview layout
 
 - Prevent the complete result card from shrinking inside the native hero flex layout; retain space for header and action buttons.

@@ -1,4 +1,5 @@
 import { streamPreview } from './stream-preview.js';
+import { isNoSuggestionPlaceholder } from '../suggestion-result.js';
 import { configKey, referenceNames } from './api.js';
 import { captureText, canSuggest, sameInput } from './editor.js';
 
@@ -17,7 +18,7 @@ export function createAssistController(deps) {
   let epoch = 0;
   let disposed = false;
   const requested = new Set();
-  const state = { pending: null, preview: null, error: null, trigger: null };
+  const state = { pending: null, preview: null, noSuggestion: null, error: null, trigger: null };
   const publish = patch => { Object.assign(state, patch); deps.publish({ ...state }); };
   const explain = (status, reason) => {
     const trigger = { status, reason, qaId: current?.qaId ?? null, candidate, busy: current?.busy === true };
@@ -27,7 +28,7 @@ export function createAssistController(deps) {
     epoch += 1;
     flight?.abort();
     flight = null;
-    if (state.pending) publish({ pending: null, ...(state.preview?.streaming?{preview:null}:{}) });
+    if (state.pending || state.noSuggestion) publish({ pending: null, noSuggestion: null, ...(state.preview?.streaming?{preview:null}:{}) });
   };
   const configured = feature => current?.settings?.[feature]?.enabled === true
     && (current.settings[feature].followSession || Boolean(current.settings[feature].provider && current.settings[feature].model));
@@ -105,11 +106,22 @@ export function createAssistController(deps) {
       }, abort.signal, streamPreview({isCurrent:()=>!disposed&&!abort.signal.aborted&&revision===epoch,
         publish,snapshot,sessionId,qaId,feature}));
       if (disposed || abort.signal.aborted || revision !== epoch) return false;
-      if (result.draftRev !== snapshot.draftRev || result.original !== snapshot.original
-        || result.feature !== feature || (feature === 'suggest' && result.qaId !== qaId) || typeof result.text !== 'string') {
+      if (!result || result.draftRev !== snapshot.draftRev || result.original !== snapshot.original
+        || result.feature !== feature || (feature === 'suggest' && result.qaId !== qaId)) {
         publish({ error: 'stale', preview: null }); return false;
       }
-      publish({ preview: { ...result, sessionId, snapshot: { ...snapshot, structured: snapshot.structured || result.structured === true } } });
+      const noSuggestion = result.outcome === 'no-suggestion';
+      const validText = typeof result.text === 'string' && result.text.trim() !== '';
+      const validOutcome = noSuggestion
+        ? feature === 'suggest' && result.text === ''
+        : validText && (feature === 'suggest'
+          ? (result.outcome === undefined || result.outcome === 'suggestion') && !isNoSuggestionPlaceholder(result.text)
+          : result.outcome === undefined);
+      if (!validOutcome) {
+        publish({ error: 'requestError', preview: null, noSuggestion: null }); return false;
+      }
+      const receipt = { ...result, sessionId, snapshot: { ...snapshot, structured: snapshot.structured || result.structured === true } };
+      publish(noSuggestion ? { noSuggestion: receipt, preview: null } : { preview: receipt, noSuggestion: null });
       return true;
     } catch (error) {
       if (!disposed && !abort.signal.aborted && revision === epoch) publish({ error, preview: null });
@@ -121,7 +133,7 @@ export function createAssistController(deps) {
 
   return {
     observe, generate,
-    mount() { disposed = false; current = undefined; knownQA = false; candidate = null; Object.assign(state, { pending: null, preview: null, error: null, trigger: null }); },
+    mount() { disposed = false; current = undefined; knownQA = false; candidate = null; Object.assign(state, { pending: null, preview: null, noSuggestion: null, error: null, trigger: null }); },
     cancel() { candidate = null; cancel(); },
     dismiss() { candidate = null; cancel(); publish({ preview: null, error: null }); },
     configurationEdited() { candidate = null; cancel(); publish({ preview: null }); },

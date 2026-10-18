@@ -1,6 +1,5 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createHash } from 'node:crypto';
 import { ENHANCE_ROLE_PROMPT } from '../assist/enhance-role.js';
 import { buildAssistPrompt } from '../assist/prompts.js';
 test('enhancement installs the complete role as system instructions, not draft text',()=>{
@@ -18,6 +17,7 @@ test('multi-turn scattered requirements remain ordered source data, assistant su
  const qa=[{question:'按钮放输入框旁边',answer:'还可以自动发送'}, {question:'不要自动发送，配置仍在面板里',answer:'好'}];
  const value=buildAssistPrompt('enhance','就这样，优化下表达',qa);assert.deepEqual(JSON.parse(value.user).qa,qa);assert.equal(value.system,ENHANCE_ROLE_PROMPT);assert.ok(!value.system.includes('还可以自动发送'));
 });
-test('suggest system prompt is byte-for-byte unchanged from 1.1.8',()=>{
- assert.equal(createHash('sha256').update(buildAssistPrompt('suggest','').system).digest('hex'),'db4cf0a361c6143e465fb58b1089ec91a2d3904df6069820fbf29e19d6f7d89e');
+test('suggest outcome protocol is separate from plain enhancement output',()=>{
+ const suggestion=buildAssistPrompt('suggest','').system;assert.notEqual(suggestion,ENHANCE_ROLE_PROMPT);
+ assert.match(suggestion,/"kind":"none"/);assert.match(ENHANCE_ROLE_PROMPT,/不输出 JSON/);
 });

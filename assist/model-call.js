@@ -1,3 +1,4 @@
+import { parseSuggestionOutput } from './suggestion-result.js';
 import { runWithPriority } from './priority-scope.js';
 import { isOpenAISelection } from '../policy.js';
 
@@ -40,7 +41,7 @@ export async function callAssistModel(ctx, agent, route, prompt, feature, signal
         if (ttftMs === null && chunk.text) ttftMs = performance.now() - started;
         text += chunk.text;
         if (text.length > 65536) throw failure('output-too-large');
-        if (chunk.text) onText?.(text);
+        if (chunk.text && feature !== 'suggest') onText?.(text);
       }
       if (chunk.type === 'finish') {
         if (chunk.reason.kind !== 'stop') throw failure(chunk.reason.kind === 'aborted' ? 'cancelled' : chunk.reason.kind === 'max-tokens' ? 'output-limit' : 'model-failed');
@@ -48,6 +49,8 @@ export async function callAssistModel(ctx, agent, route, prompt, feature, signal
       }
     }
     if (!completed || !text.trim()) throw failure('empty-result');
-    return { text: text.trim(), resolvedReasoningEffort: prepared.config.reasoningEffort ?? '', timing: { ttftMs, totalMs: performance.now() - started } };
+    signal?.throwIfAborted();
+    const result = feature === 'suggest' ? parseSuggestionOutput(text) : { text: text.trim() };
+    return { ...result, resolvedReasoningEffort: prepared.config.reasoningEffort ?? '', timing: { ttftMs, totalMs: performance.now() - started } };
   });
 }

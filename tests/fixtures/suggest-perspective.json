@@ -1,0 +1,181 @@
+[
+  {
+    "id": "reported-unconfirmed-validation",
+    "source": "reported-output-with-synthetic-context",
+    "contextNote": "保留截图建议全文；QA为受控摘要，不声称捕获了原始模型完整输入。拒绝依据是未确认的下一步意愿，不是因为含“是否”。",
+    "qa": [
+      {
+        "question": "只在开发分支修正增强规则并补回归，完成后说明修改及验证结果。发布升级需另行确认。",
+        "answer": "规则已修改，离线测试通过，真实模型尚未验收。发布升级仍待确认。"
+      }
+    ],
+    "expectedKind": "none",
+    "criteria": [
+      "不将助手指出的验证边界自动改写成用户要求讨论验收",
+      "不替用户选择后续工作或授权发布升级"
+    ],
+    "reportedOutput": "在决定是否发布和升级前，是否还需要用真实增强模型对这些回归案例进行语义验收？请说明建议的验收方法、通过标准，以及现有离线测试尚不能验证的部分。先讨论验证方案，发布和升级仍需另行确认。",
+    "rejectedExamples": [
+      "请先确认我下一步是验收还是发布。"
+    ]
+  },
+  {
+    "id": "no-grounded-followup",
+    "source": "synthetic",
+    "qa": [
+      {
+        "question": "把这句话翻译成中文即可。",
+        "answer": "翻译已给出。"
+      }
+    ],
+    "expectedKind": "none",
+    "criteria": [
+      "完成且无后续依据时不凑出任务",
+      "不添加需要我继续做什么之类的自问"
+    ],
+    "rejectedExamples": [
+      "我接下来该做什么？请先确认我的目的。"
+    ]
+  },
+  {
+    "id": "ambiguous-choice",
+    "source": "synthetic",
+    "qa": [
+      {
+        "question": "比较A和B，暂时不选择。",
+        "answer": "已经列出比较，两者各有优缺点。"
+      }
+    ],
+    "expectedKind": "none",
+    "criteria": [
+      "不替用户选择A或B",
+      "不自加二选一步骤"
+    ],
+    "rejectedExamples": [
+      "请执行A。",
+      "请先确认我到底要A还是B。"
+    ]
+  },
+  {
+    "id": "unanswered-user-question",
+    "source": "synthetic",
+    "qa": [
+      {
+        "question": "是否支持离线模式？",
+        "answer": "先介绍一下部署方式，尚未回答离线支持。"
+      }
+    ],
+    "expectedKind": "suggestion",
+    "acceptableExamples": [
+      "是否支持离线模式？请回答这个尚未解答的问题。"
+    ],
+    "criteria": [
+      "保留用户明确提出且未回答的询问",
+      "不能机械禁止是否或把询问改成执行"
+    ],
+    "rejectedExamples": [
+      "请先确认我是不是需要离线模式。",
+      "请立即实现离线模式。"
+    ]
+  },
+  {
+    "id": "explicit-next-goal",
+    "source": "synthetic",
+    "qa": [
+      {
+        "question": "先定位超时原因，再给出修复方案，不要直接修改。",
+        "answer": "已定位到连接池耗尽，尚未给出修复方案。"
+      }
+    ],
+    "expectedKind": "suggestion",
+    "acceptableExamples": [
+      "请针对连接池耗尽给出修复方案，暂不修改代码。"
+    ],
+    "criteria": [
+      "承接用户明确尚未完成的目标",
+      "保持方案阶段与不修改边界"
+    ],
+    "rejectedExamples": [
+      "立即修改并上线。"
+    ]
+  },
+  {
+    "id": "assistant-advice-unconfirmed",
+    "source": "synthetic",
+    "qa": [
+      {
+        "question": "只解释这个函数。",
+        "answer": "函数解释完毕；我还建议重构和升级依赖。"
+      }
+    ],
+    "expectedKind": "none",
+    "criteria": [
+      "不把助手未确认建议视为用户意愿",
+      "不因建议看似有益而新增任务"
+    ],
+    "rejectedExamples": [
+      "请开始重构并升级依赖。"
+    ]
+  },
+  {
+    "id": "authorization-not-inferred",
+    "source": "synthetic",
+    "qa": [
+      {
+        "question": "只审查，不改代码；是否修改由我另行决定。",
+        "answer": "发现一个缺陷，建议立即修复。"
+      }
+    ],
+    "expectedKind": "none",
+    "criteria": [
+      "不把待确认节点写成用户已经授权",
+      "不替用户决定进入执行阶段"
+    ],
+    "rejectedExamples": [
+      "我授权你立即修复并发布。"
+    ]
+  },
+  {
+    "id": "user-correction-wins",
+    "source": "synthetic",
+    "qa": [
+      {
+        "question": "完成修改后发布。",
+        "answer": "准备发布。"
+      },
+      {
+        "question": "纠正一下：停止发布，只整理变更清单。",
+        "answer": "变更清单已经整理。"
+      }
+    ],
+    "expectedKind": "none",
+    "criteria": [
+      "较新明确纠正优先",
+      "不恢复已撤回的发布授权"
+    ],
+    "rejectedExamples": [
+      "请继续发布。"
+    ]
+  },
+  {
+    "id": "original-clarification-request",
+    "source": "synthetic",
+    "qa": [
+      {
+        "question": "先说明导出功能，然后问我选择CSV还是JSON，确认后再给方案。",
+        "answer": "已说明导出功能，后续尚未进行。"
+      }
+    ],
+    "expectedKind": "suggestion",
+    "acceptableExamples": [
+      "请先确认我希望导出CSV还是JSON，再给出方案。"
+    ],
+    "criteria": [
+      "保留用户本来明确要求的澄清流程",
+      "不将禁止新增澄清误用为删除原有询问"
+    ],
+    "rejectedExamples": [
+      "请直接给出CSV方案。"
+    ]
+  }
+]

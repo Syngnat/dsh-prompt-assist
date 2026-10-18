@@ -36,7 +36,7 @@ function wireFixture(mainEnabled, api = "openai-responses") {
       await snapshot.models.streamSimple(snapshot.model, options.messages, {
         sessionId: options.sessionId, reasoningEffort: options.reasoningEffort, signal: options.signal,
       });
-      yield { type: "text-delta", index: 0, text: " generated prompt " };
+      yield { type: "text-delta", index: 0, text: options.maxTokens === 1024 ? JSON.stringify({kind:"suggestion",text:"generated prompt"}) : " generated prompt " };
       yield { type: "finish", reason: { kind: "stop" } };
     }
   }

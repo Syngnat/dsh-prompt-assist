@@ -1,0 +1,240 @@
+[
+  {
+    "id": "reported-self-question",
+    "category": "无法消歧",
+    "source": "user-reported",
+    "contextNote": "原始完整QA未捕获；按无额外可消歧资料测试，不声称重放原始模型请求。",
+    "draft": "上次检查时间没有要格式化",
+    "qa": [],
+    "acceptableExamples": [
+      "上次检查时间没有要格式化"
+    ],
+    "criteria": [
+      "保留核心含义的不确定性，不猜测肯定或否定意图",
+      "不得新增澄清步骤或用户自问",
+      "不把这条缺陷案例当作实际时间格式化任务"
+    ],
+    "rejectedExamples": [
+      {
+        "text": "关于‘提示词辅助与 Fast 加速’插件‘版本与更新’区域的‘上次检查时间’，请先确认：我说的‘没有要格式化’，是指目前时间未格式化、需要修正显示，还是指不需要对该时间进行格式化。",
+        "reason": "把增强器的疑问改成用户自问，并新增二选一澄清流程"
+      },
+      {
+        "text": "请将上次检查时间格式化为本地时间。",
+        "reason": "无依据选择正向含义及本地时区"
+      },
+      {
+        "text": "请不要格式化上次检查时间。",
+        "reason": "无依据选择否定含义"
+      }
+    ]
+  },
+  {
+    "id": "resolved-by-context",
+    "category": "上下文可消歧",
+    "source": "synthetic",
+    "draft": "这个没刷新，帮我看下",
+    "qa": [
+      {
+        "question": "我说列表没刷新，是指仍显示旧数据，不是要求关闭刷新。只排查原因。",
+        "answer": "明白，先排查列表旧数据的原因。"
+      }
+    ],
+    "acceptableExamples": [
+      "请排查列表仍显示旧数据、未刷新的原因。"
+    ],
+    "criteria": [
+      "用明确用户上下文展开这个的指代",
+      "保留只排查的阶段，不追加修改授权",
+      "不重复询问上下文已经明确的含义"
+    ],
+    "rejectedExamples": [
+      {
+        "text": "请先确认我说没刷新，是要关闭刷新还是排查旧数据。",
+        "reason": "重新引入已排除的歧义并替用户自问"
+      },
+      {
+        "text": "请关闭列表刷新。",
+        "reason": "颠倒用户已明确的意思"
+      }
+    ]
+  },
+  {
+    "id": "missing-referent",
+    "category": "无法消歧",
+    "source": "synthetic",
+    "draft": "照那个改一下",
+    "qa": [
+      {
+        "question": "先比较A和B，暂时不选。",
+        "answer": "A和B各有利弊，尚未确定。"
+      }
+    ],
+    "acceptableExamples": [
+      "照那个改一下"
+    ],
+    "criteria": [
+      "不猜那个指向哪个方案",
+      "保留原文核心，不变成选择问卷"
+    ],
+    "rejectedExamples": [
+      {
+        "text": "请按方案A修改。",
+        "reason": "擅自选择指代"
+      },
+      {
+        "text": "请先确认我说的那个是A还是B。",
+        "reason": "新增用户自问与澄清步骤"
+      }
+    ]
+  },
+  {
+    "id": "negation-scope",
+    "category": "否定句",
+    "source": "synthetic",
+    "draft": "不要自动删除过期记录，只标记过期。",
+    "qa": [],
+    "acceptableExamples": [
+      "仅标记过期记录，不要自动删除。"
+    ],
+    "criteria": [
+      "保留不要自动删除的否定范围",
+      "只标记不扩展成清理或执行新方案"
+    ],
+    "rejectedExamples": [
+      {
+        "text": "请自动删除过期记录。",
+        "reason": "颠倒否定条件"
+      }
+    ]
+  },
+  {
+    "id": "negative-wording-with-explicit-context",
+    "category": "上下文可消歧",
+    "source": "synthetic",
+    "draft": "这个不要了",
+    "qa": [
+      {
+        "question": "保留导出功能，但取消自动发送导出文件的选项。",
+        "answer": "明白，本轮讨论的是自动发送选项。"
+      }
+    ],
+    "acceptableExamples": [
+      "取消自动发送导出文件的选项，保留导出功能。"
+    ],
+    "criteria": [
+      "只展开唯一明确对象",
+      "不把取消选项扩展成删除整个功能"
+    ],
+    "rejectedExamples": [
+      {
+        "text": "删除导出功能。",
+        "reason": "扩大否定对象范围"
+      }
+    ]
+  },
+  {
+    "id": "latest-user-correction",
+    "category": "用户纠正",
+    "source": "synthetic",
+    "draft": "按最新要求整理一下",
+    "qa": [
+      {
+        "question": "按天归档并删除源文件。",
+        "answer": "可以设计归档后删除源文件的流程。"
+      },
+      {
+        "question": "纠正一下：归档后保留源文件，暂时只给方案，不执行。",
+        "answer": "收到，按最新纠正整理方案。"
+      }
+    ],
+    "acceptableExamples": [
+      "请提供按天归档且保留源文件的方案，暂不执行。"
+    ],
+    "criteria": [
+      "较新明确用户纠正优先",
+      "不恢复已撤回的删除要求",
+      "保留不执行的限制"
+    ],
+    "rejectedExamples": [
+      {
+        "text": "请按天归档并删除源文件。",
+        "reason": "重新引入已撤回要求"
+      },
+      {
+        "text": "立即执行归档并保留源文件。",
+        "reason": "把方案阶段改为执行"
+      }
+    ]
+  },
+  {
+    "id": "assistant-suggestion-not-confirmed",
+    "category": "无法消歧",
+    "source": "synthetic",
+    "draft": "时间显示还是不对",
+    "qa": [
+      {
+        "question": "看看这个时间显示问题。",
+        "answer": "可以考虑改成本地时区，但这只是建议。"
+      }
+    ],
+    "acceptableExamples": [
+      "时间显示仍有问题，请检查。"
+    ],
+    "criteria": [
+      "不把未确认的助手建议当成用户选择",
+      "不把检查问题改为确定修复方案"
+    ],
+    "rejectedExamples": [
+      {
+        "text": "请改成本地时区。",
+        "reason": "将未确认建议提升为要求"
+      },
+      {
+        "text": "请先确认我说的不对是格式还是时区。",
+        "reason": "把编辑者疑问改为用户自问"
+      }
+    ]
+  },
+  {
+    "id": "explicit-clarification-request",
+    "category": "保留原有询问",
+    "source": "synthetic",
+    "draft": "请先问我希望导出CSV还是JSON，确认后再给方案。",
+    "qa": [],
+    "acceptableExamples": [
+      "请先确认我希望导出CSV还是JSON，再给出方案。"
+    ],
+    "criteria": [
+      "保留用户本来明确要求的澄清流程",
+      "不因禁止新增追问而删去原有要求"
+    ],
+    "rejectedExamples": [
+      {
+        "text": "请给出CSV导出方案。",
+        "reason": "删除原有澄清流程且擅自选择"
+      }
+    ]
+  },
+  {
+    "id": "original-choice-question",
+    "category": "保留原有询问",
+    "source": "synthetic",
+    "draft": "我应该选A还是B？请比较代价，不要替我选择。",
+    "qa": [],
+    "acceptableExamples": [
+      "请比较A和B的代价，帮助我判断；不要替我作选择。"
+    ],
+    "criteria": [
+      "询问仍是询问",
+      "不能把禁止新增自问误用为删除用户原有问题",
+      "保留不替用户选择的约束"
+    ],
+    "rejectedExamples": [
+      {
+        "text": "请执行方案A。",
+        "reason": "把询问改为执行并替用户选择"
+      }
+    ]
+  }
+]

@@ -22,8 +22,8 @@ test("enhance uses bounded explicit JSON data, preserving original intention and
 
 test("suggest drafts the next user prompt instead of answering or inventing work", () => {
   const value = buildAssistPrompt("suggest", "", [pair], [], []);
-  assert.match(value.system, /next user prompt/); assert.match(value.system, /Do not answer/);
-  assert.match(value.system, /clarifying question rather than inventing a task/);
+  assert.match(value.system, /用户向助手提问或提出需求/); assert.match(value.system, /不回答对话/);
+  assert.match(value.system, /依据不足时不给建议/); assert.match(value.system, /"kind":"none"/);
   assert.equal(JSON.parse(value.user).draft, "");
 });
 

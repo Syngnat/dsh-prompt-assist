@@ -6,7 +6,7 @@ Provides prompt enhancement, next-question suggestions, and OpenAI Fast accelera
 
 A plugin bundle for the DeepSeek Harness (DSH) Web GUI. Enhancement and suggestions are independent features: enable either or both for the conversation you choose. Settings live on the sidebar page, not in a composer popup.
 
-> **v1.2.9:** fixes clipped enhancement previews in the first-conversation composer. Short results expand naturally; long results scroll while action buttons keep their space. Stable-update checks remain manual and never install updates.
+> **v1.2.10:** improves user-perspective rules for enhancement and next-question suggestions, and adds a normal, non-adoptable no-suggestion state. Offline contracts and state-flow tests pass; live model semantic acceptance has not been performed.
 
 ## Compatibility policy
 
@@ -61,11 +61,15 @@ Write the original text in the composer and click the enhancement icon button. E
 
 Review the inline result, compare the original when needed, then copy or apply it. Pure-text application checks the original draft and revision, creates one undoable text edit, and leaves attachments unchanged. Editing the draft cancels obsolete work. Undo is offered only while the applied text and revision still match.
 
+Enhancement keeps the user speaking to the assistant. It uses relevant confirmed context without adding clarification steps; when core meaning cannot be established, it conservatively edits or retains the original rather than guessing.
+
 ### Suggest the next question
 
 Automatic suggestions use the latest selected complete Q&A pairs. They run only after a **new** complete Q&A becomes available, while the conversation is idle and the draft contains no text, references, or attachments. Mounting or reopening the UI establishes a baseline; it does not replay an old Q&A. The toolbar suggestion button can request a suggestion from existing complete Q&A when eligible.
 
 Suggestions are unavailable while the main conversation is busy. If typing, settings, model, conversation, or Q&A changes invalidate a request, its result is discarded. A cancelled automatic attempt is not silently repeated; use the manual button when needed.
+
+Suggestions preserve user questions and permission boundaries, do not promote unconfirmed assistant advice, and abstain when no grounded next step is available. A normal no-suggestion result displays a neutral dismissible status, never adoptable/copyable prompt text. Suggestions wait for complete protocol validation before display; enhancement keeps its streaming preview. Empty, malformed, truncated or failed responses remain errors, not normal abstentions.
 
 ### Fast
 
@@ -143,14 +147,14 @@ Use an isolated DSH Web profile and a fresh, unsent conversation, with a disposa
 | Area | Release status |
 | --- | --- |
 | GitHub distribution | Prebuilt tag and release assets; see the GitHub release for download verification |
-| Windows DSH `0.2.1-rc.2` | Host activation, retained settings and live Client slot registration verified |
+| Windows DSH `0.2.1-rc.2` | Earlier v1.2.9 activation/settings/slot checks; current-profile upgrade not performed for v1.2.10 |
 | Real DSH rc.1 / rc.2 adapter contracts | Both CI jobs passed without model calls |
 | Windows update section | Real Chrome click → authenticated Host route → GitHub stable metadata verified in an isolated DSH rc.2 profile; guide and rendered layout checked |
-| Existing assistance/provider workflow | No new paid-model end-to-end test in this release |
+| v1.2.10 suggestion outcomes | Offline model-fixture → Runtime/cache → RPC/stream → controller/SSR checks; no live browser or model acceptance |
 | macOS and Linux | CI build and the offline test suite passed; DSH runtime not tested |
 | Independent security audit | Not performed/claimed |
 
-Build and 239 offline tests passed on Windows, macOS and Linux in [GitHub Actions](https://github.com/Syngnat/dsh-prompt-assist/actions). The update check was exercised in a real isolated DSH rc.2 Web UI with Chrome, including the rendered section and manual guide, with no browser console errors. No paid-model request was made; this is not full acceptance of all existing assistance features.
+The current candidate passes 402 offline tests locally. [GitHub Actions](https://github.com/Syngnat/dsh-prompt-assist/actions) covers Windows, macOS and Linux builds/tests plus real DSH adapter-contract checks; stable publication requires successful exact-commit CI. Earlier update-page and first-session layout browser checks do not constitute v1.2.10 live-model or new-status UI acceptance. No live model semantic or output-protocol adherence evaluation was performed for this release.
 
 ## License
 

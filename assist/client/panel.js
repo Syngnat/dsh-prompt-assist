@@ -3,7 +3,7 @@ import React from 'react';
 import {enhanceAvailability,suggestAvailability} from './enhance-action.js';
 import {shouldShowPanel} from './panel-visibility.js';
 import {useAssistRuntime} from './runtime.js';
-import {Preview} from './preview.js';
+import {Preview,NoSuggestion} from './preview.js';
 import {SelectedFiles} from './selected-files.js';
 import {undoText,ownsResult} from './editor.js';
 import {errorKey} from './api.js';
@@ -30,6 +30,7 @@ export function AssistPanel(p){
  return h('section',{className:'lpa lpa-inline'+compactPanelModifier({pending:r.result.pending,preview:r.result.preview,referenceCount:r.input.occurrences.length,notice,validUndo}),'aria-label':t('preview')},h('style',null,css),
   h(SelectedFiles,{input:r.input,files,t,onChange:(key,entry)=>{r.controller.dismiss();setFiles(old=>({...old,[key]:entry}));}}),
   r.result.pending&&!r.result.preview?h('div',{className:'lpa-row lpa-pending',role:'status'},h('span',{className:'lpa-pending-mark','aria-hidden':true}),t(r.result.pending==='suggest'?'generatingSuggest':'generating'),button('cancel',()=>r.controller.cancel())):null,
+  h(NoSuggestion,{runtime:r,t}),
   h(Preview,{runtime:r,actions:p.inputActions,t,onApplied:setUndo}),
   validUndo?h('div',{className:'lpa-undo-actions'},button('undo',undoApply,!r.allowed)):null,
   visible&&notice?h('div',{className:'lpa-row',role:'status'},h('span',{className:r.result.error?'lpa-error':'lpa-note'},t(typeof notice==='string'?notice:errorKey(notice))),button('dismiss',dismiss)):null);
