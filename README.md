@@ -6,7 +6,7 @@ Provides prompt enhancement, next-question suggestions, and OpenAI Fast accelera
 
 A plugin bundle for the DeepSeek Harness (DSH) Web GUI. Enhancement and suggestions are independent features: enable either or both for the current DSH profile. Settings live on the sidebar page, not in a composer popup. Feature switches are profile-wide; model controls remain per-conversation.
 
-> **v1.2.12:** enhancement and suggestion switches now persist for the whole DSH profile, including new conversations and Host restarts. Enable each global switch once after upgrading; earlier session-local flags are not automatically promoted into profile-wide authorization. Model, reasoning, auxiliary Fast and Q&A controls remain per-conversation.
+> **v1.2.13:** recognized OpenAI-family models keep a visible, disabled Fast control when provider authorization or projection state is unavailable, with an explanation instead of silent hiding. Startup reads can recover through bounded metadata retries. Existing Fast preferences, v1.2.12 global feature switches and per-conversation model controls are preserved.
 
 ## Compatibility policy
 
@@ -53,7 +53,7 @@ The package identifier remains `@local/dsh-openai-fast`, even though this reposi
 3. To change provider/model, native reasoning effort, auxiliary Fast or Q&A count, select the intended conversation and check its identifier. These controls remain per-conversation, independently configured for enhancement and suggestions.
 4. Save each changed set of conversation controls, then choose **Back to conversation**. Saving conversation controls never changes the global switches.
 
-Fresh global switches start disabled; legacy session flags are retained for replay compatibility but cannot override them. Enable each global switch once after upgrading to this change. Following the session follows only its model and reasoning effort; auxiliary Fast always remains an independent setting. Choose 1, 3, 5, or a custom **1–20 complete Q&A rounds**. Invalid values are rejected, not silently clamped. A model change that invalidates a saved effort requires an explicit new choice; the plugin does not silently lower the effort.
+Fresh global switches start disabled; legacy session flags are retained for replay compatibility but cannot override them. When upgrading from v1.2.11 or earlier, explicitly enable the new global switches once; later upgrades preserve those choices. Following the session follows only its model and reasoning effort; auxiliary Fast always remains an independent setting. Choose 1, 3, 5, or a custom **1–20 complete Q&A rounds**. Invalid values are rejected, not silently clamped. A model change that invalidates a saved effort requires an explicit new choice; the plugin does not silently lower the effort.
 
 ### Enhance a draft
 
@@ -72,6 +72,8 @@ Suggestions are unavailable while the main conversation is busy. If typing, sett
 Suggestions preserve user questions and permission boundaries, do not promote unconfirmed assistant advice, and abstain when no grounded next step is available. A normal no-suggestion result displays a neutral dismissible status, never adoptable/copyable prompt text. Suggestions wait for complete protocol validation before display; enhancement keeps its streaming preview. Empty, malformed, truncated or failed responses remain errors, not normal abstentions.
 
 ### Fast
+
+> **From v1.2.13:** a recognized GPT/OpenAI model keeps its Fast control visible even when the provider is not authorized or the Host snapshot is unavailable. The control stays disabled and explains the condition; metadata retries are bounded and never submit a model request. Model-name matching ignores case, but provider route IDs are exact and an OpenAI-compatible protocol alone does not grant Priority support.
 
 The main **Fast** icon button sits next to the model selector. It applies Priority handling only to explicitly allowed OpenAI model routes, subject to upstream support. It may incur extra charges; it is not a guarantee of lower latency. Supported subagents inherit the parent preference until they override it.
 
@@ -162,7 +164,7 @@ Use an isolated DSH Web profile and a fresh, unsent conversation, with a disposa
 | macOS and Linux | Builds/offline suite are required CI gates; DSH runtime not tested |
 | Independent security audit | Not performed/claimed |
 
-v1.2.12 passes 549 offline tests locally. [GitHub Actions](https://github.com/Syngnat/dsh-prompt-assist/actions) covers Windows, macOS and Linux builds/tests plus real DSH adapter-contract checks; stable publication requires successful exact-commit CI. Earlier update-page and first-session layout checks do not constitute full v1.2.12 visual or live-model acceptance. Isolated global-switch installation/browser evidence is recorded in the release notes. No live model semantic or output-protocol adherence evaluation was performed for this release.
+v1.2.13 passes 574 offline tests locally. [GitHub Actions](https://github.com/Syngnat/dsh-prompt-assist/actions) covers Windows, macOS and Linux builds/tests plus real DSH adapter-contract checks; stable publication requires successful exact-commit CI. Earlier update-page, layout and global-switch checks do not constitute full v1.2.13 visual or live-model acceptance. Isolated Fast-control installation/browser evidence is recorded in the release notes. The separately reported machine was not available; this release does not claim its root cause was confirmed. No live model semantic or output-protocol adherence evaluation was performed for this release.
 
 ## License
 

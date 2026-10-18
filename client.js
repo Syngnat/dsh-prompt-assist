@@ -2490,6 +2490,12 @@ __export(client_entry_exports, {
 module.exports = __toCommonJS(client_entry_exports);
 init_identity();
 
+// policy.js
+var DEFAULT_PROVIDERS = Object.freeze(["openai", "openai-codex"]);
+function isOpenAIModel(model) {
+  return typeof model === "string" && /^(?:gpt-|chatgpt-|codex(?:-|$)|o[1-9](?:-|$))/i.test(model);
+}
+
 // client-fast-core.js
 function createFast(require2) {
   let React13;
@@ -2499,19 +2505,108 @@ function createFast(require2) {
   function HiddenFastCommand2() {
     return null;
   }
+  const hydratingBindings = /* @__PURE__ */ new WeakMap();
+  function hasFastState(value) {
+    return Boolean(value && typeof value === "object" && !Array.isArray(value) && typeof value.enabled === "boolean" && Array.isArray(value.providers) && value.providers.every((provider) => typeof provider === "string"));
+  }
   function derivePresentation2(fastState, selected, fallback) {
     const selection = selected ?? fallback;
-    const providers = fastState && Array.isArray(fastState.providers) ? fastState.providers : [];
+    const family = isOpenAIModel(selection?.model);
+    const ready = hasFastState(fastState);
+    const eligible = Boolean(family && ready && fastState.providers.includes(selection.provider));
     return {
-      enabled: fastState?.enabled === true,
-      visible: Boolean(selection && providers.includes(selection.provider) && /^(?:gpt-|chatgpt-|codex(?:-|$)|o[1-9](?:-|$))/i.test(selection.model ?? ""))
+      visible: family,
+      enabled: eligible && fastState.enabled === true,
+      eligible,
+      reason: !selection ? "no-selection" : !family ? "unsupported-model" : !ready ? "loading" : !eligible ? "unsupported-provider" : "ready"
     };
   }
-  function hydrateSession2(readyBindings, binding, sessionId, refresh) {
-    if (readyBindings.has(binding)) return;
-    readyBindings.add(binding);
-    refresh(sessionId).catch(() => {
+  function hydrateSession2(readyBindings, binding, sessionId, refresh, isReady = () => true) {
+    if (readyBindings.has(binding)) {
+      if (isReady()) return Promise.resolve(true);
+      readyBindings.delete(binding);
+    }
+    if (hydratingBindings.has(binding)) return hydratingBindings.get(binding);
+    let read;
+    try {
+      read = Promise.resolve(refresh(sessionId));
+    } catch (error) {
+      read = Promise.reject(error);
+    }
+    const operation = read.then(() => {
+      hydratingBindings.delete(binding);
+      const ready = isReady() === true;
+      if (ready) readyBindings.add(binding);
+      return ready;
+    }, (error) => {
+      hydratingBindings.delete(binding);
+      readyBindings.delete(binding);
+      throw error;
     });
+    hydratingBindings.set(binding, operation);
+    void operation.catch(() => {
+    });
+    return operation;
+  }
+  function createHydrationRetry({ attempt, isReady, onSettled = () => {
+  }, setTimer = setTimeout, clearTimer = clearTimeout, delays = [250, 1e3] }) {
+    let operation, resolve, timer = null, disposed = false, finished = false;
+    const finish = (ready, publish = true) => {
+      if (finished) return;
+      finished = true;
+      if (publish && !disposed) {
+        try {
+          onSettled(ready);
+        } catch {
+        }
+      }
+      resolve?.(ready);
+    };
+    async function run(index) {
+      try {
+        await attempt();
+      } catch {
+      }
+      if (disposed || finished) return;
+      let ready = false;
+      try {
+        ready = isReady() === true;
+      } catch {
+      }
+      if (ready) {
+        finish(true);
+        return;
+      }
+      if (index >= delays.length) {
+        finish(false);
+        return;
+      }
+      try {
+        timer = setTimer(() => {
+          timer = null;
+          void run(index + 1);
+        }, delays[index]);
+      } catch {
+        finish(false);
+      }
+    }
+    return {
+      start() {
+        if (operation) return operation;
+        if (disposed) return operation = Promise.resolve(false);
+        operation = new Promise((done) => {
+          resolve = done;
+        });
+        void run(0);
+        return operation;
+      },
+      dispose() {
+        disposed = true;
+        if (timer !== null) clearTimer(timer);
+        timer = null;
+        finish(false, false);
+      }
+    };
   }
   function createToggleController2({ initial: initial2, send, publish, onError }) {
     let confirmed = initial2;
@@ -2567,14 +2662,22 @@ function createFast(require2) {
       off: "Fast \u5DF2\u5173\u95ED\u3002\u5F00\u542F\u540E\uFF0C\u540E\u7EED\u672C\u4F1A\u8BDD\u53CA\u7EE7\u627F\u8BBE\u7F6E\u7684 OpenAI \u5B50\u667A\u80FD\u4F53\u8BF7\u6C42\u4F7F\u7528 Priority \u4F18\u5148\u5904\u7406\uFF1B\u9700\u8981\u670D\u52A1\u5546\u652F\u6301\uFF0C\u53EF\u80FD\u989D\u5916\u8BA1\u8D39\u3002",
       on: "Fast \u5DF2\u5F00\u542F\u3002\u540E\u7EED\u672C\u4F1A\u8BDD\u53CA\u7EE7\u627F\u8BBE\u7F6E\u7684 OpenAI \u5B50\u667A\u80FD\u4F53\u8BF7\u6C42\u4F7F\u7528 Priority \u4F18\u5148\u5904\u7406\uFF0C\u53EF\u80FD\u989D\u5916\u8BA1\u8D39\uFF1B\u70B9\u51FB\u5173\u95ED\u3002",
       saving: "\u6B63\u5728\u4FDD\u5B58 Fast \u8BBE\u7F6E\u2026",
-      error: "Fast \u8BBE\u7F6E\u672A\u4FDD\u5B58\uFF0C\u8BF7\u91CD\u8BD5\u3002"
+      error: "Fast \u8BBE\u7F6E\u672A\u4FDD\u5B58\uFF0C\u8BF7\u91CD\u8BD5\u3002",
+      loading: "Fast \u72B6\u6001\u5C1A\u672A\u786E\u8BA4\uFF0C\u5F00\u5173\u6682\u4E0D\u53EF\u7528\uFF1B\u8FD9\u4E0D\u4F1A\u66F4\u6539\u5DF2\u4FDD\u5B58\u7684 Fast \u8BBE\u7F6E\u3002",
+      loadError: "Fast \u72B6\u6001\u540C\u6B65\u5931\u8D25\u3002\u8BF7\u5237\u65B0\u9875\u9762\uFF0C\u6216\u68C0\u67E5 Host \u4E0E Client \u63D2\u4EF6\u7248\u672C\u662F\u5426\u4E00\u81F4\u3002",
+      unsupportedProvider: "\u6B64\u4F9B\u5E94\u5546\u672A\u5728 Priority \u5141\u8BB8\u540D\u5355\u4E2D\uFF0CFast \u4E0D\u4F1A\u5F00\u542F\u3002\u786E\u8BA4\u670D\u52A1\u5546\u652F\u6301\u540E\uFF0C\u9700\u663E\u5F0F\u914D\u7F6E\u672C\u63D2\u4EF6\u7684 providers\u3002\u4F9B\u5E94\u5546 ID",
+      access: "\u5F53\u524D\u4F1A\u8BDD\u6CA1\u6709\u6267\u884C Fast \u5F00\u5173\u547D\u4EE4\u7684\u6743\u9650\u3002"
     },
     en: {
       label: "Fast",
       off: "Fast is off. Enable Priority for this session and inheriting OpenAI subagents; provider support is required and additional charges may apply.",
       on: "Fast is on for this session and inheriting OpenAI subagents; additional charges may apply. Click to turn off.",
       saving: "Saving Fast preference\u2026",
-      error: "Could not change Fast. Try again."
+      error: "Could not change Fast. Try again.",
+      loading: "Fast status is not confirmed yet; the control is temporarily unavailable. Existing Host settings are unchanged.",
+      loadError: "Fast state could not be loaded. Refresh or check that Host and Client plugin versions match.",
+      unsupportedProvider: "This provider is not authorized for Priority; Fast stays off. Confirm provider support before explicitly configuring this plugin\u2019s providers allowlist. Provider ID",
+      access: "This session cannot execute Fast toggle commands."
     }
   };
   const css2 = `
@@ -2609,7 +2712,19 @@ function createFast(require2) {
     const sessionState = React13.useSyncExternalStore(props.sessionSource.subscribe, props.sessionSource.getSnapshot, props.sessionSource.getSnapshot);
     const unavailable = Boolean(sessionState?.subagent) || sessionState?.removed === true;
     const allowed = props.useAccess("commands/execute");
-    const { visible, enabled } = derivePresentation2(fastState, selected, defaultSelection);
+    const { visible, enabled, eligible, reason } = derivePresentation2(fastState, selected, defaultSelection);
+    const ready = hasFastState(fastState);
+    const [loadFailed, setLoadFailed] = React13.useState(false);
+    React13.useEffect(() => {
+      setLoadFailed(false);
+      const retry = createHydrationRetry({
+        attempt: props.ensureHydrated,
+        isReady: () => hasFastState(props.fastSource.getSnapshot()),
+        onSettled: (value) => setLoadFailed(!value)
+      });
+      void retry.start();
+      return () => retry.dispose();
+    }, [props.hydrationKey, props.sessionId, ready]);
     const [interaction, setInteraction] = React13.useState({ enabled: null, pending: false });
     const [error, setError] = React13.useState("");
     const alive = React13.useRef(true);
@@ -2642,13 +2757,16 @@ function createFast(require2) {
       }
     }), [props.remote, props.sessionId]);
     React13.useEffect(() => controller.sync(enabled), [controller, enabled]);
-    const checked = interaction.enabled ?? enabled;
+    const checked = eligible && (interaction.enabled ?? enabled);
     if (!visible || unavailable) return null;
     function toggle() {
+      if (!eligible || !allowed) return;
       setError("");
       controller.toggle().catch(() => {
       });
     }
+    const provider = (selected ?? defaultSelection)?.provider ?? "";
+    const blocked = reason === "loading" ? props.t(loadFailed ? "loadError" : "loading") : reason === "unsupported-provider" ? props.t("unsupportedProvider") + ": " + provider : !allowed ? props.t("access") : null;
     return h12(
       "span",
       { className: "local-openai-fast" },
@@ -2659,9 +2777,9 @@ function createFast(require2) {
         className: "local-openai-fast__button",
         "aria-label": props.t("label"),
         "aria-checked": checked,
-        "aria-busy": interaction.pending,
-        disabled: !allowed,
-        title: props.t(interaction.pending ? "saving" : checked ? "on" : "off"),
+        "aria-busy": interaction.pending || reason === "loading" && !loadFailed,
+        disabled: !allowed || !eligible,
+        title: interaction.pending ? props.t("saving") : blocked ?? props.t(checked ? "on" : "off"),
         onClick: toggle
       }, h12(
         "svg",
@@ -2680,6 +2798,7 @@ function createFast(require2) {
   return {
     derivePresentation: derivePresentation2,
     hydrateSession: hydrateSession2,
+    createHydrationRetry,
     createToggleController: createToggleController2,
     quietCommandNames: quietCommandNames2,
     HiddenFastCommand: HiddenFastCommand2,
@@ -2694,7 +2813,7 @@ function createFast(require2) {
         name: "conversation.input.right",
         id: "local-openai-fast",
         order: 1020,
-        label: "OpenAI Fast 1.2.10",
+        label: "OpenAI Fast",
         locale: NS2,
         inject(sessionId) {
           const binding = ctx.sessions.binding(sessionId);
@@ -2704,11 +2823,13 @@ function createFast(require2) {
             getSnapshot: () => source.getSnapshot()
           });
           const refresh = () => ctx.sessions.refreshProjections(sessionId);
-          hydrateSession2(readyBindings, binding, sessionId, refresh);
+          const fastSource = observe(binding.session.projections.faceOf("local.openaiFast"));
           return {
             remote: ctx.remote,
             refresh,
-            fastSource: observe(binding.session.projections.faceOf("local.openaiFast")),
+            hydrationKey: binding,
+            ensureHydrated: () => hydrateSession2(readyBindings, binding, sessionId, refresh, () => hasFastState(fastSource.getSnapshot())),
+            fastSource,
             modelSource: observe(binding.session.projections.faceOf("modelSelection")),
             sessionSource: observe(binding.session)
           };

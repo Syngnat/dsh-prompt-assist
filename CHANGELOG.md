@@ -2,6 +2,16 @@
 
 [English](<README.md>) | [简体中文](<README.zh-CN.md>)
 
+## 1.2.13 — Defensive Fast visibility
+
+- Keep recognized OpenAI-family controls visible while Priority authorization or projection state is unavailable. Show a disabled switch with the reason rather than silently hiding it; an unapproved provider cannot enable Priority.
+- Share case-insensitive model-family recognition between Host and Client. Keep provider route IDs explicit and case-sensitive; do not automatically authorize compatible gateways.
+- Mark projection hydration ready only after a successful usable read, deduplicate pending reads, retry missing/failed startup snapshots within a bounded lifecycle and stop retries on unmount.
+- Add 25 real-component SSR and deterministic failure/retry regressions, bringing the offline suite to 574. This hardens reproducible source paths; it does not establish the root cause on an inaccessible reported machine.
+- Clarify that loading status does not turn off an existing Host Fast preference or promise that Priority billing has stopped. Preserve existing preferences, global feature switches and model budgets.
+
+中文：GPT系列Fast不再因供应商未获准或投影缺失而静默隐藏；改为禁用并解释原因，首次同步失败可有界恢复。不扩大Priority授权，不改变已有设置，不将防御修复冒称另机根因已确认。
+
 ## 1.2.12 — Profile-wide feature switches
 
 - Persist enhancement and suggestion enabled flags per DSH profile instead of initializing them for every new conversation. Global controls are usable without choosing a session; other model/reasoning/Fast/Q&A controls remain session-local.

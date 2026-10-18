@@ -19,7 +19,10 @@ test('Host-allowed cpa route stays visible without any Client config', () => {
 
 test('Client config cannot contradict the authoritative Host allowlist', () => {
   const view = bundle.derivePresentation({ enabled: false, providers: ['openai'] }, selected, null, ['cpa']);
-  assert.equal(view.visible, false);
+  assert.equal(view.visible, true);
+  assert.equal(view.eligible, false);
+  assert.equal(view.enabled, false);
+  assert.equal(view.reason, 'unsupported-provider');
 });
 
 test('published Fast state, rather than object truthiness, controls checked state', () => {
@@ -31,7 +34,10 @@ test('the same visibility path supports blank-session defaults and excludes non-
   const state = { enabled: false, providers: ['cpa'] };
   assert.equal(bundle.derivePresentation(state, null, selected).visible, true);
   assert.equal(bundle.derivePresentation(state, { provider: 'cpa', model: 'deepseek-chat' }, null).visible, false);
-  assert.equal(bundle.derivePresentation(undefined, selected, null).visible, false);
+  const loading = bundle.derivePresentation(undefined, selected, null);
+  assert.equal(loading.visible, true);
+  assert.equal(loading.eligible, false);
+  assert.equal(loading.reason, 'loading');
 });
 
 test('an already-open session pulls the new projection exactly once, even after rerendering', () => {

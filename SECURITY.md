@@ -19,6 +19,8 @@ This policy covers this plugin. Vulnerabilities in DSH itself, a provider, or an
 
 Cancellation stops obsolete local work and asks the transport to stop. It cannot retract data already delivered to a provider, guarantee that the provider stops processing, or guarantee that no charge occurs. Never send secrets merely to test cancellation.
 
+Fast UI synchronization is read-only. A disabled/loading control does not clear an existing Host Fast preference or promise that Priority billing has stopped. Model-family recognition is case-insensitive, but provider route authorization remains explicit; an OpenAI-compatible endpoint is not automatically trusted to support Priority.
+
 ## Update checks
 
 Only an explicit check requests `https://api.github.com/repos/Syngnat/dsh-prompt-assist/releases/latest`. Opening the panel reads local cached state only. No API token, chat data, draft, files or provider secrets are attached. GitHub can log normal network metadata. Redirects, draft/prerelease metadata, oversized or malformed responses and foreign release links are refused. Responses are treated as data, never instructions or HTML. Checking alone never installs or writes a profile. The update tool exposes only status, check and read-only operation state.
