@@ -9,10 +9,11 @@ import { callAssistModel, resolveAssistRoute, failure } from './model-call.js';
 import { fileReaders } from './file-adapter.js';
 
 const FEATURES = ['suggest', 'enhance'];
-const CODES = new Set(['invalid-config','invalid-enabled','invalid-follow-session','invalid-fast','invalid-provider','invalid-model','invalid-effort','model-required','invalid-reference','invalid-context','invalid-feature','invalid-draft','empty-draft','invalid-file-entry','invalid-file-path','invalid-file-bytes','file-reader-unavailable','file-read-failed','invalid-rounds','invalid-request','not-configured','disabled','unsupported-effort','fast-unsupported','no-context','context-overflow','context-unknown','file-type-unsupported','unsupported-file','file-too-large','total-too-large','files-too-large','sensitive-file','binary-file','invalid-file','model-failed','invalid-suggestion','empty-result','cancelled','stale-context','busy','forbidden','invalid-receipt','request-too-large','output-too-large','output-limit','timeout','save-failed','not-a-file','unknown-action','file-consent-required']);
+const CLOSED_ENABLEMENT = Object.freeze({scope:'profile',revision:0,enabled:Object.freeze({suggest:false,enhance:false})});
+const CODES = new Set(['invalid-config','invalid-enabled','invalid-follow-session','invalid-fast','invalid-provider','invalid-model','invalid-effort','model-required','invalid-reference','invalid-context','invalid-feature','invalid-draft','empty-draft','invalid-file-entry','invalid-file-path','invalid-file-bytes','file-reader-unavailable','file-read-failed','invalid-rounds','invalid-request','not-configured','disabled','unsupported-effort','fast-unsupported','no-context','context-overflow','context-unknown','file-type-unsupported','unsupported-file','file-too-large','total-too-large','files-too-large','sensitive-file','binary-file','invalid-file','model-failed','invalid-suggestion','empty-result','cancelled','stale-context','busy','forbidden','invalid-receipt','request-too-large','output-too-large','output-limit','timeout','save-failed','not-a-file','unknown-action','file-consent-required','global-settings-unavailable','stale-enablement']);
 
 export class AssistRuntime {
-  constructor(ctx, fastService, providers, createUserMessage) {
+  constructor(ctx, fastService, providers, createUserMessage, enablement) {
     this.createUserMessage = createUserMessage;
     this.ctx = ctx;
     this.fastService = fastService;
@@ -20,6 +21,17 @@ export class AssistRuntime {
     this.jobs = new Map();
     this.cache = new Map();
     this.transportReads = new Map();
+    this.enablement = enablement;
+    this.effectiveConfigs = new WeakMap();
+    let previous = this.globalEnablement();
+    this.stopEnablement = enablement?.subscribe(next => {
+      for (const feature of FEATURES) {
+        if (previous.enabled[feature] === next.enabled[feature]) continue;
+        for (const [slot,job] of this.jobs) if (slot.endsWith(':'+feature)) job.controller.abort();
+        for (const slot of this.cache.keys()) if (slot.endsWith(':'+feature)) this.cache.delete(slot);
+      }
+      previous = next;
+    });
   }
 
   async agent(id) {
@@ -38,6 +50,29 @@ export class AssistRuntime {
 
   projection(agent) { return this.ctx.sessionProjections.stateOf(agent.session, ASSIST_KEY); }
 
+  globalEnablement() { return this.enablement?.getSnapshot() ?? CLOSED_ENABLEMENT; }
+
+  settingsOf(agent) {
+    const raw = this.projection(agent).settings, global = this.globalEnablement();
+    const settings = {};
+    for (const feature of FEATURES) {
+      const config = raw[feature], enabled = global.enabled[feature];
+      let cached = this.effectiveConfigs.get(config);
+      if (!cached || cached.enabled !== enabled) {
+        cached = Object.freeze({...config,enabled});
+        this.effectiveConfigs.set(config,cached);
+      }
+      settings[feature] = cached;
+    }
+    return settings;
+  }
+
+  async setEnabled(input, options) {
+    if (options.agent?.session?.header?.origin === 'subagent') throw failure('forbidden');
+    if (!this.enablement) throw failure('global-settings-unavailable');
+    return this.enablement.set(input.feature,input.enabled,{signal:options.signal,expectedRevision:input.expectedRevision});
+  }
+
   noteTransportRead(id) {
     this.transportReads.set(id, Date.now());
     if (this.transportReads.size > 64) this.transportReads.delete(this.transportReads.keys().next().value);
@@ -45,10 +80,11 @@ export class AssistRuntime {
 
   state(agent) {
     const state = this.projection(agent);
+    const settings = this.settingsOf(agent);
     const selected = this.fastService.selection(agent);
     const goalActive = this.ctx.get('goals')?.get(agent)?.phase === 'active';
     return {
-      settings: { suggest: { ...state.settings.suggest }, enhance: { ...state.settings.enhance } }, qaId: state.qaId, qaCount: state.rounds.length,
+      settings: { suggest: { ...settings.suggest }, enhance: { ...settings.enhance } }, enablement: this.globalEnablement(), qaId: state.qaId, qaCount: state.rounds.length,
       busy: state.busy || goalActive,
       transport: { kind: 'connection-rpc', lastSuccessfulUIRead: this.transportReads.get(agent.id) ?? null },
       current: { ...selected, reasoningEffort: selected.reasoningEffort ?? '', fast: this.fastService.enabled(agent) },
@@ -57,16 +93,17 @@ export class AssistRuntime {
     };
   }
 
-  async validateConfig(agent, input, signal) {
-    if (!input || ['enabled','followSession','provider','model','reasoningEffort','fast','rounds'].some(key => !Object.hasOwn(input, key))) throw failure('invalid-config');
-    const config = normalizeConfig(input);
+  async validateConfig(agent, input, signal, feature) {
+    if (!input || ['followSession','provider','model','reasoningEffort','fast','rounds'].some(key => !Object.hasOwn(input, key))) throw failure('invalid-config');
+    if (Object.hasOwn(input,'enabled') && typeof input.enabled !== 'boolean') throw failure('invalid-enabled');
+    const config = normalizeConfig({...input,enabled: this.globalEnablement().enabled[feature] === true});
     if (config.enabled) await resolveAssistRoute(this.ctx, agent, config, this.fastService, this.providers, signal);
     return config;
   }
 
   async save(agent, input, signal) {
     if (!FEATURES.includes(input.feature)) throw failure('invalid-request');
-    const config = await this.validateConfig(agent, input.config, signal);
+    const {enabled: _ignored,...config} = await this.validateConfig(agent, input.config, signal, input.feature);
     const result = await this.ctx.commands.execute(agent, '/' + ASSIST_COMMAND + ' ' + JSON.stringify({ feature: input.feature, config }), [], signal);
     if (result?.result?.kind !== 'success') throw failure('save-failed');
     this.jobs.get(`${agent.id}:${input.feature}`)?.controller.abort();
@@ -91,6 +128,8 @@ export class AssistRuntime {
 
   async dispatch(input, options = {}) {
     if (!input || typeof input !== 'object' || Array.isArray(input)) throw failure('invalid-request');
+    if (input.action === 'enablement') return this.globalEnablement();
+    if (input.action === 'set-enabled') return this.setEnabled(input, options);
     const agent = options.agent ?? await this.agent(input.sessionId);
     switch (input.action) {
       case 'state': case 'status': return this.state(agent);
@@ -104,7 +143,7 @@ export class AssistRuntime {
 
   async generate(agent, input, options) {
     if (!FEATURES.includes(input.feature)) throw failure('invalid-request');
-    const state = this.projection(agent), settings = state.settings[input.feature];
+    const state = this.projection(agent), settings = this.settingsOf(agent)[input.feature];
     if (!settings?.enabled) throw failure('disabled');
     if (typeof input.draft !== 'string' || !Number.isSafeInteger(input.draftRev)) throw failure('invalid-request');
     if (input.feature === 'enhance' && !input.draft.trim()) throw failure('invalid-request');
@@ -121,7 +160,7 @@ export class AssistRuntime {
     const slot = agent.id + ':' + input.feature;
     const rawKey = createHash('sha256').update(JSON.stringify([input.feature, input.draft, qaId, request.files, request.references, settings, selected])).digest('hex');
     const active = this.jobs.get(slot);
-    if (active?.rawKey === rawKey) {
+    if (active?.rawKey === rawKey && !active.signal.aborted) {
       const listener=text=>{if(!options.signal?.aborted)options.onText?.(text);};
       if(active.listeners.size>=64)throw failure('busy');
       active.listeners.add(listener);
@@ -130,7 +169,7 @@ export class AssistRuntime {
     active?.controller.abort();
     const controller = new AbortController();
     const signal = AbortSignal.any([controller.signal, options.signal ?? new AbortController().signal, AbortSignal.timeout(120000)]);
-    const job = { rawKey, controller, promise: null, listeners: new Set() };
+    const job = { rawKey, controller, signal, promise: null, listeners: new Set() };
     if(options.onText)job.listeners.add(options.onText);
     const onText=text=>{signal.throwIfAborted();for(const listener of job.listeners)listener(text);};
     this.jobs.set(slot, job);
@@ -145,7 +184,7 @@ export class AssistRuntime {
   async preflight(agent, input, settings, explicit, qa, qaId, readers, slot, signal, onText) {
     const check = () => {
       signal.throwIfAborted();
-      if (this.projection(agent).settings[input.feature] !== settings || (input.feature === 'suggest' && this.projection(agent).qaId !== qaId)) throw failure('stale-context');
+      if (this.settingsOf(agent)[input.feature] !== settings || (input.feature === 'suggest' && this.projection(agent).qaId !== qaId)) throw failure('stale-context');
     };
     check();
     const route = await resolveAssistRoute(this.ctx, agent, explicit, this.fastService, this.providers, signal);
@@ -186,7 +225,7 @@ export class AssistRuntime {
     return CODES.has(error?.code) ? error.code : 'model-failed';
   }
 
-  dispose() { for (const job of this.jobs.values()) job.controller.abort(); this.jobs.clear(); this.cache.clear(); this.transportReads.clear(); }
+  dispose() { this.stopEnablement?.(); for (const job of this.jobs.values()) job.controller.abort(); this.jobs.clear(); this.cache.clear(); this.transportReads.clear(); }
   release(id) {
     this.transportReads.delete(id);
     for (const feature of FEATURES) {

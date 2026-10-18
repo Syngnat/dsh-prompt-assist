@@ -1,3 +1,4 @@
+import {fixtureEnablement} from './assist-enablement-fixture.js';
 import test from "node:test";
 import assert from "node:assert/strict";
 import { AssistRuntime, ASSIST_KEY } from "../assist/runtime.js";
@@ -56,10 +57,11 @@ function fixture(t) {
     attachments: { async *readFileStream() { fileReads.push({ receipt: true }); yield encode("receipt"); } },
   };
   const fastService = { selection: agent => ({ ...selections.get(agent.id) }), enabled: () => true };
-  const runtime = new AssistRuntime(ctx, fastService, ["openai", "alternate"], value => ({ ...value, role: "user", id: "fixture-message" })); t.after(() => runtime.dispose());
+  const enablement=fixtureEnablement();
+  const runtime = new AssistRuntime(ctx, fastService, ["openai", "alternate"], value => ({ ...value, role: "user", id: "fixture-message" }),enablement); t.after(() => runtime.dispose());
   const input = (id = "a", changes = {}) => ({ action: "generate", sessionId: id, feature: "enhance", requestId: "r1", draft: "draft", draftRev: 1, qaId: states.get(id).qaId, ...changes });
   const generate = (id = "a", changes = {}, options = {}) => runtime.dispatch(input(id, changes), { fromUI: true, ...options });
-  return { ctx, runtime, agents, states, selections, goals, prepares, streams, fileReads, hooks, commandLog, input, generate };
+  return { ctx, runtime, enablement, agents, states, selections, goals, prepares, streams, fileReads, hooks, commandLog, input, generate };
 }
 
 test("state is content-free and disabled means zero requests; enhancement can use an empty completed-QA snapshot", async t => {
@@ -67,9 +69,9 @@ test("state is content-free and disabled means zero requests; enhancement can us
   const wire = f.runtime.state(f.agents.get("a"));
   assert.doesNotMatch(JSON.stringify(wire), /question-a|answer-a|receipt/); assert.equal(wire.current.fast, true);
   f.goals.set("a", { phase: "active" }); assert.equal(f.runtime.state(f.agents.get("a")).busy, true);
-  f.states.get("a").settings.enhance = normalizeConfig();
+  await f.enablement.set("enhance",false);
   await assert.rejects(f.generate(), { code: "disabled" });
-  f.states.get("a").settings.enhance = normalizeConfig({ enabled: true });
+  await f.enablement.set("enhance",true);
   f.states.get("a").rounds = []; f.states.get("a").qaId = null;
   f.goals.delete("a");
   await assert.rejects(f.generate("a", {feature:"suggest",draft:""}), {code:"no-context"});assert.equal(f.prepares.length,0);
@@ -134,7 +136,7 @@ test("successful paired save cancels its feature and leaves independent feature 
   f.hooks.stream = async (_options, data) => { if (data.feature === "enhance") { started.resolve(); await waitAbort(_options.signal); } };
   const old = f.generate().catch(error => error); await started.promise;
   const saved = await f.runtime.dispatch({ action: "save", sessionId: "a", feature: "enhance", config: normalizeConfig({ enabled: false }) });
-  assert.equal(saved.settings.enhance.enabled, false); assert.equal(f.runtime.errorCode(await old), "cancelled");
+  assert.equal(saved.settings.enhance.enabled, true); assert.equal(f.runtime.errorCode(await old), "cancelled");
   assert.ok(f.runtime.cache.has("a:suggest")); assert.equal(f.commandLog.length, 1);
   assert.match(f.commandLog[0].line, /^\/prompt-assist-config-v2 /); assert.deepEqual(f.commandLog[0].attachments, []);
 });
@@ -173,7 +175,7 @@ test("disable or session release during preflight cannot later start a paid mode
     const f = fixture(t), ready = deferred(), release = deferred();
     f.hooks.resolve = async () => { ready.resolve(); await release.promise; };
     const pending = f.generate().then(value => ({ value }), error => ({ error })); await ready.promise;
-    if (change === "disable") await f.runtime.dispatch({ action: "save", sessionId: "a", feature: "enhance", config: normalizeConfig() });
+    if (change === "disable") await f.enablement.set("enhance",false);
     else if (change === "release") f.runtime.release("a");
     else f.runtime.dispose();
     release.resolve(); const result = await pending;

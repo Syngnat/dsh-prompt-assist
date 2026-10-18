@@ -2,6 +2,17 @@
 
 [English](<README.md>) | [简体中文](<README.zh-CN.md>)
 
+## 1.2.12 — Profile-wide feature switches
+
+- Persist enhancement and suggestion enabled flags per DSH profile instead of initializing them for every new conversation. Global controls are usable without choosing a session; other model/reasoning/Fast/Q&A controls remain session-local.
+- Synchronize existing and new conversations through authenticated read-only snapshots with revision ordering, reject stale writes, cancel obsolete work and retain choices after Host restart.
+- Keep historical session enabled records replay-compatible but non-authoritative. Do not automatically expand old session consent into global paid-request authorization; explicitly enable each global switch once.
+- Preserve profile isolation, main Fast and existing session parameters. Publishing never upgrades an existing user installation.
+- Exclude already-aborted jobs from request coalescing, so re-enabling during slow cancellation can start a fresh request without joining the cancelled one.
+- Add profile persistence, cross-session state, snapshot ordering, stale-write, reconnect/baseline and lifecycle regressions: 549 offline tests plus real rc.1/rc.2 storage contracts. No real model requests are used.
+
+中文：两个启用开关改为当前profile全局持久化，新会话无需逐个开启；模型等参数仍按会话保存。旧会话开关不自动迁移为全局收费授权，需在全局区明确开启一次。
+
 ## 1.2.11 — Confirmed online updates and provider-model budgets
 
 - Add a separate prepare, explicit unchecked risk consent, and confirm flow for supported GitHub installations. Pin target/recovery commits and run replacement through public DSH Plugin Manager APIs and a Host-owned job; checking alone never installs.

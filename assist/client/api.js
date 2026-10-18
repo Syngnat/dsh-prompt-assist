@@ -22,6 +22,11 @@ export const DEFAULT_SETTINGS = Object.freeze({
   reasoningEffort: '', fast: false, rounds: 1,
 });
 
+export const SESSION_FIELDS = Object.freeze(['followSession','provider','model','reasoningEffort','fast','rounds']);
+export function sessionSettings(value = {}) {
+  return Object.fromEntries(SESSION_FIELDS.map(key => [key, value[key] ?? DEFAULT_SETTINGS[key]]));
+}
+
 export function configKey(settings) {
   return JSON.stringify(['suggest', 'enhance'].map(key => {
     const config = settings?.[key] ?? DEFAULT_SETTINGS;
@@ -31,7 +36,7 @@ export function configKey(settings) {
 
 export function validateSettings(value) {
   if (!Number.isInteger(value.rounds) || value.rounds < 1 || value.rounds > 20) return 'rounds';
-  if (value.enabled && !value.followSession && (!value.provider || !value.model)) return 'model';
+  if (!value.followSession && (!value.provider || !value.model)) return 'model';
   return null;
 }
 

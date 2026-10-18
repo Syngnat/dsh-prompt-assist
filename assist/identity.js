@@ -5,3 +5,4 @@ export const ASSIST_CHANNEL = '/api';
 export const ASSIST_ENDPOINT = 'local-openai-fast.assist';
 export const LEGACY_KEY = 'local.promptAssist';
 export const LEGACY_COMMAND = 'prompt-assist-config';
+export const ENABLEMENT_PATH = '/api/local-openai-fast.enablement';

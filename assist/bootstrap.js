@@ -1,3 +1,5 @@
+import {openEnablement} from './enablement-store.js';
+import {installEnablementWatch} from './enablement-transport.js';
 import { installAssistStream } from './stream-transport.js';
 import { ASSIST_COMMAND, LEGACY_KEY, LEGACY_COMMAND } from './identity.js';
 import zh from '../locale/zh.json' with { type: 'json' };
@@ -11,7 +13,8 @@ function wireView() {
     const key = `${state.qaId}:${state.rounds.length}:${state.busy}`;
     const previous = cache.get(state.settings);
     if (previous?.key === key) return previous.value;
-    const value = { settings: state.settings, qaId: state.qaId, qaCount: state.rounds.length, busy: state.busy };
+    const local = config => { const {enabled,...rest}=config; return rest; };
+    const value = { settings: {suggest:local(state.settings.suggest),enhance:local(state.settings.enhance)}, qaId: state.qaId, qaCount: state.rounds.length, busy: state.busy };
     cache.set(state.settings, { key, value });
     return value;
   };
@@ -20,19 +23,21 @@ function wireView() {
 function installTool(ctx, service) {
   ctx.tools.register({
     name: 'prompt_assist',
-    description: 'Read or configure session-local prompt assistance, or generate a suggestion/enhancement when explicitly requested. Generation may incur model charges and never edits the composer. Reading files requires the user-only UI selection flow.',
+    description: 'Read prompt assistance, set profile-wide feature switches, configure session-local model controls, or generate when explicitly requested. Generation may incur model charges and never edits the composer. Reading files requires the user-only UI selection flow.',
     parameters: { type: 'object', properties: {
-      action: { type: 'string', enum: ['status', 'catalog', 'model', 'configure', 'suggest', 'enhance'] },
+      action: { type: 'string', enum: ['status', 'catalog', 'model', 'configure', 'set-enabled', 'suggest', 'enhance'] },
       provider: { type: 'string' }, model: { type: 'string' },
-      feature: { type: 'string', enum: ['suggest', 'enhance'], description: 'Required for configure.' },
-      config: { type: 'object', description: 'Full feature settings for configure: enabled, followSession, provider, model, reasoningEffort, fast, rounds.', properties: {
-        enabled: { type: 'boolean' }, followSession: { type: 'boolean' }, provider: { type: 'string' }, model: { type: 'string' },
+      feature: { type: 'string', enum: ['suggest', 'enhance'], description: 'Required for configure or set-enabled.' },
+      config: { type: 'object', description: 'Session controls for configure: followSession, provider, model, reasoningEffort, fast, rounds. Does not change global switches.', properties: {
+        followSession: { type: 'boolean' }, provider: { type: 'string' }, model: { type: 'string' },
         reasoningEffort: { type: 'string' }, fast: { type: 'boolean' }, rounds: { type: 'integer', minimum: 1, maximum: 20 },
-      }, required: ['enabled','followSession','provider','model','reasoningEffort','fast','rounds'], additionalProperties: false },
+      }, required: ['followSession','provider','model','reasoningEffort','fast','rounds'], additionalProperties: false },
+      enabled: { type: 'boolean', description: 'Required for set-enabled. Persists for every conversation in this profile; enabling suggestions permits eligible future automatic model requests. Does not replay old Q&A.' },
       draft: { type: 'string', description: 'Original prompt for enhance; omitted for suggest.' },
     }, required: ['action'], additionalProperties: false },
     output: { schema: { type: 'object' }, render: (_args, value) => [{ type: 'text', text: JSON.stringify(value) }] },
     execute: async (args, exec) => {
+      if (args.action === 'set-enabled') return service.dispatch({action:'set-enabled',feature:args.feature,enabled:args.enabled},{agent:exec.agent,signal:exec.signal});
       const input = { ...args, action: args.action === 'configure' ? 'save' : args.action };
       if (args.action === 'suggest' || args.action === 'enhance') {
         input.action = 'generate'; input.feature = args.action;
@@ -47,16 +52,18 @@ function installTool(ctx, service) {
 
 export async function installAssistHost(ctx, { z, fastService, providers, createUserMessage }) {
   if (typeof createUserMessage !== 'function') throw new Error('Native message factory is unavailable');
+  const enablement = await openEnablement(ctx,z);
+  ctx.effect(() => () => enablement.close());
   // Block the retired V1 handler left by an earlier unowned route until Host restart.
   ctx.sessionProjections.register({ key: LEGACY_KEY, stateVersion: 2, stateSchema: z.any(),
     init: () => ({ ...initialContextState({}, 0), busy: true, retired: true }), apply: state => state });
-  const feature = z.object({ enabled: z.boolean(), followSession: z.boolean(), provider: z.string(), model: z.string(), reasoningEffort: z.string(), fast: z.boolean(), rounds: z.number().int().min(1).max(20) });
+  const feature = z.object({ followSession: z.boolean(), provider: z.string(), model: z.string(), reasoningEffort: z.string(), fast: z.boolean(), rounds: z.number().int().min(1).max(20) });
   ctx.sessionProjections.register({
     key: ASSIST_KEY, stateVersion: 2, stateSchema: z.any(),
     init: initialContextState, apply: foldContextState,
     wire: { viewSchema: z.object({ settings: z.object({ suggest: feature, enhance: feature }), qaId: z.string().nullable(), qaCount: z.number().int(), busy: z.boolean() }), view: wireView() },
   });
-  const service = new AssistRuntime(ctx, fastService, providers, createUserMessage);
+  const service = new AssistRuntime(ctx, fastService, providers, createUserMessage, enablement);
   ctx.effect(() => () => service.dispose());
   ctx.commands.register({ name: LEGACY_COMMAND, definitionId: '@local/dsh-openai-fast/retired-config/v2', recordInput: false,
     description: zh['assist.retired'], handler: () => ({ kind: 'error', text: 'retired' }) });
@@ -67,13 +74,14 @@ export async function installAssistHost(ctx, { z, fastService, providers, create
       try {
         const value = JSON.parse(invocation.rawInput);
         if (!['suggest', 'enhance'].includes(value.feature)) return { kind: 'error', text: 'invalid-request' };
-        await service.validateConfig(invocation.agent, value.config, invocation.signal);
+        await service.validateConfig(invocation.agent, value.config, invocation.signal, value.feature);
         return { kind: 'success', text: 'saved' };
       } catch (error) { return { kind: 'error', text: service.errorCode(error) }; }
     },
   });
   installAssistRpc(ctx, service);
   installAssistStream(ctx, service);
+  installEnablementWatch(ctx, enablement);
   installTool(ctx, service);
   ctx.on('agent/disposed', ({ agent }) => service.release(agent.id));
   return service;

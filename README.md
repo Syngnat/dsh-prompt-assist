@@ -4,9 +4,9 @@
 
 Provides prompt enhancement, next-question suggestions, and OpenAI Fast acceleration, with per-session configuration of models, reasoning effort, and auxiliary Fast.
 
-A plugin bundle for the DeepSeek Harness (DSH) Web GUI. Enhancement and suggestions are independent features: enable either or both for the conversation you choose. Settings live on the sidebar page, not in a composer popup.
+A plugin bundle for the DeepSeek Harness (DSH) Web GUI. Enhancement and suggestions are independent features: enable either or both for the current DSH profile. Settings live on the sidebar page, not in a composer popup. Feature switches are profile-wide; model controls remain per-conversation.
 
-> **v1.2.11:** adds explicitly confirmed online updates and makes auxiliary input/output limits follow the selected provider/model settings. It also fixes timeout classification and long-text handling. No automatic installation or paid retry is introduced; live model semantic acceptance has not been performed.
+> **v1.2.12:** enhancement and suggestion switches now persist for the whole DSH profile, including new conversations and Host restarts. Enable each global switch once after upgrading; earlier session-local flags are not automatically promoted into profile-wide authorization. Model, reasoning, auxiliary Fast and Q&A controls remain per-conversation.
 
 ## Compatibility policy
 
@@ -46,14 +46,14 @@ The package identifier remains `@local/dsh-openai-fast`, even though this reposi
 
 ## Use
 
-### Configure the intended conversation
+### Global switches and per-conversation controls
 
-1. Open the conversation you want to configure.
-2. Select **Prompt assist** in the left sidebar. Check the conversation identifier shown on the page.
-3. Configure **Enhance prompt** and **Next-question suggestions** separately. Each has its own enabled state, provider/model, native reasoning effort, auxiliary Fast switch, and Q&A round count.
-4. Save each feature you change, then choose **Back to conversation**. Both features can remain enabled.
+1. Open **Prompt assist** in the left sidebar. The two global switches work without selecting a conversation and save immediately for the current profile. New and existing conversations use those choices; refreshing or restarting DSH preserves them. Other profiles remain independent.
+2. Enabling automatic suggestions authorizes eligible future new-Q&A requests across this profile. Enabling, reconnecting or reopening does not replay old Q&A. Global changes or lost live synchronization invalidate current auxiliary previews. A failed save is not shown as saved.
+3. To change provider/model, native reasoning effort, auxiliary Fast or Q&A count, select the intended conversation and check its identifier. These controls remain per-conversation, independently configured for enhancement and suggestions.
+4. Save each changed set of conversation controls, then choose **Back to conversation**. Saving conversation controls never changes the global switches.
 
-Features start disabled. Following the session follows only its model and reasoning effort; auxiliary Fast always remains an independent setting. Choose 1, 3, 5, or a custom **1–20 complete Q&A rounds**. Invalid values are rejected, not silently clamped. A model change that invalidates a saved effort requires an explicit new choice; the plugin does not silently lower the effort.
+Fresh global switches start disabled; legacy session flags are retained for replay compatibility but cannot override them. Enable each global switch once after upgrading to this change. Following the session follows only its model and reasoning effort; auxiliary Fast always remains an independent setting. Choose 1, 3, 5, or a custom **1–20 complete Q&A rounds**. Invalid values are rejected, not silently clamped. A model change that invalidates a saved effort requires an explicit new choice; the plugin does not silently lower the effort.
 
 ### Enhance a draft
 
@@ -156,13 +156,13 @@ Use an isolated DSH Web profile and a fresh, unsent conversation, with a disposa
 | --- | --- |
 | GitHub distribution | Prebuilt tag and release assets; see the GitHub release for download verification |
 | Windows DSH `0.2.1-rc.2` | Isolated packaged-fixture update/recovery/closed-page lifecycle checks pass; final archive installation evidence is recorded with the release. Existing user installation is unchanged |
-| Real DSH rc.1 / rc.2 contracts | Adapter, native budget/estimator and jobs lifecycle checks pass locally without external model calls; the same checks gate publication in CI |
+| Real DSH rc.1 / rc.2 contracts | Adapter, native budget/estimator, jobs lifecycle and profile-switch persistence checks pass locally without external model calls; the same checks gate publication in CI |
 | Windows update section | Real Chrome click → authenticated Host route → GitHub stable metadata verified in an isolated DSH rc.2 profile; guide and rendered layout checked |
 | v1.2.10 suggestion outcomes | Offline model-fixture → Runtime/cache → RPC/stream → controller/SSR checks; no live browser or model acceptance |
 | macOS and Linux | Builds/offline suite are required CI gates; DSH runtime not tested |
 | Independent security audit | Not performed/claimed |
 
-v1.2.11 passes 499 offline tests locally. [GitHub Actions](https://github.com/Syngnat/dsh-prompt-assist/actions) covers Windows, macOS and Linux builds/tests plus real DSH adapter-contract checks; stable publication requires successful exact-commit CI. Earlier update-page and first-session layout browser checks do not constitute full v1.2.11 visual or live-model acceptance. No live model semantic or output-protocol adherence evaluation was performed for this release.
+v1.2.12 passes 549 offline tests locally. [GitHub Actions](https://github.com/Syngnat/dsh-prompt-assist/actions) covers Windows, macOS and Linux builds/tests plus real DSH adapter-contract checks; stable publication requires successful exact-commit CI. Earlier update-page and first-session layout checks do not constitute full v1.2.12 visual or live-model acceptance. Isolated global-switch installation/browser evidence is recorded in the release notes. No live model semantic or output-protocol adherence evaluation was performed for this release.
 
 ## License
 

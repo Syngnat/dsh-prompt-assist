@@ -18,15 +18,15 @@ import { foldContextState } from '../assist/context.js';
 import { normalizeConfig } from '../assist/config.js';
 test('retired handler sees only disabled tombstone; its config command is reject-only',async()=>{
  const routes=new Map([['/local-openai-fast/assist',{retired:true}]]), units=new Map(), commands=new Map();
- const ctx=scope(routes);ctx.on=()=>{};ctx.tools={register(){}};
+ let registeredTool;const ctx=scope(routes);ctx.on=()=>{};ctx.tools={register(value){registeredTool=value;}};ctx.profileContext={dir:process.cwd()};ctx.get=name=>ctx[name];ctx.storageDomain={async open(spec){let value=spec.global.initial;return {global:{get:()=>value,set:async next=>{value=next;}},close:async()=>{}};}};
  ctx.connection.fetch={register(route){return ctx.effect(()=>{routes.set(route.path,route);return()=>routes.delete(route.path);});}};
  ctx.sessionProjections={register(unit){ctx.effect(()=>{units.set(unit.key,unit);return()=>units.delete(unit.key);});}};
  ctx.commands={register(command){ctx.effect(()=>{commands.set(command.name,command);return()=>commands.delete(command.name);});}};
  let streams=0;ctx.llm={prepareCall(){streams++;throw Error('must not dispatch');}};
- const chain={int(){return this;},min(){return this;},max(){return this;},nullable(){return this;}};
+ const chain={int(){return this;},min(){return this;},max(){return this;},nullable(){return this;},strict(){return this;},parse(value){return value;}};
  const z={any:()=>chain,object:()=>chain,string:()=>chain,boolean:()=>chain,number:()=>chain};
  const fast={selection:()=>({provider:'openai',model:'gpt-test'}),enabled:()=>true};
- await installAssistHost(ctx,{z,fastService:fast,providers:['openai'],createUserMessage:value=>value});
+ const service=await installAssistHost(ctx,{z,fastService:fast,providers:['openai'],createUserMessage:value=>value});
  assert.equal(units.get(ASSIST_KEY).stateVersion,2);assert.equal(units.get(LEGACY_KEY).stateVersion,2);assert.equal(units.get(LEGACY_KEY).wire,undefined);
  const locked=units.get(LEGACY_KEY).init();assert.equal(locked.settings.enhance.enabled,false);assert.equal(locked.busy,true);assert.equal(locked.rounds.length,0);
  assert.equal(units.get(LEGACY_KEY).apply(locked,{type:'anything'}),locked);
@@ -38,5 +38,7 @@ test('retired handler sees only disabled tombstone; its config command is reject
  replay=foldContextState(replay,{type:'command/done',seq:2,data:{commandId:'old',kind:'success'}});assert.equal(replay.settings.enhance.rounds,1);
  // A V1 run pending at migration and its late success never enter V2 pending/settings.
  assert.deepEqual(replay.pending,{});
- assert.equal(routes.size,3);ctx.dispose();assert.equal(routes.size,1);assert.equal(units.size,0);assert.equal(commands.size,0);
+ assert.ok(registeredTool.parameters.properties.action.enum.includes('set-enabled'));assert.equal(registeredTool.parameters.properties.config.properties.enabled,undefined);assert.equal(registeredTool.parameters.properties.enabled.type,'boolean');
+ const changed=await registeredTool.execute({action:'set-enabled',feature:'enhance',enabled:true},{agent:{session:{header:{}}},signal:new AbortController().signal});assert.equal(changed.enabled.enhance,true);assert.equal((await service.dispatch({action:'enablement'})).revision,changed.revision);
+ assert.equal(routes.size,4);ctx.dispose();assert.equal(routes.size,1);assert.equal(units.size,0);assert.equal(commands.size,0);
 });

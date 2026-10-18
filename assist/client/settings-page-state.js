@@ -1,17 +1,17 @@
-import { DEFAULT_SETTINGS } from './api.js';
+import { sessionSettings } from './api.js';
 
 export function createSettingsDraft(config) {
-  return { config: { ...DEFAULT_SETTINGS, ...config }, version: 0, dirty: false };
+  return { config: sessionSettings(config), version: 0, dirty: false };
 }
 
 export function editSettingsDraft(state, config) {
-  return { config: { ...config }, version: state.version + 1, dirty: true };
+  return { config: sessionSettings(config), version: state.version + 1, dirty: true };
 }
 
 /** A save acknowledges only the exact edit revision it submitted. */
 export function acceptSettingsSave(state, version, config) {
   if (state.version !== version) return state;
-  return { config: { ...config }, version, dirty: false };
+  return { config: sessionSettings(config), version, dirty: false };
 }
 
 /** Owned by one mounted page/card; ignored AbortSignals still cannot publish late results. */

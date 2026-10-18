@@ -29,7 +29,7 @@ export function normalizeConfig(input = {}) {
   return config;
 }
 
-/** Each feature and each session owns a distinct settings object. */
+/** Session controls stay distinct. The legacy enabled field is replay-compatible, not profile authority. */
 export function initialSettings() {
   return { suggest: normalizeConfig(), enhance: normalizeConfig() };
 }

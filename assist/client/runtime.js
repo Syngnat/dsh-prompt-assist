@@ -1,8 +1,11 @@
 import React from "react";
-import {DEFAULT_SETTINGS,reconcileState,catalogInput} from "./api.js";
+import {DEFAULT_SETTINGS,reconcileState,catalogInput,sessionSettings} from "./api.js";
 import {createAssistController} from "./controller.js";
+import {EMPTY_ENABLEMENT_SOURCE,mergeGlobalSettings,createEnablementObserver} from "./enablement-source.js";
 const EMPTY={suggest:DEFAULT_SETTINGS,enhance:DEFAULT_SETTINGS};
 export function useAssistRuntime(p) {
+ const globalSource=p.globalSource??EMPTY_ENABLEMENT_SOURCE;
+ const enablement=React.useSyncExternalStore(globalSource.subscribe,globalSource.getSnapshot,globalSource.getSnapshot);
  const input=p.useInput(s=>s);
  const session=p.useSession(s=>s);
  const wire=React.useSyncExternalStore(p.assistSource.subscribe,p.assistSource.getSnapshot,p.assistSource.getSnapshot);
@@ -18,10 +21,14 @@ export function useAssistRuntime(p) {
  const alive=React.useRef(false);
  const send=p.assistSend;
  const controller=React.useMemo(()=>createAssistController({send,actions:()=>current.current.actions,publish:value=>{if(alive.current)setResult(value);},requestId:()=>globalThis.crypto.randomUUID()}),[p.sessionId,send]);
+ const observeEnablement=React.useMemo(()=>createEnablementObserver(controller),[controller]);
  const hostValue=host?.sessionId===p.sessionId?host.value:null;
  const allowed=p.useAccess("commands/execute")&&!session?.subagent&&!session?.removed;
- const {state,busy}=reconcileState(hostValue,wire,session,allowed);
- const settings=state?.settings??EMPTY;
+ const reconciled=reconcileState(hostValue,wire,session,allowed);
+ const busy=reconciled.busy||!enablement.connected;
+ const sessionSettingsValue=reconciled.state?.settings??EMPTY;
+ const settings=React.useMemo(()=>mergeGlobalSettings(sessionSettingsValue,enablement),[sessionSettingsValue,enablement.connected,enablement.data]);
+ const state=reconciled.state?{...reconciled.state,settings}:null;
  const dirty=dirtyFeatures.length>0;
  const route=selection?.next??state?.current;
  const routeKey=JSON.stringify(route??null);
@@ -36,13 +43,13 @@ export function useAssistRuntime(p) {
   send("state",p.sessionId,{},abort.signal).then(value=>{if(!abort.signal.aborted){setHost({sessionId:p.sessionId,value});setNotice(null);}}).catch(error=>{if(!abort.signal.aborted)setNotice(error);});
   return()=>abort.abort();
  },[p.sessionId,send,wire?.qaId,wire?.busy,session?.running]);
- React.useEffect(()=>{controller.observe({sessionId:p.sessionId,input,settings,qaId:state?.qaId,busy,paused:dirty,routeKey});},[controller,p.sessionId,input,settings,state?.qaId,busy,dirty,routeKey]);
+ React.useEffect(()=>{observeEnablement({sessionId:p.sessionId,input,settings,qaId:state?.qaId,busy,paused:dirty,routeKey},enablement);},[observeEnablement,p.sessionId,input,settings,state?.qaId,busy,dirty,routeKey,enablement.connected,enablement.data?.revision]);
  async function save(feature,config){
   if(saving||!allowed)return;controller.configurationEdited();setSaving(true);setNotice(null);
   const version=editVersions.current[feature];const owner=p.sessionId;const abort=new AbortController();saves.current.add(abort);
   const valid=()=>alive.current&&!abort.signal.aborted&&current.current.sessionId===owner;
   try{
-   const value=await send("save",owner,{feature,config},abort.signal);if(!valid())return;
+   const value=await send("save",owner,{feature,config:sessionSettings(config)},abort.signal);if(!valid())return;
    setHost({sessionId:owner,value});await p.refreshAssist();if(!valid())return;
    if(editVersions.current[feature]===version){setDirtyFeatures(old=>old.filter(key=>key!==feature));setNotice("saved");return true;}
   }catch(error){if(valid())setNotice(error);}

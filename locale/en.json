@@ -13,6 +13,6 @@
   "fast.unsupported": "Fast is only available for explicitly allowed OpenAI model routes.",
   "fast.enabled": "OpenAI Fast enabled for this session and inheriting subagents. Priority may incur additional charges.",
   "fast.disabled": "Fast disabled for this session and inheriting subagents. Subsequent requests keep provider defaults.",
-  "assist.command": "Save prompt assistance preferences for this session.",
+  "assist.command": "Save this session's model, reasoning, Fast and Q&A controls; global switches are separate.",
   "assist.retired": "The retired assist configuration entry is disabled. Use Prompt assist."
 }

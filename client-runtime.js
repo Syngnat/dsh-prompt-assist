@@ -36,7 +36,7 @@ var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__ge
 var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
 
 // assist/identity.js
-var ASSIST_KEY, ASSIST_COMMAND, ASSIST_CHANNEL, ASSIST_ENDPOINT, LEGACY_COMMAND;
+var ASSIST_KEY, ASSIST_COMMAND, ASSIST_CHANNEL, ASSIST_ENDPOINT, LEGACY_COMMAND, ENABLEMENT_PATH;
 var init_identity = __esm({
   "assist/identity.js"() {
     ASSIST_KEY = "local.promptAssist.v2";
@@ -44,6 +44,7 @@ var init_identity = __esm({
     ASSIST_CHANNEL = "/api";
     ASSIST_ENDPOINT = "local-openai-fast.assist";
     LEGACY_COMMAND = "prompt-assist-config";
+    ENABLEMENT_PATH = "/api/local-openai-fast.enablement";
   }
 });
 
@@ -345,6 +346,19 @@ var init_messages = __esm({
     NS = "local-prompt-assist";
     dictionaries = {
       zh: {
+        "global.title": "\u5168\u5C40\u529F\u80FD\u5F00\u5173\uFF08\u5F53\u524D profile\uFF09",
+        "global.scope": "\u8FD9\u4E24\u4E2A\u5F00\u5173\u7ACB\u5373\u4FDD\u5B58\u5E76\u4F5C\u7528\u4E8E\u5F53\u524D profile \u7684\u6240\u6709\u73B0\u6709\u548C\u65B0\u5EFA\u4F1A\u8BDD\uFF0C\u65E0\u9700\u5148\u9009\u62E9\u4F1A\u8BDD\u3002\u6A21\u578B\u3001\u63A8\u7406\u6863\u3001\u8F85\u52A9 Fast \u548C\u95EE\u7B54\u8F6E\u6570\u4ECD\u5206\u522B\u6309\u4F1A\u8BDD\u8BBE\u7F6E\u3002",
+        "global.charge": "\u5F00\u542F\u4E0B\u4E00\u95EE\u5EFA\u8BAE\u540E\uFF0C\u5404\u4F1A\u8BDD\u5728\u65B0\u7684\u5B8C\u6574\u95EE\u7B54\u7ED3\u675F\u3001\u7A7A\u95F2\u4E14\u8349\u7A3F\u4E3A\u7A7A\u65F6\u53EF\u81EA\u52A8\u8BF7\u6C42\u6A21\u578B\u5E76\u4EA7\u751F\u8D39\u7528\uFF1B\u589E\u5F3A\u4ECD\u53EA\u5728\u4E3B\u52A8\u70B9\u51FB\u65F6\u8BF7\u6C42\u3002\u5173\u95ED\u4F1A\u53D6\u6D88\u8BE5\u529F\u80FD\u7684\u8FC7\u671F\u7ED3\u679C\u3002",
+        "global.suggest": "\u5168\u5C40\u542F\u7528\u4E0B\u4E00\u95EE\u5EFA\u8BAE",
+        "global.enhance": "\u5168\u5C40\u542F\u7528\u63D0\u793A\u8BCD\u589E\u5F3A",
+        "global.migration": "\u9996\u6B21\u5168\u5C40\u5F00\u5173\u9ED8\u8BA4\u5173\u95ED\uFF1B\u65E7\u4F1A\u8BDD\u7684\u542F\u7528\u6807\u8BB0\u4E0D\u4F1A\u81EA\u52A8\u8FC1\u79FB\u3002\u9700\u8981\u65F6\u5728\u8FD9\u91CC\u5F00\u542F\u4E00\u6B21\uFF0C\u65B0\u65E7\u4F1A\u8BDD\u5171\u540C\u7EE7\u627F\u3002\u5F00\u542F\u6216\u91CD\u8FDE\u4E0D\u4F1A\u8FFD\u6EAF\u5386\u53F2\u95EE\u7B54\u3002",
+        "global.loading": "\u6B63\u5728\u8BFB\u53D6\u5168\u5C40\u5F00\u5173\u5E76\u8FDE\u63A5\u540C\u6B65\u2026",
+        "global.disconnected": "\u5168\u5C40\u540C\u6B65\u6682\u4E0D\u53EF\u7528\uFF1B\u4E0B\u65B9\u53EF\u80FD\u663E\u793A\u4E0A\u6B21\u786E\u8BA4\u503C\uFF0C\u4F46\u5404\u4F1A\u8BDD\u6682\u4E0D\u542F\u7528\u8F85\u52A9\u8BF7\u6C42\u3002\u6062\u590D\u8FDE\u63A5\u53EA\u91CD\u8BFB\u72B6\u6001\uFF0C\u4E0D\u4F1A\u81EA\u52A8\u91CD\u53D1\u4FDD\u5B58\u3002",
+        "global.saving": "\u6B63\u5728\u4FDD\u5B58\u5168\u5C40\u5F00\u5173\u2026",
+        "global.saved": "\u5168\u5C40\u5F00\u5173\u5DF2\u7531\u5BBF\u4E3B\u786E\u8BA4\u4FDD\u5B58\u3002",
+        "global.saveFailed": "\u672A\u786E\u8BA4\u4FDD\u5B58\u6210\u529F\uFF0C\u4E0D\u80FD\u89C6\u4E3A\u5F00\u5173\u5DF2\u66F4\u6539\uFF1B\u8BF7\u91CD\u8BFB\u72B6\u6001\u540E\u624B\u52A8\u91CD\u8BD5\u3002\u4E0D\u4F1A\u81EA\u52A8\u91CD\u53D1\u4FDD\u5B58\u3002",
+        "global.stale": "\u5176\u4ED6\u7A97\u53E3\u5DF2\u66F4\u65B0\u5168\u5C40\u5F00\u5173\u3002\u672C\u6B21\u65E7\u7248\u672C\u64CD\u4F5C\u672A\u4F5C\u4E3A\u5F53\u524D\u4FDD\u5B58\u6210\u529F\u5904\u7406\uFF1B\u8BF7\u91CD\u8BFB\u5E76\u6838\u5BF9\u540E\u518D\u64CD\u4F5C\uFF0C\u4E0D\u4F1A\u81EA\u52A8\u91CD\u53D1\u4FDD\u5B58\u3002",
+        "global.reload": "\u91CD\u8BFB\u5168\u5C40\u5F00\u5173",
         "online.confirmationRejected": "\u5BBF\u4E3B\u660E\u786E\u62D2\u7EDD\u4E86\u672C\u6B21\u786E\u8BA4\uFF0C\u672A\u4E3A\u6B64\u8BF7\u6C42\u542F\u52A8\u66F4\u65B0\u4EFB\u52A1\u3002\u8BF7\u91CD\u65B0\u8BFB\u53D6\u72B6\u6001\uFF0C\u7136\u540E\u91CD\u65B0\u51C6\u5907\u5E76\u786E\u8BA4\uFF1B\u4E0D\u4F1A\u81EA\u52A8\u91CD\u8BD5\u3002\u9519\u8BEF\u7801\uFF1A",
         "online.forgetWarning": "\u82E5\u8BB0\u5F55\u65E0\u6CD5\u6062\u590D\uFF0C\u8BF7\u5148\u5728\u63D2\u4EF6\u7BA1\u7406\u4E2D\u4EBA\u5DE5\u6838\u5BF9\u5B9E\u9645\u5B89\u88C5\u7248\u672C\u5E76\u786E\u8BA4\u6CA1\u6709\u66F4\u65B0\u4EFB\u52A1\u4ECD\u5728\u6267\u884C\u3002\u6E05\u9664\u4EC5\u79FB\u9664\u672C\u6807\u7B7E\u9875\u7684\u672C\u5730\u8DDF\u8E2A\u6807\u8BB0\uFF0C\u4E0D\u4EE3\u8868\u66F4\u65B0\u6210\u529F\uFF0C\u4E0D\u4F1A\u53D6\u6D88\u3001\u542F\u52A8\u6216\u91CD\u8BD5\u4EFB\u4F55\u5BBF\u4E3B\u4EFB\u52A1\u3002\u987B\u5148\u6210\u529F\u91CD\u8BFB\u72B6\u6001\uFF0C\u4E14\u6CA1\u6709\u6D3B\u52A8\u4EFB\u52A1\uFF0C\u624D\u80FD\u6E05\u9664\u3002",
         "online.forgetAcknowledgement": "\u6211\u5DF2\u4EBA\u5DE5\u6838\u5BF9\u5B89\u88C5\u72B6\u6001\uFF0C\u786E\u8BA4\u6CA1\u6709\u66F4\u65B0\u4EFB\u52A1\u4ECD\u5728\u6267\u884C\uFF0C\u5E76\u7406\u89E3\u6E05\u9664\u6807\u8BB0\u4E0D\u662F\u66F4\u65B0\u7ED3\u679C\u3002",
@@ -438,13 +452,13 @@ var init_messages = __esm({
         firstTokenLabel: "\u9996\u5B57",
         totalTimeLabel: "\u603B\u8017\u65F6",
         warningsLabel: "\u5904\u7406\u63D0\u793A",
-        chooseSession: "\u8BF7\u5148\u6253\u5F00\u9700\u8981\u914D\u7F6E\u7684\u4F1A\u8BDD\uFF0C\u518D\u8FDB\u5165\u63D0\u793A\u8BCD\u8F85\u52A9\u3002",
+        chooseSession: "\u5168\u5C40\u5F00\u5173\u53EF\u76F4\u63A5\u8C03\u6574\u3002\u8981\u7F16\u8F91\u4F1A\u8BDD\u53C2\u6570\uFF0C\u8BF7\u5148\u6253\u5F00\u76EE\u6807\u4F1A\u8BDD\uFF0C\u518D\u8FDB\u5165\u6B64\u9875\u3002",
         returnConversation: "\u8FD4\u56DE\u5BF9\u8BDD",
-        sessionScope: "\u8BBE\u7F6E\u4EC5\u5E94\u7528\u4E8E\u4E0B\u9762\u6240\u793A\u7684\u6700\u8FD1\u6253\u5F00\u4F1A\u8BDD\u3002\u5207\u6362\u914D\u7F6E\u5BF9\u8C61\u65F6\uFF0C\u8BF7\u5148\u6253\u5F00\u53E6\u4E00\u4F1A\u8BDD\uFF0C\u518D\u8FDB\u5165\u6B64\u9875\u3002",
+        sessionScope: "\u4E0B\u9762\u7684\u6A21\u578B\u3001\u63A8\u7406\u6863\u3001\u8F85\u52A9 Fast \u548C\u8F6E\u6570\u4EC5\u5E94\u7528\u4E8E\u6240\u793A\u4F1A\u8BDD\uFF1B\u4E0D\u5305\u542B\u5168\u5C40\u5F00\u5173\u3002\u5207\u6362\u914D\u7F6E\u5BF9\u8C61\u65F6\uFF0C\u8BF7\u5148\u6253\u5F00\u53E6\u4E00\u4F1A\u8BDD\uFF0C\u518D\u8FDB\u5165\u6B64\u9875\u3002",
         editingSession: "\u6B63\u5728\u914D\u7F6E\u7684\u4F1A\u8BDD",
         loading: "\u6B63\u5728\u52A0\u8F7D\u8BBE\u7F6E\u2026",
         generatingSuggest: "\u6B63\u5728\u5EFA\u8BAE\u2026",
-        enableSuggest: "\u8BF7\u5148\u5728\u5DE6\u4FA7\u63D0\u793A\u8BCD\u8F85\u52A9\u4E2D\u542F\u7528\u4E0B\u4E00\u95EE\u5EFA\u8BAE\u3002",
+        enableSuggest: "\u8BF7\u5148\u5728\u63D0\u793A\u8BCD\u8F85\u52A9\u4E2D\u5F00\u542F\u5F53\u524D profile \u7684\u5168\u5C40\u4E0B\u4E00\u95EE\u5EFA\u8BAE\u5F00\u5173\u3002",
         suggestReset: "\u8F93\u5165\u6216\u914D\u7F6E\u53D1\u751F\u53D8\u5316\uFF0C\u672C\u8F6E\u81EA\u52A8\u5EFA\u8BAE\u5DF2\u53D6\u6D88\uFF1B\u53EF\u624B\u52A8\u91CD\u65B0\u751F\u6210\u3002",
         suggestRequested: "\u672C\u8F6E\u5DF2\u89E6\u53D1\u8FC7\u5EFA\u8BAE\uFF0C\u4E0D\u4F1A\u81EA\u52A8\u91CD\u590D\u8BF7\u6C42\uFF1B\u9700\u8981\u65F6\u53EF\u624B\u52A8\u91CD\u8BD5\u3002",
         streaming: "\u6B63\u5728\u6D41\u5F0F\u751F\u6210\uFF0C\u5B8C\u6210\u540E\u53EF\u5E94\u7528",
@@ -453,7 +467,7 @@ var init_messages = __esm({
         draftOccupied: "\u8349\u7A3F\u542B\u6587\u5B57\u3001\u5F15\u7528\u6216\u9644\u4EF6\uFF0C\u81EA\u52A8\u5EFA\u8BAE\u5DF2\u8DF3\u8FC7\uFF0C\u4E0D\u4F1A\u8986\u76D6\u8F93\u5165\u3002",
         waitingQA: "\u81EA\u52A8\u7B49\u5F85\u4E0B\u4E00\u8F6E\u5B8C\u6574 QA\uFF1B\u4E5F\u53EF\u70B9\u51FB\u4E0B\u65B9\u6309\u94AE\uFF0C\u57FA\u4E8E\u5DF2\u6709 QA \u751F\u6210\u3002",
         enhancing: "\u6B63\u5728\u589E\u5F3A\u2026",
-        enableEnhance: "\u8BF7\u5148\u5728\u5DE6\u4FA7\u63D0\u793A\u8BCD\u8F85\u52A9\u4E2D\u542F\u7528\u589E\u5F3A\u529F\u80FD\u5E76\u4FDD\u5B58\u914D\u7F6E\u3002",
+        enableEnhance: "\u8BF7\u5148\u5F00\u542F\u5F53\u524D profile \u7684\u5168\u5C40\u589E\u5F3A\u5F00\u5173\uFF1B\u4F1A\u8BDD\u6A21\u578B\u7B49\u53C2\u6570\u5728\u4E0B\u65B9\u5355\u72EC\u4FDD\u5B58\u3002",
         transportError: "\u8F85\u52A9\u670D\u52A1\u8FDE\u63A5\u5931\u8D25\uFF08\u4F20\u8F93\u5C42\uFF09\uFF0C\u4E0D\u662F\u6A21\u578B\u914D\u7F6E\u9519\u8BEF\u3002\u8BF7\u5237\u65B0\u9875\u9762\u540E\u91CD\u8BD5\u3002",
         authError: "\u8F85\u52A9\u670D\u52A1\u8BBF\u95EE\u88AB\u62D2\u7EDD\uFF0C\u8BF7\u68C0\u67E5\u5F53\u524D\u8FDE\u63A5\u4E0E\u4F1A\u8BDD\u6743\u9650\u3002",
         parallel: "\u4E24\u9879\u72EC\u7ACB\uFF0C\u53EF\u540C\u65F6\u542F\u7528\uFF1B\u4E0D\u662F\u4E8C\u9009\u4E00\u7684\u6A21\u5F0F\u3002",
@@ -493,7 +507,7 @@ var init_messages = __esm({
         dismiss: "\u5FFD\u7565",
         unsupported: "\u5F53\u524D\u7248\u672C\u4E0D\u652F\u6301\u539F\u751F Ghost \u6216 \u2192 \u91C7\u7EB3\uFF1B\u8BF7\u70B9\u51FB\u91C7\u7528\u3002\u672C\u529F\u80FD\u672A\u6CE8\u518C Ctrl+Alt+E \u5FEB\u6377\u952E\u3002",
         structured: "\u542B\u5F15\u7528\u6216\u547D\u4EE4\u7684\u8349\u7A3F\u4EC5\u652F\u6301\u9884\u89C8/\u590D\u5236\uFF1B\u7ED3\u6784\u5316\u5E94\u7528\u5C1A\u4E0D\u652F\u6301\uFF0C\u4E0D\u4F1A\u66FF\u6362\u5F15\u7528\u6216\u9644\u4EF6\u3002",
-        initial: "\u9ED8\u8BA4\u5173\u95ED\u3002\u8BF7\u5206\u522B\u4FDD\u5B58/\u542F\u7528\u914D\u7F6E\uFF1B\u5EFA\u8BAE\u4EC5\u5728\u65B0\u7684\u5B8C\u6574\u95EE\u7B54\u7ED3\u675F\u540E\u751F\u6210\uFF0C\u9996\u6B21\u6253\u5F00\u4E0D\u8FFD\u6EAF\u3002",
+        initial: "\u5168\u5C40\u5F00\u5173\u9996\u6B21\u9ED8\u8BA4\u5173\u95ED\uFF1B\u4F1A\u8BDD\u53C2\u6570\u5355\u72EC\u4FDD\u5B58\u3002\u5EFA\u8BAE\u4EC5\u5728\u65B0\u7684\u5B8C\u6574\u95EE\u7B54\u7ED3\u675F\u540E\u751F\u6210\uFF0C\u9996\u6B21\u6253\u5F00\u3001\u542F\u7528\u6216\u91CD\u8FDE\u5747\u4E0D\u8FFD\u6EAF\u3002",
         manual: "\u589E\u5F3A\u53EA\u5728\u70B9\u51FB\u540E\u8BF7\u6C42\uFF1B\u751F\u6210\u671F\u95F4\u4ECD\u53EF\u7F16\u8F91\uFF0C\u7F16\u8F91\u4F1A\u53D6\u6D88\u8FC7\u671F\u7ED3\u679C\u3002",
         busy: "\u4F1A\u8BDD\u4ECD\u5728\u8FD0\u884C\uFF0C\u7ED3\u675F\u540E\u518D\u8BD5\u3002",
         requestError: "\u8BF7\u6C42\u672A\u5B8C\u6210\uFF0C\u8349\u7A3F\u4FDD\u6301\u4E0D\u53D8\uFF1B\u8BF7\u68C0\u67E5\u914D\u7F6E\u540E\u91CD\u8BD5\u3002",
@@ -527,6 +541,19 @@ var init_messages = __esm({
         cached: "\u547D\u4E2D\u672C\u4F1A\u8BDD\u7F13\u5B58\uFF0C\u4E0B\u5217\u8017\u65F6\u4E3A\u539F\u751F\u6210\u8017\u65F6\u3002"
       },
       en: {
+        "global.title": "Profile-wide feature switches",
+        "global.scope": "These two switches save immediately for every existing and new session in this profile. No selected session is required. Models, reasoning effort, auxiliary Fast and Q&A rounds remain session-specific.",
+        "global.charge": "Enabling next-question suggestions can automatically call a model and incur charges after a new complete Q&A when a session is idle with an empty draft. Enhancement still requires a click. Turning a feature off invalidates its pending results.",
+        "global.suggest": "Enable suggestions across this profile",
+        "global.enhance": "Enable enhancement across this profile",
+        "global.migration": "Profile-wide switches start off. Old per-session enablement is not migrated automatically. Enable each feature here once for both existing and new sessions. Enabling or reconnecting never replays historical Q&A.",
+        "global.loading": "Reading global switches and connecting live updates\u2026",
+        "global.disconnected": "Global sync is unavailable. The last confirmed values may remain visible, but auxiliary requests are temporarily disabled in sessions. Reconnection only reads status; it never resends a save.",
+        "global.saving": "Saving profile-wide switches\u2026",
+        "global.saved": "The Host confirmed that the profile-wide switch was saved.",
+        "global.saveFailed": "The save was not confirmed. Do not assume the switch changed. Reload status before retrying manually; saves are never retried automatically.",
+        "global.stale": "Another window changed the switches. This older operation is not reported as the current successful save. Reload and review before acting; no save is resent automatically.",
+        "global.reload": "Reload profile-wide switches",
         "online.confirmationRejected": "The Host explicitly rejected this confirmation without starting an update job for it. Reload status, then prepare and confirm again. Nothing retries automatically. Error code:",
         "online.forgetWarning": "If the record cannot be recovered, first verify the installed version in plugin management and make sure no update job is still running. Clearing only removes this tab\u2019s local tracking marker. It does not mean success, and does not cancel, start, or retry any Host job. Reload status successfully with no active job before clearing.",
         "online.forgetAcknowledgement": "I have manually verified the installation and that no update job is still running. I understand that clearing the marker is not an update result.",
@@ -620,13 +647,13 @@ var init_messages = __esm({
         firstTokenLabel: "First token",
         totalTimeLabel: "Total time",
         warningsLabel: "Warnings",
-        chooseSession: "Open the conversation you want to configure, then return here.",
+        chooseSession: "Global switches are available now. To edit session parameters, open the target conversation and return here.",
         returnConversation: "Back to conversation",
-        sessionScope: "Settings apply only to the last visited conversation shown below. To configure another, open it first and return here.",
+        sessionScope: "Model, effort, auxiliary Fast and round settings below apply only to the shown session, not the global switches. Open another conversation first to change the target.",
         editingSession: "Conversation being configured",
         loading: "Loading settings\u2026",
         generatingSuggest: "Suggesting\u2026",
-        enableSuggest: "Enable next-question suggestions in Prompt assist on the left.",
+        enableSuggest: "Enable the profile-wide suggestions switch in Prompt assist first.",
         suggestReset: "Input or settings changed; this automatic suggestion was cancelled. Generate manually to retry.",
         suggestRequested: "This Q&A already triggered a suggestion; no automatic duplicate. Retry manually if needed.",
         streaming: "Streaming \u2014 apply becomes available when complete",
@@ -635,7 +662,7 @@ var init_messages = __esm({
         draftOccupied: "Draft has text, references or attachments. Automatic suggestions are skipped; your draft stays unchanged.",
         waitingQA: "Waiting for the next completed Q&A. You can also generate from existing Q&A below.",
         enhancing: "Enhancing\u2026",
-        enableEnhance: "Enable enhancement and save its settings in Prompt assist on the left first.",
+        enableEnhance: "Enable the profile-wide enhancement switch first. Save session model parameters separately below.",
         transportError: "Assist connection failed at the transport layer, not model configuration. Reload the page and retry.",
         authError: "Assist access was denied. Check the current connection and session access.",
         parallel: "Two independent features. Both can be enabled at the same time; these are not alternative modes.",
@@ -675,7 +702,7 @@ var init_messages = __esm({
         dismiss: "Dismiss",
         unsupported: "Native Ghost and \u2192 acceptance are not supported. Use the Accept button. This feature does not register Ctrl+Alt+E.",
         structured: "Drafts with references or commands support preview/copy only. Structured apply is not supported; references and attachments stay unchanged.",
-        initial: "Off by default. Save/enable each feature first. Suggestions only follow a NEW completed Q&A; opening this panel never replays an old Q&A.",
+        initial: "Profile-wide switches start off; session parameters save separately. Suggestions only follow a NEW complete Q&A. Opening, enabling or reconnecting never replays old Q&A.",
         manual: "Enhancement runs only on click. You can keep editing; edits cancel stale results.",
         busy: "The session is still running. Try again after it ends.",
         requestError: "The request did not finish. Your draft is unchanged. Check settings and retry.",
@@ -736,6 +763,9 @@ var init_panel_visibility = __esm({
 });
 
 // assist/client/api.js
+function sessionSettings(value = {}) {
+  return Object.fromEntries(SESSION_FIELDS.map((key) => [key, value[key] ?? DEFAULT_SETTINGS[key]]));
+}
 function configKey(settings) {
   return JSON.stringify(["suggest", "enhance"].map((key) => {
     const config = settings?.[key] ?? DEFAULT_SETTINGS;
@@ -744,7 +774,7 @@ function configKey(settings) {
 }
 function validateSettings(value) {
   if (!Number.isInteger(value.rounds) || value.rounds < 1 || value.rounds > 20) return "rounds";
-  if (value.enabled && !value.followSession && (!value.provider || !value.model)) return "model";
+  if (!value.followSession && (!value.provider || !value.model)) return "model";
   return null;
 }
 function selectedFileOf(occurrence) {
@@ -783,7 +813,7 @@ function reconcileState(host, wire, session, allowed) {
 function catalogInput(config, provider) {
   return config.followSession ? {} : { provider };
 }
-var DEFAULT_SETTINGS;
+var DEFAULT_SETTINGS, SESSION_FIELDS;
 var init_api = __esm({
   "assist/client/api.js"() {
     init_identity();
@@ -796,6 +826,7 @@ var init_api = __esm({
       fast: false,
       rounds: 1
     });
+    SESSION_FIELDS = Object.freeze(["followSession", "provider", "model", "reasoningEffort", "fast", "rounds"]);
   }
 });
 
@@ -1005,8 +1036,224 @@ var init_controller = __esm({
   }
 });
 
+// assist/client/enablement-source.js
+function normalizeEnablement(value) {
+  if (!value || value.scope !== "profile" || !Number.isSafeInteger(value.revision) || value.revision < 0 || !value.enabled || FEATURES.some((feature) => typeof value.enabled[feature] !== "boolean")) throw invalid();
+  return Object.freeze({ scope: "profile", revision: value.revision, enabled: Object.freeze({ suggest: value.enabled.suggest, enhance: value.enabled.enhance }) });
+}
+function mergeGlobalSettings(settings, global) {
+  return Object.fromEntries(FEATURES.map((feature) => [feature, { ...sessionSettings(settings?.[feature]), enabled: global?.connected === true && global.data?.enabled[feature] === true }]));
+}
+function createEnablementObserver(controller) {
+  let previous;
+  return (frame, global) => {
+    const identity = JSON.stringify([global?.connected === true, global?.data?.revision ?? null]);
+    if (previous !== void 0 && identity !== previous) {
+      controller.configurationEdited();
+      controller.mount();
+    }
+    previous = identity;
+    controller.observe(frame);
+  };
+}
+function createEnablementSource({ send, fetcher = (...args) => globalThis.fetch(...args), setTimer = setTimeout, clearTimer = clearTimeout }) {
+  let state = initial(), disposed = true, epoch = 0, readEpoch = 0, readAbort = null, writeAbort = null, watchAbort = null, reader = null, timer = null, backoff = 1e3;
+  const listeners = /* @__PURE__ */ new Set();
+  const publish = (patch) => {
+    if (Object.keys(patch).every((key) => state[key] === patch[key])) return;
+    state = { ...state, ...patch };
+    for (const listener of listeners) listener();
+  };
+  const accept = (value) => {
+    const data = normalizeEnablement(value), old = state.data;
+    if (old && data.revision < old.revision) return false;
+    if (old && data.revision === old.revision) {
+      if (FEATURES.some((key) => data.enabled[key] !== old.enabled[key])) throw invalid();
+      return true;
+    }
+    publish({ data, saved: null });
+    return true;
+  };
+  const clearRetry = () => {
+    if (timer !== null) clearTimer(timer);
+    timer = null;
+  };
+  async function load() {
+    if (disposed) return false;
+    readAbort?.abort();
+    const abort = new AbortController(), revision = ++readEpoch, owner = epoch;
+    readAbort = abort;
+    publish({ loading: true, readError: null });
+    try {
+      const value = await send("enablement", void 0, {}, abort.signal);
+      if (disposed || owner !== epoch || revision !== readEpoch) return false;
+      accept(value);
+      return true;
+    } catch (error) {
+      if (!disposed && owner === epoch && revision === readEpoch) publish({ readError: error?.code === "transport-invalid-response" ? "transport-invalid-response" : "global-unavailable" });
+      return false;
+    } finally {
+      if (!disposed && owner === epoch && revision === readEpoch) {
+        readAbort = null;
+        publish({ loading: false });
+      }
+    }
+  }
+  async function watch() {
+    if (disposed) return;
+    const owner = epoch, abort = new AbortController();
+    watchAbort = abort;
+    let ownedReader;
+    try {
+      const response = await fetcher(ENABLEMENT_PATH2, { method: "GET", credentials: "same-origin", signal: abort.signal });
+      if (disposed || owner !== epoch || abort.signal.aborted) {
+        await response.body?.cancel();
+        return;
+      }
+      if (!response.ok || !response.body) {
+        await response.body?.cancel();
+        throw invalid();
+      }
+      ownedReader = response.body.getReader();
+      reader = ownedReader;
+      const decoder = new TextDecoder("utf-8", { fatal: true });
+      let buffer = "";
+      const frame = (line) => {
+        if (!line.trim()) return;
+        if (line.length > 16384) throw invalid();
+        let value;
+        try {
+          value = JSON.parse(line);
+        } catch {
+          throw invalid();
+        }
+        if (accept(value)) {
+          backoff = 1e3;
+          publish({ connected: true, loading: false, readError: null });
+        }
+      };
+      for (; ; ) {
+        const { value, done } = await ownedReader.read();
+        if (disposed || owner !== epoch || abort.signal.aborted) return;
+        if (done) {
+          buffer += decoder.decode();
+          if (buffer) frame(buffer);
+          throw new Error("watch-ended");
+        }
+        buffer += decoder.decode(value, { stream: true });
+        let index;
+        while ((index = buffer.indexOf("\n")) >= 0) {
+          frame(buffer.slice(0, index));
+          buffer = buffer.slice(index + 1);
+        }
+        if (buffer.length > 16384) throw invalid();
+      }
+    } catch (error) {
+      if (!disposed && owner === epoch && !abort.signal.aborted) {
+        publish({ connected: false, loading: false, readError: error?.code === "transport-invalid-response" ? "transport-invalid-response" : "global-unavailable", saved: null });
+        clearRetry();
+        timer = setTimer(() => {
+          timer = null;
+          void watch();
+        }, backoff);
+        backoff = Math.min(3e4, backoff * 2);
+      }
+    } finally {
+      try {
+        await ownedReader?.cancel();
+      } catch {
+      }
+      try {
+        ownedReader?.releaseLock();
+      } catch {
+      }
+      if (reader === ownedReader) reader = null;
+      if (watchAbort === abort) watchAbort = null;
+    }
+  }
+  async function setEnabled(feature, enabled) {
+    if (disposed || state.pending || !state.connected || !state.data || !FEATURES.includes(feature) || typeof enabled !== "boolean") return false;
+    const owner = epoch, expectedRevision = state.data.revision, abort = new AbortController();
+    writeAbort = abort;
+    publish({ pending: feature, writeError: null, saved: null });
+    try {
+      const value = await send("set-enabled", void 0, { feature, enabled, expectedRevision }, abort.signal);
+      if (disposed || owner !== epoch || abort.signal.aborted) return false;
+      const accepted = accept(value);
+      if (!accepted || state.data.enabled[feature] !== enabled) {
+        publish({ writeError: "stale-enablement" });
+        await load();
+        return false;
+      }
+      publish({ saved: { feature, revision: state.data.revision } });
+      return true;
+    } catch (error) {
+      if (!disposed && owner === epoch && !abort.signal.aborted) {
+        const stale = error?.code === "stale-enablement";
+        publish({ writeError: stale ? "stale-enablement" : "global-save-failed" });
+        if (stale) await load();
+      }
+      return false;
+    } finally {
+      if (!disposed && owner === epoch) {
+        writeAbort = null;
+        publish({ pending: null });
+      }
+    }
+  }
+  return {
+    getSnapshot: () => state,
+    subscribe(listener) {
+      listeners.add(listener);
+      return () => listeners.delete(listener);
+    },
+    start() {
+      if (!disposed) return Promise.resolve(false);
+      disposed = false;
+      epoch++;
+      publish({ connected: false, pending: null, saved: null });
+      void watch();
+      return load();
+    },
+    load,
+    setEnabled,
+    dispose() {
+      disposed = true;
+      epoch++;
+      readEpoch++;
+      clearRetry();
+      readAbort?.abort();
+      writeAbort?.abort();
+      watchAbort?.abort();
+      void reader?.cancel().catch(() => {
+      });
+      readAbort = null;
+      writeAbort = null;
+      watchAbort = null;
+      reader = null;
+      state = { ...state, connected: false, pending: null, saved: null };
+    }
+  };
+}
+var ENABLEMENT_PATH2, FEATURES, invalid, initial, empty, EMPTY_ENABLEMENT_SOURCE;
+var init_enablement_source = __esm({
+  "assist/client/enablement-source.js"() {
+    init_api();
+    init_identity();
+    ENABLEMENT_PATH2 = ENABLEMENT_PATH.slice(1);
+    FEATURES = ["suggest", "enhance"];
+    invalid = () => Object.assign(new Error("transport-invalid-response"), { code: "transport-invalid-response" });
+    initial = () => ({ data: null, connected: false, loading: true, pending: null, readError: null, writeError: null, saved: null });
+    empty = Object.freeze(initial());
+    EMPTY_ENABLEMENT_SOURCE = Object.freeze({ getSnapshot: () => empty, subscribe: () => () => {
+    }, load: async () => false, setEnabled: async () => false });
+  }
+});
+
 // assist/client/runtime.js
 function useAssistRuntime(p) {
+  const globalSource = p.globalSource ?? EMPTY_ENABLEMENT_SOURCE;
+  const enablement = import_react3.default.useSyncExternalStore(globalSource.subscribe, globalSource.getSnapshot, globalSource.getSnapshot);
   const input = p.useInput((s) => s);
   const session = p.useSession((s) => s);
   const wire = import_react3.default.useSyncExternalStore(p.assistSource.subscribe, p.assistSource.getSnapshot, p.assistSource.getSnapshot);
@@ -1025,10 +1272,14 @@ function useAssistRuntime(p) {
   const controller = import_react3.default.useMemo(() => createAssistController({ send, actions: () => current.current.actions, publish: (value) => {
     if (alive.current) setResult(value);
   }, requestId: () => globalThis.crypto.randomUUID() }), [p.sessionId, send]);
+  const observeEnablement = import_react3.default.useMemo(() => createEnablementObserver(controller), [controller]);
   const hostValue = host?.sessionId === p.sessionId ? host.value : null;
   const allowed = p.useAccess("commands/execute") && !session?.subagent && !session?.removed;
-  const { state, busy } = reconcileState(hostValue, wire, session, allowed);
-  const settings = state?.settings ?? EMPTY;
+  const reconciled = reconcileState(hostValue, wire, session, allowed);
+  const busy = reconciled.busy || !enablement.connected;
+  const sessionSettingsValue = reconciled.state?.settings ?? EMPTY;
+  const settings = import_react3.default.useMemo(() => mergeGlobalSettings(sessionSettingsValue, enablement), [sessionSettingsValue, enablement.connected, enablement.data]);
+  const state = reconciled.state ? { ...reconciled.state, settings } : null;
   const dirty = dirtyFeatures.length > 0;
   const route = selection?.next ?? state?.current;
   const routeKey = JSON.stringify(route ?? null);
@@ -1063,8 +1314,8 @@ function useAssistRuntime(p) {
     return () => abort.abort();
   }, [p.sessionId, send, wire?.qaId, wire?.busy, session?.running]);
   import_react3.default.useEffect(() => {
-    controller.observe({ sessionId: p.sessionId, input, settings, qaId: state?.qaId, busy, paused: dirty, routeKey });
-  }, [controller, p.sessionId, input, settings, state?.qaId, busy, dirty, routeKey]);
+    observeEnablement({ sessionId: p.sessionId, input, settings, qaId: state?.qaId, busy, paused: dirty, routeKey }, enablement);
+  }, [observeEnablement, p.sessionId, input, settings, state?.qaId, busy, dirty, routeKey, enablement.connected, enablement.data?.revision]);
   async function save(feature, config) {
     if (saving || !allowed) return;
     controller.configurationEdited();
@@ -1076,7 +1327,7 @@ function useAssistRuntime(p) {
     saves.current.add(abort);
     const valid = () => alive.current && !abort.signal.aborted && current.current.sessionId === owner;
     try {
-      const value = await send("save", owner, { feature, config }, abort.signal);
+      const value = await send("save", owner, { feature, config: sessionSettings(config) }, abort.signal);
       if (!valid()) return;
       setHost({ sessionId: owner, value });
       await p.refreshAssist();
@@ -1139,6 +1390,7 @@ var init_runtime = __esm({
     import_react3 = __toESM(require("react"), 1);
     init_api();
     init_controller();
+    init_enablement_source();
     EMPTY = { suggest: DEFAULT_SETTINGS, enhance: DEFAULT_SETTINGS };
   }
 });
@@ -1338,12 +1590,12 @@ function formatCheckedAt(value) {
   return Number.isNaN(date.getTime()) ? null : date.toISOString();
 }
 function normalizeUpdateState(value) {
-  if (!value || typeof value !== "object" || !version(value.currentVersion) || !STATUSES.has(value.status)) throw invalid();
-  if (value.latestVersion !== null && (!version(value.latestVersion) || !/^v?\d+\.\d+\.\d+(?:\+[a-zA-Z0-9.-]+)?$/.test(value.latestVersion))) throw invalid();
-  if (value.checkedAt !== null && formatCheckedAt(value.checkedAt) === null) throw invalid();
-  if (value.error !== null && !ERRORS.has(value.error)) throw invalid();
-  if (value.status === "error" !== (value.error !== null)) throw invalid();
-  if (["current", "update-available", "ahead"].includes(value.status) && (!value.latestVersion || value.checkedAt === null)) throw invalid();
+  if (!value || typeof value !== "object" || !version(value.currentVersion) || !STATUSES.has(value.status)) throw invalid2();
+  if (value.latestVersion !== null && (!version(value.latestVersion) || !/^v?\d+\.\d+\.\d+(?:\+[a-zA-Z0-9.-]+)?$/.test(value.latestVersion))) throw invalid2();
+  if (value.checkedAt !== null && formatCheckedAt(value.checkedAt) === null) throw invalid2();
+  if (value.error !== null && !ERRORS.has(value.error)) throw invalid2();
+  if (value.status === "error" !== (value.error !== null)) throw invalid2();
+  if (["current", "update-available", "ahead"].includes(value.status) && (!value.latestVersion || value.checkedAt === null)) throw invalid2();
   return Object.freeze({
     currentVersion: value.currentVersion,
     status: value.status,
@@ -1401,10 +1653,10 @@ function createUpdateController(fetcher = globalThis.fetch) {
       try {
         body = await response.json();
       } catch {
-        throw invalid();
+        throw invalid2();
       }
       const data = normalizeUpdateState(body);
-      if (!response.ok && data.status !== "error") throw invalid();
+      if (!response.ok && data.status !== "error") throw invalid2();
       if (disposed || abort.signal.aborted || epoch !== revision) return false;
       publish({ data, localError: null });
       return true;
@@ -1452,7 +1704,7 @@ async function copyInstallSpec(clipboard = globalThis.navigator?.clipboard) {
   if (typeof clipboard?.writeText !== "function") throw new Error("clipboard-unavailable");
   await clipboard.writeText(INSTALL_SPEC);
 }
-var UPDATE_ENDPOINT, INSTALL_SPEC, STATUSES, ERRORS, VERSION, version, invalid;
+var UPDATE_ENDPOINT, INSTALL_SPEC, STATUSES, ERRORS, VERSION, version, invalid2;
 var init_update_state = __esm({
   "assist/client/update-state.js"() {
     UPDATE_ENDPOINT = "/api/local-openai-fast.updates";
@@ -1461,19 +1713,19 @@ var init_update_state = __esm({
     ERRORS = /* @__PURE__ */ new Set(["network", "timeout", "rate-limited", "not-found", "invalid-response"]);
     VERSION = /^v?\d+\.\d+\.\d+(?:-[a-zA-Z0-9.-]+)?(?:\+[a-zA-Z0-9.-]+)?$/;
     version = (value) => typeof value === "string" && value.length <= 80 && VERSION.test(value);
-    invalid = () => Object.assign(new Error("invalid-response"), { code: "invalid-response" });
+    invalid2 = () => Object.assign(new Error("invalid-response"), { code: "invalid-response" });
   }
 });
 
 // assist/client/online-update-state.js
 function normalizeOnlineOperation(x) {
-  if (!object(x) || !id(x.jobId) || !version2(x.fromVersion) || !version2(x.targetVersion) || !ONLINE_PHASES.includes(x.phase) || typeof x.terminal !== "boolean" || x.phase !== "unknown" && x.terminal !== TERMINAL.has(x.phase) || !(x.installedVersion === null || version2(x.installedVersion)) || !nullableCode(x.error) || !nullableCode(x.detailCode) || typeof x.restartRequired !== "boolean" || typeof x.cancelRequested !== "boolean") throw invalid2();
-  if (x.phase === "updated" && (x.installedVersion !== x.targetVersion || x.restartRequired || x.error !== null)) throw invalid2();
-  if (x.phase === "restart-required" && !x.restartRequired) throw invalid2();
+  if (!object(x) || !id(x.jobId) || !version2(x.fromVersion) || !version2(x.targetVersion) || !ONLINE_PHASES.includes(x.phase) || typeof x.terminal !== "boolean" || x.phase !== "unknown" && x.terminal !== TERMINAL.has(x.phase) || !(x.installedVersion === null || version2(x.installedVersion)) || !nullableCode(x.error) || !nullableCode(x.detailCode) || typeof x.restartRequired !== "boolean" || typeof x.cancelRequested !== "boolean") throw invalid3();
+  if (x.phase === "updated" && (x.installedVersion !== x.targetVersion || x.restartRequired || x.error !== null)) throw invalid3();
+  if (x.phase === "restart-required" && !x.restartRequired) throw invalid3();
   return Object.freeze(Object.fromEntries(["jobId", "fromVersion", "targetVersion", "phase", "terminal", "installedVersion", "error", "detailCode", "restartRequired", "cancelRequested"].map((key) => [key, x[key]])));
 }
 function normalizeOnlineStatus(x) {
-  if (!object(x) || !version2(x.currentVersion) || typeof x.available !== "boolean" || !nullableCode(x.reason)) throw invalid2();
+  if (!object(x) || !version2(x.currentVersion) || typeof x.available !== "boolean" || !nullableCode(x.reason)) throw invalid3();
   return Object.freeze({
     currentVersion: x.currentVersion,
     available: x.available,
@@ -1482,7 +1734,7 @@ function normalizeOnlineStatus(x) {
   });
 }
 function normalizeOnlinePreparation(x, now = Date.now()) {
-  if (!object(x) || typeof x.token !== "string" || !/^[A-Za-z0-9_-]{16,512}$/.test(x.token) || !version2(x.fromVersion) || !version2(x.targetVersion) || !pinnedSpec(x.targetSpec) || !pinnedSpec(x.restoreSpec) || !Number.isSafeInteger(x.expiresAt) || x.expiresAt <= now || x.expiresAt > 864e13) throw invalid2();
+  if (!object(x) || typeof x.token !== "string" || !/^[A-Za-z0-9_-]{16,512}$/.test(x.token) || !version2(x.fromVersion) || !version2(x.targetVersion) || !pinnedSpec(x.targetSpec) || !pinnedSpec(x.restoreSpec) || !Number.isSafeInteger(x.expiresAt) || x.expiresAt <= now || x.expiresAt > 864e13) throw invalid3();
   return Object.freeze(Object.fromEntries(["token", "fromVersion", "targetVersion", "targetSpec", "restoreSpec", "expiresAt"].map((key) => [key, x[key]])));
 }
 function readMarker(storage) {
@@ -1559,7 +1811,7 @@ function createOnlineUpdateController(fetcher = globalThis.fetch, { now = Date.n
       try {
         value = await response.json();
       } catch {
-        throw invalid2();
+        throw invalid3();
       }
       if (!response.ok) {
         rejectedBeforeSubmission = response.ok === false && action === "confirm" && object(value) && Object.keys(value).length === 1 && PRE_SUBMISSION_REJECTIONS.has(value.error);
@@ -1567,7 +1819,7 @@ function createOnlineUpdateController(fetcher = globalThis.fetch, { now = Date.n
       }
       const data = action === "load" ? normalizeOnlineStatus(value) : action === "prepare" ? normalizeOnlinePreparation(value, now()) : normalizeOnlineOperation(value);
       if (disposed || revision !== epoch) return false;
-      if (action === "confirm" && (data.targetVersion !== submitted.targetVersion || data.fromVersion !== submitted.fromVersion || data.jobId === submitted.previousJobId)) throw invalid2();
+      if (action === "confirm" && (data.targetVersion !== submitted.targetVersion || data.fromVersion !== submitted.fromVersion || data.jobId === submitted.previousJobId)) throw invalid3();
       if (action === "load") {
         const lost = !data.operation && (state.uncertain || !!state.data?.operation || state.recordLost);
         const unresolved = state.uncertain && submitted && (!data.operation || data.operation.jobId === submitted.previousJobId || data.operation.targetVersion !== submitted.targetVersion || data.operation.fromVersion !== submitted.fromVersion) || !associateMarker(data.operation);
@@ -1638,14 +1890,14 @@ function createOnlineUpdateController(fetcher = globalThis.fetch, { now = Date.n
     }
   };
 }
-var ONLINE_UPDATE_ENDPOINT, ONLINE_PHASES, TERMINAL, PRE_SUBMISSION_REJECTIONS, invalid2, object, version2, code, nullableCode, id, pinnedSpec, ONLINE_MARKER_KEY, browserStorage, initialOnlineSnapshot, canForgetOnlineMarker;
+var ONLINE_UPDATE_ENDPOINT, ONLINE_PHASES, TERMINAL, PRE_SUBMISSION_REJECTIONS, invalid3, object, version2, code, nullableCode, id, pinnedSpec, ONLINE_MARKER_KEY, browserStorage, initialOnlineSnapshot, canForgetOnlineMarker;
 var init_online_update_state = __esm({
   "assist/client/online-update-state.js"() {
     ONLINE_UPDATE_ENDPOINT = "/api/local-openai-fast.online-update";
     ONLINE_PHASES = Object.freeze(["queued", "checking", "removing", "installing", "activating", "verifying", "recovering", "updated", "restart-required", "restored", "repair-required", "failed", "cancelled", "unknown"]);
     TERMINAL = /* @__PURE__ */ new Set(["updated", "restart-required", "restored", "repair-required", "failed", "cancelled", "unknown"]);
     PRE_SUBMISSION_REJECTIONS = /* @__PURE__ */ new Set(["confirmation-expired", "confirmation-required", "inventory-changed", "busy", "invalid-request", "owner-confirmation-required", "unavailable"]);
-    invalid2 = () => Object.assign(new Error("invalid-response"), { code: "invalid-response" });
+    invalid3 = () => Object.assign(new Error("invalid-response"), { code: "invalid-response" });
     object = (x) => x !== null && typeof x === "object" && !Array.isArray(x);
     version2 = (x) => typeof x === "string" && x.length <= 80 && /^v?\d+\.\d+\.\d+(?:-[a-zA-Z0-9.-]+)?(?:\+[a-zA-Z0-9.-]+)?$/.test(x);
     code = (x) => typeof x === "string" && /^[a-z][a-z0-9-]{0,79}$/.test(x);
@@ -1908,13 +2160,13 @@ function Settings(p) {
     e.preventDefault();
     const problem = validateSettings(v);
     setError(problem === "rounds" ? "roundsError" : problem ? "modelError" : null);
-    if (!problem && (!v.enabled || !invalidEffort && !invalidFast)) p.save(v);
+    if (!problem && !invalidEffort && !invalidFast) p.save(sessionSettings(v));
   };
   const select = (key, value, items, change2) => field(key, h8("select", { value, onChange: (e) => change2(e.target.value) }, items.map((item) => h8("option", { key: item.id, value: item.id }, item.name))));
   return h8(
     "form",
     { onSubmit: submit },
-    h8("div", { className: "lpa-row" }, check("enabled", v.enabled, (enabled) => change({ enabled })), check("follow", v.followSession, (followSession) => change({ followSession }))),
+    h8("div", { className: "lpa-row" }, check("follow", v.followSession, (followSession) => change({ followSession }))),
     h8("p", { className: "lpa-note" }, t("followHint")),
     h8("p", { className: "lpa-note" }, t("budgetPolicy")),
     !v.followSession ? h8(
@@ -1949,16 +2201,58 @@ var init_settings = __esm({
   }
 });
 
+// assist/client/enablement-panel.js
+function EnablementPanelContent({ snapshot, t, onSet, onReload }) {
+  const { data, connected, loading, pending, readError, writeError, saved } = snapshot;
+  const disabled = !data || !connected || !!pending;
+  const message = writeError === "stale-enablement" ? "global.stale" : writeError ? "global.saveFailed" : readError ? "global.disconnected" : null;
+  return h9(
+    "section",
+    { className: "lpa-feature", "aria-label": t("global.title"), "aria-busy": !!pending },
+    h9("h2", { className: "lpa-feature-title" }, t("global.title")),
+    h9("p", { className: "lpa-note" }, t("global.scope")),
+    h9("p", { className: "lpa-note" }, t("global.charge")),
+    h9("div", { className: "lpa-row" }, ["suggest", "enhance"].map((feature) => h9(
+      "label",
+      { className: "lpa-check", key: feature },
+      h9("input", { type: "checkbox", checked: data?.enabled[feature] === true, disabled, onChange: (event) => onSet(feature, event.target.checked) }),
+      t("global." + feature)
+    ))),
+    h9("p", { className: "lpa-note" }, t("global.migration")),
+    pending ? h9("p", { role: "status" }, t("global.saving")) : null,
+    !connected && !message ? h9("p", { role: "status", className: "lpa-note" }, t(loading ? "global.loading" : "global.disconnected")) : null,
+    message ? h9("p", { role: "alert", className: "lpa-error" }, t(message)) : null,
+    saved && connected && saved.revision === data?.revision && !writeError ? h9("p", { role: "status", className: "lpa-note" }, t("global.saved")) : null,
+    !connected || readError || writeError ? h9("button", { type: "button", className: "lpa-button", onClick: onReload, disabled: !!pending || loading }, t("global.reload")) : null
+  );
+}
+function EnablementPanel({ globalSource = EMPTY_ENABLEMENT_SOURCE, t }) {
+  const snapshot = import_react10.default.useSyncExternalStore(globalSource.subscribe, globalSource.getSnapshot, globalSource.getSnapshot);
+  return h9(EnablementPanelContent, { snapshot, t, onSet: (feature, value) => {
+    void globalSource.setEnabled(feature, value);
+  }, onReload: () => {
+    void globalSource.load();
+  } });
+}
+var import_react10, h9;
+var init_enablement_panel = __esm({
+  "assist/client/enablement-panel.js"() {
+    import_react10 = __toESM(require("react"), 1);
+    init_enablement_source();
+    h9 = import_react10.default.createElement;
+  }
+});
+
 // assist/client/settings-page-state.js
 function createSettingsDraft(config) {
-  return { config: { ...DEFAULT_SETTINGS, ...config }, version: 0, dirty: false };
+  return { config: sessionSettings(config), version: 0, dirty: false };
 }
 function editSettingsDraft(state, config) {
-  return { config: { ...config }, version: state.version + 1, dirty: true };
+  return { config: sessionSettings(config), version: state.version + 1, dirty: true };
 }
 function acceptSettingsSave(state, version3, config) {
   if (state.version !== version3) return state;
-  return { config: { ...config }, version: version3, dirty: false };
+  return { config: sessionSettings(config), version: version3, dirty: false };
 }
 function createSettingsRequests() {
   let closed = false;
@@ -1989,12 +2283,12 @@ var init_settings_page_state = __esm({
 
 // assist/client/settings-page.js
 function FeatureSettings({ feature, host, sessionId, p, allowed, onSaved }) {
-  const [draft, setDraft] = import_react10.default.useState(() => createSettingsDraft(host.settings[feature]));
-  const current = import_react10.default.useRef(draft);
+  const [draft, setDraft] = import_react11.default.useState(() => createSettingsDraft(host.settings[feature]));
+  const current = import_react11.default.useRef(draft);
   current.current = draft;
-  const [saving, setSaving] = import_react10.default.useState(false), [notice, setNotice] = import_react10.default.useState(null);
-  const scope = import_react10.default.useRef(null), inFlight = import_react10.default.useRef(false);
-  import_react10.default.useEffect(() => {
+  const [saving, setSaving] = import_react11.default.useState(false), [notice, setNotice] = import_react11.default.useState(null);
+  const scope = import_react11.default.useRef(null), inFlight = import_react11.default.useRef(false);
+  import_react11.default.useEffect(() => {
     scope.current = createSettingsRequests();
     inFlight.current = false;
     return () => scope.current.close();
@@ -2014,7 +2308,7 @@ function FeatureSettings({ feature, host, sessionId, p, allowed, onSaved }) {
     setSaving(true);
     setNotice(null);
     try {
-      const value = await p.assistSend("save", sessionId, { feature, config }, request.signal);
+      const value = await p.assistSend("save", sessionId, { feature, config: sessionSettings(config) }, request.signal);
       if (!request.valid()) return;
       onSaved(feature, value);
       const next = acceptSettingsSave(current.current, version3, value.settings[feature]);
@@ -2034,24 +2328,24 @@ function FeatureSettings({ feature, host, sessionId, p, allowed, onSaved }) {
     }
   }
   const noticeValue = notice ?? options.error;
-  return h9(
+  return h10(
     "section",
     { className: "lpa-feature", "aria-label": p.t(feature) },
-    h9("h2", { className: "lpa-feature-title" }, p.t(feature)),
-    h9("p", { className: "lpa-note" }, p.t(feature === "suggest" ? "suggestContext" : "enhanceOriginal")),
-    h9(Settings, { t: p.t, config: draft.config, catalog: options.catalog, capabilities: options.capabilities, allowed, saving, onChange: edit, save }),
-    h9(
+    h10("h2", { className: "lpa-feature-title" }, p.t(feature)),
+    h10("p", { className: "lpa-note" }, p.t(feature === "suggest" ? "suggestContext" : "enhanceOriginal")),
+    h10(Settings, { t: p.t, config: draft.config, catalog: options.catalog, capabilities: options.capabilities, allowed, saving, onChange: edit, save }),
+    h10(
       "div",
       { className: "lpa-settings-feedback" },
-      draft.dirty ? h9("p", { className: "lpa-note" }, p.t("settingsChanged")) : null,
-      noticeValue ? h9("p", { role: "status", className: noticeValue === "saved" ? "lpa-note" : "lpa-error" }, p.t(typeof noticeValue === "string" ? noticeValue : errorKey(noticeValue))) : null
+      draft.dirty ? h10("p", { className: "lpa-note" }, p.t("settingsChanged")) : null,
+      noticeValue ? h10("p", { role: "status", className: noticeValue === "saved" ? "lpa-note" : "lpa-error" }, p.t(typeof noticeValue === "string" ? noticeValue : errorKey(noticeValue))) : null
     )
   );
 }
 function SessionSettings({ sessionId, p }) {
   const allowed = p.useSessionAccess(sessionId, "commands/execute");
-  const [host, setHost] = import_react10.default.useState(null), [error, setError] = import_react10.default.useState(null);
-  import_react10.default.useEffect(() => {
+  const [host, setHost] = import_react11.default.useState(null), [error, setError] = import_react11.default.useState(null);
+  import_react11.default.useEffect(() => {
     const abort = new AbortController();
     setHost(null);
     setError(null);
@@ -2063,37 +2357,39 @@ function SessionSettings({ sessionId, p }) {
     return () => abort.abort();
   }, [sessionId, p.assistSend]);
   const onSaved = (feature, value) => setHost((old) => ({ ...old, settings: { ...old.settings, [feature]: value.settings[feature] } }));
-  return h9(
-    import_react10.default.Fragment,
+  return h10(
+    import_react11.default.Fragment,
     null,
-    h9("p", { className: "lpa-note" }, p.t("editingSession"), ": ", h9("code", null, sessionId)),
-    !allowed ? h9("p", { className: "lpa-note" }, p.t("access")) : null,
-    error ? h9("p", { className: "lpa-error", role: "alert" }, p.t(errorKey(error))) : null,
-    !host && !error ? h9("p", { role: "status" }, p.t("loading")) : null,
-    host ? h9("div", { className: "lpa-settings-cards" }, ["suggest", "enhance"].map((feature) => h9(FeatureSettings, { key: feature, feature, host, sessionId, p, allowed, onSaved }))) : null
+    h10("p", { className: "lpa-note" }, p.t("editingSession"), ": ", h10("code", null, sessionId)),
+    !allowed ? h10("p", { className: "lpa-note" }, p.t("access")) : null,
+    error ? h10("p", { className: "lpa-error", role: "alert" }, p.t(errorKey(error))) : null,
+    !host && !error ? h10("p", { role: "status" }, p.t("loading")) : null,
+    host ? h10("div", { className: "lpa-settings-cards" }, ["suggest", "enhance"].map((feature) => h10(FeatureSettings, { key: feature, feature, host, sessionId, p, allowed, onSaved }))) : null
   );
 }
 function SettingsPage(p) {
-  const target = import_react10.default.useSyncExternalStore(p.targetSource.subscribe, p.targetSource.getSnapshot, p.targetSource.getSnapshot);
-  return h9(
+  const target = import_react11.default.useSyncExternalStore(p.targetSource.subscribe, p.targetSource.getSnapshot, p.targetSource.getSnapshot);
+  return h10(
     "section",
     { className: "lpa lpa-settings-page", "aria-label": p.t("title") },
-    h9("header", { className: "lpa-settings-header" }, h9("h1", null, p.t("title")), h9("button", { type: "button", className: "lpa-button", onClick: p.returnToConversation }, p.t("returnConversation"))),
-    h9("p", { className: "lpa-note" }, p.t("sessionScope")),
-    target.sessionId ? h9(SessionSettings, { key: target.sessionId, sessionId: target.sessionId, p }) : h9("p", { role: "status" }, p.t("chooseSession")),
-    h9(UpdatePanel, { t: p.t })
+    h10("header", { className: "lpa-settings-header" }, h10("h1", null, p.t("title")), h10("button", { type: "button", className: "lpa-button", onClick: p.returnToConversation }, p.t("returnConversation"))),
+    h10(EnablementPanel, { globalSource: p.globalSource, t: p.t }),
+    h10("p", { className: "lpa-note" }, p.t("sessionScope")),
+    target.sessionId ? h10(SessionSettings, { key: target.sessionId, sessionId: target.sessionId, p }) : h10("p", { role: "status" }, p.t("chooseSession")),
+    h10(UpdatePanel, { t: p.t })
   );
 }
-var import_react10, h9;
+var import_react11, h10;
 var init_settings_page = __esm({
   "assist/client/settings-page.js"() {
     init_update_panel();
-    import_react10 = __toESM(require("react"), 1);
+    import_react11 = __toESM(require("react"), 1);
     init_settings();
     init_runtime();
     init_api();
+    init_enablement_panel();
     init_settings_page_state();
-    h9 = import_react10.default.createElement;
+    h10 = import_react11.default.createElement;
   }
 });
 
@@ -2121,15 +2417,20 @@ __export(client_exports, {
   installAssist: () => installAssist
 });
 function AssistIcon({ size = 20 }) {
-  return h10("svg", { width: size, height: size, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: 1.7, "aria-hidden": true }, h10("path", { d: "M4 5h10M4 10h7M4 15h6M14 4v4m-2-2h4M17 10l3 3-7 7H10v-3Z" }));
+  return h11("svg", { width: size, height: size, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: 1.7, "aria-hidden": true }, h11("path", { d: "M4 5h10M4 10h7M4 15h6M14 4v4m-2-2h4M17 10l3 3-7 7H10v-3Z" }));
 }
 function SettingsSurface(p) {
-  return h10(import_react11.default.Fragment, null, h10("style", null, css), h10(SettingsPage, p));
+  return h11(import_react12.default.Fragment, null, h11("style", null, css), h11(SettingsPage, p));
 }
 function installAssist(ctx) {
   ctx.effect(() => ctx.locale.register(NS, dictionaries));
   const actions = /* @__PURE__ */ new WeakMap(), targetSource = createSettingsTarget();
   const assistSend = createAssistRpcApi(ctx.connection);
+  const globalSource = createEnablementSource({ send: assistSend });
+  ctx.effect(() => {
+    void globalSource.start();
+    return () => globalSource.dispose();
+  });
   const inject2 = (sessionId) => {
     const binding = ctx.sessions.binding(sessionId);
     if (!binding) throw Error("Prompt assist requires a retained session binding");
@@ -2139,6 +2440,7 @@ function installAssist(ctx) {
       assistEnhance: actions.get(binding).enhance,
       assistSuggest: actions.get(binding).suggest,
       assistSend,
+      globalSource,
       settingsTarget: targetSource,
       assistModel: observe(binding.session.projections.faceOf("modelSelection")),
       assistSource: observe(binding.session.projections.faceOf(ASSIST_KEY)),
@@ -2150,15 +2452,15 @@ function installAssist(ctx) {
     return dictionaries[language]?.title ?? (language.startsWith("zh") ? dictionaries.zh.title : dictionaries.en.title);
   };
   ctx.slots.inject("sidebar.panellist", () => ctx.slots.register({ name: "sidebar.panellist", id: "local-prompt-assist", order: 40, label, locale: NS }, AssistIcon));
-  ctx.slots.inject("main", () => ctx.slots.register({ name: "main", key: "local-prompt-assist", locale: NS, inject: () => ({ assistSend, targetSource, returnToConversation: () => ctx.layout.selectPanel(null), refreshAssist: (id2) => ctx.sessions.refreshProjections(id2) }) }, SettingsSurface));
+  ctx.slots.inject("main", () => ctx.slots.register({ name: "main", key: "local-prompt-assist", locale: NS, inject: () => ({ assistSend, globalSource, targetSource, returnToConversation: () => ctx.layout.selectPanel(null), refreshAssist: (id2) => ctx.sessions.refreshProjections(id2) }) }, SettingsSurface));
   ctx.slots.inject("conversation.input.right", () => ctx.slots.register({ name: "conversation.input.right", id: "local-prompt-enhance-action", order: 1005, label: dictionaries.en.enhance, locale: NS, inject: inject2 }, EnhanceButton));
   ctx.slots.inject("conversation.input.right", () => ctx.slots.register({ name: "conversation.input.right", id: "local-next-question-action", order: 1010, label: dictionaries.en.suggest, locale: NS, inject: inject2 }, SuggestButton));
   ctx.slots.inject("conversation.input.dock", () => ctx.slots.register({ name: "conversation.input.dock", id: "local-prompt-assist-results", order: 50, label, locale: NS, inject: inject2 }, AssistPanel));
 }
-var import_react11, h10;
+var import_react12, h11;
 var init_client = __esm({
   "assist/client/index.js"() {
-    import_react11 = __toESM(require("react"), 1);
+    import_react12 = __toESM(require("react"), 1);
     init_enhance_action();
     init_enhance_button();
     init_suggest_button();
@@ -2169,7 +2471,8 @@ var init_client = __esm({
     init_settings_page();
     init_style();
     init_settings_target();
-    h10 = import_react11.default.createElement;
+    init_enablement_source();
+    h11 = import_react12.default.createElement;
   }
 });
 
@@ -2189,8 +2492,8 @@ init_identity();
 
 // client-fast-core.js
 function createFast(require2) {
-  let React12;
-  let h11;
+  let React13;
+  let h12;
   const NS2 = "local-openai-fast";
   const quietCommandNames2 = Object.freeze(["openai-fast", "openai-fast-ui-health"]);
   function HiddenFastCommand2() {
@@ -2210,9 +2513,9 @@ function createFast(require2) {
     refresh(sessionId).catch(() => {
     });
   }
-  function createToggleController2({ initial, send, publish, onError }) {
-    let confirmed = initial;
-    let desired = initial;
+  function createToggleController2({ initial: initial2, send, publish, onError }) {
+    let confirmed = initial2;
+    let desired = initial2;
     let running = false;
     let operation = Promise.resolve();
     let last;
@@ -2285,8 +2588,8 @@ function createFast(require2) {
       .local-openai-fast__error{position:absolute;bottom:34px;right:0;max-width:240px;width:max-content;padding:8px 10px;border:1px solid var(--dsw-alias-border-l2);border-radius:7px;background:var(--dsw-alias-bg-overlay);color:var(--dsw-alias-state-error-primary);font-size:12px;line-height:18px;z-index:20}
     `;
   function useDefaultSelection(remote) {
-    const [selection, setSelection] = React12.useState(null);
-    React12.useEffect(() => {
+    const [selection, setSelection] = React13.useState(null);
+    React13.useEffect(() => {
       let active = true;
       remote.session.modelCatalog().then((result) => {
         if (active && result.ok) setSelection(result.value.default);
@@ -2299,24 +2602,24 @@ function createFast(require2) {
     return selection;
   }
   function FastToggle(props) {
-    const fastState = React12.useSyncExternalStore(props.fastSource.subscribe, props.fastSource.getSnapshot, props.fastSource.getSnapshot);
-    const modelState = React12.useSyncExternalStore(props.modelSource.subscribe, props.modelSource.getSnapshot, props.modelSource.getSnapshot);
+    const fastState = React13.useSyncExternalStore(props.fastSource.subscribe, props.fastSource.getSnapshot, props.fastSource.getSnapshot);
+    const modelState = React13.useSyncExternalStore(props.modelSource.subscribe, props.modelSource.getSnapshot, props.modelSource.getSnapshot);
     const selected = modelState?.next ?? null;
     const defaultSelection = useDefaultSelection(props.remote);
-    const sessionState = React12.useSyncExternalStore(props.sessionSource.subscribe, props.sessionSource.getSnapshot, props.sessionSource.getSnapshot);
+    const sessionState = React13.useSyncExternalStore(props.sessionSource.subscribe, props.sessionSource.getSnapshot, props.sessionSource.getSnapshot);
     const unavailable = Boolean(sessionState?.subagent) || sessionState?.removed === true;
     const allowed = props.useAccess("commands/execute");
     const { visible, enabled } = derivePresentation2(fastState, selected, defaultSelection);
-    const [interaction, setInteraction] = React12.useState({ enabled: null, pending: false });
-    const [error, setError] = React12.useState("");
-    const alive = React12.useRef(true);
-    React12.useEffect(() => {
+    const [interaction, setInteraction] = React13.useState({ enabled: null, pending: false });
+    const [error, setError] = React13.useState("");
+    const alive = React13.useRef(true);
+    React13.useEffect(() => {
       alive.current = true;
       return () => {
         alive.current = false;
       };
     }, []);
-    const controller = React12.useMemo(() => createToggleController2({
+    const controller = React13.useMemo(() => createToggleController2({
       initial: enabled,
       send: async (next) => {
         const result = await props.remote.commands.execute(
@@ -2338,7 +2641,7 @@ function createFast(require2) {
         });
       }
     }), [props.remote, props.sessionId]);
-    React12.useEffect(() => controller.sync(enabled), [controller, enabled]);
+    React13.useEffect(() => controller.sync(enabled), [controller, enabled]);
     const checked = interaction.enabled ?? enabled;
     if (!visible || unavailable) return null;
     function toggle() {
@@ -2346,11 +2649,11 @@ function createFast(require2) {
       controller.toggle().catch(() => {
       });
     }
-    return h11(
+    return h12(
       "span",
       { className: "local-openai-fast" },
-      h11("style", null, css2),
-      h11("button", {
+      h12("style", null, css2),
+      h12("button", {
         type: "button",
         role: "switch",
         className: "local-openai-fast__button",
@@ -2360,10 +2663,10 @@ function createFast(require2) {
         disabled: !allowed,
         title: props.t(interaction.pending ? "saving" : checked ? "on" : "off"),
         onClick: toggle
-      }, h11(
+      }, h12(
         "svg",
         { viewBox: "0 0 20 20", width: 14, height: 14, fill: "none", "aria-hidden": true },
-        h11("path", {
+        h12("path", {
           d: "M11.5 2 4 11h5l-.5 7L16 8h-5l.5-6Z",
           stroke: "currentColor",
           strokeWidth: 1.5,
@@ -2371,7 +2674,7 @@ function createFast(require2) {
           fill: checked ? "currentColor" : "none"
         })
       ), props.t("label")),
-      error ? h11("span", { role: "alert", className: "local-openai-fast__error" }, error) : null
+      error ? h12("span", { role: "alert", className: "local-openai-fast__error" }, error) : null
     );
   }
   return {
@@ -2382,8 +2685,8 @@ function createFast(require2) {
     HiddenFastCommand: HiddenFastCommand2,
     inject: ["slots", "locale", "sessions", "remote", "remote.commands", "remote.session"],
     apply(ctx) {
-      React12 = require2("react");
-      h11 = React12.createElement;
+      React13 = require2("react");
+      h12 = React13.createElement;
       ctx.effect(() => ctx.locale.register(NS2, dictionaries2));
       ctx.slots.inject("conversation.chat.commandview", () => quietCommandNames2.map((key) => ctx.slots.register({ name: "conversation.chat.commandview", key }, HiddenFastCommand2)));
       const readyBindings = /* @__PURE__ */ new WeakSet();

@@ -2,7 +2,8 @@ import {UpdatePanel} from "./update-panel.js";
 import React from 'react';
 import {Settings} from './settings.js';
 import {useModelOptions} from './runtime.js';
-import {errorKey} from './api.js';
+import {errorKey,sessionSettings} from './api.js';
+import {EnablementPanel} from './enablement-panel.js';
 import {createSettingsDraft,editSettingsDraft,acceptSettingsSave,createSettingsRequests} from './settings-page-state.js';
 const h=React.createElement;
 
@@ -19,7 +20,7 @@ function FeatureSettings({feature,host,sessionId,p,allowed,onSaved}){
   if(!allowed||inFlight.current||!scope.current)return;
   const request=scope.current.begin(),version=current.current.version;inFlight.current=true;setSaving(true);setNotice(null);
   try{
-   const value=await p.assistSend('save',sessionId,{feature,config},request.signal);
+   const value=await p.assistSend('save',sessionId,{feature,config:sessionSettings(config)},request.signal);
    if(!request.valid())return;
    onSaved(feature,value);
    const next=acceptSettingsSave(current.current,version,value.settings[feature]);
@@ -58,6 +59,7 @@ export function SettingsPage(p){
  const target=React.useSyncExternalStore(p.targetSource.subscribe,p.targetSource.getSnapshot,p.targetSource.getSnapshot);
  return h('section',{className:'lpa lpa-settings-page','aria-label':p.t('title')},
   h('header',{className:'lpa-settings-header'},h('h1',null,p.t('title')),h('button',{type:'button',className:'lpa-button',onClick:p.returnToConversation},p.t('returnConversation'))),
+  h(EnablementPanel,{globalSource:p.globalSource,t:p.t}),
   h('p',{className:'lpa-note'},p.t('sessionScope')),
   target.sessionId?h(SessionSettings,{key:target.sessionId,sessionId:target.sessionId,p}):h('p',{role:'status'},p.t('chooseSession')),
    h(UpdatePanel,{t:p.t}));

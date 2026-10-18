@@ -10,7 +10,7 @@ This policy covers this plugin. Vulnerabilities in DSH itself, a provider, or an
 
 ## Data flows and trust boundaries
 
-- Generation sends the current draft, selected complete Q&A context, visible reference names, and explicitly authorized file content to the model provider selected in DSH. Enabling automatic suggestions authorizes eligible new-Q&A requests for that feature and conversation.
+- Generation sends the current draft, selected complete Q&A context, visible reference names, and explicitly authorized file content to the model provider selected in DSH. From v1.2.12, enabling automatic suggestions authorizes eligible future new-Q&A requests across the current profile; it does not replay past Q&A.
 - The plugin does not upload data to a developer-operated service and does not add telemetry. DSH and the selected provider can have their own storage, logging, retention, and billing policies.
 - Existing file references are not permission to read everything nearby. Only explicitly selected supported files are read; limits are 64 KiB per file and 128 KiB total. Folder recursion, session-reference content, and uploaded image/attachment content are not read.
 - File checks can reject known sensitive paths or unsupported data, but they are not a complete data-loss-prevention system. Inspect your files and context before sending them.
@@ -28,6 +28,12 @@ Only an explicit check requests `https://api.github.com/repos/Syngnat/dsh-prompt
 From v1.2.11, supported installations can prepare a pinned target/recovery plan using this fixed repository's public GitHub API and raw package metadata. No chat or provider secrets are attached. Preparation does not install. A bounded, owner-authenticated confirmation with a one-use expiring token and explicit risk consent is required to start a Host-owned update job. Tokens are not returned to model tools or persisted in browser storage; a local recovery marker contains only versions and job id.
 
 Installation/removal/enablement and best-effort recovery use public DSH Plugin Manager methods. The plugin does not edit profile files directly, approve dependency build scripts, grant version exemptions or accept arbitrary installation sources. Public manager policy still applies. Updates execute trusted Host code and affect the whole profile, can temporarily remove this plugin, can change bundle precedence and can fail to restore it. Save work and back up the profile. A closed browser page does not cancel an accepted job; a Host restart loses its in-memory record. Unknown outcomes never trigger automatic replay. See [online-update limits](<docs/confirmed-online-update.md>).
+
+## Global switch persistence
+
+Only the two enabled flags and a monotonic revision are stored through the public storage-domain service, with a profile-path hash separating namespaces even when profiles share one backend. No prompts, selected files or provider secrets are copied into this record. The server is authoritative; browser snapshots are not persistent permission. Session logs retain old enabled fields for compatibility, but reads/replays never promote them into global authorization.
+
+The global switches are separate from per-session model/Fast/Q&A controls. All browser pages use a read-only authenticated snapshot stream. Unknown or disconnected state does not enable generation; stale writes require a reread and are never automatically replayed. Writes are serialized within one Host, not a new cross-process locking protocol.
 
 ## Model resource limits
 

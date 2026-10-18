@@ -7,7 +7,7 @@ import { apply as applyFast, inject as fastInject } from "./host-v1.0.4.js";
 import { OpenAIFastService } from "./service-v2.js";
 import { DEFAULT_PROVIDERS } from "./policy.js";
 import { installAssistHost } from "./assist/bootstrap.js";
-export const inject = [...fastInject, "webServer", "connection", "fs", "workingDirectory", "fileUploads", "attachments", "sessionController"];
+export const inject = [...fastInject, "webServer", "connection", "fs", "workingDirectory", "fileUploads", "attachments", "sessionController", "storageDomain", "profileContext"];
 export async function apply(ctx, config = {}) {
   assertRuntimeContract(ctx);
   const adapterEntry = await resolveAdapterEntry(ctx, config);

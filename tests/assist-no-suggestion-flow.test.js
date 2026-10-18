@@ -1,3 +1,4 @@
+import {fixtureEnablement} from './assist-enablement-fixture.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import React from 'react';
@@ -16,7 +17,7 @@ function fixture(t){
  state.qaId='1:2';state.rounds=[{id:'1:2',question:'只分析，不执行。',answer:'分析已完成。',endSeq:2,truncated:false}];
  const provider={text:'{"kind":"none"}',finish:'stop',beforeFinish:null,calls:0};const handlers=new Map(),wires=[];
  const ctx={agents:{get:id=>id==='a'?agent:undefined,withInitiator:(_a,fn)=>fn()},get:name=>name==="tokenMeter"?{estimateMessage:m=>Math.ceil(m.content[0].text.length/4)+8}:undefined,sessionProjections:{stateOf:()=>state},connection:{fetch:{register:r=>{handlers.set(r.path,r);return ()=>handlers.delete(r.path);}}},llm:{resolveModelInfo:async()=>({context:{contextWindow:1000000}}),prepareCall:async config=>({config,context:{contextWindow:1000000},stream:async function*(){provider.calls++;for(const text of [provider.text.slice(0,7),provider.text.slice(7)])yield {type:'text-delta',text};await provider.beforeFinish?.();yield {type:'finish',reason:{kind:provider.finish}};}})}};
- const runtime=new AssistRuntime(ctx,{selection:()=>({provider:'openai',model:'fixture'}),enabled:()=>false},['openai'],x=>({...x,role:'user'}));
+ const runtime=new AssistRuntime(ctx,{selection:()=>({provider:'openai',model:'fixture'}),enabled:()=>false},['openai'],x=>({...x,role:'user'}),fixtureEnablement());
  installAssistStream(ctx,runtime);installAssistRpc(ctx,runtime);
  const request=async(url,init)=>{const path=new URL(url,'http://fixture/').pathname;const response=await handlers.get(path).fetch(new Request('http://fixture'+path,init));return response;};
  const api=createAssistRpcApi({rpc:{call:async(channel,method,payload,signal)=>{const response=await request(channel+'/'+method,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({type:'client-request',rpcId:'r',method,payload}),signal});return (await response.json()).result;}}},async(url,init)=>{const response=await request(url,init);wires.push(response.clone().text());return response;});

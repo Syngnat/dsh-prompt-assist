@@ -1,5 +1,5 @@
 import React from "react";
-import { validateSettings } from "./api.js";
+import { validateSettings,sessionSettings } from "./api.js";
 const h = React.createElement;
 export function Settings(p) {
  const {t,config:v,catalog:c,capabilities:cap}=p;
@@ -11,10 +11,10 @@ export function Settings(p) {
  const efforts=cap?.efforts??[];
  const invalidEffort=!v.followSession&&cap&&v.reasoningEffort&&!efforts.some(e=>e.id===v.reasoningEffort);
  const invalidFast=cap&&v.fast&&!cap.fastEligible;
- const submit=e=>{e.preventDefault();const problem=validateSettings(v);setError(problem==="rounds"?"roundsError":problem?"modelError":null);if(!problem&&(!v.enabled||(!invalidEffort&&!invalidFast)))p.save(v);};
+ const submit=e=>{e.preventDefault();const problem=validateSettings(v);setError(problem==="rounds"?"roundsError":problem?"modelError":null);if(!problem&&!invalidEffort&&!invalidFast)p.save(sessionSettings(v));};
  const select=(key,value,items,change)=>field(key,h("select",{value,onChange:e=>change(e.target.value)},items.map(item=>h("option",{key:item.id,value:item.id},item.name))));
  return h("form",{onSubmit:submit},
- h("div",{className:"lpa-row"},check("enabled",v.enabled,enabled=>change({enabled})),check("follow",v.followSession,followSession=>change({followSession}))),
+ h("div",{className:"lpa-row"},check("follow",v.followSession,followSession=>change({followSession}))),
  h("p",{className:"lpa-note"},t("followHint")),
   h("p",{className:"lpa-note"},t("budgetPolicy")),
  !v.followSession?h("div",{className:"lpa-grid"},
