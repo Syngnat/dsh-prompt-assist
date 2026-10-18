@@ -22,7 +22,7 @@ function fixture(t) {
   }
   const ctx = {
     agents: { get: id => agents.get(id), withInitiator(agent, operation) { assert.equal(agents.get(agent.id), agent); return operation(); } },
-    get: name => name === "goals" ? { get: agent => goals.get(agent.id) } : undefined,
+    get: name => name === "tokenMeter" ? {estimateMessage:m=>Math.ceil(m.content[0].text.length/4)+8} : name === "goals" ? { get: agent => goals.get(agent.id) } : undefined,
     sessionProjections: { stateOf(session, key) { assert.equal(key, ASSIST_KEY); return states.get(session.id); } },
     llm: {
       async resolveModelInfo(provider, model, signal) {
@@ -31,7 +31,7 @@ function fixture(t) {
       },
       async prepareCall(config, signal) {
         signal?.throwIfAborted(); prepares.push({ ...config });
-        return { config: Object.freeze({ ...config, reasoningEffort: config.reasoningEffort ?? "high" }), async *stream(options) {
+        return { context: {contextWindow:1000000}, config: Object.freeze({ ...config, reasoningEffort: config.reasoningEffort ?? "high" }), async *stream(options) {
           streams.push(options); const data = JSON.parse(options.messages[0].content[0].text);
           await hooks.stream?.(options, data); options.signal?.throwIfAborted();
           yield { type: "text-delta", index: 0, text: data.feature === "suggest" ? JSON.stringify({kind:"suggestion",text:`generated ${options.sessionId} ${data.draft}`}) : `generated ${options.sessionId} ${data.draft}` };
@@ -216,3 +216,31 @@ test('enhancement while main is busy retains its completed-QA snapshot when main
  const pending=f.generate();await ready.promise;f.states.get('a').qaId='10:13';f.states.get('a').busy=false;release.resolve();
  const value=await pending;assert.equal(value.qaId,'0:3');assert.equal(value.original,'draft');assert.equal(captured.qa[0].answer,'answer-a');assert.equal(f.prepares.length,1);
 });
+
+test('transport AbortError preserves timeout reason rather than reporting user cancellation',async t=>{
+ const f=fixture(t),controller=new AbortController();
+ f.hooks.stream=async()=>{controller.abort(new DOMException('deadline','TimeoutError'));throw new DOMException('transport aborted','AbortError');};
+ const error=await f.generate('a',{}, {signal:controller.signal}).catch(error=>error);
+ assert.equal(f.runtime.errorCode(error),'timeout');assert.equal(f.runtime.cache.size,0);assert.equal(f.runtime.jobs.size,0);
+});
+
+test('status describes provider policy and configured budget changes invalidate cached generations',async t=>{const f=fixture(t);const limits=f.runtime.state(f.agents.get('a')).limits;assert.equal(limits.suggestTokens,undefined);assert.equal(limits.enhanceTokens,undefined);assert.equal(limits.suggestFallbackTokens,undefined);assert.equal(limits.enhanceFallbackTokens,undefined);assert.equal(limits.modelBudgetPolicy,'provider-model');let budget=16384;const resolve=f.ctx.llm.resolveModelInfo;f.ctx.llm.resolveModelInfo=async(...args)=>({...await resolve(...args),defaultMaxTokens:budget});await f.generate();budget=32768;assert.notEqual((await f.generate()).cached,true);assert.equal(f.streams.length,2);});
+
+test('deadline during route preflight is also timeout and never reaches a model stream',async t=>{const f=fixture(t),controller=new AbortController();f.hooks.resolve=async()=>{controller.abort(new DOMException('deadline','TimeoutError'));throw new DOMException('transport aborted','AbortError');};const error=await f.generate('a',{}, {signal:controller.signal}).catch(e=>e);assert.equal(f.runtime.errorCode(error),'timeout');assert.equal(f.streams.length,0);assert.equal(f.runtime.jobs.size,0);});
+
+for(const dimension of ['budget','window','effort'])test('captured '+dimension+' change never caches a result under earlier metadata',async t=>{
+ const f=fixture(t);f.selections.set('a',{provider:'openai',model:'gpt-test'});
+ const resolve=f.ctx.llm.resolveModelInfo,prepare=f.ctx.llm.prepareCall;let changed=true;
+ f.ctx.llm.resolveModelInfo=async(...args)=>({...await resolve(...args),defaultMaxTokens:512});
+ f.ctx.llm.prepareCall=async(config,signal,configure)=>{
+  const snapshot={provider:config.provider,id:config.model,name:config.model,defaultMaxTokens:changed&&dimension==='budget'?16384:512,context:{contextWindow:changed&&dimension==='window'?500000:1000000},reasoning:{defaultEffort:changed&&dimension==='effort'?'xhigh':'high'}};
+  const controls=configure?configure(config,snapshot):config;
+  const prepared=await prepare({...config,...controls,maxTokens:controls.maxTokens??snapshot.defaultMaxTokens,reasoningEffort:controls.reasoningEffort??snapshot.reasoning.defaultEffort},signal);
+  return {...prepared,context:snapshot.context};
+ };
+ await f.generate();assert.equal(f.runtime.cache.size,0);
+ changed=false;assert.notEqual((await f.generate()).cached,true);assert.equal(f.prepares.length,2);
+ assert.equal((await f.generate()).cached,true);assert.equal(f.prepares.length,2);
+});
+
+test('long draft and complete enhancement follow model context, not former 20K/64K text caps',async t=>{const f=fixture(t),draft='文'.repeat(100000);const result=await f.generate('a',{draft});assert.equal(result.original,draft);assert.equal(result.text,'generated a '+draft);assert.equal(f.streams.length,1);assert.equal(result.contextWindowTokens,1000000);assert.equal(result.outputBudgetTokens,null);assert.equal(f.commandLog.length,0);});

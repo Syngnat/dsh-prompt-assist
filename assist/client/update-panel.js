@@ -1,9 +1,10 @@
 import React from "react";
 import {createUpdateController, initialUpdateSnapshot, updateDisplay, INSTALL_SPEC, copyInstallSpec} from "./update-state.js";
+import {OnlineUpdatePanel} from "./online-update-panel.js";
 const h = React.createElement;
 
 /** Pure render surface, exercised with ReactDOMServer rather than a fake DOM. */
-export function UpdatePanelContent({snapshot = initialUpdateSnapshot(), t, onCheck, onReload, onCancel, onCopy, copyStatus}) {
+export function UpdatePanelContent({snapshot = initialUpdateSnapshot(), t, onCheck, onReload, onCancel, onCopy, copyStatus, children}) {
   const view = updateDisplay(snapshot);
   const data = snapshot.data;
   const button = (key, onClick, disabled = false) => h("button", {type: "button", className: "lpa-button", onClick, disabled}, t(key));
@@ -26,6 +27,7 @@ export function UpdatePanelContent({snapshot = initialUpdateSnapshot(), t, onChe
       view.releaseUrl ? h("a", {className: "lpa-button", href: view.releaseUrl, target: "_blank", rel: "noopener noreferrer"}, t("updates.releaseLink")) : null),
     h("p", {className: "lpa-note"}, t("updates.privacy")),
     h("p", {className: "lpa-note"}, t("updates.cacheNote")),
+    children,
     h("div", {className: "lpa-update-install"},
       h("span", null, t("updates.installAddress")), h("code", null, INSTALL_SPEC),
       button("updates.copy", onCopy), copyStatus ? h("span", {className: "lpa-note", role: "status"}, t("updates." + copyStatus)) : null),
@@ -57,5 +59,6 @@ export function UpdatePanel({t, fetcher = globalThis.fetch}) {
     }
   }
   return h(UpdatePanelContent, {snapshot, t, copyStatus, onCopy: copy,
-    onCheck: () => {void controller.check();}, onReload: () => {void controller.load();}, onCancel: () => controller.cancel()});
+    onCheck: () => {void controller.check();}, onReload: () => {void controller.load();}, onCancel: () => controller.cancel()},
+    h(OnlineUpdatePanel, {t, fetcher, updateAvailable: snapshot.data?.status === "update-available"}));
 }

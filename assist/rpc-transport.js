@@ -7,7 +7,6 @@ export function installAssistRpc(ctx, service) {
     const fail = code => ({ ok: false, error: { code, message: code, details: {} } });
     if (endpoint !== ASSIST_ENDPOINT) return fail('unknown-action');
     try {
-      if (JSON.stringify(input)?.length > 393216) return fail('request-too-large');
       signal.throwIfAborted();
       const value = await service.dispatch(input, { signal, fromUI: true });
       // Content-free receipt for diagnosing the real UI path, never a chat event.
@@ -25,7 +24,7 @@ export function installAssistRpc(ctx, service) {
       const reply = (value, status = 200) => new Response(JSON.stringify(value), { status, headers });
       if (request.headers.get('content-type')?.split(';')[0].trim().toLowerCase() !== 'application/json') return reply({error:'invalid-request'},415);
       let envelope;
-      try { const text=await request.text(); if(text.length>393216)return reply({error:'request-too-large'},413); envelope=JSON.parse(text); }
+      try { const text=await request.text(); envelope=JSON.parse(text); }
       catch { return reply({error:'invalid-request'},400); }
       if(envelope?.type!=='client-request'||typeof envelope.rpcId!=='string'||envelope.rpcId.length>200||envelope.method!==ASSIST_ENDPOINT)return reply({error:'invalid-request'},400);
       const result=await handle(envelope.method,envelope.payload,request.signal);

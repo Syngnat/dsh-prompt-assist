@@ -56,6 +56,8 @@ export function errorKey(error) {
   if (code.startsWith('transport-')) return 'transportError';
   if (code === 'forbidden') return 'authError';
   if (code === 'output-limit') return 'outputLimit';
+  if (code === 'timeout') return 'requestTimeout';
+  if (code === 'context-unknown') return 'contextUnknown';
   if (/stale|changed|revision/.test(code)) return 'stale';
   if (/context|overflow/.test(code)) return 'contextError';
   if (/file|secret|binary|oversize/.test(code)) return 'fileError';

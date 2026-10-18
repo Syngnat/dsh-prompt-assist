@@ -2,6 +2,17 @@
 
 [English](<README.md>) | [简体中文](<README.zh-CN.md>)
 
+## 1.2.11 — Confirmed online updates and provider-model budgets
+
+- Add a separate prepare, explicit unchecked risk consent, and confirm flow for supported GitHub installations. Pin target/recovery commits and run replacement through public DSH Plugin Manager APIs and a Host-owned job; checking alone never installs.
+- Verify actual loaded versions after update and recovery. Handle cancellation, restart requirements, lost receipts and failed best-effort recovery without silently resubmitting. Replacement is profile-wide and non-atomic; jobs survive page closure, not Host restart.
+- Follow selected provider/model input windows and native output defaults. Remove fixed auxiliary 1024/4096-token budgets and extra draft/Q&A/output/transport text caps; an omitted output cap remains omitted. Preserve complete Q&A and use the Host token estimator rather than treating UTF-8 bytes as tokens.
+- Preserve timeout reasons when transports throw a generic AbortError, prevent cross-generation budget/window/effort cache reuse, and transmit streaming progress as deltas while accepting older cumulative frames.
+- Keep the independent 120-second deadline, explicit file-access safeguards, native carrier limits, existing feature settings and main Fast behavior. No automatic paid retry, reasoning downgrade or main-conversation parameter change.
+- Validate 499 offline regressions, real rc.1/rc.2 LLM/token-estimator and jobs contracts, and reproducible prebuilt artifacts. Isolated Windows rc.2 update lifecycle checks use local packaged fixtures, not a real future GitHub release or live model evaluation.
+
+中文：新增用户明确确认后的在线更新；输入输出额度跟随供应商模型设置，取消插件额外文本限额，修复超时误报和换代缓存。文件读取与120秒等待保护保留。更新可能影响整个profile且恢复可能失败，不自动安装、重试收费请求或调整推理档位。
+
 ## 1.2.10 — User-perspective drafting and normal abstention
 
 - Enhancement uses confirmed context, preserves user-to-assistant intent, and retains unresolved core wording instead of inventing self-questions or clarification steps.

@@ -52,7 +52,7 @@ export async function installAssistHost(ctx, { z, fastService, providers, create
     init: () => ({ ...initialContextState({}, 0), busy: true, retired: true }), apply: state => state });
   const feature = z.object({ enabled: z.boolean(), followSession: z.boolean(), provider: z.string(), model: z.string(), reasoningEffort: z.string(), fast: z.boolean(), rounds: z.number().int().min(1).max(20) });
   ctx.sessionProjections.register({
-    key: ASSIST_KEY, stateVersion: 1, stateSchema: z.any(),
+    key: ASSIST_KEY, stateVersion: 2, stateSchema: z.any(),
     init: initialContextState, apply: foldContextState,
     wire: { viewSchema: z.object({ settings: z.object({ suggest: feature, enhance: feature }), qaId: z.string().nullable(), qaCount: z.number().int(), busy: z.boolean() }), view: wireView() },
   });

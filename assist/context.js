@@ -4,7 +4,7 @@ import { initialSettings, normalizeConfig } from "./config.js";
 export const PROJECTION_KEY = ASSIST_KEY;
 export const COMMAND_NAME = ASSIST_COMMAND;
 export const QA_ROUND_LIMIT = 20;
-export const QA_TEXT_LIMIT = 16384;
+// Legacy checkpoint marker only; literal user text is never evidence of truncation.
 export const TRUNCATION_MARKER = "\n[truncated: prompt-assist context limit]";
 const MAX_PENDING_COMMANDS = 64;
 
@@ -18,24 +18,12 @@ export function initialContextState(_header, floor = 0) {
   };
 }
 
-/** Retain only text blocks, with an explicit marker rather than silently clipping. */
+/** Preserve complete native text blocks; model-specific admission happens downstream. */
 function messageText(message) {
   if (!Array.isArray(message?.content)) return null;
-  let text = "";
-  let truncated = false;
-  for (const block of message.content) {
-    if (block?.type !== "text" || typeof block.text !== "string" || !block.text) continue;
-    const separator = text ? "\n" : "";
-    const remaining = QA_TEXT_LIMIT - text.length - separator.length;
-    if (block.text.length > remaining) {
-      text = (text + separator + block.text.slice(0, Math.max(0, remaining))).slice(0, QA_TEXT_LIMIT - TRUNCATION_MARKER.length);
-      truncated = true;
-      break;
-    }
-    text += separator + block.text;
-  }
-  if (truncated) text += TRUNCATION_MARKER;
-  return text.trim() ? { text, truncated } : null;
+  const text = message.content.filter(block => block?.type === "text" && typeof block.text === "string" && block.text)
+    .map(block => block.text).join("\n");
+  return text.trim() ? { text, truncated: false } : null;
 }
 
 function readConfigCommand(data) {
@@ -111,14 +99,12 @@ export function foldContextState(state, event) {
   return { ...state, answer };
 }
 
-/** Select complete recent pairs; marked overflow is never admitted to a model prompt. */
+/** Select complete recent pairs; explicitly truncated legacy data is never admitted. */
 export function selectQA(state, count) {
   if (!Number.isInteger(count) || count < 1 || count > QA_ROUND_LIMIT) throw failure("invalid-rounds");
   const rounds = state.rounds.slice(-count);
   if (rounds.some(round => typeof round.question !== "string" || typeof round.answer !== "string"
     || !round.question.trim() || !round.answer.trim())) throw failure("invalid-context");
-  if (rounds.some(round => round.question.length > QA_TEXT_LIMIT || round.answer.length > QA_TEXT_LIMIT)) throw failure("context-overflow");
-  if (rounds.some(round => round.truncated || round.question.includes(TRUNCATION_MARKER)
-    || round.answer.includes(TRUNCATION_MARKER))) throw failure("context-overflow");
+  if (rounds.some(round => round.truncated)) throw failure("context-overflow");
   return rounds.map(round => ({ ...round }));
 }

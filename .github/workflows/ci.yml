@@ -41,3 +41,4 @@ jobs:
       - run: node -e "require('fs').mkdirSync('.compat-runtime',{recursive:true});require('fs').writeFileSync('.compat-runtime/package.json',JSON.stringify({private:true}))"
       - run: pnpm --dir .compat-runtime add --ignore-scripts @deepseek-ai/dsh@${{ matrix.dsh }}
       - run: node scripts/check-dsh-compatibility.mjs .compat-runtime/node_modules/@deepseek-ai/dsh/package.json
+      - run: node scripts/check-online-update-jobs.mjs .compat-runtime/node_modules/@deepseek-ai/dsh/package.json

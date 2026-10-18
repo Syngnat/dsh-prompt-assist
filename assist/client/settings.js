@@ -16,6 +16,7 @@ export function Settings(p) {
  return h("form",{onSubmit:submit},
  h("div",{className:"lpa-row"},check("enabled",v.enabled,enabled=>change({enabled})),check("follow",v.followSession,followSession=>change({followSession}))),
  h("p",{className:"lpa-note"},t("followHint")),
+  h("p",{className:"lpa-note"},t("budgetPolicy")),
  !v.followSession?h("div",{className:"lpa-grid"},
  select("provider",v.provider,[{id:"",name:t("selectProvider")},...c.providers],provider=>change({provider,model:""})),
  select("model",v.model,[{id:"",name:t("selectModel")},...c.models.filter(m=>m.provider===v.provider)],model=>change({model})),

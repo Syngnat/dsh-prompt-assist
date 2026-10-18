@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {callAssistModel} from '../assist/model-call.js';
 const route={provider:'openai',model:'fixture',fast:false,metadata:{context:{contextWindow:1000000}}};
 async function run(chunks,{feature='suggest',signal}={}){
- const deltas=[];const ctx={llm:{prepareCall:async config=>({config,stream:async function*(){yield* chunks;}})}};
+ const deltas=[];const ctx={tokenMeter:{estimateMessage:m=>Math.ceil(m.content[0].text.length/4)+8},llm:{prepareCall:async config=>({config,context:{contextWindow:1000000},stream:async function*(){yield* chunks;}})}};
  const result=await callAssistModel(ctx,{id:'fixture'},route,{system:'system',user:'{}'},feature,signal,x=>({...x,role:'user'}),x=>deltas.push(x));
  return {result,deltas};
 }

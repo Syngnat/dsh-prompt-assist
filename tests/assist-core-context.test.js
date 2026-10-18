@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { DEFAULT_CONFIG, initialSettings, normalizeConfig } from "../assist/config.js";
-import { COMMAND_NAME, PROJECTION_KEY, initialContextState, foldContextState, selectQA, QA_TEXT_LIMIT, TRUNCATION_MARKER } from "../assist/context.js";
+import { COMMAND_NAME, PROJECTION_KEY, initialContextState, foldContextState, selectQA, TRUNCATION_MARKER } from "../assist/context.js";
 
 const event = (type, seq, data, extra = {}) => ({ type, seq, time: 0, data, ...extra });
 const user = (seq, text = "question", source = "user") => event("user/message", seq, {
@@ -186,18 +186,20 @@ test("retain at most 20 unique questions and select detached recent pairs", () =
   for (const count of [0, 21, "3", NaN, 1.5]) assert.throws(() => selectQA(state, count), { code: "invalid-rounds" });
 });
 
-test("bounded QA is explicitly marked and selecting any marked pair fails closed", () => {
-  for (const field of ["question", "answer"]) {
-    const large = "x".repeat(QA_TEXT_LIMIT + 10);
-    let state = complete(initialContextState({}, 0), 0, field === "question" ? large : "Q", field === "answer" ? large : "A");
-    const round = state.rounds[0];
-    assert.equal(round.truncated, true); assert.ok(round[field].length <= QA_TEXT_LIMIT);
-    assert.ok(round[field].endsWith(TRUNCATION_MARKER));
-    assert.throws(() => selectQA(state, 1), { code: "context-overflow" });
-    state = complete(state, 1);
-    assert.equal(selectQA(state, 1).length, 1);
-    assert.throws(() => selectQA(state, 2), { code: "context-overflow" });
-  }
+test("long Chinese multi-block QA is preserved completely, including literal legacy marker text", () => {
+  const qParts = ["中文问题🙂".repeat(5000), "正文引用" + TRUNCATION_MARKER, "问题末尾不可丢失".repeat(3000)];
+  const aParts = ["完整回答🧪".repeat(6000), "答案末尾不可丢失".repeat(3000)];
+  const question = user(0), answer = assistant(2, 1);
+  question.data.content = [...qParts.map(text => ({type: "text", text})), {type: "image", text: "HIDDEN_IMAGE"}];
+  answer.data.message.content = [{type: "reasoning", text: "HIDDEN_REASONING"}, ...aParts.map(text => ({type: "text", text}))];
+  const state = [question, event("turn/start", 1, {turn: 1}), answer,
+    event("turn/end", 3, {turn: 1, reason: {kind: "completed"}})].reduce(foldContextState, initialContextState({}, 0));
+  assert.equal(state.rounds[0].truncated, false);
+  const selected = selectQA(state, 1);
+  assert.equal(selected[0].question, qParts.join("\n"));
+  assert.equal(selected[0].answer, aParts.join("\n"));
+  assert.doesNotMatch(JSON.stringify(selected), /HIDDEN_IMAGE|HIDDEN_REASONING/);
+  assert.deepEqual(selectQA(JSON.parse(JSON.stringify(state)), 1), selected);
 });
 
 test("plain JSON checkpoint preserves pending command and incomplete QA semantics", () => {
@@ -238,7 +240,17 @@ test("unsettled config commands are bounded and duplicate IDs cannot overwrite a
   assert.equal(state.settings.suggest.rounds, 3); assert.equal(Object.keys(state.pending).length, 63);
 });
 
-test("selected malformed or oversized checkpoint content is rejected before model use", () => {
+test("selected malformed or explicitly truncated legacy checkpoint content is rejected before model use", () => {
   assert.throws(() => selectQA({ rounds: [{ question: "Q", answer: "" }] }, 1), { code: "invalid-context" });
-  assert.throws(() => selectQA({ rounds: [{ question: "Q", answer: "x".repeat(QA_TEXT_LIMIT + 1), truncated: false }] }, 1), { code: "context-overflow" });
+  assert.throws(() => selectQA({ rounds: [{ question: "Q", answer: "retained prefix" + TRUNCATION_MARKER, truncated: true }] }, 1), { code: "context-overflow" });
+});
+
+test("legacy truncation is rejected by its flag, not by literal marker content", () => {
+  const text = "A quoted historical marker:" + TRUNCATION_MARKER;
+  assert.equal(selectQA({rounds: [{question: text, answer: text, truncated: false}]}, 1)[0].answer, text);
+  for (const answer of ["retained prefix", "retained prefix" + TRUNCATION_MARKER]) {
+    const state = {rounds: [{question: "old", answer, truncated: true}, {question: "new", answer: "complete", truncated: false}]};
+    assert.equal(selectQA(state, 1)[0].question, "new");
+    assert.throws(() => selectQA(state, 2), {code: "context-overflow"});
+  }
 });

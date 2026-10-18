@@ -1,6 +1,6 @@
 import { SUGGEST_ROLE_PROMPT } from './suggest-role.js';
 import { ENHANCE_ROLE_PROMPT } from './enhance-role.js';
-import { QA_ROUND_LIMIT, QA_TEXT_LIMIT, TRUNCATION_MARKER } from "./context.js";
+import { QA_ROUND_LIMIT } from "./context.js";
 import { FILE_BYTES, TOTAL_BYTES } from "./files.js";
 
 function failure(code) { return Object.assign(new Error(code), { code }); }
@@ -10,8 +10,7 @@ function qaData(qa) {
   return qa.map(round => {
     if (!round || typeof round.question !== "string" || typeof round.answer !== "string"
       || !round.question.trim() || !round.answer.trim()) throw failure("invalid-context");
-    if (round.truncated || round.question.length > QA_TEXT_LIMIT || round.answer.length > QA_TEXT_LIMIT
-      || round.question.includes(TRUNCATION_MARKER) || round.answer.includes(TRUNCATION_MARKER)) throw failure("context-overflow");
+    if (round.truncated) throw failure("context-overflow");
     return { question: round.question, answer: round.answer };
   });
 }

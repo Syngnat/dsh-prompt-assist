@@ -5,7 +5,7 @@ export function isNoSuggestionPlaceholder(text) {
 export function parseSuggestionOutput(raw) {
  const invalid=()=>Object.assign(new Error('invalid-suggestion'),{code:'invalid-suggestion'});
  let value;
- try{if(typeof raw!=='string'||raw.length>65536)throw invalid();value=JSON.parse(raw);}catch{throw invalid();}
+ try{if(typeof raw!=='string')throw invalid();value=JSON.parse(raw);}catch{throw invalid();}
  if(!value||typeof value!=='object'||Array.isArray(value))throw invalid();
  const keys=Object.keys(value);
  if(value.kind==='none'&&keys.length===1)return {outcome:'no-suggestion',text:''};

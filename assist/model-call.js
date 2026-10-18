@@ -16,31 +16,38 @@ export async function resolveAssistRoute(ctx, agent, settings, fastService, prov
   return { ...route, fast: settings.fast === true, metadata };
 }
 
-/** Consume within AsyncLocalStorage, not merely create an iterator within it. */
-export async function callAssistModel(ctx, agent, route, prompt, feature, signal, createUserMessage, onText) {
+/** Model quotas belong to the captured provider configuration, never this feature. */
+export async function callAssistModel(ctx, agent, route, prompt, feature, signal, createUserMessage, onText, onPrepared) {
   if (typeof createUserMessage !== 'function') throw failure('not-configured');
-  const maxTokens = feature === 'suggest' ? 1024 : 4096;
-  const inputBytes = Buffer.byteLength(prompt.system + prompt.user, 'utf8');
-  const config = { provider: route.provider, model: route.model, maxTokens };
+  const config = { provider: route.provider, model: route.model };
   if (route.reasoningEffort) config.reasoningEffort = route.reasoningEffort;
   const prepared = await ctx.llm.prepareCall(config, signal);
-  const available = prepared.context?.contextWindow ?? route.metadata.context?.contextWindow;
+  const available = prepared.context?.contextWindow;
+  const outputBudget = prepared.config.maxTokens;
   if (!Number.isFinite(available) || available <= 0) throw failure('context-unknown');
-  if (inputBytes > 262144 || (available && inputBytes + maxTokens + 1024 > available)) throw failure('context-overflow');
+  if (outputBudget !== undefined && (!Number.isSafeInteger(outputBudget) || outputBudget <= 0)) throw failure('invalid-config');
+  const meter = typeof ctx.get === 'function' ? ctx.get('tokenMeter') : ctx.tokenMeter;
+  if (typeof meter?.estimateMessage !== 'function') throw failure('context-unknown');
+  const message = createUserMessage({ content: [{ type: 'text', text: prompt.user }], source: { kind: 'plugin', plugin: '@local/dsh-openai-fast' } });
+  // Estimator-only system message; neither it nor this call is appended to chat history.
+  const system = { ...message, role: 'system', source: { kind: 'system-prompt' }, content: [{ type: 'text', text: prompt.system }] };
+  const counts = [meter.estimateMessage(system), meter.estimateMessage(message)];
+  if (counts.some(value => !Number.isFinite(value) || value < 0)) throw failure('context-unknown');
+  const inputTokensEstimate = counts[0] + counts[1];
+  // Use the Host's heuristic, not UTF-8 bytes. The provider remains the final token authority.
+  if (inputTokensEstimate > available) throw failure('context-overflow');
   signal?.throwIfAborted();
+  onPrepared?.({ outputBudget: outputBudget ?? null,
+    contextWindow: available, effort: prepared.config.reasoningEffort ?? '' });
   const started = performance.now();
   return runWithPriority(agent.id, route.fast, async () => {
     let text = '', ttftMs = null, completed = false;
-    const options = {
-      ...prepared.config, sessionId: agent.id, signal, system: prompt.system,
-      messages: [createUserMessage({ content: [{ type: 'text', text: prompt.user }], source: { kind: 'plugin', plugin: '@local/dsh-openai-fast' } })],
-    };
+    const options = { ...prepared.config, sessionId: agent.id, signal, system: prompt.system, messages: [message] };
     for await (const chunk of prepared.stream(options)) {
       signal?.throwIfAborted();
       if (chunk.type === 'text-delta') {
         if (ttftMs === null && chunk.text) ttftMs = performance.now() - started;
         text += chunk.text;
-        if (text.length > 65536) throw failure('output-too-large');
         if (chunk.text && feature !== 'suggest') onText?.(text);
       }
       if (chunk.type === 'finish') {
@@ -51,6 +58,7 @@ export async function callAssistModel(ctx, agent, route, prompt, feature, signal
     if (!completed || !text.trim()) throw failure('empty-result');
     signal?.throwIfAborted();
     const result = feature === 'suggest' ? parseSuggestionOutput(text) : { text: text.trim() };
-    return { ...result, resolvedReasoningEffort: prepared.config.reasoningEffort ?? '', timing: { ttftMs, totalMs: performance.now() - started } };
+    return { ...result, outputBudgetTokens: outputBudget ?? null, contextWindowTokens: available, inputTokensEstimate,
+      resolvedReasoningEffort: prepared.config.reasoningEffort ?? '', timing: { ttftMs, totalMs: performance.now() - started } };
   });
 }

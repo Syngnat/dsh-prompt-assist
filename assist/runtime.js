@@ -52,7 +52,7 @@ export class AssistRuntime {
       busy: state.busy || goalActive,
       transport: { kind: 'connection-rpc', lastSuccessfulUIRead: this.transportReads.get(agent.id) ?? null },
       current: { ...selected, reasoningEffort: selected.reasoningEffort ?? '', fast: this.fastService.enabled(agent) },
-      limits: { fileBytes: 65536, totalBytes: 131072, suggestTokens: 1024, enhanceTokens: 4096, requestMs: 120000 },
+      limits: { fileBytes: 65536, totalBytes: 131072, modelBudgetPolicy: "provider-model", inputMeasurement: "host-token-estimate", requestMs: 120000 },
       capabilities: { inlineGhost: false, structuredApply: false },
     };
   }
@@ -106,7 +106,7 @@ export class AssistRuntime {
     if (!FEATURES.includes(input.feature)) throw failure('invalid-request');
     const state = this.projection(agent), settings = state.settings[input.feature];
     if (!settings?.enabled) throw failure('disabled');
-    if (typeof input.draft !== 'string' || input.draft.length > 20000 || !Number.isSafeInteger(input.draftRev)) throw failure('invalid-request');
+    if (typeof input.draft !== 'string' || !Number.isSafeInteger(input.draftRev)) throw failure('invalid-request');
     if (input.feature === 'enhance' && !input.draft.trim()) throw failure('invalid-request');
     if (input.feature === 'suggest' && (this.state(agent).busy || input.draft !== '' || input.qaId !== state.qaId)) throw failure('stale-context');
     const entries = input.files ?? [];
@@ -135,6 +135,9 @@ export class AssistRuntime {
     const onText=text=>{signal.throwIfAborted();for(const listener of job.listeners)listener(text);};
     this.jobs.set(slot, job);
     job.promise = Promise.resolve().then(() => this.preflight(agent, request, settings, explicit, qa, qaId, readers, slot, signal, onText))
+      // Some transports replace a deadline reason with a generic AbortError.
+      // Preserve the first authoritative cancellation reason across all preflight stages.
+      .catch(error => { signal.throwIfAborted(); throw error; })
       .finally(() => { if (this.jobs.get(slot) === job) this.jobs.delete(slot); });
     return job.promise;
   }
@@ -150,19 +153,23 @@ export class AssistRuntime {
     const files = await readSelectedFiles(input.files, { ...readers, signal });
     check();
     const prompt = buildAssistPrompt(input.feature, input.draft, qa, files.files, input.references);
-    const identity = { provider: route.provider, model: route.model, effort: route.reasoningEffort ?? route.metadata.reasoning?.defaultEffort ?? '', fast: route.fast };
+    const identity = { provider: route.provider, model: route.model, effort: route.reasoningEffort ?? route.metadata.reasoning?.defaultEffort ?? '', fast: route.fast, outputBudget: route.metadata.defaultMaxTokens ?? null, contextWindow: route.metadata.context?.contextWindow ?? null };
     const key = createHash('sha256').update(JSON.stringify([input.feature, input.draft, qaId, settings, prompt, identity])).digest('hex');
     const cached = this.cache.get(slot);
     if (cached?.key === key && cached.expires > Date.now()) return { ...cached.value, draftRev: input.draftRev, cached: true };
     check();
-    const value = await this.finish(agent, input, route, prompt, files, qaId, signal, onText);
+    let preparedIdentity;
+    const value = await this.finish(agent, input, route, prompt, files, qaId, signal, onText, value => { preparedIdentity = value; });
     check();
-    this.cache.set(slot, { key, value, expires: Date.now() + 60000 });
+    // Do not label a newly captured adapter generation with earlier lookup metadata.
+    if (preparedIdentity && ['outputBudget','contextWindow','effort'].every(field => preparedIdentity[field] === identity[field])) {
+      this.cache.set(slot, { key, value, expires: Date.now() + 60000 });
+    }
     return value;
   }
 
-  async finish(agent, input, route, prompt, files, qaId, signal, onText) {
-    const generated = await callAssistModel(this.ctx, agent, route, prompt, input.feature, signal, this.createUserMessage, onText);
+  async finish(agent, input, route, prompt, files, qaId, signal, onText, onPrepared) {
+    const generated = await callAssistModel(this.ctx, agent, route, prompt, input.feature, signal, this.createUserMessage, onText, onPrepared);
     if (input.feature === 'suggest' && this.projection(agent).qaId !== qaId) throw failure('stale-context');
     return {
       ...generated, original: input.draft, draftRev: input.draftRev, qaId, feature: input.feature,

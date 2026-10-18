@@ -27,7 +27,17 @@ test('reader cancellation aborts the owning generation',async()=>{
 import {callAssistModel} from '../assist/model-call.js';
 test('provider text deltas reach callback while completion is still pending',async()=>{
  const gate=defer(),seen=defer();const updates=[];
- const ctx={llm:{async prepareCall(config){return {config,context:{contextWindow:100000},async *stream(){yield {type:'text-delta',text:'A'};await gate.promise;yield {type:'text-delta',text:'B'};yield {type:'finish',reason:{kind:'stop'}};}};}}};
+ const ctx={tokenMeter:{estimateMessage:m=>Math.ceil(m.content[0].text.length/4)+8},llm:{async prepareCall(config){return {config,context:{contextWindow:100000},async *stream(){yield {type:'text-delta',text:'A'};await gate.promise;yield {type:'text-delta',text:'B'};yield {type:'finish',reason:{kind:'stop'}};}};}}};
  const pending=callAssistModel(ctx,{id:'a'},{provider:'openai',model:'gpt-test',metadata:{},fast:false},{system:'s',user:'u'},'enhance',undefined,value=>({...value,role:'user'}),text=>{updates.push(text);seen.resolve();});
  await seen.promise;assert.deepEqual(updates,['A']);gate.resolve();assert.equal((await pending).text,'AB');assert.deepEqual(updates,['A','AB']);
+});
+
+test('large drafts and complete streamed output survive all current transport text boundaries',async()=>{
+ const draft='汉'.repeat(400000),output='字'.repeat(1100000),seen=[];
+ const fetcher=setup({async dispatch(input,{onText}){assert.equal(input.draft,draft);onText(output.slice(0,100000));await Promise.resolve();onText(output);return {text:output};},errorCode:()=> 'model-failed'});
+ const result=await streamAssist(fetcher,'a',{feature:'enhance',draft},undefined,text=>seen.push(text));assert.equal(result.text,output);assert.ok(seen.some(text=>text.length>=100000));
+});
+test('delta and legacy frames reconstruct text without silently dropping long progress',async()=>{
+ const text='x'.repeat(70000),frames=[{type:'text',text:'A'},{type:'delta',text},{type:'delta',text:'B'},{type:'result',value:{text:'A'+text+'B'}}];const seen=[];
+ const value=await streamAssist(async()=>new Response(frames.map(x=>JSON.stringify(x)).join('\n')+'\n'),'a',{},undefined,text=>seen.push(text));assert.equal(seen.at(-1),value.text);assert.equal(seen.length,3);
 });

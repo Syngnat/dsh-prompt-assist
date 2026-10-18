@@ -16,7 +16,7 @@ function fixture(t, options = {}, sharedRoutes = new Map()) {
     connection: { fetch: { register(route) {
       assert.equal(sharedRoutes.has(route.path), false, "exact route must not leak across unload"); sharedRoutes.set(route.path, route);
       let live = true;
-      return async () => { if (!live) return; live = false; await drain(); sharedRoutes.delete(route.path); };
+      return async () => { if (!live) return; live = false; if(route.path===UPDATE_PATH) await drain(); sharedRoutes.delete(route.path); };
     } } },
     tools: { register(definition) {
       assert.equal(tools.has(definition.name), false); tools.set(definition.name, definition);
@@ -45,14 +45,14 @@ function fixture(t, options = {}, sharedRoutes = new Map()) {
     get tool() { return tools.get("prompt_assist_updates"); } };
 }
 
-test("Host registers one authenticated route and one explicit-action tool without initial network", t => {
+test("Host registers two authenticated routes and one explicit-action tool without initial network", t => {
   const f = fixture(t, { currentVersion: "99.0.0" });
-  assert.equal(f.routes.size, 1); assert.deepEqual(f.routes.get(UPDATE_PATH).methods, ["GET", "POST"]);
+  assert.equal(f.routes.size, 2); assert.deepEqual(f.routes.get(UPDATE_PATH).methods, ["GET", "POST"]);
   assert.equal(f.routes.get(UPDATE_PATH).requestBody, "buffered");
   assert.equal(f.service.status().currentVersion, manifest.version); assert.equal(f.calls.length, 0); assert.equal(f.timers.size, 0);
   assert.deepEqual(f.tool.parameters.required, ["action"]); assert.equal(f.tool.parameters.additionalProperties, false);
-  assert.deepEqual(f.tool.parameters.properties.action.enum, ["status", "check"]);
-  assert.match(f.tool.description, /only when the user explicitly requests/); assert.match(f.tool.description, /Never installs/);
+  assert.deepEqual(f.tool.parameters.properties.action.enum, ["status", "check", "operation"]);
+  assert.match(f.tool.description, /only when the user explicitly requests/); assert.match(f.tool.description, /Never confirms or starts/);
   assert.ok(f.tool.description.length < 300); assert.equal(f.tool.isConcurrencySafe({ action: "check" }), true);
 });
 
@@ -121,7 +121,7 @@ test("unload aborts the request before waiting for authenticated route draining,
 test("owned route can be reinstalled after disposal without duplicate exact registration", async t => {
   const routes = new Map(), first = fixture(t, {}, routes);
   await first.dispose(); assert.equal(routes.size, 0);
-  const next = fixture(t, {}, routes); assert.equal(routes.size, 1);
+  const next = fixture(t, {}, routes); assert.equal(routes.size, 2);
   assert.equal((await (await next.request()).json()).status, "idle"); assert.equal(next.calls.length, 0);
 });
 
@@ -132,5 +132,9 @@ test("owner registry admission and unsupported methods cannot force a network ch
   const result = await f.tool.execute({ action: "status" });
   const rendered = f.tool.output.render({ action: "status" }, result);
   assert.deepEqual(JSON.parse(rendered[0].text), result);
-  assert.deepEqual([...f.tool.output.schema.required].sort(), Object.keys(result).sort());
+  assert.deepEqual([...f.tool.output.schema.oneOf[0].required].sort(), Object.keys(result).sort());
 });
+
+test('operation tool reads local status only and cannot prepare or confirm installation',async t=>{const f=fixture(t);const state=await f.tool.execute({action:'operation'});assert.equal(state.available,false);assert.equal(state.reason,'manager-unavailable');assert.equal(state.operation,null);assert.equal(f.calls.length,0);for(const action of ['prepare','confirm','install'])await assert.rejects(f.tool.execute({action}),{code:'invalid-action'});assert.doesNotMatch(JSON.stringify(state),/token|targetSpec/);});
+
+test('operation tool hides raw dependency failures',async t=>{const manager=Object.fromEntries(['listBundles','listPlugins','installBundle','removeBundle','setBundleEnabled','cancelInstall'].map(k=>[k,()=>{throw Error('secret raw path');}]));const jobs=Object.fromEntries(['list','start','readAt','attachController'].map(k=>[k,()=>[]]));const f=fixture(t,{online:{manager,jobs,readLoadedVersion:async()=>manifest.version}});assert.deepEqual(await f.tool.execute({action:'operation'}),{currentVersion:manifest.version,available:false,reason:'state-unavailable',operation:null});assert.equal(f.calls.length,0);});

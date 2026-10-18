@@ -6,7 +6,7 @@ Provides prompt enhancement, next-question suggestions, and OpenAI Fast accelera
 
 A plugin bundle for the DeepSeek Harness (DSH) Web GUI. Enhancement and suggestions are independent features: enable either or both for the conversation you choose. Settings live on the sidebar page, not in a composer popup.
 
-> **v1.2.10:** improves user-perspective rules for enhancement and next-question suggestions, and adds a normal, non-adoptable no-suggestion state. Offline contracts and state-flow tests pass; live model semantic acceptance has not been performed.
+> **v1.2.11:** adds explicitly confirmed online updates and makes auxiliary input/output limits follow the selected provider/model settings. It also fixes timeout classification and long-text handling. No automatic installation or paid retry is introduced; live model semantic acceptance has not been performed.
 
 ## Compatibility policy
 
@@ -88,18 +88,26 @@ The Fast switch for each auxiliary feature is separate from the main Fast button
 
 Results stay in the allocated inline composer area instead of a floating overlay. Settings use a separate sidebar page; return to the conversation to edit the draft. Apply becomes available only after generation completes. Displayed durations use seconds rounded **down**, so a subsecond duration appears as 0 seconds. A cache hit shows the timing of the original generation.
 
-This release does **not** implement native Ghost text, ArrowRight acceptance, or a new Ctrl+Alt+E shortcut. Use the explicit buttons. Output/token and wait limits can stop a request; reasoning may consume the same output budget. The plugin does not automatically retry paid requests or change the reasoning effort to work around a limit.
+This release does **not** implement native Ghost text, ArrowRight acceptance, or a new Ctrl+Alt+E shortcut. Use the explicit buttons. Auxiliary input windows and output budgets follow the selected provider/model settings. There are no fixed 1024/4096-token fallbacks or additional plugin text/byte quotas on drafts, Q&A or generated text. An omitted output cap keeps native/provider defaults. Input preflight uses the Host token estimator, not UTF-8 bytes as tokens; native adapters and providers remain authoritative for actual counts, output limits and the shared window. Input is not silently truncated, output budgets are not silently lowered, and main-conversation per-call overrides are neither copied nor changed. Larger budgets may increase time and cost; reasoning may share the budget. The independent 120-second wait, authorized file-access safeguards and native carrier resource boundaries remain. Incomplete output is never applied as complete; paid requests are not retried automatically and reasoning effort is not changed.
 
 ## Check for stable updates
 
 Open **Prompt assist** in the sidebar and find **Version and updates** below the feature settings. No conversation selection is required for this global section.
 
-- Opening the page reads only the Host's in-memory status. There is no startup check, background polling or scheduled network check.
+- Opening the page never checks the network or installs. Release checking reads its cache; the online-update section reads local installation/job state. Only accepted update jobs poll local progress; releases are not polled automatically.
 - Click **Check for updates** to query this repository's public GitHub latest-release endpoint. Drafts and prereleases are rejected. The result distinguishes a newer stable version, the same version, a locally newer version, and a failed check.
 - The section shows current/latest versions, the check time, a release link, the fixed installation address and manual-upgrade instructions. A failed check is not reported as up to date.
 - Checks time out after 10 seconds, limit response size, coalesce concurrent requests and use a short 30-second cooldown. The shared status is ephemeral and resets when the Host/plugin restarts.
 - Checking sends no conversation, draft, file, provider credentials or model request. GitHub receives ordinary network metadata such as the Host IP and request headers.
-- **No update is downloaded or installed.** The built-in DSH plugin page is not given an automatic update capability by this feature.
+- **Checking alone never downloads or installs an update.** The built-in DSH plugin page is not given an automatic update capability by this feature.
+
+### Confirmed online updates
+
+From v1.2.11, supported GitHub installations can use a separate **Prepare → read and check risk consent → Confirm** flow. Versions older than v1.2.11 need one manual upgrade before this flow is available. Checking or preparing never installs; consent is unchecked by default.
+
+The Host pins both target and recovery versions to immutable commits, then uses public DSH Plugin Manager APIs and a Host-owned job. Save drafts/settings and back up your profile first. Replacement affects every session in the profile and can temporarily remove this plugin's UI. It is not atomic: best-effort recovery can fail, re-adding the bundle can change configuration precedence, and a restart may be required. Do not quit DSH until the job settles; jobs survive a closed page, not a Host process restart.
+
+Local-directory, foreign-repository and other unsupported sources keep the manual path below. See the [design, recovery limits and validation notes](<docs/confirmed-online-update.md>). No update is installed automatically.
 
 ## Privacy and security
 
@@ -107,7 +115,7 @@ Generation sends the draft, the selected complete Q&A context, visible reference
 
 This plugin does not send data to a developer-operated server and does not add telemetry. DSH and your provider may have their own logging and retention policies. Installing a DSH Host plugin permits local code execution with the host user permissions; it is not a workspace sandbox boundary. Model output is untrusted and should be reviewed before use. No independent security audit is claimed. See [Security policy](<SECURITY.md>).
 
-## Upgrade and remove
+## Manual upgrade and removal
 
 1. Keep a normal backup of your DSH profile and session data. Save drafts and feature settings before upgrading.
 2. In **Plugins**, identify the existing bundle by its manifest name, `@local/dsh-openai-fast`. Remove the old plugin dependency before adding the same unversioned GitHub target again. Do not delete profile or session data.
@@ -147,14 +155,14 @@ Use an isolated DSH Web profile and a fresh, unsent conversation, with a disposa
 | Area | Release status |
 | --- | --- |
 | GitHub distribution | Prebuilt tag and release assets; see the GitHub release for download verification |
-| Windows DSH `0.2.1-rc.2` | Earlier v1.2.9 activation/settings/slot checks; current-profile upgrade not performed for v1.2.10 |
-| Real DSH rc.1 / rc.2 adapter contracts | Both CI jobs passed without model calls |
+| Windows DSH `0.2.1-rc.2` | Isolated packaged-fixture update/recovery/closed-page lifecycle checks pass; final archive installation evidence is recorded with the release. Existing user installation is unchanged |
+| Real DSH rc.1 / rc.2 contracts | Adapter, native budget/estimator and jobs lifecycle checks pass locally without external model calls; the same checks gate publication in CI |
 | Windows update section | Real Chrome click → authenticated Host route → GitHub stable metadata verified in an isolated DSH rc.2 profile; guide and rendered layout checked |
 | v1.2.10 suggestion outcomes | Offline model-fixture → Runtime/cache → RPC/stream → controller/SSR checks; no live browser or model acceptance |
-| macOS and Linux | CI build and the offline test suite passed; DSH runtime not tested |
+| macOS and Linux | Builds/offline suite are required CI gates; DSH runtime not tested |
 | Independent security audit | Not performed/claimed |
 
-The current candidate passes 402 offline tests locally. [GitHub Actions](https://github.com/Syngnat/dsh-prompt-assist/actions) covers Windows, macOS and Linux builds/tests plus real DSH adapter-contract checks; stable publication requires successful exact-commit CI. Earlier update-page and first-session layout browser checks do not constitute v1.2.10 live-model or new-status UI acceptance. No live model semantic or output-protocol adherence evaluation was performed for this release.
+v1.2.11 passes 499 offline tests locally. [GitHub Actions](https://github.com/Syngnat/dsh-prompt-assist/actions) covers Windows, macOS and Linux builds/tests plus real DSH adapter-contract checks; stable publication requires successful exact-commit CI. Earlier update-page and first-session layout browser checks do not constitute full v1.2.11 visual or live-model acceptance. No live model semantic or output-protocol adherence evaluation was performed for this release.
 
 ## License
 

@@ -1,13 +1,13 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { buildAssistPrompt } from "../assist/prompts.js";
-import { QA_TEXT_LIMIT, TRUNCATION_MARKER } from "../assist/context.js";
+import { TRUNCATION_MARKER } from "../assist/context.js";
 import { FILE_BYTES } from "../assist/files.js";
 
 const pair = { id: "0:3", question: "修复现有查询，不要新增功能", answer: "已修复，可运行回归", endSeq: 3, truncated: false };
 const file = { name: "README.md", text: "selected context", bytes: 16 };
 
-test("enhance uses bounded explicit JSON data, preserving original intention and visible names", () => {
+test("enhance uses explicit JSON data, preserving original intention and visible names", () => {
   const references = [{ name: "当前截图.png", path: "DO_NOT_SEND_PATH", source: { token: "DO_NOT_SEND_SOURCE" } }, { label: "查询结果" }];
   const value = buildAssistPrompt("enhance", "请补测试，不要改宿主。", [pair], [file], references);
   assert.deepEqual(JSON.parse(value.user), { feature: "enhance", draft: "请补测试，不要改宿主。",
@@ -38,10 +38,21 @@ test("embedded instruction and boundary attacks stay untrusted data, never syste
   assert.match(value.system, /不回答问题、不执行任务/);
 });
 
-test("prompt refuses selected overflow even when caller bypasses selectQA", () => {
-  for (const qa of [[{ ...pair, truncated: true }], [{ ...pair, question: "x".repeat(QA_TEXT_LIMIT + 1) }],
-    [{ ...pair, answer: "text" + TRUNCATION_MARKER }]]) {
-    assert.throws(() => buildAssistPrompt("enhance", "draft", qa), { code: "context-overflow" });
+test("prompt preserves long QA and literal legacy marker text for model-specific admission", () => {
+  const question = "完整中文问题🙂".repeat(6000) + TRUNCATION_MARKER;
+  const answer = "完整中文答案🧪".repeat(7000) + "\n不可丢失末尾";
+  for (const feature of ["suggest", "enhance"]) {
+    const draft = feature === "enhance" ? "长原文".repeat(10000) : "";
+    const value = buildAssistPrompt(feature, draft, [{...pair, question, answer}]);
+    assert.deepEqual(JSON.parse(value.user).qa, [{question, answer}]);
+    assert.equal(JSON.parse(value.user).draft, draft);
+    assert.equal(value.system, buildAssistPrompt(feature, draft).system);
+  }
+});
+
+test("prompt refuses explicitly truncated legacy QA even without a marker", () => {
+  for (const answer of ["retained prefix", "retained prefix" + TRUNCATION_MARKER]) {
+    assert.throws(() => buildAssistPrompt("enhance", "draft", [{...pair, answer, truncated: true}]), {code: "context-overflow"});
   }
 });
 

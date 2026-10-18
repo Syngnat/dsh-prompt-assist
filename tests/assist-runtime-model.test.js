@@ -4,7 +4,7 @@ import { callAssistModel as callNativeAssistModel, resolveAssistRoute } from "..
 import { installFastBridge } from "../bridge-v2.js";
 import { priorityOverride } from "../assist/priority-scope.js";
 
-const callAssistModel = (ctx, agent, route, prompt, feature, signal) => callNativeAssistModel(ctx, agent, route, prompt, feature, signal, value => ({ ...value, role: "user", id: "fixture-message" }));
+const callAssistModel = (ctx, agent, route, prompt, feature, signal) => callNativeAssistModel({...ctx,tokenMeter:{estimateMessage:m=>Math.ceil(m.content[0].text.length/4)+8}}, agent, route, prompt, feature, signal, value => ({ ...value, role: "user", id: "fixture-message",fixtureFeature:feature }));
 const prompt = Object.freeze({ system: "draft only", user: "explicit context" });
 const agent = Object.freeze({ id: "root-a" });
 const capabilities = () => ({ context: { contextWindow: 1000000 },
@@ -36,7 +36,7 @@ function wireFixture(mainEnabled, api = "openai-responses") {
       await snapshot.models.streamSimple(snapshot.model, options.messages, {
         sessionId: options.sessionId, reasoningEffort: options.reasoningEffort, signal: options.signal,
       });
-      yield { type: "text-delta", index: 0, text: options.maxTokens === 1024 ? JSON.stringify({kind:"suggestion",text:"generated prompt"}) : " generated prompt " };
+      yield { type: "text-delta", index: 0, text: options.messages[0]?.fixtureFeature === "suggest" ? JSON.stringify({kind:"suggestion",text:"generated prompt"}) : " generated prompt " };
       yield { type: "finish", reason: { kind: "stop" } };
     }
   }
@@ -48,7 +48,7 @@ function wireFixture(mainEnabled, api = "openai-responses") {
       signal?.throwIfAborted(); prepared.push({ ...config });
       if (config.reasoningEffort && !nativeEfforts.includes(config.reasoningEffort)) throw nativeRejection;
       const resolved = Object.freeze({ ...config, reasoningEffort: config.reasoningEffort ?? metadata.reasoning.defaultEffort });
-      return { config: resolved, async *stream(options) {
+      return { config: resolved, context: metadata.context, async *stream(options) {
         // Admission is deliberately deferred until iteration, proving the whole generator stays scoped.
         await Promise.resolve(); observations.push(priorityOverride(options.sessionId));
         yield* adapter.streamWithSnapshot(options, snapshot);
@@ -68,7 +68,7 @@ test("auxiliary on/off overrides opposite main Fast and preserves actual reasoni
       const body = f.payloads[0].body;
       assert.equal(body.service_tier, fast ? "priority" : undefined);
       assert.equal(api === "openai-completions" ? body.reasoning_effort : body.reasoning.effort, effort);
-      assert.equal(f.prepared[0].reasoningEffort, effort); assert.equal(f.prepared[0].maxTokens, 4096);
+      assert.equal(f.prepared[0].reasoningEffort, effort); assert.equal(f.prepared[0].maxTokens, undefined);
       assert.equal(f.originalBodies[0].service_tier, undefined);
       assert.deepEqual(f.observations, [fast, fast]); assert.equal(priorityOverride(agent.id), undefined);
       assert.equal(result.text, "generated prompt"); assert.ok(result.timing.ttftMs >= 0);
@@ -89,7 +89,7 @@ test("concurrent sessions and opposite same-session feature overrides remain iso
       const payload = f.payloads.find(item => item.sessionId === id && item.body.reasoning.effort === effort);
       assert.equal(payload.body.service_tier, fast ? "priority" : undefined);
     }
-    assert.ok(f.prepared.every(config => config.maxTokens === 1024));
+    assert.ok(f.prepared.every(config => config.maxTokens === undefined));
     assert.equal(priorityOverride("root-a"), undefined); assert.equal(priorityOverride("root-b"), undefined);
   } finally { f.dispose(); }
 });
@@ -115,20 +115,20 @@ test("follow-session follows model/effort only; explicit unsupported effort is n
 
 test("overflow rejects before dispatch, and failed/incomplete/output-heavy streams close without scope leak", async () => {
   let prepares = 0, dispatches = 0, closed = 0;
-  const ctx = { llm: { async prepareCall(config) { prepares++; return { config, async *stream() { dispatches++; } }; } } };
+  const ctx = { llm: { async prepareCall(config) { prepares++; return { config, context: {contextWindow:1000000}, async *stream() { dispatches++; } }; } } };
   const route = { provider: "openai", model: "gpt-test", fast: true, metadata: capabilities() };
-  await assert.rejects(callAssistModel(ctx, agent, route, { system: "x".repeat(262145), user: "" }, "enhance"), { code: "context-overflow" });
+  await assert.rejects(callAssistModel(ctx, agent, route, { system: "x".repeat(4000000), user: "" }, "enhance"), { code: "context-overflow" });
   assert.equal(prepares, 1); assert.equal(dispatches, 0);
-  ctx.llm.prepareCall = async config => ({ config, context: { contextWindow: 32 }, async *stream() { dispatches++; } });
+  ctx.llm.prepareCall = async config => ({ config, context: { contextWindow: 16 }, async *stream() { dispatches++; } });
   await assert.rejects(callAssistModel(ctx, agent, route, prompt, "suggest"), { code: "context-overflow" });
   assert.equal(dispatches, 0);
   for (const [chunks, code] of [
     [[], "empty-result"], [[{ type: "text-delta", text: "partial" }], "empty-result"],
     [[{ type: "finish", reason: { kind: "max-tokens" } }], "output-limit"],
     [[{ type: "finish", reason: { kind: "aborted", failure: { message: "RAW_SECRET" } } }], "cancelled"],
-    [[{ type: "text-delta", text: "x".repeat(65537) }], "output-too-large"],
+    [[{ type: "text-delta", text: "x".repeat(65537) }], "empty-result"],
   ]) {
-    ctx.llm.prepareCall = async config => ({ config, async *stream() { try { yield* chunks; } finally { closed++; } } });
+    ctx.llm.prepareCall = async config => ({ config, context: {contextWindow:1000000}, async *stream() { try { yield* chunks; } finally { closed++; } } });
     await assert.rejects(callAssistModel(ctx, agent, route, prompt, "enhance"), error => error.code === code && !error.message.includes("RAW_SECRET"));
     assert.equal(priorityOverride(agent.id), undefined);
   }
@@ -137,7 +137,7 @@ test("overflow rejects before dispatch, and failed/incomplete/output-heavy strea
 
 test("caller cancellation interrupts lazy iteration and runs generator cleanup", async () => {
   const controller = new AbortController(); let closed = false;
-  const ctx = { llm: { async prepareCall(config) { return { config, async *stream() {
+  const ctx = { llm: { async prepareCall(config) { return { config, context:{contextWindow:1000000}, async *stream() {
     try { controller.abort(); yield { type: "text-delta", text: "must not escape" }; } finally { closed = true; }
   } }; } } };
   await assert.rejects(callAssistModel(ctx, agent, { provider: "openai", model: "gpt-test", fast: false, metadata: capabilities() }, prompt, "suggest", controller.signal), { name: "AbortError" });

@@ -27,7 +27,7 @@ test('retired handler sees only disabled tombstone; its config command is reject
  const z={any:()=>chain,object:()=>chain,string:()=>chain,boolean:()=>chain,number:()=>chain};
  const fast={selection:()=>({provider:'openai',model:'gpt-test'}),enabled:()=>true};
  await installAssistHost(ctx,{z,fastService:fast,providers:['openai'],createUserMessage:value=>value});
- assert.equal(units.get(LEGACY_KEY).stateVersion,2);assert.equal(units.get(LEGACY_KEY).wire,undefined);
+ assert.equal(units.get(ASSIST_KEY).stateVersion,2);assert.equal(units.get(LEGACY_KEY).stateVersion,2);assert.equal(units.get(LEGACY_KEY).wire,undefined);
  const locked=units.get(LEGACY_KEY).init();assert.equal(locked.settings.enhance.enabled,false);assert.equal(locked.busy,true);assert.equal(locked.rounds.length,0);
  assert.equal(units.get(LEGACY_KEY).apply(locked,{type:'anything'}),locked);
  const legacy=new AssistRuntime(ctx,fast,['openai'],value=>value);legacy.projection=()=>locked;

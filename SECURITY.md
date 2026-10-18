@@ -21,7 +21,17 @@ Cancellation stops obsolete local work and asks the transport to stop. It cannot
 
 ## Update checks
 
-Only an explicit check requests `https://api.github.com/repos/Syngnat/dsh-prompt-assist/releases/latest`. Opening the panel reads local cached state only. No API token, chat data, draft, files or provider secrets are attached. GitHub can log normal network metadata. Redirects, draft/prerelease metadata, oversized or malformed responses and foreign release links are refused. Responses are treated as data, never instructions or HTML. There is no automatic installation, package-manager invocation or profile write in this feature. The update tool uses the same read-only service as the UI.
+Only an explicit check requests `https://api.github.com/repos/Syngnat/dsh-prompt-assist/releases/latest`. Opening the panel reads local cached state only. No API token, chat data, draft, files or provider secrets are attached. GitHub can log normal network metadata. Redirects, draft/prerelease metadata, oversized or malformed responses and foreign release links are refused. Responses are treated as data, never instructions or HTML. Checking alone never installs or writes a profile. The update tool exposes only status, check and read-only operation state.
+
+## Explicitly confirmed online updates
+
+From v1.2.11, supported installations can prepare a pinned target/recovery plan using this fixed repository's public GitHub API and raw package metadata. No chat or provider secrets are attached. Preparation does not install. A bounded, owner-authenticated confirmation with a one-use expiring token and explicit risk consent is required to start a Host-owned update job. Tokens are not returned to model tools or persisted in browser storage; a local recovery marker contains only versions and job id.
+
+Installation/removal/enablement and best-effort recovery use public DSH Plugin Manager methods. The plugin does not edit profile files directly, approve dependency build scripts, grant version exemptions or accept arbitrary installation sources. Public manager policy still applies. Updates execute trusted Host code and affect the whole profile, can temporarily remove this plugin, can change bundle precedence and can fail to restore it. Save work and back up the profile. A closed browser page does not cancel an accepted job; a Host restart loses its in-memory record. Unknown outcomes never trigger automatic replay. See [online-update limits](<docs/confirmed-online-update.md>).
+
+## Model resource limits
+
+Auxiliary input/output quotas follow the selected provider/model configuration rather than fixed plugin text quotas. Input admission uses a Host heuristic, not exact provider tokenization; the provider remains authoritative for shared-window and output validation. Larger configured budgets can increase cost and resource use. The independent 120-second deadline, explicit file-read limits and native carrier boundaries remain; cancellation or timeout does not guarantee upstream work or billing has stopped.
 
 ## Report a vulnerability
 
@@ -45,4 +55,4 @@ Do not test against other users or production services without authorization. Do
 - Host 插件以本机用户权限运行。默认安装地址跟随由维护者管理的稳定分支；需要审计复现时可另行固定tag/commit。谨慎授权安装脚本，升级前常规备份。
 - 优先通过上述 GitHub 私密漏洞报告入口联系；若未启用，只在公开 issue 中请求私密渠道，不公开漏洞细节、凭证、个人路径或会话内容。
 
-更新检查仅在明确操作时访问固定GitHub公开接口，不带会话/草稿/文件/凭证；GitHub可记录常规网络信息。不会执行响应内容或自动下载安装。
+更新检查仅在明确操作时访问固定GitHub公开接口，不带会话/草稿/文件/凭证；GitHub可记录常规网络信息。准备不会安装，只有owner明确勾选风险并确认后，才通过公开管理器更新整个profile。操作非原子，恢复也可能失败；不自动授权脚本、豁免版本或重发结果不明的操作。输入输出额度跟随供应商模型设置，较大预算可能增加费用和资源消耗；120秒等待及文件读取安全限制独立保留。

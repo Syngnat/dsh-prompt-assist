@@ -42,6 +42,4 @@ test('server errors and carrier failures do not expose upstream details',async()
  await assert.rejects(createAssistRpcApi(f.connection)('state','a'),e=>e.code==='model-failed'&&!e.message.includes('private'));
  await assert.rejects(createAssistRpcApi({rpc:{call(){throw Error('token=SECRET');}}})('state','a'),e=>e.code==='transport-unavailable'&&!e.message.includes('SECRET'));
 });
-test('oversized payload is refused before business dispatch',async()=>{
- const f=fixture();await assert.rejects(createAssistRpcApi(f.connection)('generate','a',{draft:'x'.repeat(393217)}),{code:'request-too-large'});assert.equal(f.calls.length,0);
-});
+test('large authenticated payload reaches model admission without an extra plugin text cap',async()=>{const f=fixture(),draft='字'.repeat(500000);await createAssistRpcApi(f.connection)('generate','a',{draft});assert.equal(f.calls.length,1);assert.equal(f.calls[0].input.draft,draft);});

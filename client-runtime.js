@@ -264,13 +264,18 @@ async function streamAssist(fetcher, sessionId, input, signal, onText) {
   const response = await fetcher(STREAM_PATH.slice(1), { method: "POST", credentials: "same-origin", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...input, sessionId, action: "generate" }), signal });
   if (!response.ok || !response.body) throw Object.assign(new Error("transport-unavailable"), { code: "transport-unavailable" });
   const reader = response.body.getReader(), decoder = new TextDecoder();
-  let buffer = "", result, complete = false;
+  let buffer = "", text = "", result, complete = false;
   const accept = (line) => {
     if (!line) return;
     const frame = JSON.parse(line);
     signal?.throwIfAborted();
-    if (frame.type === "text" && typeof frame.text === "string" && frame.text.length <= 65536) onText(frame.text);
-    else if (frame.type === "result") {
+    if (frame.type === "delta" && typeof frame.text === "string") {
+      text += frame.text;
+      onText(text);
+    } else if (frame.type === "text" && typeof frame.text === "string") {
+      text = frame.text;
+      onText(text);
+    } else if (frame.type === "result") {
       result = frame.value;
       complete = true;
     } else if (frame.type === "error") throw Object.assign(new Error(frame.code), { code: frame.code });
@@ -280,7 +285,6 @@ async function streamAssist(fetcher, sessionId, input, signal, onText) {
       const { value, done } = await reader.read();
       if (done) break;
       buffer += decoder.decode(value, { stream: true });
-      if (buffer.length > 1048576) throw Error("stream-frame-too-large");
       let index;
       while ((index = buffer.indexOf("\n")) >= 0) {
         accept(buffer.slice(0, index));
@@ -321,8 +325,8 @@ function createAssistRpcApi(connection, fetcher = (...args) => globalThis.fetch(
       throw Object.assign(new Error("transport-unavailable"), { code: "transport-unavailable" });
     }
     if (result?.ok !== true) {
-      const code = result?.error?.code ?? "transport-invalid-response";
-      throw Object.assign(new Error(code), { code });
+      const code2 = result?.error?.code ?? "transport-invalid-response";
+      throw Object.assign(new Error(code2), { code: code2 });
     }
     return result.value;
   };
@@ -341,9 +345,57 @@ var init_messages = __esm({
     NS = "local-prompt-assist";
     dictionaries = {
       zh: {
+        "online.confirmationRejected": "\u5BBF\u4E3B\u660E\u786E\u62D2\u7EDD\u4E86\u672C\u6B21\u786E\u8BA4\uFF0C\u672A\u4E3A\u6B64\u8BF7\u6C42\u542F\u52A8\u66F4\u65B0\u4EFB\u52A1\u3002\u8BF7\u91CD\u65B0\u8BFB\u53D6\u72B6\u6001\uFF0C\u7136\u540E\u91CD\u65B0\u51C6\u5907\u5E76\u786E\u8BA4\uFF1B\u4E0D\u4F1A\u81EA\u52A8\u91CD\u8BD5\u3002\u9519\u8BEF\u7801\uFF1A",
+        "online.forgetWarning": "\u82E5\u8BB0\u5F55\u65E0\u6CD5\u6062\u590D\uFF0C\u8BF7\u5148\u5728\u63D2\u4EF6\u7BA1\u7406\u4E2D\u4EBA\u5DE5\u6838\u5BF9\u5B9E\u9645\u5B89\u88C5\u7248\u672C\u5E76\u786E\u8BA4\u6CA1\u6709\u66F4\u65B0\u4EFB\u52A1\u4ECD\u5728\u6267\u884C\u3002\u6E05\u9664\u4EC5\u79FB\u9664\u672C\u6807\u7B7E\u9875\u7684\u672C\u5730\u8DDF\u8E2A\u6807\u8BB0\uFF0C\u4E0D\u4EE3\u8868\u66F4\u65B0\u6210\u529F\uFF0C\u4E0D\u4F1A\u53D6\u6D88\u3001\u542F\u52A8\u6216\u91CD\u8BD5\u4EFB\u4F55\u5BBF\u4E3B\u4EFB\u52A1\u3002\u987B\u5148\u6210\u529F\u91CD\u8BFB\u72B6\u6001\uFF0C\u4E14\u6CA1\u6709\u6D3B\u52A8\u4EFB\u52A1\uFF0C\u624D\u80FD\u6E05\u9664\u3002",
+        "online.forgetAcknowledgement": "\u6211\u5DF2\u4EBA\u5DE5\u6838\u5BF9\u5B89\u88C5\u72B6\u6001\uFF0C\u786E\u8BA4\u6CA1\u6709\u66F4\u65B0\u4EFB\u52A1\u4ECD\u5728\u6267\u884C\uFF0C\u5E76\u7406\u89E3\u6E05\u9664\u6807\u8BB0\u4E0D\u662F\u66F4\u65B0\u7ED3\u679C\u3002",
+        "online.forgetMarker": "\u4EC5\u6E05\u9664\u672C\u5730\u8DDF\u8E2A\u6807\u8BB0",
+        "online.markerCleared": "\u672C\u5730\u8DDF\u8E2A\u6807\u8BB0\u5DF2\u6E05\u9664\uFF0C\u5BBF\u4E3B\u4EFB\u52A1\u672A\u88AB\u66F4\u6539\uFF0C\u66F4\u65B0\u6210\u529F\u4E0E\u5426\u4ECD\u4E0D\u7531\u6B64\u786E\u5B9A\u3002\u8BF7\u91CD\u8BFB\u72B6\u6001\uFF1B\u5982\u9700\u66F4\u65B0\uFF0C\u5FC5\u987B\u91CD\u65B0\u51C6\u5907\u3001\u52FE\u9009\u98CE\u9669\u786E\u8BA4\u5E76\u63D0\u4EA4\u3002",
+        "online.title": "\u5728\u7EBF\u66F4\u65B0",
+        "online.userOnly": "\u68C0\u67E5\u7248\u672C\u4E0D\u4F1A\u5B89\u88C5\u3002\u53EA\u6709\u51C6\u5907\u540E\u52FE\u9009\u98CE\u9669\u786E\u8BA4\u5E76\u70B9\u51FB\u201C\u786E\u8BA4\u66F4\u65B0\u201D\uFF0C\u624D\u4F1A\u542F\u52A8\u5BBF\u4E3B\u66F4\u65B0\u4EFB\u52A1\u3002\u4E0D\u4F1A\u81EA\u52A8\u66F4\u65B0\u3002",
+        "online.continuity": "\u66F4\u65B0\u671F\u95F4\u672C\u9875\u9762\u53EF\u80FD\u6D88\u5931\u6216\u77ED\u6682\u4E0D\u53EF\u7528\uFF1B\u5173\u95ED\u9875\u9762\u4E0D\u4F1A\u53D6\u6D88\u5BBF\u4E3B\u4EFB\u52A1\u3002\u91CD\u65B0\u6253\u5F00\u540E\u53EF\u8BFB\u53D6\u7ED3\u679C\u3002\u9000\u51FA DSH \u4F1A\u4E2D\u65AD\u4EFB\u52A1\uFF0C\u8BF7\u7B49\u5F85\u7ED3\u679C\u540E\u518D\u6309\u63D0\u793A\u91CD\u542F\u3002\u8BF7\u5148\u4FDD\u5B58\u8349\u7A3F\u5E76\u5907\u4EFD\u914D\u7F6E\u3002",
+        "online.loading": "\u6B63\u5728\u8BFB\u53D6\u5BBF\u4E3B\u66F4\u65B0\u72B6\u6001\u2026",
+        "online.noRecord": "\u6CA1\u6709\u53EF\u8BFB\u53D6\u7684\u5728\u7EBF\u66F4\u65B0\u4EFB\u52A1\u8BB0\u5F55\uFF1B\u8FD9\u4E0D\u4EE3\u8868\u66F4\u65B0\u6210\u529F\u3002",
+        "online.unavailable": "\u5F53\u524D\u65E0\u6CD5\u51C6\u5907\u5728\u7EBF\u66F4\u65B0\u3002",
+        "online.recordLost": "\u4EFB\u52A1\u8BB0\u5F55\u5DF2\u4E0D\u53EF\u8BFB\u53D6\uFF0C\u4E0D\u80FD\u786E\u8BA4\u66F4\u65B0\u6210\u529F\u3002\u8BF7\u68C0\u67E5\u63D2\u4EF6\u7BA1\u7406\u72B6\u6001\uFF1B\u4E0D\u8981\u628A\u624B\u52A8\u6307\u5357\u5F53\u4F5C\u66F4\u65B0\u7ED3\u679C\u3002",
+        "online.uncertain": "\u786E\u8BA4\u8BF7\u6C42\u7684\u7ED3\u679C\u5C1A\u4E0D\u786E\u5B9A\uFF0C\u4EFB\u52A1\u53EF\u80FD\u5DF2\u542F\u52A8\u3002\u53EA\u91CD\u8BFB\u72B6\u6001\uFF0C\u4E0D\u4F1A\u81EA\u52A8\u91CD\u53D1\u786E\u8BA4\uFF1B\u8BF7\u52FF\u91CD\u590D\u66F4\u65B0\u3002",
+        "online.requestFailed": "\u8BF7\u6C42\u672A\u5B8C\u6210\uFF0C\u8BF7\u624B\u52A8\u91CD\u8BFB\u72B6\u6001\u3002\u5B89\u5168\u9519\u8BEF\u7801\uFF1A",
+        "online.review": "\u786E\u8BA4\u672C\u6B21\u66F4\u65B0",
+        "online.fromVersion": "\u539F\u7248\u672C",
+        "online.targetVersion": "\u76EE\u6807\u7248\u672C",
+        "online.installedVersion": "\u5DF2\u9A8C\u8BC1\u7684\u5B89\u88C5\u7248\u672C",
+        "online.targetSpec": "\u9501\u5B9A\u7684\u76EE\u6807\u6765\u6E90",
+        "online.restoreSpec": "\u9501\u5B9A\u7684\u6062\u590D\u6765\u6E90",
+        "online.expiresAt": "\u786E\u8BA4\u6709\u6548\u671F\uFF08UTC\uFF09",
+        "online.jobId": "\u5BBF\u4E3B\u4EFB\u52A1\u7F16\u53F7",
+        "online.errorCode": "\u5B89\u5168\u9519\u8BEF\u7801\uFF1A",
+        "online.detailCode": "\u72B6\u6001\u8BF4\u660E\u7801\uFF1A",
+        "online.risks": "\u6B64\u64CD\u4F5C\u5F71\u54CD\u5F53\u524D profile \u7684\u6240\u6709\u4F1A\u8BDD\uFF0C\u63D2\u4EF6\u53EF\u80FD\u77ED\u6682\u4E0D\u53EF\u7528\u3002\u901A\u5E38\u5148\u79FB\u9664\u65E7\u63D2\u4EF6\u518D\u5B89\u88C5\uFF0C\u65E0\u70ED\u91CD\u8F7D\u65F6\u4F1A\u76F4\u63A5\u5B89\u88C5\u5E76\u7B49\u5F85\u91CD\u542F\u3002\u79FB\u9664\u5E76\u91CD\u65B0\u6DFB\u52A0\u63D2\u4EF6\u5305\u8FD8\u53EF\u80FD\u6539\u53D8\u7EC4\u5408\u914D\u7F6E\u987A\u5E8F\u548C\u8986\u76D6\u4F18\u5148\u7EA7\uFF0C\u8BF7\u91CD\u65B0\u6838\u5BF9\u6709\u6548\u914D\u7F6E\u3002\u5B89\u88C5\u5931\u8D25\u65F6\u4F1A\u5C1D\u8BD5\u6062\u590D\u65E7\u7248\u672C\uFF0C\u4F46\u6062\u590D\u4E5F\u53EF\u80FD\u5931\u8D25\uFF0C\u5C4A\u65F6\u9700\u624B\u52A8\u4FEE\u590D\u3002\u53EF\u80FD\u9700\u8981\u5B8C\u5168\u9000\u51FA\u5E76\u91CD\u542F DSH\uFF1B\u53EA\u5237\u65B0\u9875\u9762\u4E0D\u8DB3\u4EE5\u91CD\u8F7D Host\u3002",
+        "online.consent": "\u6211\u5DF2\u4FDD\u5B58\u9700\u8981\u4FDD\u7559\u7684\u5185\u5BB9\uFF0C\u7406\u89E3\u4EE5\u4E0A\u6240\u6709\u4F1A\u8BDD\u5F71\u54CD\u3001\u4E0D\u53EF\u7528\u3001\u914D\u7F6E\u8986\u76D6\u4F18\u5148\u7EA7\u53D8\u5316\u3001\u6062\u590D\u5931\u8D25\u548C\u91CD\u542F\u98CE\u9669\uFF0C\u5E76\u540C\u610F\u66F4\u65B0\u5230\u4E0A\u8FF0\u76EE\u6807\u7248\u672C\u3002",
+        "online.confirm": "\u786E\u8BA4\u66F4\u65B0",
+        "online.dismiss": "\u653E\u5F03\u672C\u6B21\u786E\u8BA4",
+        "online.prepare": "\u51C6\u5907\u5728\u7EBF\u66F4\u65B0",
+        "online.preparing": "\u6B63\u5728\u51C6\u5907\u2026",
+        "online.reload": "\u91CD\u8BFB\u5728\u7EBF\u66F4\u65B0\u72B6\u6001",
+        "online.submitting": "\u6B63\u5728\u63D0\u4EA4\u786E\u8BA4\u3002\u82E5\u9875\u9762\u5931\u53BB\u8FDE\u63A5\uFF0C\u8BF7\u91CD\u65B0\u6253\u5F00\u8BFB\u53D6\u72B6\u6001\uFF0C\u4E0D\u8981\u91CD\u590D\u63D0\u4EA4\u3002",
+        "online.restart": "\u8BF7\u6309\u5BBF\u4E3B\u63D0\u793A\u5B8C\u5168\u9000\u51FA\u5E76\u91CD\u542F DSH\uFF0C\u518D\u6838\u5BF9\u5DF2\u52A0\u8F7D\u7248\u672C\uFF1B\u5F53\u524D\u4E0D\u58F0\u660E\u66F4\u65B0\u5DF2\u751F\u6548\u3002",
+        "online.cancelRequested": "\u5BBF\u4E3B\u5DF2\u8BB0\u5F55\u53D6\u6D88\u8BF7\u6C42\uFF1B\u7B49\u5F85\u6700\u7EC8\u7ED3\u679C\uFF0C\u4E0D\u80FD\u89C6\u4E3A\u5DF2\u53D6\u6D88\u3002",
+        "online.phase.queued": "\u66F4\u65B0\u5DF2\u6392\u961F\uFF0C\u5BBF\u4E3B\u5C06\u7EE7\u7EED\u6267\u884C\u3002",
+        "online.phase.checking": "\u6B63\u5728\u6838\u5BF9\u66F4\u65B0\u6761\u4EF6\u3002",
+        "online.phase.removing": "\u6B63\u5728\u79FB\u9664\u65E7\u63D2\u4EF6\u3002",
+        "online.phase.installing": "\u6B63\u5728\u5B89\u88C5\u5DF2\u786E\u8BA4\u7684\u76EE\u6807\u7248\u672C\u3002",
+        "online.phase.activating": "\u6B63\u5728\u6FC0\u6D3B\u76EE\u6807\u63D2\u4EF6\u3002",
+        "online.phase.verifying": "\u6B63\u5728\u9A8C\u8BC1\u5B89\u88C5\u4E0E\u6FC0\u6D3B\u72B6\u6001\u3002",
+        "online.phase.recovering": "\u66F4\u65B0\u9047\u5230\u95EE\u9898\uFF0C\u6B63\u5728\u5C1D\u8BD5\u6062\u590D\u539F\u7248\u672C\u3002",
+        "online.phase.updated": "\u5BBF\u4E3B\u5DF2\u9A8C\u8BC1\u76EE\u6807\u7248\u672C\u66F4\u65B0\u6210\u529F\u3002",
+        "online.phase.restart-required": "\u5B89\u88C5\u5DF2\u5B8C\u6210\uFF0C\u4F46\u9700\u8981\u91CD\u542F\uFF1B\u5F53\u524D\u672A\u786E\u8BA4\u65B0\u7248\u672C\u5DF2\u751F\u6548\u3002",
+        "online.phase.restored": "\u76EE\u6807\u66F4\u65B0\u672A\u6210\u529F\uFF1B\u5BBF\u4E3B\u62A5\u544A\u5DF2\u6062\u590D\u539F\u7248\u672C\u3002",
+        "online.phase.repair-required": "\u66F4\u65B0\u6216\u6062\u590D\u672A\u5B8C\u6210\uFF0C\u9700\u8981\u624B\u52A8\u4FEE\u590D\u3002\u8BF7\u67E5\u770B\u63D2\u4EF6\u7BA1\u7406\u72B6\u6001\u3002",
+        "online.phase.failed": "\u66F4\u65B0\u5931\u8D25\uFF1B\u672A\u786E\u8BA4\u76EE\u6807\u7248\u672C\u5DF2\u5B89\u88C5\u3002",
+        "online.phase.cancelled": "\u5BBF\u4E3B\u62A5\u544A\u4EFB\u52A1\u5DF2\u53D6\u6D88\uFF1B\u8BF7\u6838\u5BF9\u5F53\u524D\u63D2\u4EF6\u72B6\u6001\u3002",
+        "online.phase.unknown": "\u4EFB\u52A1\u7ED3\u679C\u672A\u77E5\uFF0C\u4E0D\u80FD\u89C6\u4E3A\u66F4\u65B0\u6210\u529F\u3002",
         "updates.title": "\u7248\u672C\u4E0E\u66F4\u65B0",
-        "updates.readOnly": "\u6B64\u5904\u53EA\u68C0\u67E5\u66F4\u65B0\uFF0C\u4E0D\u4F1A\u4E0B\u8F7D\u6216\u5B89\u88C5\uFF0C\u4E5F\u4E0D\u4F1A\u81EA\u52A8\u5347\u7EA7\u3002",
-        "updates.installedVersion": "\u672C\u5730\u7248\u672C",
+        "updates.readOnly": "\u7248\u672C\u68C0\u67E5\u53EA\u8BFB\u53D6\u516C\u5F00\u4FE1\u606F\uFF0C\u4E0D\u4E0B\u8F7D\u6216\u5B89\u88C5\u3002\u5728\u7EBF\u66F4\u65B0\u9700\u5728\u4E0B\u65B9\u5355\u72EC\u51C6\u5907\u5E76\u660E\u786E\u786E\u8BA4\uFF1B\u4E0D\u4F1A\u81EA\u52A8\u5347\u7EA7\u3002",
+        "updates.installedVersion": "\u5F53\u524D\u8FD0\u884C\u7248\u672C",
         "updates.latestVersion": "\u6700\u65B0\u7A33\u5B9A\u7248",
         "updates.checkedAt": "\u4E0A\u6B21\u68C0\u67E5\u65F6\u95F4\uFF08UTC\uFF09",
         "updates.unknown": "\u672A\u77E5",
@@ -351,9 +403,9 @@ var init_messages = __esm({
         "updates.idle": "\u5C1A\u672A\u68C0\u67E5\u66F4\u65B0\uFF0C\u8BF7\u6309\u9700\u70B9\u51FB\u68C0\u67E5\u6309\u94AE\u3002",
         "updates.loading": "\u6B63\u5728\u8BFB\u53D6 Host \u7F13\u5B58\u72B6\u6001\uFF0C\u4E0D\u8BBF\u95EE GitHub\u2026",
         "updates.checking": "\u6B63\u5728\u5411 GitHub \u68C0\u67E5\u516C\u5F00\u7A33\u5B9A\u7248\u4FE1\u606F\u2026",
-        "updates.current": "\u672C\u5730\u7248\u672C\u4E0E\u4E0A\u6B21\u68C0\u67E5\u5230\u7684\u6700\u65B0\u7A33\u5B9A\u7248\u4E00\u81F4\u3002",
-        "updates.update-available": "\u53D1\u73B0\u8F83\u65B0\u7684\u7A33\u5B9A\u7248\uFF0C\u8BF7\u6309\u4E0B\u65B9\u6B65\u9AA4\u624B\u52A8\u5347\u7EA7\u3002",
-        "updates.ahead": "\u672C\u5730\u7248\u672C\u9886\u5148\u4E8E\u6700\u65B0\u7A33\u5B9A\u7248\uFF0C\u53EF\u80FD\u662F\u5F00\u53D1\u6216\u5019\u9009\u6784\u5EFA\uFF1B\u5F53\u524D\u4E0D\u63D0\u793A\u7A33\u5B9A\u7248\u5347\u7EA7\u3002",
+        "updates.current": "\u5F53\u524D\u8FD0\u884C\u7248\u672C\u4E0E\u4E0A\u6B21\u68C0\u67E5\u5230\u7684\u6700\u65B0\u7A33\u5B9A\u7248\u4E00\u81F4\u3002",
+        "updates.update-available": "\u53D1\u73B0\u8F83\u65B0\u7684\u7A33\u5B9A\u7248\uFF0C\u53EF\u51C6\u5907\u5728\u7EBF\u66F4\u65B0\uFF0C\u6216\u9009\u62E9\u4E0B\u65B9\u7684\u624B\u52A8\u5347\u7EA7\u8DEF\u5F84\u3002",
+        "updates.ahead": "\u5F53\u524D\u8FD0\u884C\u7248\u672C\u9886\u5148\u4E8E\u6700\u65B0\u7A33\u5B9A\u7248\uFF0C\u53EF\u80FD\u662F\u5F00\u53D1\u6216\u5019\u9009\u6784\u5EFA\uFF1B\u5F53\u524D\u4E0D\u63D0\u793A\u7A33\u5B9A\u7248\u5347\u7EA7\u3002",
         "updates.error": "\u66F4\u65B0\u68C0\u67E5\u672A\u5B8C\u6210\uFF0C\u4E0D\u80FD\u786E\u8BA4\u662F\u5426\u5DF2\u662F\u6700\u65B0\u7248\u672C\u3002",
         "updates.cancelled": "\u672C\u6B21\u8BFB\u53D6\u6216\u68C0\u67E5\u5DF2\u53D6\u6D88\uFF0C\u6CA1\u6709\u4E0B\u8F7D\u6216\u5B89\u88C5\u4EFB\u4F55\u5185\u5BB9\u3002",
         "updates.error.network": "\u7F51\u7EDC\u8FDE\u63A5\u5931\u8D25\uFF0C\u8BF7\u7A0D\u540E\u624B\u52A8\u91CD\u8BD5\u3002",
@@ -366,13 +418,13 @@ var init_messages = __esm({
         "updates.cancel": "\u53D6\u6D88",
         "updates.reloadStatus": "\u91CD\u8BFB\u672C\u5730\u72B6\u6001",
         "updates.releaseLink": "\u5728 GitHub \u67E5\u770B\u7248\u672C",
-        "updates.privacy": "\u53EA\u6709\u70B9\u51FB\u201C\u68C0\u67E5\u66F4\u65B0\u201D\u624D\u4F1A\u8BA9 Host \u8BFB\u53D6 GitHub \u7684\u516C\u5F00\u7248\u672C\u4FE1\u606F\uFF1B\u4E0D\u4F1A\u53D1\u9001\u4F1A\u8BDD\u3001\u8349\u7A3F\u6216\u6587\u4EF6\u5185\u5BB9\u3002",
+        "updates.privacy": "\u70B9\u51FB\u201C\u68C0\u67E5\u66F4\u65B0\u201D\u4F1A\u8BFB\u53D6 GitHub \u7684\u516C\u5F00\u7248\u672C\u4FE1\u606F\uFF1B\u51C6\u5907\u5728\u7EBF\u66F4\u65B0\u4E5F\u4F1A\u6838\u5BF9\u76EE\u6807\u548C\u6062\u590D\u6765\u6E90\u3002\u4E0D\u4F1A\u53D1\u9001\u4F1A\u8BDD\u3001\u8349\u7A3F\u6216\u6587\u4EF6\u5185\u5BB9\u3002",
         "updates.cacheNote": "\u4E3A\u9075\u5B88 GitHub \u8BF7\u6C42\u9650\u5236\uFF0C\u77ED\u65F6\u95F4\u5185\u91CD\u590D\u68C0\u67E5\u53EF\u80FD\u590D\u7528 Host \u7F13\u5B58\uFF1B\u4E0D\u4F1A\u5B9A\u65F6\u81EA\u52A8\u68C0\u67E5\u3002",
         "updates.installAddress": "\u65E0 tag \u5B89\u88C5\u5730\u5740",
         "updates.copy": "\u590D\u5236\u5730\u5740",
         "updates.copied": "\u5730\u5740\u5DF2\u590D\u5236",
         "updates.copyFailed": "\u65E0\u6CD5\u81EA\u52A8\u590D\u5236\uFF0C\u8BF7\u624B\u52A8\u9009\u62E9\u5E76\u590D\u5236\u4E0A\u65B9\u5730\u5740\u3002",
-        "updates.manualUpgrade": "\u5982\u4F55\u624B\u52A8\u5347\u7EA7",
+        "updates.manualUpgrade": "\u53EF\u9009\uFF1A\u624B\u52A8\u5347\u7EA7\u6307\u5357",
         "updates.stepSave": "\u5148\u4FDD\u5B58\u8349\u7A3F\u548C\u4E24\u9879\u529F\u80FD\u8BBE\u7F6E\uFF0C\u8BB0\u5F55\u9700\u8981\u4FDD\u7559\u7684\u914D\u7F6E\u3002",
         "updates.stepRemove": "\u8FDB\u5165 DSH \u63D2\u4EF6\u7BA1\u7406\uFF0C\u79FB\u9664\u65E7\u63D2\u4EF6\u4F9D\u8D56\uFF08\u6309\u5305\u540D\uFF09\uFF1A",
         "updates.stepInstall": "\u4F7F\u7528\u4EE5\u4E0B\u65E0 tag \u5B89\u88C5\u5730\u5740\u91CD\u65B0\u6DFB\u52A0\u63D2\u4EF6\uFF1A",
@@ -467,14 +519,65 @@ var init_messages = __esm({
         access: "\u5F53\u524D\u4F1A\u8BDD\u53EA\u8BFB\uFF0C\u4E0D\u80FD\u8BF7\u6C42\u6216\u5E94\u7528\u3002",
         load: "\u52A0\u8F7D\u8F85\u52A9\u914D\u7F6E\u2026",
         settingsChanged: "\u6709\u672A\u4FDD\u5B58\u914D\u7F6E\uFF1B\u4FDD\u5B58\u540E\u518D\u8BF7\u6C42\u3002",
-        budget: "\u5355\u6B21\u8F93\u51FA\u9884\u7B97 {{tokens}} token\uFF0C\u6700\u957F\u7B49\u5F85 {{seconds}} \u79D2\uFF1B\u63A8\u7406\u53EF\u80FD\u5360\u7528\u8F93\u51FA\u9884\u7B97\uFF0C\u4E0D\u81EA\u52A8\u91CD\u8BD5\u6216\u8C03\u6863\u3002",
+        budgetPolicy: "\u8F93\u5165\u4E0A\u4E0B\u6587\u548C\u8F93\u51FA\u9884\u7B97\u8DDF\u968F\u6240\u9009\u4F9B\u5E94\u5546\u6A21\u578B\u8BBE\u7F6E\uFF1B\u672A\u914D\u7F6E\u8F93\u51FA\u9884\u7B97\u65F6\u6CBF\u7528\u5BBF\u4E3B/\u4F9B\u5E94\u5546\u9ED8\u8BA4\u884C\u4E3A\u3002\u8F83\u5927\u9884\u7B97\u53EF\u80FD\u589E\u52A0\u8017\u65F6\u548C\u8D39\u7528\uFF1B\u7B49\u5F85\u4E0A\u9650\u4E3A 120 \u79D2\uFF0C\u6587\u4EF6\u8BFB\u53D6\u5B89\u5168\u9650\u5236\u72EC\u7ACB\u4FDD\u7559\u3002\u4E0D\u6539\u53D8\u4E3B\u4F1A\u8BDD\u53C2\u6570\u3002",
+        contextUnknown: "\u65E0\u6CD5\u8BFB\u53D6\u6A21\u578B\u4E0A\u4E0B\u6587\u7A97\u53E3\u6216\u5BBF\u4E3B token \u8BA1\u91CF\u670D\u52A1\uFF0C\u672A\u53D1\u8D77\u751F\u6210\u8BF7\u6C42\u3002\u8BF7\u68C0\u67E5\u4F9B\u5E94\u5546\u6A21\u578B\u914D\u7F6E\u4E0E\u5BBF\u4E3B\u517C\u5BB9\u6027\u3002",
+        requestTimeout: "\u8F85\u52A9\u8BF7\u6C42\u8FBE\u5230\u7B49\u5F85\u4E0A\u9650\uFF0C\u672A\u5E94\u7528\u7ED3\u679C\uFF1B\u539F\u6587\u4FDD\u6301\u4E0D\u53D8\uFF0C\u4E0D\u4F1A\u81EA\u52A8\u91CD\u8BD5\u3002\u8BF7\u68C0\u67E5\u6A21\u578B\u54CD\u5E94\u901F\u5EA6\u6216\u63A8\u7406\u8BBE\u7F6E\u3002",
+        budget: "\u672C\u6B21\u8BF7\u6C42\u8F93\u51FA\u9884\u7B97 {{tokens}} token\uFF0C\u6700\u957F\u7B49\u5F85 {{seconds}} \u79D2\uFF1B\u63A8\u7406\u53EF\u80FD\u5360\u7528\u8F93\u51FA\u9884\u7B97\uFF0C\u4E0D\u81EA\u52A8\u91CD\u8BD5\u6216\u8C03\u6863\u3002",
         outputLimit: "\u6A21\u578B\u5DF2\u8FBE\u5230\u672C\u6B21\u8F93\u51FA\u9884\u7B97\uFF0C\u7ED3\u679C\u672A\u5E94\u7528\uFF1B\u4E0D\u4F1A\u81EA\u52A8\u91CD\u8BD5\u6216\u8C03\u6574\u63A8\u7406\u6863\u3002",
         cached: "\u547D\u4E2D\u672C\u4F1A\u8BDD\u7F13\u5B58\uFF0C\u4E0B\u5217\u8017\u65F6\u4E3A\u539F\u751F\u6210\u8017\u65F6\u3002"
       },
       en: {
+        "online.confirmationRejected": "The Host explicitly rejected this confirmation without starting an update job for it. Reload status, then prepare and confirm again. Nothing retries automatically. Error code:",
+        "online.forgetWarning": "If the record cannot be recovered, first verify the installed version in plugin management and make sure no update job is still running. Clearing only removes this tab\u2019s local tracking marker. It does not mean success, and does not cancel, start, or retry any Host job. Reload status successfully with no active job before clearing.",
+        "online.forgetAcknowledgement": "I have manually verified the installation and that no update job is still running. I understand that clearing the marker is not an update result.",
+        "online.forgetMarker": "Clear local tracking marker only",
+        "online.markerCleared": "The local tracking marker was cleared. No Host job was changed, and this does not establish success. Reload status; any update still requires fresh preparation, risk consent, and confirmation.",
+        "online.title": "Online update",
+        "online.userOnly": "Checking versions never installs anything. Only preparing, checking the risk confirmation, and clicking Confirm update starts a Host update job. Updates are never automatic.",
+        "online.continuity": "This page may disappear or become temporarily unavailable during the update. Closing it does not cancel the Host job. Reopen it to read the result. Quitting DSH interrupts the job; wait for its outcome before restarting as instructed. Save drafts and back up configuration first.",
+        "online.loading": "Reading Host update status\u2026",
+        "online.noRecord": "No online update job record is available. This does not mean an update succeeded.",
+        "online.unavailable": "Online update preparation is currently unavailable.",
+        "online.recordLost": "The job record is no longer available. Success cannot be confirmed. Check plugin management; the manual guide is not an update result.",
+        "online.uncertain": "The confirmation outcome is uncertain; the job may have started. Reload status only. Confirmation will not be resent automatically. Do not start a duplicate update.",
+        "online.requestFailed": "The request did not complete. Reload status manually. Safe error code:",
+        "online.review": "Review this update",
+        "online.fromVersion": "Original version",
+        "online.targetVersion": "Target version",
+        "online.installedVersion": "Verified installed version",
+        "online.targetSpec": "Pinned target source",
+        "online.restoreSpec": "Pinned recovery source",
+        "online.expiresAt": "Confirmation expiry (UTC)",
+        "online.jobId": "Host job ID",
+        "online.errorCode": "Safe error code:",
+        "online.detailCode": "Status detail code:",
+        "online.risks": "This affects every session in the current profile. The plugin may become temporarily unavailable. The old plugin is normally removed before installation, while hosts without hot reload install in place and require restart. Removing and re-adding the bundle may change its configuration order and override precedence; recheck effective settings. If installation fails, recovery of the original version will be attempted; recovery can also fail and require manual repair. You may need to fully quit and restart DSH. A browser refresh alone does not reload the Host.",
+        "online.consent": "I have saved what I need and understand the impact on all sessions, unavailability, configuration precedence changes, failed recovery and restart risks. I consent to updating to the target version above.",
+        "online.confirm": "Confirm update",
+        "online.dismiss": "Discard confirmation",
+        "online.prepare": "Prepare online update",
+        "online.preparing": "Preparing\u2026",
+        "online.reload": "Reload online update status",
+        "online.submitting": "Submitting confirmation. If this page disconnects, reopen it to read status; do not submit again.",
+        "online.restart": "Fully quit and restart DSH as instructed by the Host, then verify the loaded version. The update is not yet confirmed active.",
+        "online.cancelRequested": "The Host recorded a cancellation request. Wait for the final outcome; cancellation is not yet confirmed.",
+        "online.phase.queued": "Update queued. The Host will continue the job.",
+        "online.phase.checking": "Checking update conditions.",
+        "online.phase.removing": "Removing the old plugin.",
+        "online.phase.installing": "Installing the confirmed target version.",
+        "online.phase.activating": "Activating the target plugin.",
+        "online.phase.verifying": "Verifying installation and activation.",
+        "online.phase.recovering": "The update encountered a problem. Attempting to restore the original version.",
+        "online.phase.updated": "The Host verified that the target version was updated successfully.",
+        "online.phase.restart-required": "Installation finished, but a restart is required. The new version is not yet confirmed active.",
+        "online.phase.restored": "The target update did not succeed. The Host reports the original version was restored.",
+        "online.phase.repair-required": "Update or recovery is incomplete. Manual repair is required; check plugin management.",
+        "online.phase.failed": "Update failed. Target installation is not confirmed.",
+        "online.phase.cancelled": "The Host reports cancellation. Verify the current plugin state.",
+        "online.phase.unknown": "The job outcome is unknown, not a successful update.",
         "updates.title": "Version and updates",
-        "updates.readOnly": "This section only checks updates. It never downloads, installs, or automatically upgrades the plugin.",
-        "updates.installedVersion": "Installed version",
+        "updates.readOnly": "Version checks only read public information; they never download or install. Online updates require separate preparation and explicit confirmation below. Nothing upgrades automatically.",
+        "updates.installedVersion": "Running version",
         "updates.latestVersion": "Latest stable release",
         "updates.checkedAt": "Last check (UTC)",
         "updates.unknown": "Unknown",
@@ -482,9 +585,9 @@ var init_messages = __esm({
         "updates.idle": "Updates have not been checked. Use the button when needed.",
         "updates.loading": "Reading the Host cache without contacting GitHub\u2026",
         "updates.checking": "Checking public stable-release information on GitHub\u2026",
-        "updates.current": "The installed version matches the latest stable release from the last check.",
-        "updates.update-available": "A newer stable release is available. Follow the manual upgrade steps below.",
-        "updates.ahead": "The installed version is ahead of the latest stable release and may be a development or candidate build. No stable upgrade is offered.",
+        "updates.current": "The running version matches the latest stable release from the last check.",
+        "updates.update-available": "A newer stable release is available. Prepare an online update or use the optional manual upgrade path below.",
+        "updates.ahead": "The running version is ahead of the latest stable release and may be a development or candidate build. No stable upgrade is offered.",
         "updates.error": "The update check did not complete. The latest version is not confirmed.",
         "updates.cancelled": "This read or check was cancelled. Nothing was downloaded or installed.",
         "updates.error.network": "The network connection failed. Retry manually later.",
@@ -497,13 +600,13 @@ var init_messages = __esm({
         "updates.cancel": "Cancel",
         "updates.reloadStatus": "Reload local status",
         "updates.releaseLink": "View release on GitHub",
-        "updates.privacy": "Only clicking Check for updates asks the Host to read public GitHub release information. No conversation, draft, or file contents are sent.",
+        "updates.privacy": "Check for updates reads public GitHub release information. Preparing an online update also verifies target and recovery sources. No conversation, draft, or file contents are sent.",
         "updates.cacheNote": "A recent Host result may be reused to respect GitHub limits. There are no scheduled automatic checks.",
         "updates.installAddress": "Installation address (no tag)",
         "updates.copy": "Copy address",
         "updates.copied": "Address copied",
         "updates.copyFailed": "Automatic copy failed. Select and copy the address above manually.",
-        "updates.manualUpgrade": "How to upgrade manually",
+        "updates.manualUpgrade": "Optional: manual upgrade guide",
         "updates.stepSave": "Save the draft and both feature settings first. Record configuration you want to retain.",
         "updates.stepRemove": "Open DSH plugin management and remove the old dependency by package name:",
         "updates.stepInstall": "Add the plugin again using this installation address without a tag:",
@@ -577,7 +680,7 @@ var init_messages = __esm({
         busy: "The session is still running. Try again after it ends.",
         requestError: "The request did not finish. Your draft is unchanged. Check settings and retry.",
         configError: "The model, effort, or settings are invalid. Select again and save.",
-        contextError: "Selected complete Q&A is unavailable or exceeds the context limit. Use fewer rounds.",
+        contextError: "Complete Q&A is unavailable, or input is estimated to exceed the model context window. Reduce input/rounds or check provider/model settings; input is not silently truncated.",
         fileError: "File not read: it may be oversized, sensitive, or unsupported. Deselect it and retry.",
         stale: "The draft changed. Nothing was applied. Generate a new preview.",
         roundsError: "Custom rounds must be an integer from 1 to 20.",
@@ -598,7 +701,10 @@ var init_messages = __esm({
         access: "This session is read-only. Requests and apply are unavailable.",
         load: "Loading assist settings\u2026",
         settingsChanged: "Settings have unsaved changes. Save before requesting.",
-        budget: "Output budget: {{tokens}} tokens, wait limit: {{seconds}} s. Reasoning may share this budget; no automatic retry or effort change.",
+        budgetPolicy: "Input context and output budgets follow the selected provider/model settings. With no configured output cap, native/provider defaults apply. Larger budgets may increase time and cost. The 120-second wait and independent file-access safeguards remain. Main conversation controls are unchanged.",
+        contextUnknown: "The model context window or Host token estimator is unavailable. No generation was dispatched. Check provider/model configuration and Host compatibility.",
+        requestTimeout: "The auxiliary request reached its wait limit. Nothing was applied or retried automatically. Check model latency or reasoning settings.",
+        budget: "Requested output budget: {{tokens}} tokens, wait limit: {{seconds}} s. Reasoning may share this budget; no automatic retry or effort change.",
         outputLimit: "The model reached the output budget. Nothing was applied; no automatic retry or effort change.",
         cached: "Session cache hit; the timings below belong to the original generation."
       }
@@ -655,15 +761,17 @@ function referenceNames(occurrences = []) {
   return occurrences.flatMap((item) => typeof item?.label === "string" ? [{ name: item.label }] : []);
 }
 function errorKey(error) {
-  const code = String(error?.code ?? "request_failed").toLowerCase();
-  if (code.startsWith("transport-")) return "transportError";
-  if (code === "forbidden") return "authError";
-  if (code === "output-limit") return "outputLimit";
-  if (/stale|changed|revision/.test(code)) return "stale";
-  if (/context|overflow/.test(code)) return "contextError";
-  if (/file|secret|binary|oversize/.test(code)) return "fileError";
-  if (/model|effort|provider|config/.test(code)) return "configError";
-  if (/busy/.test(code)) return "busy";
+  const code2 = String(error?.code ?? "request_failed").toLowerCase();
+  if (code2.startsWith("transport-")) return "transportError";
+  if (code2 === "forbidden") return "authError";
+  if (code2 === "output-limit") return "outputLimit";
+  if (code2 === "timeout") return "requestTimeout";
+  if (code2 === "context-unknown") return "contextUnknown";
+  if (/stale|changed|revision/.test(code2)) return "stale";
+  if (/context|overflow/.test(code2)) return "contextError";
+  if (/file|secret|binary|oversize/.test(code2)) return "fileError";
+  if (/model|effort|provider|config/.test(code2)) return "configError";
+  if (/busy/.test(code2)) return "busy";
   return "requestError";
 }
 function reconcileState(host, wire, session, allowed) {
@@ -694,7 +802,7 @@ var init_api = __esm({
 // assist/client/stream-preview.js
 function streamPreview({ isCurrent, publish, snapshot, sessionId, qaId, feature }) {
   return (text) => {
-    if (feature === "suggest" || !isCurrent() || typeof text !== "string" || text.length > 65536) return;
+    if (feature === "suggest" || !isCurrent() || typeof text !== "string") return;
     publish({ preview: { text, original: snapshot.original, draftRev: snapshot.draftRev, sessionId, qaId, feature, streaming: true, snapshot } });
   };
 }
@@ -713,8 +821,8 @@ var init_suggestion_result = __esm({
 });
 
 // assist/client/controller.js
-function qaEndOf(id) {
-  const match = typeof id === "string" ? /^(\d+):(\d+)$/.exec(id) : null;
+function qaEndOf(id2) {
+  const match = typeof id2 === "string" ? /^(\d+):(\d+)$/.exec(id2) : null;
   const end = match ? Number(match[2]) : 0;
   return Number.isSafeInteger(end) ? end : 0;
 }
@@ -962,7 +1070,7 @@ function useAssistRuntime(p) {
     controller.configurationEdited();
     setSaving(true);
     setNotice(null);
-    const version2 = editVersions.current[feature];
+    const version3 = editVersions.current[feature];
     const owner = p.sessionId;
     const abort = new AbortController();
     saves.current.add(abort);
@@ -973,7 +1081,7 @@ function useAssistRuntime(p) {
       setHost({ sessionId: owner, value });
       await p.refreshAssist();
       if (!valid()) return;
-      if (editVersions.current[feature] === version2) {
+      if (editVersions.current[feature] === version3) {
         setDirtyFeatures((old) => old.filter((key) => key !== feature));
         setNotice("saved");
         return true;
@@ -1302,8 +1410,8 @@ function createUpdateController(fetcher = globalThis.fetch) {
       return true;
     } catch (error) {
       if (disposed || abort.signal.aborted || epoch !== revision) return false;
-      const code = ERRORS.has(error?.code) ? error.code : error?.name === "TimeoutError" ? "timeout" : "network";
-      publish({ localError: code });
+      const code2 = ERRORS.has(error?.code) ? error.code : error?.name === "TimeoutError" ? "timeout" : "network";
+      publish({ localError: code2 });
       return false;
     } finally {
       if (!disposed && epoch === revision) {
@@ -1357,30 +1465,340 @@ var init_update_state = __esm({
   }
 });
 
-// assist/client/update-panel.js
-function UpdatePanelContent({ snapshot = initialUpdateSnapshot(), t, onCheck, onReload, onCancel, onCopy, copyStatus }) {
-  const view = updateDisplay(snapshot);
-  const data = snapshot.data;
-  const button = (key, onClick, disabled = false) => h6("button", { type: "button", className: "lpa-button", onClick, disabled }, t(key));
-  const field = (label, value) => h6(
-    "div",
-    { className: "lpa-update-field", key: label },
-    h6("dt", null, t(label)),
-    h6("dd", null, value)
-  );
+// assist/client/online-update-state.js
+function normalizeOnlineOperation(x) {
+  if (!object(x) || !id(x.jobId) || !version2(x.fromVersion) || !version2(x.targetVersion) || !ONLINE_PHASES.includes(x.phase) || typeof x.terminal !== "boolean" || x.phase !== "unknown" && x.terminal !== TERMINAL.has(x.phase) || !(x.installedVersion === null || version2(x.installedVersion)) || !nullableCode(x.error) || !nullableCode(x.detailCode) || typeof x.restartRequired !== "boolean" || typeof x.cancelRequested !== "boolean") throw invalid2();
+  if (x.phase === "updated" && (x.installedVersion !== x.targetVersion || x.restartRequired || x.error !== null)) throw invalid2();
+  if (x.phase === "restart-required" && !x.restartRequired) throw invalid2();
+  return Object.freeze(Object.fromEntries(["jobId", "fromVersion", "targetVersion", "phase", "terminal", "installedVersion", "error", "detailCode", "restartRequired", "cancelRequested"].map((key) => [key, x[key]])));
+}
+function normalizeOnlineStatus(x) {
+  if (!object(x) || !version2(x.currentVersion) || typeof x.available !== "boolean" || !nullableCode(x.reason)) throw invalid2();
+  return Object.freeze({
+    currentVersion: x.currentVersion,
+    available: x.available,
+    reason: x.reason,
+    operation: x.operation === null ? null : normalizeOnlineOperation(x.operation)
+  });
+}
+function normalizeOnlinePreparation(x, now = Date.now()) {
+  if (!object(x) || typeof x.token !== "string" || !/^[A-Za-z0-9_-]{16,512}$/.test(x.token) || !version2(x.fromVersion) || !version2(x.targetVersion) || !pinnedSpec(x.targetSpec) || !pinnedSpec(x.restoreSpec) || !Number.isSafeInteger(x.expiresAt) || x.expiresAt <= now || x.expiresAt > 864e13) throw invalid2();
+  return Object.freeze(Object.fromEntries(["token", "fromVersion", "targetVersion", "targetSpec", "restoreSpec", "expiresAt"].map((key) => [key, x[key]])));
+}
+function readMarker(storage) {
+  try {
+    const x = JSON.parse(storage?.getItem(ONLINE_MARKER_KEY) ?? "null");
+    if (!object(x) || !version2(x.fromVersion) || !version2(x.targetVersion) || !(x.jobId === null || id(x.jobId))) return null;
+    return { fromVersion: x.fromVersion, targetVersion: x.targetVersion, jobId: x.jobId };
+  } catch {
+    return null;
+  }
+}
+function createOnlineUpdateController(fetcher = globalThis.fetch, { now = Date.now, setTimer = setTimeout, clearTimer = clearTimeout, pollMs = 3e3, storage = browserStorage() } = {}) {
+  let state = initialOnlineSnapshot(), disposed = true, epoch = 0, timer = null, flight = null;
+  let submitted = null, marker = readMarker(storage);
+  if (marker) state = { ...state, uncertain: true };
+  const saveMarker = (next) => {
+    marker = next;
+    try {
+      if (next) storage?.setItem(ONLINE_MARKER_KEY, JSON.stringify(next));
+      else storage?.removeItem(ONLINE_MARKER_KEY);
+    } catch {
+    }
+  };
+  const associateMarker = (operation) => {
+    if (!marker) return true;
+    if (!operation || operation.fromVersion !== marker.fromVersion || operation.targetVersion !== marker.targetVersion || (marker.jobId ? operation.jobId !== marker.jobId : operation.terminal)) return false;
+    saveMarker(operation.terminal ? null : { fromVersion: operation.fromVersion, targetVersion: operation.targetVersion, jobId: operation.jobId });
+    return true;
+  };
+  const listeners = /* @__PURE__ */ new Set();
+  const publish = (patch) => {
+    state = { ...state, ...patch };
+    for (const listener of listeners) listener();
+  };
+  const clearPoll = () => {
+    if (timer !== null) clearTimer(timer);
+    timer = null;
+  };
+  const schedule = () => {
+    clearPoll();
+    if (!disposed && (state.data?.reason === "busy" || state.data?.operation && !state.data.operation.terminal))
+      timer = setTimer(() => {
+        timer = null;
+        void request("load");
+      }, Math.max(3e3, pollMs));
+  };
+  async function request(action) {
+    if (disposed || state.pending) return false;
+    if (action === "prepare" && (!state.data?.available || state.uncertain || state.data.operation && !state.data.operation.terminal)) return false;
+    let body, rejectedBeforeSubmission = false;
+    if (action === "confirm") {
+      const p = state.preparation;
+      if (!p || !state.consent || state.uncertain) return false;
+      if (p.expiresAt <= now()) {
+        publish({ preparation: null, consent: false, localError: "confirmation-expired" });
+        return false;
+      }
+      submitted = { fromVersion: p.fromVersion, targetVersion: p.targetVersion, previousJobId: state.data?.operation?.jobId };
+      saveMarker({ fromVersion: p.fromVersion, targetVersion: p.targetVersion, jobId: null });
+      body = { action: "confirm", token: p.token, targetVersion: p.targetVersion, consent: true };
+    } else if (action === "prepare") body = { action: "prepare" };
+    clearPoll();
+    const revision = ++epoch, abort = new AbortController();
+    flight = abort;
+    publish({ pending: action, localError: null, confirmationRejected: false, recoveryAcknowledged: false, markerCleared: false, ...action === "load" ? {} : { preparation: null, consent: false } });
+    try {
+      const response = await fetcher(ONLINE_UPDATE_ENDPOINT, {
+        method: body ? "POST" : "GET",
+        credentials: "same-origin",
+        signal: abort.signal,
+        ...body ? { headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) } : {}
+      });
+      let value;
+      try {
+        value = await response.json();
+      } catch {
+        throw invalid2();
+      }
+      if (!response.ok) {
+        rejectedBeforeSubmission = response.ok === false && action === "confirm" && object(value) && Object.keys(value).length === 1 && PRE_SUBMISSION_REJECTIONS.has(value.error);
+        throw Object.assign(new Error("request-failed"), { code: object(value) && code(value.error) ? value.error : "invalid-response" });
+      }
+      const data = action === "load" ? normalizeOnlineStatus(value) : action === "prepare" ? normalizeOnlinePreparation(value, now()) : normalizeOnlineOperation(value);
+      if (disposed || revision !== epoch) return false;
+      if (action === "confirm" && (data.targetVersion !== submitted.targetVersion || data.fromVersion !== submitted.fromVersion || data.jobId === submitted.previousJobId)) throw invalid2();
+      if (action === "load") {
+        const lost = !data.operation && (state.uncertain || !!state.data?.operation || state.recordLost);
+        const unresolved = state.uncertain && submitted && (!data.operation || data.operation.jobId === submitted.previousJobId || data.operation.targetVersion !== submitted.targetVersion || data.operation.fromVersion !== submitted.fromVersion) || !associateMarker(data.operation);
+        publish({ data, recordLost: lost, uncertain: lost || !!unresolved, ...data.operation ? { preparation: null, consent: false } : {} });
+      } else if (action === "prepare") publish({ preparation: data });
+      else {
+        saveMarker(data.terminal ? null : { fromVersion: data.fromVersion, targetVersion: data.targetVersion, jobId: data.jobId });
+        publish({ data: { ...state.data, operation: data }, uncertain: false, recordLost: false });
+      }
+      return true;
+    } catch (error) {
+      if (disposed || revision !== epoch) return false;
+      if (rejectedBeforeSubmission) {
+        saveMarker(null);
+        submitted = null;
+      }
+      publish({ localError: code(error?.code) ? error.code : "network", ...action === "confirm" ? {
+        uncertain: !rejectedBeforeSubmission,
+        recordLost: false,
+        confirmationRejected: rejectedBeforeSubmission
+      } : {} });
+      return false;
+    } finally {
+      if (!disposed && revision === epoch) {
+        flight = null;
+        publish({ pending: null });
+        schedule();
+      }
+    }
+  }
+  return {
+    getSnapshot: () => state,
+    subscribe(listener) {
+      listeners.add(listener);
+      return () => listeners.delete(listener);
+    },
+    start() {
+      disposed = false;
+      return request("load");
+    },
+    load: () => request("load"),
+    prepare: () => request("prepare"),
+    confirm: () => request("confirm"),
+    setConsent(consent) {
+      if (!disposed && !state.pending && state.preparation) publish({ consent: consent === true });
+    },
+    dismiss() {
+      if (!disposed && !state.pending) publish({ preparation: null, consent: false });
+    },
+    setRecoveryAcknowledged(value) {
+      if (!disposed && canForgetOnlineMarker(state)) publish({ recoveryAcknowledged: value === true });
+    },
+    forgetMarker() {
+      if (disposed || !canForgetOnlineMarker(state) || state.recoveryAcknowledged !== true) return false;
+      clearPoll();
+      saveMarker(null);
+      submitted = null;
+      publish({ ...initialOnlineSnapshot(), markerCleared: true });
+      return true;
+    },
+    dispose() {
+      disposed = true;
+      epoch += 1;
+      clearPoll();
+      flight?.abort();
+      flight = null;
+      state = { ...state, preparation: null, consent: false, recoveryAcknowledged: false, pending: null };
+    }
+  };
+}
+var ONLINE_UPDATE_ENDPOINT, ONLINE_PHASES, TERMINAL, PRE_SUBMISSION_REJECTIONS, invalid2, object, version2, code, nullableCode, id, pinnedSpec, ONLINE_MARKER_KEY, browserStorage, initialOnlineSnapshot, canForgetOnlineMarker;
+var init_online_update_state = __esm({
+  "assist/client/online-update-state.js"() {
+    ONLINE_UPDATE_ENDPOINT = "/api/local-openai-fast.online-update";
+    ONLINE_PHASES = Object.freeze(["queued", "checking", "removing", "installing", "activating", "verifying", "recovering", "updated", "restart-required", "restored", "repair-required", "failed", "cancelled", "unknown"]);
+    TERMINAL = /* @__PURE__ */ new Set(["updated", "restart-required", "restored", "repair-required", "failed", "cancelled", "unknown"]);
+    PRE_SUBMISSION_REJECTIONS = /* @__PURE__ */ new Set(["confirmation-expired", "confirmation-required", "inventory-changed", "busy", "invalid-request", "owner-confirmation-required", "unavailable"]);
+    invalid2 = () => Object.assign(new Error("invalid-response"), { code: "invalid-response" });
+    object = (x) => x !== null && typeof x === "object" && !Array.isArray(x);
+    version2 = (x) => typeof x === "string" && x.length <= 80 && /^v?\d+\.\d+\.\d+(?:-[a-zA-Z0-9.-]+)?(?:\+[a-zA-Z0-9.-]+)?$/.test(x);
+    code = (x) => typeof x === "string" && /^[a-z][a-z0-9-]{0,79}$/.test(x);
+    nullableCode = (x) => x === null || code(x);
+    id = (x) => typeof x === "string" && /^[A-Za-z0-9_-]{1,128}$/.test(x);
+    pinnedSpec = (x) => typeof x === "string" && /^github:Syngnat\/dsh-prompt-assist#[a-fA-F0-9]{40}$/.test(x);
+    ONLINE_MARKER_KEY = "local-prompt-assist.online-update.pending.v1";
+    browserStorage = () => {
+      try {
+        return globalThis.sessionStorage;
+      } catch {
+        return null;
+      }
+    };
+    initialOnlineSnapshot = () => ({ data: null, preparation: null, consent: false, pending: null, localError: null, uncertain: false, recordLost: false, confirmationRejected: false, recoveryAcknowledged: false, markerCleared: false });
+    canForgetOnlineMarker = (state) => !!((state.uncertain || state.recordLost) && state.data && !state.pending && !state.localError && state.data.reason !== "busy" && (!state.data.operation || state.data.operation.terminal));
+  }
+});
+
+// assist/client/online-update-panel.js
+function OnlineUpdatePanelContent({ snapshot = initialOnlineSnapshot(), updateAvailable = false, t, onPrepare, onConfirm, onConsent, onDismiss, onReload, onRecoveryAcknowledged, onForgetMarker }) {
+  const { data, preparation, pending, consent, localError, uncertain, recordLost, confirmationRejected, recoveryAcknowledged, markerCleared } = snapshot;
+  const operation = data?.operation;
+  const canForget = canForgetOnlineMarker(snapshot);
+  const active = operation && !operation.terminal;
+  const button = (key, onClick, disabled = false) => h6("button", { type: "button", className: "lpa-button", onClick, disabled }, t("online." + key));
+  const field = (label, value) => h6("div", { className: "lpa-update-field", key: label }, h6("dt", null, t("online." + label)), h6("dd", null, value));
   return h6(
     "section",
-    { className: "lpa-update-panel", "aria-label": t("updates.title") },
-    h6("h2", { className: "lpa-update-title" }, t("updates.title")),
-    h6("p", { className: "lpa-note" }, t("updates.readOnly")),
+    { className: "lpa-update-panel", "aria-label": t("online.title"), "aria-busy": !!pending },
+    h6("h3", null, t("online.title")),
+    h6("p", { className: "lpa-note" }, t("online.userOnly")),
+    h6("p", { className: "lpa-note" }, t("online.continuity")),
+    operation && !uncertain ? h6(
+      "div",
+      { role: "status", "aria-live": "polite", "aria-atomic": true },
+      h6("p", null, t("online.phase." + operation.phase)),
+      h6(
+        "dl",
+        { className: "lpa-update-versions" },
+        field("jobId", operation.jobId),
+        field("fromVersion", operation.fromVersion),
+        field("targetVersion", operation.targetVersion),
+        field("installedVersion", operation.installedVersion ?? t("updates.unknown"))
+      ),
+      operation.error ? h6("p", { className: "lpa-error" }, t("online.errorCode"), " ", h6("code", null, operation.error)) : null,
+      operation.detailCode ? h6("p", { className: "lpa-note" }, t("online.detailCode"), " ", h6("code", null, operation.detailCode)) : null,
+      operation.restartRequired ? h6("p", { className: "lpa-note" }, t("online.restart")) : null,
+      operation.cancelRequested ? h6("p", { className: "lpa-note" }, t("online.cancelRequested")) : null
+    ) : null,
+    !data && !localError && !markerCleared ? h6("p", { role: "status" }, t("online.loading")) : null,
+    data && !operation && !uncertain ? h6("p", { className: "lpa-note" }, t("online.noRecord")) : null,
+    data && !data.available ? h6("p", { className: "lpa-note" }, t("online.unavailable"), data.reason ? " (" + data.reason + ")" : null) : null,
+    recordLost || uncertain ? h6("p", { className: "lpa-error", role: "alert" }, t(recordLost ? "online.recordLost" : "online.uncertain")) : null,
+    localError ? h6("p", { className: "lpa-error", role: "alert" }, t(confirmationRejected ? "online.confirmationRejected" : "online.requestFailed"), " ", h6("code", null, localError)) : null,
+    recordLost || uncertain ? h6(
+      "div",
+      { className: "lpa-update-install" },
+      h6("p", { className: "lpa-note" }, t("online.forgetWarning")),
+      h6("label", { className: "lpa-row" }, h6("input", {
+        type: "checkbox",
+        checked: recoveryAcknowledged === true,
+        disabled: !canForget,
+        onChange: (event) => onRecoveryAcknowledged?.(event.target.checked)
+      }), t("online.forgetAcknowledgement")),
+      button("forgetMarker", onForgetMarker, !canForget || recoveryAcknowledged !== true)
+    ) : null,
+    markerCleared ? h6("p", { className: "lpa-note", role: "status" }, t("online.markerCleared")) : null,
+    preparation ? h6(
+      "div",
+      { className: "lpa-update-install" },
+      h6("h4", null, t("online.review")),
+      h6(
+        "dl",
+        { className: "lpa-update-versions" },
+        field("fromVersion", preparation.fromVersion),
+        field("targetVersion", preparation.targetVersion),
+        field("targetSpec", h6("code", null, preparation.targetSpec)),
+        field("restoreSpec", h6("code", null, preparation.restoreSpec)),
+        field("expiresAt", h6("time", { dateTime: new Date(preparation.expiresAt).toISOString() }, new Date(preparation.expiresAt).toISOString()))
+      ),
+      h6("p", { className: "lpa-note" }, t("online.risks")),
+      h6("label", { className: "lpa-row" }, h6("input", { type: "checkbox", checked: consent, disabled: !!pending, onChange: (event) => onConsent?.(event.target.checked) }), t("online.consent")),
+      h6("div", { className: "lpa-row" }, button("confirm", onConfirm, !consent || !!pending || uncertain), button("dismiss", onDismiss, !!pending))
+    ) : null,
     h6(
+      "div",
+      { className: "lpa-row" },
+      !preparation && updateAvailable ? button(pending === "prepare" ? "preparing" : "prepare", onPrepare, !!pending || !data?.available || !!active || uncertain) : null,
+      button("reload", onReload, !!pending)
+    ),
+    pending === "confirm" ? h6("p", { role: "status" }, t("online.submitting")) : null
+  );
+}
+function OnlineUpdatePanel({ t, updateAvailable, fetcher = globalThis.fetch }) {
+  const controller = import_react7.default.useMemo(() => createOnlineUpdateController(fetcher), [fetcher]);
+  const snapshot = import_react7.default.useSyncExternalStore(controller.subscribe, controller.getSnapshot, controller.getSnapshot);
+  import_react7.default.useEffect(() => {
+    void controller.start();
+    return () => controller.dispose();
+  }, [controller]);
+  return h6(OnlineUpdatePanelContent, {
+    t,
+    snapshot,
+    updateAvailable,
+    onPrepare: () => {
+      void controller.prepare();
+    },
+    onConfirm: () => {
+      void controller.confirm();
+    },
+    onRecoveryAcknowledged: (value) => controller.setRecoveryAcknowledged(value),
+    onForgetMarker: () => controller.forgetMarker(),
+    onConsent: (value) => controller.setConsent(value),
+    onDismiss: () => controller.dismiss(),
+    onReload: () => {
+      void controller.load();
+    }
+  });
+}
+var import_react7, h6;
+var init_online_update_panel = __esm({
+  "assist/client/online-update-panel.js"() {
+    import_react7 = __toESM(require("react"), 1);
+    init_online_update_state();
+    h6 = import_react7.default.createElement;
+  }
+});
+
+// assist/client/update-panel.js
+function UpdatePanelContent({ snapshot = initialUpdateSnapshot(), t, onCheck, onReload, onCancel, onCopy, copyStatus, children }) {
+  const view = updateDisplay(snapshot);
+  const data = snapshot.data;
+  const button = (key, onClick, disabled = false) => h7("button", { type: "button", className: "lpa-button", onClick, disabled }, t(key));
+  const field = (label, value) => h7(
+    "div",
+    { className: "lpa-update-field", key: label },
+    h7("dt", null, t(label)),
+    h7("dd", null, value)
+  );
+  return h7(
+    "section",
+    { className: "lpa-update-panel", "aria-label": t("updates.title") },
+    h7("h2", { className: "lpa-update-title" }, t("updates.title")),
+    h7("p", { className: "lpa-note" }, t("updates.readOnly")),
+    h7(
       "dl",
       { className: "lpa-update-versions" },
       field("updates.installedVersion", data?.currentVersion ?? t("updates.unknown")),
       field("updates.latestVersion", data?.latestVersion ?? t("updates.unknown")),
-      field("updates.checkedAt", view.checkedAt ? h6("time", { dateTime: view.checkedAt }, view.checkedAt) : t("updates.notChecked"))
+      field("updates.checkedAt", view.checkedAt ? h7("time", { dateTime: view.checkedAt }, view.checkedAt) : t("updates.notChecked"))
     ),
-    h6(
+    h7(
       "p",
       {
         className: view.status === "error" ? "lpa-error" : "lpa-note",
@@ -1391,46 +1809,47 @@ function UpdatePanelContent({ snapshot = initialUpdateSnapshot(), t, onCheck, on
       t(view.message),
       view.status === "error" && view.error ? " " + t("updates.error." + view.error) : null
     ),
-    h6(
+    h7(
       "div",
       { className: "lpa-row" },
       button(snapshot.pending === "check" ? "updates.checkingButton" : "updates.checkButton", onCheck, snapshot.pending === "check"),
       snapshot.pending ? button("updates.cancel", onCancel) : null,
       snapshot.localError ? button("updates.reloadStatus", onReload) : null,
-      view.releaseUrl ? h6("a", { className: "lpa-button", href: view.releaseUrl, target: "_blank", rel: "noopener noreferrer" }, t("updates.releaseLink")) : null
+      view.releaseUrl ? h7("a", { className: "lpa-button", href: view.releaseUrl, target: "_blank", rel: "noopener noreferrer" }, t("updates.releaseLink")) : null
     ),
-    h6("p", { className: "lpa-note" }, t("updates.privacy")),
-    h6("p", { className: "lpa-note" }, t("updates.cacheNote")),
-    h6(
+    h7("p", { className: "lpa-note" }, t("updates.privacy")),
+    h7("p", { className: "lpa-note" }, t("updates.cacheNote")),
+    children,
+    h7(
       "div",
       { className: "lpa-update-install" },
-      h6("span", null, t("updates.installAddress")),
-      h6("code", null, INSTALL_SPEC),
+      h7("span", null, t("updates.installAddress")),
+      h7("code", null, INSTALL_SPEC),
       button("updates.copy", onCopy),
-      copyStatus ? h6("span", { className: "lpa-note", role: "status" }, t("updates." + copyStatus)) : null
+      copyStatus ? h7("span", { className: "lpa-note", role: "status" }, t("updates." + copyStatus)) : null
     ),
-    h6(
+    h7(
       "details",
       { className: "lpa-update-guide" },
-      h6("summary", null, t("updates.manualUpgrade")),
-      h6(
+      h7("summary", null, t("updates.manualUpgrade")),
+      h7(
         "ol",
         null,
-        h6("li", null, t("updates.stepSave")),
-        h6("li", null, t("updates.stepRemove"), " ", h6("code", null, "@local/dsh-openai-fast")),
-        h6("li", null, t("updates.stepInstall"), " ", h6("code", null, INSTALL_SPEC)),
-        h6("li", null, t("updates.stepRestart"))
+        h7("li", null, t("updates.stepSave")),
+        h7("li", null, t("updates.stepRemove"), " ", h7("code", null, "@local/dsh-openai-fast")),
+        h7("li", null, t("updates.stepInstall"), " ", h7("code", null, INSTALL_SPEC)),
+        h7("li", null, t("updates.stepRestart"))
       ),
-      h6("p", { className: "lpa-note" }, t("updates.backup"))
+      h7("p", { className: "lpa-note" }, t("updates.backup"))
     )
   );
 }
 function UpdatePanel({ t, fetcher = globalThis.fetch }) {
-  const controller = import_react7.default.useMemo(() => createUpdateController(fetcher), [fetcher]);
-  const snapshot = import_react7.default.useSyncExternalStore(controller.subscribe, controller.getSnapshot, controller.getSnapshot);
-  const [copyStatus, setCopyStatus] = import_react7.default.useState(null);
-  const copyEpoch = import_react7.default.useRef(0);
-  import_react7.default.useEffect(() => {
+  const controller = import_react8.default.useMemo(() => createUpdateController(fetcher), [fetcher]);
+  const snapshot = import_react8.default.useSyncExternalStore(controller.subscribe, controller.getSnapshot, controller.getSnapshot);
+  const [copyStatus, setCopyStatus] = import_react8.default.useState(null);
+  const copyEpoch = import_react8.default.useRef(0);
+  import_react8.default.useEffect(() => {
     void controller.start();
     return () => {
       copyEpoch.current += 1;
@@ -1446,26 +1865,31 @@ function UpdatePanel({ t, fetcher = globalThis.fetch }) {
       if (copyEpoch.current === revision) setCopyStatus("copyFailed");
     }
   }
-  return h6(UpdatePanelContent, {
-    snapshot,
-    t,
-    copyStatus,
-    onCopy: copy,
-    onCheck: () => {
-      void controller.check();
+  return h7(
+    UpdatePanelContent,
+    {
+      snapshot,
+      t,
+      copyStatus,
+      onCopy: copy,
+      onCheck: () => {
+        void controller.check();
+      },
+      onReload: () => {
+        void controller.load();
+      },
+      onCancel: () => controller.cancel()
     },
-    onReload: () => {
-      void controller.load();
-    },
-    onCancel: () => controller.cancel()
-  });
+    h7(OnlineUpdatePanel, { t, fetcher, updateAvailable: snapshot.data?.status === "update-available" })
+  );
 }
-var import_react7, h6;
+var import_react8, h7;
 var init_update_panel = __esm({
   "assist/client/update-panel.js"() {
-    import_react7 = __toESM(require("react"), 1);
+    import_react8 = __toESM(require("react"), 1);
     init_update_state();
-    h6 = import_react7.default.createElement;
+    init_online_update_panel();
+    h7 = import_react8.default.createElement;
   }
 });
 
@@ -1473,10 +1897,10 @@ var init_update_panel = __esm({
 function Settings(p) {
   const { t, config: v, catalog: c, capabilities: cap } = p;
   const change = (patch) => p.onChange({ ...v, ...patch });
-  const field = (key, node) => h7("label", { className: "lpa-field" }, t(key), node);
-  const check = (key, checked, change2, disabled = false) => h7("label", { className: "lpa-check" }, h7("input", { type: "checkbox", checked, disabled, onChange: (e) => change2(e.target.checked) }), t(key));
-  const [custom, setCustom] = import_react8.default.useState(![1, 3, 5].includes(v.rounds));
-  const [error, setError] = import_react8.default.useState(null);
+  const field = (key, node) => h8("label", { className: "lpa-field" }, t(key), node);
+  const check = (key, checked, change2, disabled = false) => h8("label", { className: "lpa-check" }, h8("input", { type: "checkbox", checked, disabled, onChange: (e) => change2(e.target.checked) }), t(key));
+  const [custom, setCustom] = import_react9.default.useState(![1, 3, 5].includes(v.rounds));
+  const [error, setError] = import_react9.default.useState(null);
   const efforts = cap?.efforts ?? [];
   const invalidEffort = !v.followSession && cap && v.reasoningEffort && !efforts.some((e) => e.id === v.reasoningEffort);
   const invalidFast = cap && v.fast && !cap.fastEligible;
@@ -1486,41 +1910,42 @@ function Settings(p) {
     setError(problem === "rounds" ? "roundsError" : problem ? "modelError" : null);
     if (!problem && (!v.enabled || !invalidEffort && !invalidFast)) p.save(v);
   };
-  const select = (key, value, items, change2) => field(key, h7("select", { value, onChange: (e) => change2(e.target.value) }, items.map((item) => h7("option", { key: item.id, value: item.id }, item.name))));
-  return h7(
+  const select = (key, value, items, change2) => field(key, h8("select", { value, onChange: (e) => change2(e.target.value) }, items.map((item) => h8("option", { key: item.id, value: item.id }, item.name))));
+  return h8(
     "form",
     { onSubmit: submit },
-    h7("div", { className: "lpa-row" }, check("enabled", v.enabled, (enabled) => change({ enabled })), check("follow", v.followSession, (followSession) => change({ followSession }))),
-    h7("p", { className: "lpa-note" }, t("followHint")),
-    !v.followSession ? h7(
+    h8("div", { className: "lpa-row" }, check("enabled", v.enabled, (enabled) => change({ enabled })), check("follow", v.followSession, (followSession) => change({ followSession }))),
+    h8("p", { className: "lpa-note" }, t("followHint")),
+    h8("p", { className: "lpa-note" }, t("budgetPolicy")),
+    !v.followSession ? h8(
       "div",
       { className: "lpa-grid" },
       select("provider", v.provider, [{ id: "", name: t("selectProvider") }, ...c.providers], (provider) => change({ provider, model: "" })),
       select("model", v.model, [{ id: "", name: t("selectModel") }, ...c.models.filter((m) => m.provider === v.provider)], (model) => change({ model })),
       select("effort", v.reasoningEffort, [{ id: "", name: t("nativeDefault") }, ...invalidEffort ? [{ id: v.reasoningEffort, name: v.reasoningEffort }] : [], ...efforts], (reasoningEffort) => change({ reasoningEffort }))
     ) : null,
-    invalidEffort ? h7("p", { className: "lpa-error", role: "alert" }, t("effortInvalid")) : null,
+    invalidEffort ? h8("p", { className: "lpa-error", role: "alert" }, t("effortInvalid")) : null,
     check("fast", v.fast, (fast2) => change({ fast: fast2 }), !v.fast && cap?.fastEligible !== true),
-    invalidFast ? h7("p", { className: "lpa-error", role: "alert" }, t("fastUnsupported")) : null,
-    h7(
+    invalidFast ? h8("p", { className: "lpa-error", role: "alert" }, t("fastUnsupported")) : null,
+    h8(
       "div",
       { className: "lpa-grid" },
       select("rounds", custom ? "custom" : String(v.rounds), [1, 3, 5].map((n) => ({ id: String(n), name: n })).concat({ id: "custom", name: t("custom") }), (value) => {
         setCustom(value === "custom");
         if (value !== "custom") change({ rounds: Number(value) });
       }),
-      custom ? field("custom", h7("input", { type: "number", min: 1, max: 20, step: 1, value: Number.isFinite(v.rounds) ? v.rounds : "", onChange: (e) => change({ rounds: e.target.value === "" ? NaN : Number(e.target.value) }) })) : null
+      custom ? field("custom", h8("input", { type: "number", min: 1, max: 20, step: 1, value: Number.isFinite(v.rounds) ? v.rounds : "", onChange: (e) => change({ rounds: e.target.value === "" ? NaN : Number(e.target.value) }) })) : null
     ),
-    error ? h7("p", { role: "alert", className: "lpa-error" }, t(error)) : null,
-    h7("button", { className: "lpa-button lpa-button--primary", type: "submit", disabled: p.saving || !p.allowed }, t(p.saving ? "saving" : "save"))
+    error ? h8("p", { role: "alert", className: "lpa-error" }, t(error)) : null,
+    h8("button", { className: "lpa-button lpa-button--primary", type: "submit", disabled: p.saving || !p.allowed }, t(p.saving ? "saving" : "save"))
   );
 }
-var import_react8, h7;
+var import_react9, h8;
 var init_settings = __esm({
   "assist/client/settings.js"() {
-    import_react8 = __toESM(require("react"), 1);
+    import_react9 = __toESM(require("react"), 1);
     init_api();
-    h7 = import_react8.default.createElement;
+    h8 = import_react9.default.createElement;
   }
 });
 
@@ -1531,9 +1956,9 @@ function createSettingsDraft(config) {
 function editSettingsDraft(state, config) {
   return { config: { ...config }, version: state.version + 1, dirty: true };
 }
-function acceptSettingsSave(state, version2, config) {
-  if (state.version !== version2) return state;
-  return { config: { ...config }, version: version2, dirty: false };
+function acceptSettingsSave(state, version3, config) {
+  if (state.version !== version3) return state;
+  return { config: { ...config }, version: version3, dirty: false };
 }
 function createSettingsRequests() {
   let closed = false;
@@ -1564,12 +1989,12 @@ var init_settings_page_state = __esm({
 
 // assist/client/settings-page.js
 function FeatureSettings({ feature, host, sessionId, p, allowed, onSaved }) {
-  const [draft, setDraft] = import_react9.default.useState(() => createSettingsDraft(host.settings[feature]));
-  const current = import_react9.default.useRef(draft);
+  const [draft, setDraft] = import_react10.default.useState(() => createSettingsDraft(host.settings[feature]));
+  const current = import_react10.default.useRef(draft);
   current.current = draft;
-  const [saving, setSaving] = import_react9.default.useState(false), [notice, setNotice] = import_react9.default.useState(null);
-  const scope = import_react9.default.useRef(null), inFlight = import_react9.default.useRef(false);
-  import_react9.default.useEffect(() => {
+  const [saving, setSaving] = import_react10.default.useState(false), [notice, setNotice] = import_react10.default.useState(null);
+  const scope = import_react10.default.useRef(null), inFlight = import_react10.default.useRef(false);
+  import_react10.default.useEffect(() => {
     scope.current = createSettingsRequests();
     inFlight.current = false;
     return () => scope.current.close();
@@ -1584,7 +2009,7 @@ function FeatureSettings({ feature, host, sessionId, p, allowed, onSaved }) {
   };
   async function save(config) {
     if (!allowed || inFlight.current || !scope.current) return;
-    const request = scope.current.begin(), version2 = current.current.version;
+    const request = scope.current.begin(), version3 = current.current.version;
     inFlight.current = true;
     setSaving(true);
     setNotice(null);
@@ -1592,7 +2017,7 @@ function FeatureSettings({ feature, host, sessionId, p, allowed, onSaved }) {
       const value = await p.assistSend("save", sessionId, { feature, config }, request.signal);
       if (!request.valid()) return;
       onSaved(feature, value);
-      const next = acceptSettingsSave(current.current, version2, value.settings[feature]);
+      const next = acceptSettingsSave(current.current, version3, value.settings[feature]);
       current.current = next;
       setDraft(next);
       if (!next.dirty) setNotice("saved");
@@ -1609,24 +2034,24 @@ function FeatureSettings({ feature, host, sessionId, p, allowed, onSaved }) {
     }
   }
   const noticeValue = notice ?? options.error;
-  return h8(
+  return h9(
     "section",
     { className: "lpa-feature", "aria-label": p.t(feature) },
-    h8("h2", { className: "lpa-feature-title" }, p.t(feature)),
-    h8("p", { className: "lpa-note" }, p.t(feature === "suggest" ? "suggestContext" : "enhanceOriginal")),
-    h8(Settings, { t: p.t, config: draft.config, catalog: options.catalog, capabilities: options.capabilities, allowed, saving, onChange: edit, save }),
-    h8(
+    h9("h2", { className: "lpa-feature-title" }, p.t(feature)),
+    h9("p", { className: "lpa-note" }, p.t(feature === "suggest" ? "suggestContext" : "enhanceOriginal")),
+    h9(Settings, { t: p.t, config: draft.config, catalog: options.catalog, capabilities: options.capabilities, allowed, saving, onChange: edit, save }),
+    h9(
       "div",
       { className: "lpa-settings-feedback" },
-      draft.dirty ? h8("p", { className: "lpa-note" }, p.t("settingsChanged")) : null,
-      noticeValue ? h8("p", { role: "status", className: noticeValue === "saved" ? "lpa-note" : "lpa-error" }, p.t(typeof noticeValue === "string" ? noticeValue : errorKey(noticeValue))) : null
+      draft.dirty ? h9("p", { className: "lpa-note" }, p.t("settingsChanged")) : null,
+      noticeValue ? h9("p", { role: "status", className: noticeValue === "saved" ? "lpa-note" : "lpa-error" }, p.t(typeof noticeValue === "string" ? noticeValue : errorKey(noticeValue))) : null
     )
   );
 }
 function SessionSettings({ sessionId, p }) {
   const allowed = p.useSessionAccess(sessionId, "commands/execute");
-  const [host, setHost] = import_react9.default.useState(null), [error, setError] = import_react9.default.useState(null);
-  import_react9.default.useEffect(() => {
+  const [host, setHost] = import_react10.default.useState(null), [error, setError] = import_react10.default.useState(null);
+  import_react10.default.useEffect(() => {
     const abort = new AbortController();
     setHost(null);
     setError(null);
@@ -1638,37 +2063,37 @@ function SessionSettings({ sessionId, p }) {
     return () => abort.abort();
   }, [sessionId, p.assistSend]);
   const onSaved = (feature, value) => setHost((old) => ({ ...old, settings: { ...old.settings, [feature]: value.settings[feature] } }));
-  return h8(
-    import_react9.default.Fragment,
+  return h9(
+    import_react10.default.Fragment,
     null,
-    h8("p", { className: "lpa-note" }, p.t("editingSession"), ": ", h8("code", null, sessionId)),
-    !allowed ? h8("p", { className: "lpa-note" }, p.t("access")) : null,
-    error ? h8("p", { className: "lpa-error", role: "alert" }, p.t(errorKey(error))) : null,
-    !host && !error ? h8("p", { role: "status" }, p.t("loading")) : null,
-    host ? h8("div", { className: "lpa-settings-cards" }, ["suggest", "enhance"].map((feature) => h8(FeatureSettings, { key: feature, feature, host, sessionId, p, allowed, onSaved }))) : null
+    h9("p", { className: "lpa-note" }, p.t("editingSession"), ": ", h9("code", null, sessionId)),
+    !allowed ? h9("p", { className: "lpa-note" }, p.t("access")) : null,
+    error ? h9("p", { className: "lpa-error", role: "alert" }, p.t(errorKey(error))) : null,
+    !host && !error ? h9("p", { role: "status" }, p.t("loading")) : null,
+    host ? h9("div", { className: "lpa-settings-cards" }, ["suggest", "enhance"].map((feature) => h9(FeatureSettings, { key: feature, feature, host, sessionId, p, allowed, onSaved }))) : null
   );
 }
 function SettingsPage(p) {
-  const target = import_react9.default.useSyncExternalStore(p.targetSource.subscribe, p.targetSource.getSnapshot, p.targetSource.getSnapshot);
-  return h8(
+  const target = import_react10.default.useSyncExternalStore(p.targetSource.subscribe, p.targetSource.getSnapshot, p.targetSource.getSnapshot);
+  return h9(
     "section",
     { className: "lpa lpa-settings-page", "aria-label": p.t("title") },
-    h8("header", { className: "lpa-settings-header" }, h8("h1", null, p.t("title")), h8("button", { type: "button", className: "lpa-button", onClick: p.returnToConversation }, p.t("returnConversation"))),
-    h8("p", { className: "lpa-note" }, p.t("sessionScope")),
-    target.sessionId ? h8(SessionSettings, { key: target.sessionId, sessionId: target.sessionId, p }) : h8("p", { role: "status" }, p.t("chooseSession")),
-    h8(UpdatePanel, { t: p.t })
+    h9("header", { className: "lpa-settings-header" }, h9("h1", null, p.t("title")), h9("button", { type: "button", className: "lpa-button", onClick: p.returnToConversation }, p.t("returnConversation"))),
+    h9("p", { className: "lpa-note" }, p.t("sessionScope")),
+    target.sessionId ? h9(SessionSettings, { key: target.sessionId, sessionId: target.sessionId, p }) : h9("p", { role: "status" }, p.t("chooseSession")),
+    h9(UpdatePanel, { t: p.t })
   );
 }
-var import_react9, h8;
+var import_react10, h9;
 var init_settings_page = __esm({
   "assist/client/settings-page.js"() {
     init_update_panel();
-    import_react9 = __toESM(require("react"), 1);
+    import_react10 = __toESM(require("react"), 1);
     init_settings();
     init_runtime();
     init_api();
     init_settings_page_state();
-    h8 = import_react9.default.createElement;
+    h9 = import_react10.default.createElement;
   }
 });
 
@@ -1696,10 +2121,10 @@ __export(client_exports, {
   installAssist: () => installAssist
 });
 function AssistIcon({ size = 20 }) {
-  return h9("svg", { width: size, height: size, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: 1.7, "aria-hidden": true }, h9("path", { d: "M4 5h10M4 10h7M4 15h6M14 4v4m-2-2h4M17 10l3 3-7 7H10v-3Z" }));
+  return h10("svg", { width: size, height: size, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: 1.7, "aria-hidden": true }, h10("path", { d: "M4 5h10M4 10h7M4 15h6M14 4v4m-2-2h4M17 10l3 3-7 7H10v-3Z" }));
 }
 function SettingsSurface(p) {
-  return h9(import_react10.default.Fragment, null, h9("style", null, css), h9(SettingsPage, p));
+  return h10(import_react11.default.Fragment, null, h10("style", null, css), h10(SettingsPage, p));
 }
 function installAssist(ctx) {
   ctx.effect(() => ctx.locale.register(NS, dictionaries));
@@ -1725,15 +2150,15 @@ function installAssist(ctx) {
     return dictionaries[language]?.title ?? (language.startsWith("zh") ? dictionaries.zh.title : dictionaries.en.title);
   };
   ctx.slots.inject("sidebar.panellist", () => ctx.slots.register({ name: "sidebar.panellist", id: "local-prompt-assist", order: 40, label, locale: NS }, AssistIcon));
-  ctx.slots.inject("main", () => ctx.slots.register({ name: "main", key: "local-prompt-assist", locale: NS, inject: () => ({ assistSend, targetSource, returnToConversation: () => ctx.layout.selectPanel(null), refreshAssist: (id) => ctx.sessions.refreshProjections(id) }) }, SettingsSurface));
+  ctx.slots.inject("main", () => ctx.slots.register({ name: "main", key: "local-prompt-assist", locale: NS, inject: () => ({ assistSend, targetSource, returnToConversation: () => ctx.layout.selectPanel(null), refreshAssist: (id2) => ctx.sessions.refreshProjections(id2) }) }, SettingsSurface));
   ctx.slots.inject("conversation.input.right", () => ctx.slots.register({ name: "conversation.input.right", id: "local-prompt-enhance-action", order: 1005, label: dictionaries.en.enhance, locale: NS, inject: inject2 }, EnhanceButton));
   ctx.slots.inject("conversation.input.right", () => ctx.slots.register({ name: "conversation.input.right", id: "local-next-question-action", order: 1010, label: dictionaries.en.suggest, locale: NS, inject: inject2 }, SuggestButton));
   ctx.slots.inject("conversation.input.dock", () => ctx.slots.register({ name: "conversation.input.dock", id: "local-prompt-assist-results", order: 50, label, locale: NS, inject: inject2 }, AssistPanel));
 }
-var import_react10, h9;
+var import_react11, h10;
 var init_client = __esm({
   "assist/client/index.js"() {
-    import_react10 = __toESM(require("react"), 1);
+    import_react11 = __toESM(require("react"), 1);
     init_enhance_action();
     init_enhance_button();
     init_suggest_button();
@@ -1744,7 +2169,7 @@ var init_client = __esm({
     init_settings_page();
     init_style();
     init_settings_target();
-    h9 = import_react10.default.createElement;
+    h10 = import_react11.default.createElement;
   }
 });
 
@@ -1764,8 +2189,8 @@ init_identity();
 
 // client-fast-core.js
 function createFast(require2) {
-  let React11;
-  let h10;
+  let React12;
+  let h11;
   const NS2 = "local-openai-fast";
   const quietCommandNames2 = Object.freeze(["openai-fast", "openai-fast-ui-health"]);
   function HiddenFastCommand2() {
@@ -1860,8 +2285,8 @@ function createFast(require2) {
       .local-openai-fast__error{position:absolute;bottom:34px;right:0;max-width:240px;width:max-content;padding:8px 10px;border:1px solid var(--dsw-alias-border-l2);border-radius:7px;background:var(--dsw-alias-bg-overlay);color:var(--dsw-alias-state-error-primary);font-size:12px;line-height:18px;z-index:20}
     `;
   function useDefaultSelection(remote) {
-    const [selection, setSelection] = React11.useState(null);
-    React11.useEffect(() => {
+    const [selection, setSelection] = React12.useState(null);
+    React12.useEffect(() => {
       let active = true;
       remote.session.modelCatalog().then((result) => {
         if (active && result.ok) setSelection(result.value.default);
@@ -1874,24 +2299,24 @@ function createFast(require2) {
     return selection;
   }
   function FastToggle(props) {
-    const fastState = React11.useSyncExternalStore(props.fastSource.subscribe, props.fastSource.getSnapshot, props.fastSource.getSnapshot);
-    const modelState = React11.useSyncExternalStore(props.modelSource.subscribe, props.modelSource.getSnapshot, props.modelSource.getSnapshot);
+    const fastState = React12.useSyncExternalStore(props.fastSource.subscribe, props.fastSource.getSnapshot, props.fastSource.getSnapshot);
+    const modelState = React12.useSyncExternalStore(props.modelSource.subscribe, props.modelSource.getSnapshot, props.modelSource.getSnapshot);
     const selected = modelState?.next ?? null;
     const defaultSelection = useDefaultSelection(props.remote);
-    const sessionState = React11.useSyncExternalStore(props.sessionSource.subscribe, props.sessionSource.getSnapshot, props.sessionSource.getSnapshot);
+    const sessionState = React12.useSyncExternalStore(props.sessionSource.subscribe, props.sessionSource.getSnapshot, props.sessionSource.getSnapshot);
     const unavailable = Boolean(sessionState?.subagent) || sessionState?.removed === true;
     const allowed = props.useAccess("commands/execute");
     const { visible, enabled } = derivePresentation2(fastState, selected, defaultSelection);
-    const [interaction, setInteraction] = React11.useState({ enabled: null, pending: false });
-    const [error, setError] = React11.useState("");
-    const alive = React11.useRef(true);
-    React11.useEffect(() => {
+    const [interaction, setInteraction] = React12.useState({ enabled: null, pending: false });
+    const [error, setError] = React12.useState("");
+    const alive = React12.useRef(true);
+    React12.useEffect(() => {
       alive.current = true;
       return () => {
         alive.current = false;
       };
     }, []);
-    const controller = React11.useMemo(() => createToggleController2({
+    const controller = React12.useMemo(() => createToggleController2({
       initial: enabled,
       send: async (next) => {
         const result = await props.remote.commands.execute(
@@ -1913,7 +2338,7 @@ function createFast(require2) {
         });
       }
     }), [props.remote, props.sessionId]);
-    React11.useEffect(() => controller.sync(enabled), [controller, enabled]);
+    React12.useEffect(() => controller.sync(enabled), [controller, enabled]);
     const checked = interaction.enabled ?? enabled;
     if (!visible || unavailable) return null;
     function toggle() {
@@ -1921,11 +2346,11 @@ function createFast(require2) {
       controller.toggle().catch(() => {
       });
     }
-    return h10(
+    return h11(
       "span",
       { className: "local-openai-fast" },
-      h10("style", null, css2),
-      h10("button", {
+      h11("style", null, css2),
+      h11("button", {
         type: "button",
         role: "switch",
         className: "local-openai-fast__button",
@@ -1935,10 +2360,10 @@ function createFast(require2) {
         disabled: !allowed,
         title: props.t(interaction.pending ? "saving" : checked ? "on" : "off"),
         onClick: toggle
-      }, h10(
+      }, h11(
         "svg",
         { viewBox: "0 0 20 20", width: 14, height: 14, fill: "none", "aria-hidden": true },
-        h10("path", {
+        h11("path", {
           d: "M11.5 2 4 11h5l-.5 7L16 8h-5l.5-6Z",
           stroke: "currentColor",
           strokeWidth: 1.5,
@@ -1946,7 +2371,7 @@ function createFast(require2) {
           fill: checked ? "currentColor" : "none"
         })
       ), props.t("label")),
-      error ? h10("span", { role: "alert", className: "local-openai-fast__error" }, error) : null
+      error ? h11("span", { role: "alert", className: "local-openai-fast__error" }, error) : null
     );
   }
   return {
@@ -1957,8 +2382,8 @@ function createFast(require2) {
     HiddenFastCommand: HiddenFastCommand2,
     inject: ["slots", "locale", "sessions", "remote", "remote.commands", "remote.session"],
     apply(ctx) {
-      React11 = require2("react");
-      h10 = React11.createElement;
+      React12 = require2("react");
+      h11 = React12.createElement;
       ctx.effect(() => ctx.locale.register(NS2, dictionaries2));
       ctx.slots.inject("conversation.chat.commandview", () => quietCommandNames2.map((key) => ctx.slots.register({ name: "conversation.chat.commandview", key }, HiddenFastCommand2)));
       const readyBindings = /* @__PURE__ */ new WeakSet();

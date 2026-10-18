@@ -1,3 +1,4 @@
+import {installOnlineUpdateHost,operationSchema} from './online-host.js';
 import manifest from "../package.json" with { type: "json" };
 import { UpdateService, INSTALL_SPEC } from "./service.js";
 
@@ -30,16 +31,21 @@ export function installUpdateHost(ctx, options = {}) {
     // Cancel before awaiting route draining, so unload never waits for the network deadline.
     return async () => { service.dispose(); await unregister(); };
   });
+  const online=installOnlineUpdateHost(ctx,{...options.online,updates:service,currentVersion:manifest.version});
   ctx.tools.register({
     name: "prompt_assist_updates",
-    description: "Read cached plugin update status without networking, or check GitHub for the latest stable release only when the user explicitly requests an update check. Never installs, downloads release assets, or upgrades anything.",
+    description: "Read cached release or online-update task status. Check GitHub only when the user explicitly requests it. Never confirms or starts an installation.",
     parameters: { type: "object", properties: {
-      action: { type: "string", enum: ["status", "check"], description: "status reads cached data only; check fetches stable-release metadata from GitHub." },
+      action: { type: "string", enum: ["status", "check", "operation"], description: "status reads the release cache; check fetches GitHub metadata; operation reads online-update task status without networking." },
     }, required: ["action"], additionalProperties: false },
-    output: { schema: outputSchema, render: (_args, value) => [{ type: "text", text: JSON.stringify(value) }] },
+    output: { schema: {oneOf:[outputSchema,{type:"object",properties:{currentVersion:{type:"string"},available:{type:"boolean"},reason:nullable("string"),operation:{oneOf:[operationSchema,{type:"null"}]}},required:["currentVersion","available","reason","operation"],additionalProperties:false}]}, render: (_args, value) => [{ type: "text", text: JSON.stringify(value) }] },
     timeoutMs: 12000, isConcurrencySafe: () => true,
     execute: async (args, exec) => {
       exec?.signal?.throwIfAborted();
+      if (args?.action === "operation") {
+        try { return await online.status(); }
+        catch { return {currentVersion:manifest.version,available:false,reason:"state-unavailable",operation:null}; }
+      }
       if (args?.action === "status") return service.status();
       if (args?.action === "check") return service.check();
       throw Object.assign(new Error("Invalid update action"), { code: "invalid-action" });

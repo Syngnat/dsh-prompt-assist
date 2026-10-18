@@ -17,7 +17,7 @@ function cancelBody(response) {
 }
 
 /** Never buffer an unbounded response or expose GitHub response text to callers. */
-async function boundedJSON(response, signal) {
+export async function boundedJSON(response, signal) {
   const declared = response.headers.get("content-length");
   if (declared !== null && (!/^\d+$/u.test(declared) || Number(declared) > MAX_RESPONSE_BYTES)) throw failure("invalid-response");
   const reader = response.body?.getReader();
