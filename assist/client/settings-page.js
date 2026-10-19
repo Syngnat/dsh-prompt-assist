@@ -31,7 +31,7 @@ function FeatureSettings({feature,host,sessionId,p,allowed,onSaved}){
   finally{request.finish();if(request.valid()){inFlight.current=false;setSaving(false);}}
  }
  const noticeValue=notice??options.error;
- return h('section',{className:'lpa-feature','aria-label':p.t(feature)},
+ return h('section',{className:'lpa-feature lpa-card','aria-label':p.t(feature)},
   h('h2',{className:'lpa-feature-title'},p.t(feature)),
   h('p',{className:'lpa-note'},p.t(feature==='suggest'?'suggestContext':'enhanceOriginal')),
   h(Settings,{t:p.t,config:draft.config,catalog:options.catalog,capabilities:options.capabilities,allowed,saving,onChange:edit,save}),
@@ -49,7 +49,7 @@ function SessionSettings({sessionId,p}){
  },[sessionId,p.assistSend]);
  const onSaved=(feature,value)=>setHost(old=>({...old,settings:{...old.settings,[feature]:value.settings[feature]}}));
  return h(React.Fragment,null,
-  h('p',{className:'lpa-note'},p.t('editingSession'),': ',h('code',null,sessionId)),
+  h('p',{className:'lpa-note'},p.t('editingSession'),': ',h('code',{className:'lpa-chip lpa-chip--readonly'},sessionId)),
   !allowed?h('p',{className:'lpa-note'},p.t('access')):null,
   error?h('p',{className:'lpa-error',role:'alert'},errorText(error,p.t)):null,
   !host&&!error?h('p',{role:'status'},p.t('loading')):null,
@@ -58,11 +58,15 @@ function SessionSettings({sessionId,p}){
 
 export function SettingsPage(p){
  const target=React.useSyncExternalStore(p.targetSource.subscribe,p.targetSource.getSnapshot,p.targetSource.getSnapshot);
- return h('section',{className:'lpa lpa-settings-page','aria-label':p.t('title')},
-  h('header',{className:'lpa-settings-header'},h('h1',null,p.t('title')),h('button',{type:'button',className:'lpa-button',onClick:p.returnToConversation},p.t('returnConversation'))),
-  h(EnablementPanel,{globalSource:p.globalSource,t:p.t}),
-  h('p',{className:'lpa-note'},p.t('sessionScope')),
-  target.sessionId?h(SessionSettings,{key:target.sessionId,sessionId:target.sessionId,p}):h('p',{role:'status'},p.t('chooseSession')),
-  p.connection?h(PriorityPanel,{connection:p.connection,t:p.t,onChanged:()=>{if(target.sessionId)void p.refreshAssist(target.sessionId).catch(()=>{});}}):null,
-   h(UpdatePanel,{t:p.t}));
+ return h("section",{className:"lpa lpa-settings-page","aria-label":p.t("title")},
+  h("header",{className:"lpa-settings-header"},
+   h("div",{className:"lpa-settings-heading"},h("h1",null,p.t("title")),h("p",{className:"lpa-note lpa-settings-subtitle"},p.t("settings.subtitle"))),
+   h("button",{type:"button",className:"lpa-button",onClick:p.returnToConversation},p.t("returnConversation"))),
+  h("div",{className:"lpa-settings-sections"},
+   h(EnablementPanel,{globalSource:p.globalSource,t:p.t}),
+   h("section",{className:"lpa-session-panel lpa-card","aria-label":p.t("settings.sessionSection")},
+    h("header",{className:"lpa-card-header"},h("h2",{className:"lpa-card-title"},p.t("settings.sessionSection")),h("p",{className:"lpa-note"},p.t("sessionScope"))),
+    target.sessionId?h(SessionSettings,{key:target.sessionId,sessionId:target.sessionId,p}):h("p",{className:"lpa-note lpa-empty-state",role:"status"},p.t("settings.sessionEmpty"))),
+   p.connection?h(PriorityPanel,{connection:p.connection,t:p.t,onChanged:()=>{if(target.sessionId)void p.refreshAssist(target.sessionId).catch(()=>{});}}):null,
+   h(UpdatePanel,{t:p.t})));
 }

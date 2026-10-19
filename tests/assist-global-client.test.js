@@ -28,7 +28,7 @@ test('settings shows two profile switches even with no selected session',async()
  const React=await import('react');const {renderToStaticMarkup}=await import('react-dom/server');const {SettingsPage}=await import('../assist/client/settings-page.js');
  const target={sessionId:null},global={data:snapshot(1,true,false),connected:true,loading:false,pending:null,readError:null,writeError:null,saved:null};
  const html=renderToStaticMarkup(React.createElement(SettingsPage,{t:key=>key,targetSource:{getSnapshot:()=>target,subscribe:()=>()=>{}},globalSource:{getSnapshot:()=>global,subscribe:()=>()=>{},setEnabled(){}},returnToConversation(){}}));
- assert.ok(html.includes('global.title'));assert.equal((html.match(/type="checkbox"/g)||[]).length,2);assert.ok(html.includes('chooseSession'));
+ assert.ok(html.includes('global.title'));assert.equal((html.match(/type="checkbox"/g)||[]).length,2);assert.ok(html.includes('settings.sessionEmpty'));
 });
 
 import {createEnablementSource,normalizeEnablement,mergeGlobalSettings,createEnablementObserver} from '../assist/client/enablement-source.js';

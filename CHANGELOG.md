@@ -2,6 +2,19 @@
 
 [English](<README.md>) | [简体中文](<README.zh-CN.md>)
 
+## 1.2.21 — 设置页卡片式重排 / Settings page laid out as cards
+
+- Rebuild the Prompt assist settings page as four consistent cards — global switches, session parameters, Priority authorization, and version/updates — each with its own title and one-line explanation instead of one flat column of bordered boxes.
+- Global switches become real switch rows: label plus a short hint on the left, a 40×22 toggle on the right, with the long charge/migration notes moved into a muted footnote.
+- Session parameters get an empty state when no session is selected, and the session id is shown as a chip.
+- Priority authorization lists built-in and self-authorized providers as chips, and groups the candidate selector, risk consent and actions into one action block.
+- The version card shows three statistic tiles (running version, latest stable, last check), keeps a single availability banner, moves the privacy/cache notes into a collapsed details block, and hosts the online update area as a borderless subsection — the previous nested double card is gone.
+- Responsive rules collapse statistics and feature cards to one column at ≤720px; the composer-side preview panel is unchanged, and no button text, disabled condition, ARIA attribute or request flow was altered.
+- The switch is drawn without absolute positioning, keeping the existing safeguard that the stylesheet never creates an overlay.
+- Add layout regressions (four cards, switch semantics, empty state, stat tiles, subsection and install row) and update the assertions that referenced the previous flat markup: 681 offline tests pass.
+
+中文：提示词辅助设置页改为四张统一卡片（全局开关、会话参数、Priority 授权、版本与更新），各自带标题与一行说明；开关改为真实 checkbox 的开关行，长说明移到底部脚注；未选会话显示空状态，会话 ID 用 chip；授权区用 chip 列表并集中动作行；版本区增加三块统计、单一更新横幅、可折叠隐私说明，并把在线更新改为无边框子区（不再双层卡片）。≤720px 单列。按钮文案、禁用条件、aria 与请求流程均未改动；开关不使用绝对定位，保留“样式表不产生浮层”的既有约束。
+
 ## 1.2.20 — 过期的更新记录默认折叠
 
 - A terminal update record whose verified version differs from the running version is now demoted into a collapsed **Earlier update record** block. The main view no longer shows an old task's `1.2.12 / 1.2.13` next to the running version, so it cannot be mistaken for the current release.

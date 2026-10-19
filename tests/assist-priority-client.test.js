@@ -24,7 +24,8 @@ const render = props => renderToStaticMarkup(React.createElement(panel().Priorit
 
 test("SSR separates built-in and self authorization and refuses non-OpenAI candidates", () => {
   const html = render({candidates: [candidate, {id: "deepseek", name: "Other", configured: false, openAIModels: ["deepseek-chat"]}]});
-  assert.match(html, /class="lpa-feature"/);
+  // Class tokens may grow (for example a card shell); assert membership, not the exact attribute.
+  assert.match(html, /class="[^"]*\blpa-feature\b[^"]*"/);
   assert.match(html, /aria-label="priority.title"/);
   assert.match(html, /priority.configured/);
   assert.match(html, /<code>openai<\/code>/);

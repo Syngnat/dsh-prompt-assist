@@ -28,34 +28,34 @@ export function PriorityPanelContent({state, candidates = [], consent = false, n
   const available = availableCandidates(candidates, state);
   const selection = available.find(item => item.id === selected);
   const raw = Array.isArray(candidates) ? candidates : [];
-  // Built-in IDs are already authorized; show their recognized models so users can see why they are
-  // not offered again instead of staring at an empty selector.
   const builtinModels = new Map(raw.filter(item => item && item.configured === true && Array.isArray(item.openAIModels))
     .map(item => [item.id, item.openAIModels.filter(model => typeof model === "string" && isOpenAIModel(model)).slice(0, 8)]));
   const button = (key, action, disabled = false, extra = {}) => h("button",
     {type: "button", className: "lpa-button", onClick: action, disabled, ...extra}, t(key));
-  return h("section", {className: "lpa-feature", "aria-label": t("priority.title"), "aria-busy": Boolean(pending)},
-    h("h3", {className: "lpa-feature-title"}, t("priority.title")),
-    h("p", {className: "lpa-note"}, t("priority.scope")),
+  return h("section", {className: "lpa-feature lpa-card", "aria-label": t("priority.title"), "aria-busy": Boolean(pending)},
+    h("header", {className: "lpa-card-header"}, h("h2", {className: "lpa-feature-title lpa-card-title"}, t("settings.prioritySection")),
+      h("p", {className: "lpa-note"}, t("priority.scope"))),
     h("div", {className: "lpa-field"}, h("strong", null, t("priority.configured")),
-      configured.map(id => h("p", {className: "lpa-note", key: id}, h("code", null, id),
-        builtinModels.get(id)?.length ? " · " + t("priority.visibleModels") + ": " + builtinModels.get(id).join(", ") : null))),
+      h("div", {className: "lpa-chip-list"}, configured.map(id => h("div", {className: "lpa-provider-item", key: id},
+        h("span", {className: "lpa-note lpa-chip lpa-chip--readonly"}, h("code", null, id)),
+        builtinModels.get(id)?.length ? h("span", {className: "lpa-note lpa-chip-models"}, " · " + t("priority.visibleModels") + ": " + builtinModels.get(id).join(", ")) : null)))),
     h("div", {className: "lpa-field"}, h("strong", null, t("priority.authorized")),
-      authorized.map(id => h("div", {className: "lpa-row", key: id}, h("code", null, id),
-        button("priority.revoke", () => onRevoke?.(id), !state || Boolean(pending), {"aria-label": t("priority.revoke") + ": " + id}))),
+      h("div", {className: "lpa-chip-list"}, authorized.map(id => h("span", {className: "lpa-row lpa-chip", key: id}, h("code", null, id),
+        button("priority.revoke", () => onRevoke?.(id), !state || Boolean(pending), {"aria-label": t("priority.revoke") + ": " + id, className: "lpa-button lpa-chip-action"})))),
       state && !authorized.length ? h("p", {className: "lpa-note"}, t("priority.none")) : null),
-    available.length ? h("label", {className: "lpa-field"}, t("priority.candidates"),
-      h("select", {value: selection?.id ?? "", disabled: !state || Boolean(pending),
-        onChange: event => onSelect?.(event.target.value)},
-        h("option", {value: ""}, t("priority.choose")),
-        available.map(item => h("option", {key: item.id, value: item.id}, item.name + " (" + item.id + ")")))) : null,
-    state && !available.length ? h("p", {className: "lpa-note"}, t(raw.length ? "priority.allAuthorized" : "priority.noProviderModels")) : null,
-    selection ? h("p", {className: "lpa-note"}, t("priority.exampleModels"), ": ", selection.openAIModels.join(", ")) : null,
-    h("label", {className: "lpa-check"}, h("input", {type: "checkbox", checked: consent === true,
-      disabled: !state || Boolean(pending), onChange: event => onConsent?.(event.target.checked)}), t("priority.consent")),
-    h("div", {className: "lpa-row"},
-      button("priority.authorize", () => onAuthorize?.(selected, consent), !state || Boolean(pending) || consent !== true || !selection),
-      button("priority.reload", () => onReload?.(), Boolean(pending))),
+    h("div", {className: "lpa-card-actions lpa-priority-actions"},
+      available.length ? h("label", {className: "lpa-field"}, t("priority.candidates"),
+        h("select", {value: selection?.id ?? "", disabled: !state || Boolean(pending),
+          onChange: event => onSelect?.(event.target.value)},
+          h("option", {value: ""}, t("priority.choose")),
+          available.map(item => h("option", {key: item.id, value: item.id}, item.name + " (" + item.id + ")")))) : null,
+      state && !available.length ? h("p", {className: "lpa-note"}, t(raw.length ? "priority.allAuthorized" : "priority.noProviderModels")) : null,
+      selection ? h("p", {className: "lpa-note"}, t("priority.exampleModels"), ": ", selection.openAIModels.join(", ")) : null,
+      h("label", {className: "lpa-check"}, h("input", {type: "checkbox", checked: consent === true,
+        disabled: !state || Boolean(pending), onChange: event => onConsent?.(event.target.checked)}), t("priority.consent")),
+      h("div", {className: "lpa-row lpa-action-buttons"},
+        button("priority.authorize", () => onAuthorize?.(selected, consent), !state || Boolean(pending) || consent !== true || !selection),
+        button("priority.reload", () => onReload?.(), Boolean(pending)))),
     pending || (!state && !notice) ? h("p", {className: "lpa-note", role: "status"}, t("priority.loading")) : null,
     notice ? h("p", {className: notice === "priority.error" ? "lpa-error" : "lpa-note", role: "status"}, t(notice)) : null);
 }

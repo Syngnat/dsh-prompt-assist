@@ -9,12 +9,12 @@ export function UpdatePanelContent({snapshot = initialUpdateSnapshot(), t, onChe
   const data = snapshot.data;
   const available = view.status === "update-available";
   const button = (key, onClick, disabled = false) => h("button", {type: "button", className: "lpa-button", onClick, disabled}, t(key));
-  const field = (label, value, highlight = false) => h("div", {className: "lpa-update-field" + (highlight ? " lpa-update-field--highlight" : ""), key: label},
+  const field = (label, value, highlight = false) => h("div", {className: "lpa-update-field lpa-stat" + (highlight ? " lpa-update-field--highlight lpa-stat--highlight" : ""), key: label},
     h("dt", null, t(label)), h("dd", null, value));
-  return h("section", {className: "lpa-update-panel", "aria-label": t("updates.title")},
-    h("h2", {className: "lpa-update-title"}, t("updates.title")),
-    h("p", {className: "lpa-note"}, t("updates.readOnly")),
-    h("dl", {className: "lpa-update-versions"},
+  return h("section", {className: "lpa-update-panel lpa-card", "aria-label": t("updates.title")},
+    h("header", {className: "lpa-card-header"}, h("h2", {className: "lpa-update-title lpa-card-title"}, t("settings.updatesSection")),
+      h("p", {className: "lpa-note"}, t("updates.readOnly"))),
+    h("dl", {className: "lpa-update-versions lpa-stats"},
       field("updates.installedVersion", data?.currentVersion ?? t("updates.unknown")),
       field("updates.latestVersion", data?.latestVersion ?? t("updates.unknown"), available),
       field("updates.checkedAt", view.checkedAt ? h("time", {dateTime: view.checkedAt}, displayCheckedAt(new Date(view.checkedAt).getTime()) ?? view.checkedAt) : t("updates.notChecked"))),
@@ -23,15 +23,17 @@ export function UpdatePanelContent({snapshot = initialUpdateSnapshot(), t, onChe
     h("p", {className: view.status === "error" ? "lpa-error" : "lpa-note",
       role: view.status === "error" ? "alert" : "status", "aria-live": "polite", "aria-atomic": true},
       t(view.message), view.status === "error" && view.error ? " " + t("updates.error." + view.error) : null),
-    h("div", {className: "lpa-row"},
+    h("div", {className: "lpa-row lpa-card-actions"},
       button(snapshot.pending === "check" ? "updates.checkingButton" : "updates.checkButton", onCheck, snapshot.pending === "check"),
       snapshot.pending ? button("updates.cancel", onCancel) : null,
       snapshot.localError ? button("updates.reloadStatus", onReload) : null,
       view.releaseUrl ? h("a", {className: "lpa-button", href: view.releaseUrl, target: "_blank", rel: "noopener noreferrer"}, t("updates.releaseLink")) : null),
-    h("p", {className: "lpa-note"}, t("updates.privacy")),
-    h("p", {className: "lpa-note"}, t("updates.cacheNote")),
+    h("details", {className: "lpa-footnote-details"}, h("summary", null, t("settings.advanced")),
+      h("p", {className: "lpa-note"}, t("updates.privacy")),
+      h("p", {className: "lpa-note"}, t("updates.cacheNote"))),
+    h("div", {className: "lpa-divider"}),
     children,
-    h("div", {className: "lpa-update-install"},
+    h("div", {className: "lpa-update-install lpa-install-row"},
       h("span", null, t("updates.installAddress")), h("code", null, INSTALL_SPEC),
       button("updates.copy", onCopy), copyStatus ? h("span", {className: "lpa-note", role: "status"}, t("updates." + copyStatus)) : null),
     h("details", {className: "lpa-update-guide"}, h("summary", null, t("updates.manualUpgrade")),
@@ -64,5 +66,7 @@ export function UpdatePanel({t, fetcher = globalThis.fetch}) {
   return h(UpdatePanelContent, {snapshot, t, copyStatus, onCopy: copy,
     onCheck: () => {void controller.check();}, onReload: () => {void controller.load();}, onCancel: () => controller.cancel()},
     h(OnlineUpdatePanel, {t, fetcher, currentVersion: snapshot.data?.currentVersion ?? null,
+      // The enclosing card already announces the available release; the subsection must not repeat it.
+      showAvailability: false,
       updateAvailable: snapshot.data?.status === "update-available"}));
 }

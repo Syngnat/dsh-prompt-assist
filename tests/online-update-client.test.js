@@ -135,6 +135,10 @@ for (const lang of ["zh", "en"]) {
     assert.ok(!current.includes(dictionaries[lang]["online.recordStale"]));
     assert.doesNotMatch(current, /lpa-update-history/);
     assert.ok(current.includes(dictionaries[lang]["online.phase.updated"]));
+    // Embedded in the version card, the availability banner belongs to the parent and must not repeat.
+    const available = {...initialOnlineSnapshot(), data: status()};
+    assert.match(render(available, lang), /lpa-update-banner/);
+    assert.doesNotMatch(render(available, lang, {showAvailability: false}), /lpa-update-banner/);
     // Confirmation expiry is readable too, while the machine-readable attribute stays exact.
     const preparation = render({...initialOnlineSnapshot(), data: status(), preparation: prep()}, lang);
     assert.match(preparation, /<time dateTime="[^"]+">\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2} UTC<\/time>/);
@@ -298,4 +302,14 @@ for(const lang of ['en','zh'])test('SSR '+lang+' gives available updates and con
  assert.match(review,/<button[^>]*class="lpa-button lpa-button--primary lpa-button--danger"[^>]*disabled=""/);
  for(const patch of [{data:status(op())},{data:status(op({phase:'unknown',terminal:true}))},{uncertain:true},{recordLost:true},{pending:'confirm'},{data:status(null,{available:false})}])assert.doesNotMatch(render({...base,...patch},lang),/class="lpa-update-banner"/);
  assert.doesNotMatch(render(base,lang,{updateAvailable:false}),/class="lpa-update-banner"/);
+});
+
+test("online update is an unboxed subsection with unchanged confirmation semantics", () => {
+  const base={...initialOnlineSnapshot(),data:status(),preparation:prep()};
+  const html=render(base);
+  assert.match(html,/<section class="lpa-subsection lpa-online-update" aria-label="[^"]+" aria-busy="false"/);
+  assert.doesNotMatch(html,/<section class="[^"]*lpa-update-panel/);
+  assert.match(html,/lpa-card-actions/);
+  assert.match(html,/<button[^>]*class="lpa-button lpa-button--primary lpa-button--danger"[^>]*disabled=""/);
+  assert.match(render({...base,consent:true}),/<button[^>]*class="lpa-button lpa-button--primary lpa-button--danger"(?![^>]*disabled)[^>]*>/);
 });

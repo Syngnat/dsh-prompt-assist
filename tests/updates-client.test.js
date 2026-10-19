@@ -77,9 +77,11 @@ test("settings page includes the global updates section with no selected session
   const target = {sessionId: null};
   const html = renderToStaticMarkup(React.createElement(SettingsPage, {t: tFor("en"),
     targetSource: {getSnapshot: () => target, subscribe: () => () => {}}, returnToConversation() {}}));
-  assert.ok(html.includes(dictionaries.en.chooseSession));
+  const empty = dictionaries.en["settings.sessionEmpty"];
+  assert.ok(html.includes(empty));
   assert.ok(html.includes(dictionaries.en["updates.title"]));
-  assert.ok(html.indexOf(dictionaries.en.chooseSession) < html.indexOf("class=\"lpa-update-panel\""));
+  const updateSection = html.search(/<section[^>]*class="[^"]*\blpa-update-panel\b/);
+  assert.ok(updateSection > html.indexOf(empty));
 });
 
 test("real SSR does not mount effects or make a check request", () => {
