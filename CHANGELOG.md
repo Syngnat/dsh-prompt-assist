@@ -2,6 +2,15 @@
 
 [English](<README.md>) | [简体中文](<README.zh-CN.md>)
 
+## 1.2.22 — 授权列表显示供应商名称与 ID / Provider names beside IDs
+
+- The Priority authorization lists now show the provider's display name beside its exact ID — for example `CPA · cpa` — because model settings identify a provider by name, while authorization is recorded by ID. The candidate selector already used `name (id)` and is unchanged.
+- The Host supplies these names from the live LLM registry, restricted to the providers the receipt actually lists; a missing, failing or identical name degrades to the ID alone and never fails the authorization state. Names are length-capped and stripped of control characters.
+- The Fast control's blocked reason uses the same pair (`CPA (cpa)`) so the tooltip matches what the settings page shows.
+- Add regressions for name disclosure scope, sanitisation, identical-name omission, a failing registry, malformed client-side name maps, and the tooltip label: 685 offline tests pass.
+
+中文：Priority 授权列表改为同时显示供应商名称与准确 ID（例如 `CPA · cpa`），与模型设置里先看到名称的习惯对齐；授权本身仍按 ID 记录。名称由 Host 从实时的 LLM 注册表读取，且只包含该回执真正列出的供应商；名称缺失、读取失败或与 ID 相同时自动退化为只显示 ID，不会影响授权状态。Fast 按钮的不可用提示同样显示「名称 (ID)」。
+
 ## 1.2.21 — 设置页卡片式重排 / Settings page laid out as cards
 
 - Rebuild the Prompt assist settings page as four consistent cards — global switches, session parameters, Priority authorization, and version/updates — each with its own title and one-line explanation instead of one flat column of bordered boxes.

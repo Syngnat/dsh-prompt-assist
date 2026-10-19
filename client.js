@@ -76,7 +76,7 @@ function onPriorityChanged(listener) {
   return () => listeners.delete(listener);
 }
 function createPrioritySource(connection) {
-  let snapshot = Object.freeze({ status: "idle", revision: null, authorized: Object.freeze([]), effective: Object.freeze([]) });
+  let snapshot = Object.freeze({ status: "idle", revision: null, authorized: Object.freeze([]), effective: Object.freeze([]), names: Object.freeze({}) });
   const subscribers = /* @__PURE__ */ new Set();
   let epoch = 0, disposed = false, inflight = null;
   const publish = (next) => {
@@ -105,7 +105,8 @@ function createPrioritySource(connection) {
           status: "ready",
           revision: Number.isSafeInteger(value?.revision) ? value.revision : null,
           authorized: Object.freeze(ids(value?.authorized)),
-          effective: Object.freeze(ids(value?.effective))
+          effective: Object.freeze(ids(value?.effective)),
+          names: displayNames(value?.names)
         });
       } catch {
         if (!disposed && token === epoch) publish({ ...snapshot, status: "error" });
@@ -131,12 +132,16 @@ function createPrioritySource(connection) {
     }
   };
 }
-var listeners, ids;
+var listeners, ids, displayNames;
 var init_priority_source = __esm({
   "assist/client/priority-source.js"() {
     init_identity();
     listeners = /* @__PURE__ */ new Set();
     ids = (value) => Array.isArray(value) ? [...new Set(value.filter((item) => typeof item === "string"))] : [];
+    displayNames = (value) => {
+      if (!value || typeof value !== "object" || Array.isArray(value)) return Object.freeze({});
+      return Object.freeze(Object.fromEntries(Object.entries(value).filter(([id2, name]) => typeof id2 === "string" && id2.length > 0 && id2.length <= 64 && typeof name === "string" && name.length > 0 && name.length <= 80).slice(0, 64)));
+    };
   }
 });
 
@@ -2605,6 +2610,8 @@ function PriorityPanelContent({
   const available = availableCandidates(candidates, state);
   const selection = available.find((item) => item.id === selected);
   const raw = Array.isArray(candidates) ? candidates : [];
+  const names = state?.names && typeof state.names === "object" ? state.names : {};
+  const nameOf = (id2) => typeof names[id2] === "string" && names[id2] && names[id2] !== id2 ? names[id2] : null;
   const builtinModels = new Map(raw.filter((item) => item && item.configured === true && Array.isArray(item.openAIModels)).map((item) => [item.id, item.openAIModels.filter((model) => typeof model === "string" && isOpenAIModel(model)).slice(0, 8)]));
   const button = (key, action, disabled = false, extra = {}) => h10(
     "button",
@@ -2627,7 +2634,12 @@ function PriorityPanelContent({
       h10("div", { className: "lpa-chip-list" }, configured.map((id2) => h10(
         "div",
         { className: "lpa-provider-item", key: id2 },
-        h10("span", { className: "lpa-note lpa-chip lpa-chip--readonly" }, h10("code", null, id2)),
+        h10(
+          "span",
+          { className: "lpa-note lpa-chip lpa-chip--readonly" },
+          nameOf(id2) ? h10("strong", null, nameOf(id2)) : null,
+          h10("code", null, id2)
+        ),
         builtinModels.get(id2)?.length ? h10("span", { className: "lpa-note lpa-chip-models" }, " \xB7 " + t("priority.visibleModels") + ": " + builtinModels.get(id2).join(", ")) : null
       )))
     ),
@@ -2638,6 +2650,7 @@ function PriorityPanelContent({
       h10("div", { className: "lpa-chip-list" }, authorized.map((id2) => h10(
         "span",
         { className: "lpa-row lpa-chip", key: id2 },
+        nameOf(id2) ? h10("strong", null, nameOf(id2)) : null,
         h10("code", null, id2),
         button("priority.revoke", () => onRevoke?.(id2), !state || Boolean(pending), { "aria-label": t("priority.revoke") + ": " + id2, className: "lpa-button lpa-chip-action" })
       ))),
@@ -2685,11 +2698,19 @@ function readState(value) {
   for (const key of ["configured", "authorized", "effective"]) {
     if (!Array.isArray(value[key]) || value[key].some((id2) => typeof id2 !== "string" || !PROVIDER.test(id2))) throw { code: "invalid-response" };
   }
+  const names = {};
+  if (value.names !== void 0 && value.names !== null) {
+    if (typeof value.names !== "object" || Array.isArray(value.names)) throw { code: "invalid-response" };
+    for (const [id2, name] of Object.entries(value.names)) {
+      if (PROVIDER.test(id2) && typeof name === "string" && name.length > 0 && name.length <= 80) names[id2] = name;
+    }
+  }
   return Object.freeze({
     revision: value.revision,
     configured: Object.freeze([...value.configured]),
     authorized: Object.freeze([...value.authorized]),
-    effective: Object.freeze([...value.effective])
+    effective: Object.freeze([...value.effective]),
+    names: Object.freeze(names)
   });
 }
 function createPriorityController(connection, { onChanged } = {}) {
@@ -3412,7 +3433,9 @@ function createFast(require2) {
     React14.useEffect(() => controller.sync(enabled), [controller, enabled]);
     const checked = eligible && (interaction.enabled ?? enabled);
     const provider = (selected ?? defaultSelection)?.provider ?? "";
-    const blocked = reason === "loading" ? props.t(loadFailed ? "loadError" : "loading") : reason === "unsupported-provider" ? props.t("unsupportedProvider") + ": " + provider : !allowed ? props.t("access") : null;
+    const providerName = priorityState?.names?.[provider];
+    const providerLabel = typeof providerName === "string" && providerName && providerName !== provider ? providerName + " (" + provider + ")" : provider;
+    const blocked = reason === "loading" ? props.t(loadFailed ? "loadError" : "loading") : reason === "unsupported-provider" ? props.t("unsupportedProvider") + ": " + providerLabel : !allowed ? props.t("access") : null;
     React14.useEffect(() => {
       if (!blocked) setNotice("");
     }, [blocked]);

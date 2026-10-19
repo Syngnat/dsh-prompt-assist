@@ -16,7 +16,8 @@ test('a Host snapshot becomes the authoritative authorized list', async () => {
     assert.equal(channel, '/api');
     assert.equal(endpoint, 'local-openai-fast.priority');
     assert.deepEqual(payload, {action: 'snapshot'});
-    return {ok: true, value: {revision: 3, configured: ['openai'], authorized: ['syngnat', 'syngnat', 7], effective: ['openai', 'syngnat']}};
+    return {ok: true, value: {revision: 3, configured: ['openai'], authorized: ['syngnat', 'syngnat', 7], effective: ['openai', 'syngnat'],
+      names: {openai: 'OpenAI', syngnat: 'Syngnat', bad: 7, ['x'.repeat(70)]: 'too long id'}}};
   }));
   await source.refresh();
   const state = source.getSnapshot();
@@ -24,7 +25,18 @@ test('a Host snapshot becomes the authoritative authorized list', async () => {
   assert.equal(state.revision, 3);
   assert.deepEqual(state.authorized, ['syngnat']);
   assert.deepEqual(state.effective, ['openai', 'syngnat']);
+  // Display names are optional decoration: valid pairs survive, junk never does.
+  assert.deepEqual(state.names, {openai: 'OpenAI', syngnat: 'Syngnat'});
   assert.equal(calls, 1);
+  source.dispose();
+});
+
+test('a snapshot without usable names still reports the authoritative lists', async () => {
+  const source = createPrioritySource(connectionOf(async () => ({ok: true,
+    value: {revision: 1, configured: ['openai'], authorized: ['proxy'], effective: ['openai', 'proxy'], names: ['not', 'a', 'map']}})));
+  await source.refresh();
+  assert.deepEqual(source.getSnapshot().authorized, ['proxy']);
+  assert.deepEqual(source.getSnapshot().names, {});
   source.dispose();
 });
 

@@ -237,8 +237,12 @@ export function createFast(require) {
       React.useEffect(() => controller.sync(enabled), [controller, enabled]);
       const checked = eligible && (interaction.enabled ?? enabled);
       const provider = (selected ?? defaultSelection)?.provider ?? '';
+      // Model settings lead with the display name, so the reason names both when they are known.
+      const providerName = priorityState?.names?.[provider];
+      const providerLabel = typeof providerName === 'string' && providerName && providerName !== provider
+        ? providerName + ' (' + provider + ')' : provider;
       const blocked = reason === 'loading' ? props.t(loadFailed ? 'loadError' : 'loading')
-        : reason === 'unsupported-provider' ? props.t('unsupportedProvider') + ': ' + provider
+        : reason === 'unsupported-provider' ? props.t('unsupportedProvider') + ': ' + providerLabel
         : !allowed ? props.t('access') : null;
       // A disabled <button> is not hoverable and shows no title in Chromium, so the control stays
       // focusable and clickable: a blocked click explains itself and never sends a command.

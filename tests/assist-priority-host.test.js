@@ -195,10 +195,11 @@ test("close is idempotent, drains accepted writes, rejects new work and owns onl
   gate.resolve(); await pending; await close; assert.equal(f.closed, 1);
 });
 
-async function rpcFixture(t, suppliedStore) {
+async function rpcFixture(t, suppliedStore, suppliedLlm) {
   const { installPriorityRpc, PRIORITY_ENDPOINT } = await import("../assist/priority-transport.js");
   const data = suppliedStore ? { store: suppliedStore } : await opened(t); let route, unregistered = 0;
-  const ctx = { connection: { fetch: { register(value) { route = value; return async () => { unregistered++; }; } } } };
+  const ctx = { get(name) { if (name === "llm") return suppliedLlm; throw Error("must not read " + name); },
+    connection: { fetch: { register(value) { route = value; return async () => { unregistered++; }; } } } };
   const stop = installPriorityRpc(ctx, data.store, ["openai", "openai"]); t.after(stop);
   const envelope = payload => ({ type: "client-request", rpcId: "r1", method: PRIORITY_ENDPOINT, payload });
   const post = (payload, changes = {}, contentType = "application/json") => route.fetch(new Request("http://connection.invalid" + route.path, {
@@ -210,17 +211,40 @@ async function rpcFixture(t, suppliedStore) {
 test("owner RPC receipts include the standard envelope and authoritative configured/authorized/effective sets", async t => {
   const f = await rpcFixture(t); assert.deepEqual(f.route.methods, ["POST"]); assert.equal(f.route.path, "/api/local-openai-fast.priority");
   const first = await f.post({ action: "snapshot" }); assert.equal(first.status, 200);
-  assert.deepEqual(await first.json(), { type: "server-response", rpcId: "r1", result: { ok: true, value: { revision: 0, configured: ["openai"], authorized: [], effective: ["openai"] } } });
+  assert.deepEqual(await first.json(), { type: "server-response", rpcId: "r1", result: { ok: true, value: { revision: 0, configured: ["openai"], authorized: [], effective: ["openai"], names: {} } } });
   const granted = await (await f.post({ action: "authorize", provider: "proxy", consent: true, expectedRevision: 0 })).json();
-  assert.deepEqual(granted.result.value, { revision: 1, configured: ["openai"], authorized: ["proxy"], effective: ["openai", "proxy"] });
+  assert.deepEqual(granted.result.value, { revision: 1, configured: ["openai"], authorized: ["proxy"], effective: ["openai", "proxy"], names: {} });
   const candidates = await (await f.post({ action: "candidates" })).json();
   assert.deepEqual(candidates.result.value.candidates, [{ id: "proxy", name: "GPT proxy", configured: false, openAIModels: ["gpt-4o", "o3"] }]);
   const revoked = await (await f.post({ action: "revoke", provider: "proxy", expectedRevision: 1 })).json();
   assert.equal(revoked.result.value.revision, 2); assert.deepEqual(revoked.result.value.authorized, []); assert.equal(Object.hasOwn(revoked.result.value, "candidates"), false);
 });
 
-test("malformed non-string RPC actions never coerce into a privileged action", async t => {
-  const f = await rpcFixture(t);
+test("receipts carry display names for exactly the providers they list", async t => {
+  const llm = { async listProviders() { return [
+    { id: "openai", name: "OpenAI" },
+    { id: "proxy", name: "GPT\nproxy\tX" },
+    { id: "unrelated", name: "Must not be disclosed" },
+    { id: "same", name: "same" },
+  ]; } };
+  const f = await rpcFixture(t, undefined, llm);
+  const snapshot = (await (await f.post({ action: "snapshot" })).json()).result.value;
+  // Only the configured id is listed, so only its name may travel.
+  assert.deepEqual(snapshot.names, { openai: "OpenAI" });
+  const candidates = (await (await f.post({ action: "candidates" })).json()).result.value;
+  assert.deepEqual(candidates.names, { openai: "OpenAI", proxy: "GPT proxy X" });
+  // A name identical to the id adds nothing; a failing registry must not break the receipt.
+  const echo = { async listProviders() { return [{ id: "openai", name: "openai" }]; } };
+  const echoed = await rpcFixture(t, undefined, echo);
+  const echoValue = (await (await echoed.post({ action: "snapshot" })).json()).result.value;
+  assert.deepEqual(echoValue.names, {});
+  const broken = { async listProviders() { throw Error("registry offline"); } };
+  const failed = await rpcFixture(t, undefined, broken);
+  const failedReply = await (await failed.post({ action: "snapshot" })).json();
+  assert.equal(failedReply.result.ok, true); assert.deepEqual(failedReply.result.value.names, {});
+});
+
+test("malformed non-string RPC actions never coerce into a privileged action", async t => {  const f = await rpcFixture(t);
   for (const action of [["snapshot"], {}, null, "constructor", "__proto__"]) {
     const reply = await (await f.post({ action })).json(); assert.equal(reply.result.error.code, "invalid-request");
   }

@@ -6,7 +6,7 @@ Provides prompt enhancement, next-question suggestions, and OpenAI Fast accelera
 
 A plugin bundle for the DeepSeek Harness (DSH) Web GUI. Enhancement and suggestions are independent features: enable either or both for the current DSH profile. Settings live on the sidebar page, not in a composer popup. Feature switches are profile-wide; model controls remain per-conversation.
 
-> **v1.2.21:** the Prompt assist settings page is laid out as four cards — global switches, session parameters, Priority authorization, and version/updates — with switch rows, provider chips, statistic tiles and a borderless online-update subsection instead of one flat column.
+> **v1.2.22:** the Priority authorization lists show the provider display name beside the exact ID (for example `CPA · cpa`), matching how model settings present providers; the Fast blocked tooltip uses the same pair. Names come from the live LLM registry and degrade to the ID alone when unavailable.
 
 ## Compatibility policy
 

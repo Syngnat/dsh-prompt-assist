@@ -17,10 +17,26 @@ function panel() {
   new Function("require", "module", "exports", built.outputFiles[0].text)(require, module, module.exports);
   return production = module.exports;
 }
-const state = {revision: 4, configured: ["openai"], authorized: ["proxy"], effective: ["openai", "proxy"]};
+const state = {revision: 4, configured: ["openai"], authorized: ["proxy"], effective: ["openai", "proxy"],
+  names: {openai: "OpenAI", proxy: "Syngnat"}};
 const candidate = {id: "partner", name: "Partner endpoint", configured: false, openAIModels: ["gpt-6.1-sol"]};
 const render = props => renderToStaticMarkup(React.createElement(panel().PriorityPanelContent, {
   state, candidates: [candidate], consent: false, selected: candidate.id, notice: null, pending: false, t: key => key, ...props}));
+
+test("SSR shows the provider display name beside the authorized id", () => {
+  const html = render({});
+  // Model settings lead with the display name, so the lists must pair it with the exact id.
+  assert.match(html, /<strong>OpenAI<\/strong><code>openai<\/code>/);
+  assert.match(html, /<strong>Syngnat<\/strong><code>proxy<\/code>/);
+  assert.ok(html.includes("priority.revoke"));
+  // Missing, identical or malformed names fall back to the id alone and never break the list.
+  const bare = render({state: {revision: 4, configured: ["openai"], authorized: ["proxy"], effective: ["openai", "proxy"]}});
+  assert.doesNotMatch(bare, /<strong>OpenAI<\/strong>/);
+  assert.match(bare, /<code>openai<\/code>/);
+  const junk = render({state: {...state, names: {openai: 42, proxy: "proxy"}}});
+  assert.doesNotMatch(junk, /<strong>42<\/strong>/);
+  assert.match(junk, /<code>proxy<\/code>/);
+});
 
 test("SSR separates built-in and self authorization and refuses non-OpenAI candidates", () => {
   const html = render({candidates: [candidate, {id: "deepseek", name: "Other", configured: false, openAIModels: ["deepseek-chat"]}]});

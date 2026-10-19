@@ -28,6 +28,9 @@ export function PriorityPanelContent({state, candidates = [], consent = false, n
   const available = availableCandidates(candidates, state);
   const selection = available.find(item => item.id === selected);
   const raw = Array.isArray(candidates) ? candidates : [];
+  const names = state?.names && typeof state.names === "object" ? state.names : {};
+  // Model settings identify a provider by display name, so both must be visible together.
+  const nameOf = id => typeof names[id] === "string" && names[id] && names[id] !== id ? names[id] : null;
   const builtinModels = new Map(raw.filter(item => item && item.configured === true && Array.isArray(item.openAIModels))
     .map(item => [item.id, item.openAIModels.filter(model => typeof model === "string" && isOpenAIModel(model)).slice(0, 8)]));
   const button = (key, action, disabled = false, extra = {}) => h("button",
@@ -37,10 +40,12 @@ export function PriorityPanelContent({state, candidates = [], consent = false, n
       h("p", {className: "lpa-note"}, t("priority.scope"))),
     h("div", {className: "lpa-field"}, h("strong", null, t("priority.configured")),
       h("div", {className: "lpa-chip-list"}, configured.map(id => h("div", {className: "lpa-provider-item", key: id},
-        h("span", {className: "lpa-note lpa-chip lpa-chip--readonly"}, h("code", null, id)),
+        h("span", {className: "lpa-note lpa-chip lpa-chip--readonly"},
+          nameOf(id) ? h("strong", null, nameOf(id)) : null, h("code", null, id)),
         builtinModels.get(id)?.length ? h("span", {className: "lpa-note lpa-chip-models"}, " · " + t("priority.visibleModels") + ": " + builtinModels.get(id).join(", ")) : null)))),
     h("div", {className: "lpa-field"}, h("strong", null, t("priority.authorized")),
-      h("div", {className: "lpa-chip-list"}, authorized.map(id => h("span", {className: "lpa-row lpa-chip", key: id}, h("code", null, id),
+      h("div", {className: "lpa-chip-list"}, authorized.map(id => h("span", {className: "lpa-row lpa-chip", key: id},
+        nameOf(id) ? h("strong", null, nameOf(id)) : null, h("code", null, id),
         button("priority.revoke", () => onRevoke?.(id), !state || Boolean(pending), {"aria-label": t("priority.revoke") + ": " + id, className: "lpa-button lpa-chip-action"})))),
       state && !authorized.length ? h("p", {className: "lpa-note"}, t("priority.none")) : null),
     h("div", {className: "lpa-card-actions lpa-priority-actions"},
@@ -65,8 +70,17 @@ function readState(value) {
   for (const key of ["configured", "authorized", "effective"]) {
     if (!Array.isArray(value[key]) || value[key].some(id => typeof id !== "string" || !PROVIDER.test(id))) throw {code: "invalid-response"};
   }
+  // Display names are decoration: a malformed or missing map must never invalidate the authorization state.
+  const names = {};
+  if (value.names !== undefined && value.names !== null) {
+    if (typeof value.names !== "object" || Array.isArray(value.names)) throw {code: "invalid-response"};
+    for (const [id, name] of Object.entries(value.names)) {
+      if (PROVIDER.test(id) && typeof name === "string" && name.length > 0 && name.length <= 80) names[id] = name;
+    }
+  }
   return Object.freeze({revision: value.revision, configured: Object.freeze([...value.configured]),
-    authorized: Object.freeze([...value.authorized]), effective: Object.freeze([...value.effective])});
+    authorized: Object.freeze([...value.authorized]), effective: Object.freeze([...value.effective]),
+    names: Object.freeze(names)});
 }
 const notices = Object.freeze({
   "consent-required": "priority.noConsent", "provider-unknown": "priority.unknownProvider",

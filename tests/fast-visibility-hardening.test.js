@@ -53,6 +53,13 @@ test("a blocked Fast control explains itself without relying on a disabled toolt
   assert.doesNotMatch(html, /<button[^>]*\stitle=/);
 });
 
+test("the blocked reason names the provider by display name and exact id when both are known", () => {
+  const fixture = toggleFixture({enabled: true, providers: ["openai"]}, selected, {
+    prioritySource: source({status: "ready", revision: 1, authorized: [], effective: ["openai"], names: {"cpa": "CPA"}}),
+  });
+  assert.match(fixture.render(), /title="[^"]*Provider ID: CPA \(cpa\)/);
+});
+
 test("a profile authorization reaches the Fast control even when the wire predates it", () => {
   const fixture = toggleFixture({enabled: false, providers: ["openai"]}, selected, {
     prioritySource: source({status: "ready", revision: 1, authorized: ["cpa"], effective: ["openai", "cpa"]}),
