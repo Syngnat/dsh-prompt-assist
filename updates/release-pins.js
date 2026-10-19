@@ -2,11 +2,25 @@ import {boundedJSON,INSTALL_SPEC,CHECK_TIMEOUT_MS} from './service.js';
 export const BUNDLE_NAME='@local/dsh-openai-fast';
 export const stableVersion=v=>typeof v==='string'&&v.length<=80&&/^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$/.test(v);
 export const onlineError=code=>Object.assign(new Error(code),{code});
-const sha=value=>typeof value==='string'&&/^[a-f0-9]{40}$/i.test(value);
+const sha=value=>typeof value==='string'&&/^[a-f0-9]{7,40}$/i.test(value);
+const OFFICIAL='syngnat/dsh-prompt-assist';
+/** The bundle manager may record the same official repository in several equivalent spellings. */
+function normalizeBase(base){
+ return String(base).trim().toLowerCase().replace(/\.git$/,'').replace(/\/+$/,'')
+  .replace(/^git\+/,'')
+  .replace(/^(?:github:|github\.com\/|https?:\/\/github\.com\/)/,'');
+}
 export function supportedSource(source,version){
- if(typeof source!=='string')return false;
- const [base,ref,...rest]=source.split('#');
- return base.toLowerCase()===INSTALL_SPEC.toLowerCase()&&!rest.length&&(ref===undefined||ref==='v'+version||sha(ref));
+ if(typeof source!=='string'||source.length>200||/[\u0000-\u001f\u007f]/u.test(source))return false;
+ const [base,ref,...rest]=source.trim().split('#');
+ if(rest.length||normalizeBase(base)!==OFFICIAL)return false;
+ if(ref===undefined)return true;
+ const clean=ref.trim();
+ return clean==='v'+version||sha(clean);
+}
+/** One bounded, control-character-free copy of an observed source for diagnosis. */
+export function observedSource(value){
+ return typeof value==='string'&&value.length>0&&value.length<=200&&!/[\u0000-\u001f\u007f]/u.test(value)?value:null;
 }
 /** Fixed-origin read-only metadata, not a package installer. Never accepts a caller URL. */
 export class ReleasePins {

@@ -143,6 +143,21 @@ for (const lang of ["zh", "en"]) {
     const preparation = render({...initialOnlineSnapshot(), data: status(), preparation: prep()}, lang);
     assert.match(preparation, /<time dateTime="[^"]+">\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2} UTC<\/time>/);
   });
+  test("SSR " + lang + " explains a refused installation source", () => {
+    const refused = {...status(), available: false, reason: "unsupported-source", source: "link:/Users/dev/dsh-prompt-assist"};
+    const html = render({...initialOnlineSnapshot(), data: refused}, lang);
+    assert.ok(html.includes(dictionaries[lang]["online.unavailable"]));
+    assert.ok(html.includes("unsupported-source"));
+    assert.ok(html.includes(dictionaries[lang]["online.sourceObserved"]));
+    assert.ok(html.includes("link:/Users/dev/dsh-prompt-assist"));
+    assert.ok(html.includes(dictionaries[lang]["online.unsupportedSourceHint"]));
+    // Junk in the source field never reaches the DOM, and the actionable hint still shows.
+    const junk = normalizeOnlineStatus({...refused, source: "bad\u0000source"});
+    assert.equal(junk.source, null);
+    const cleaned = render({...initialOnlineSnapshot(), data: junk}, lang);
+    assert.ok(!cleaned.includes("bad\u0000source"));
+    assert.ok(cleaned.includes(dictionaries[lang]["online.unsupportedSourceHint"]));
+  });
   test("SSR " + lang + " confirmation names pinned versions and all risks without revealing nonce", () => {
     const snapshot = {...initialOnlineSnapshot(), data: status(), preparation: prep()}; const html = render(snapshot, lang);
     for (const key of ["online.risks", "online.continuity", "online.consent"]) assert.ok(html.includes(dictionaries[lang][key]));

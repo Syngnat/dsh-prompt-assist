@@ -21,7 +21,10 @@ export function normalizeOnlineOperation(x) {
 }
 export function normalizeOnlineStatus(x) {
   if (!object(x) || !version(x.currentVersion) || typeof x.available !== "boolean" || !nullableCode(x.reason)) throw invalid();
-  return Object.freeze({currentVersion: x.currentVersion, available: x.available, reason: x.reason,
+  // The observed installation source explains a refusal; junk degrades to null instead of failing the status.
+  const source = typeof x.source === "string" && x.source.length > 0 && x.source.length <= 200
+    && !/[\u0000-\u001f\u007f]/u.test(x.source) ? x.source : null;
+  return Object.freeze({currentVersion: x.currentVersion, available: x.available, reason: x.reason, source,
     operation: x.operation === null ? null : normalizeOnlineOperation(x.operation)});
 }
 export function normalizeOnlinePreparation(x, now = Date.now()) {

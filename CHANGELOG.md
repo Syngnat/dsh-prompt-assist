@@ -2,6 +2,16 @@
 
 [English](<README.md>) | [简体中文](<README.zh-CN.md>)
 
+## 1.2.23 — 在线更新来源判定与可诊断性 / Online-update source recognition and diagnosis
+
+- Accept the official repository in every equivalent spelling the bundle manager may record: `github:…`, `github.com/…`, `https://github.com/Syngnat/dsh-prompt-assist`, an optional `git+` prefix, an optional `.git` suffix, any letter case, and a tag or commit pin (full or short SHA). Foreign repositories, a moving `#main` ref and non-Git origins such as `file:`/`link:` remain refused.
+- Report the refused installation source in the status payload, bounded to 200 characters and stripped of control characters, and show it in the settings page next to the reason — previously macOS users only saw `(unsupported-source)` with no way to tell what the Host had detected.
+- Add an actionable hint for that reason: reinstall from the unversioned target `github:Syngnat/dsh-prompt-assist`, then use online update again.
+- Every eligibility branch now keeps the observed row, so a refusal can always name the installation it examined; the tool output schema carries the new field.
+- Add 4 regressions (spelling matrix accepted/refused, refused-source reporting bounds, client rendering with a sanitized source): 689 offline tests pass.
+
+中文：在线更新放宽到「官方仓库的等价写法」：`github:`、`github.com/`、`https://github.com/Syngnat/dsh-prompt-assist`、可选 `git+` 前缀与 `.git` 后缀、大小写，以及 tag 或提交（完整/短 SHA）固定；其他仓库、`#main` 浮动引用和 `file:`/`link:` 等非 Git 来源仍然拒绝。同时在状态里回报**实际检测到的安装来源**（限长、去控制字符）并在设置页显示，不再只给一个 `unsupported-source`；该原因下补充可操作提示：用无版本号地址 `github:Syngnat/dsh-prompt-assist` 重装后再在线更新。
+
 ## 1.2.22 — 授权列表显示供应商名称与 ID / Provider names beside IDs
 
 - The Priority authorization lists now show the provider's display name beside its exact ID — for example `CPA · cpa` — because model settings identify a provider by name, while authorization is recorded by ID. The candidate selector already used `name (id)` and is unchanged.

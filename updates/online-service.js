@@ -1,6 +1,6 @@
 import {randomBytes} from 'node:crypto';
 import semver from 'semver';
-import {BUNDLE_NAME,ReleasePins,stableVersion,supportedSource,onlineError} from './release-pins.js';
+import {BUNDLE_NAME,ReleasePins,stableVersion,supportedSource,observedSource,onlineError} from './release-pins.js';
 export const UPDATE_JOB_KIND='prompt-assist-update';
 const LIVE=new Set(['running','stopping']);
 export const OPERATION_FIELDS=['jobId','fromVersion','targetVersion','phase','terminal','installedVersion','error','detailCode','restartRequired','cancelRequested'];
@@ -45,17 +45,19 @@ export class OnlineUpdateService {
   if(!this.jobs)return {reason:'jobs-unavailable'};
   if(typeof this.readLoadedVersion!=='function')return {reason:'readiness-unavailable'};
   const row=await this.bundle();
-  if(!row?.installed||row.availability!=='profile'||row.readOnlyReason||row.error)return {reason:'unsupported-installation'};
-  if(!stableVersion(row.version)||!stableVersion(this.currentVersion))return {reason:'unsupported-version'};
-  if(row.version!==this.currentVersion)return {reason:'restart-required'};
-  if(!supportedSource(row.source,row.version))return {reason:'unsupported-source'};
-  if(!row.enabled)return {reason:'disabled'};
-  if(this.hasHmr&&!row.removable)return {reason:'not-removable'};
+  // Every branch keeps the observed row so status() can report the exact refused installation source.
+  if(!row?.installed||row.availability!=='profile'||row.readOnlyReason||row.error)return {reason:'unsupported-installation',row};
+  if(!stableVersion(row.version)||!stableVersion(this.currentVersion))return {reason:'unsupported-version',row};
+  if(row.version!==this.currentVersion)return {reason:'restart-required',row};
+  if(!supportedSource(row.source,row.version))return {reason:'unsupported-source',row};
+  if(!row.enabled)return {reason:'disabled',row};
+  if(this.hasHmr&&!row.removable)return {reason:'not-removable',row};
   return {reason:null,row};
  }
  async status(){
-  const {reason}=await this.eligibility();const records=this.records();const record=records.find(job=>LIVE.has(job.status))??records.at(-1);
-  return {currentVersion:this.currentVersion,available:!reason&&!records.some(job=>LIVE.has(job.status)),reason:records.some(job=>LIVE.has(job.status))?'busy':reason,operation:this.snapshot(record)};
+  const {reason,row}=await this.eligibility();const records=this.records();const record=records.find(job=>LIVE.has(job.status))??records.at(-1);
+  // The observed installation source is bounded and control-character free; it makes a refusal diagnosable.
+  return {currentVersion:this.currentVersion,available:!reason&&!records.some(job=>LIVE.has(job.status)),reason:records.some(job=>LIVE.has(job.status))?'busy':reason,source:observedSource(row?.source),operation:this.snapshot(record)};
  }
  async prepare(signal){
   if(this.disposed)throw onlineError('unavailable');

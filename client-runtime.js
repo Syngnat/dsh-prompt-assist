@@ -529,6 +529,8 @@ var init_messages = __esm({
         "online.loading": "\u6B63\u5728\u8BFB\u53D6\u5BBF\u4E3B\u66F4\u65B0\u72B6\u6001\u2026",
         "online.noRecord": "\u6CA1\u6709\u53EF\u8BFB\u53D6\u7684\u5728\u7EBF\u66F4\u65B0\u4EFB\u52A1\u8BB0\u5F55\uFF1B\u8FD9\u4E0D\u4EE3\u8868\u66F4\u65B0\u6210\u529F\u3002",
         "online.unavailable": "\u5F53\u524D\u65E0\u6CD5\u51C6\u5907\u5728\u7EBF\u66F4\u65B0\u3002",
+        "online.sourceObserved": "\u68C0\u6D4B\u5230\u7684\u5B89\u88C5\u6765\u6E90",
+        "online.unsupportedSourceHint": "\u5728\u7EBF\u66F4\u65B0\u53EA\u652F\u6301\u4ECE\u5B98\u65B9\u65E0\u7248\u672C\u53F7\u5730\u5740\u5B89\u88C5\u7684\u63D2\u4EF6\u3002\u8BF7\u5728\u300C\u63D2\u4EF6\u300D\u9875\u79FB\u9664\u672C\u63D2\u4EF6\uFF0C\u518D\u7528 github:Syngnat/dsh-prompt-assist \u91CD\u65B0\u5B89\u88C5\uFF1B\u5347\u7EA7\u524D\u5148\u4FDD\u5B58\u8349\u7A3F\u5E76\u5907\u4EFD\u914D\u7F6E\u3002",
         "online.recordLost": "\u4EFB\u52A1\u8BB0\u5F55\u5DF2\u4E0D\u53EF\u8BFB\u53D6\uFF0C\u4E0D\u80FD\u786E\u8BA4\u66F4\u65B0\u6210\u529F\u3002\u8BF7\u68C0\u67E5\u63D2\u4EF6\u7BA1\u7406\u72B6\u6001\uFF1B\u4E0D\u8981\u628A\u624B\u52A8\u6307\u5357\u5F53\u4F5C\u66F4\u65B0\u7ED3\u679C\u3002",
         "online.uncertain": "\u786E\u8BA4\u8BF7\u6C42\u7684\u7ED3\u679C\u5C1A\u4E0D\u786E\u5B9A\uFF0C\u4EFB\u52A1\u53EF\u80FD\u5DF2\u542F\u52A8\u3002\u53EA\u91CD\u8BFB\u72B6\u6001\uFF0C\u4E0D\u4F1A\u81EA\u52A8\u91CD\u53D1\u786E\u8BA4\uFF1B\u8BF7\u52FF\u91CD\u590D\u66F4\u65B0\u3002",
         "online.requestFailed": "\u8BF7\u6C42\u672A\u5B8C\u6210\uFF0C\u8BF7\u624B\u52A8\u91CD\u8BFB\u72B6\u6001\u3002\u5B89\u5168\u9519\u8BEF\u7801\uFF1A",
@@ -772,6 +774,8 @@ var init_messages = __esm({
         "online.loading": "Reading Host update status\u2026",
         "online.noRecord": "No online update job record is available. This does not mean an update succeeded.",
         "online.unavailable": "Online update preparation is currently unavailable.",
+        "online.sourceObserved": "Detected installation source",
+        "online.unsupportedSourceHint": "Online update only supports a plugin installed from the official unversioned target. Remove this plugin in Plugins, reinstall it with github:Syngnat/dsh-prompt-assist, then update online. Save drafts and back up configuration first.",
         "online.recordLost": "The job record is no longer available. Success cannot be confirmed. Check plugin management; the manual guide is not an update result.",
         "online.uncertain": "The confirmation outcome is uncertain; the job may have started. Reload status only. Confirmation will not be resent automatically. Do not start a duplicate update.",
         "online.requestFailed": "The request did not complete. Reload status manually. Safe error code:",
@@ -1996,10 +2000,12 @@ function normalizeOnlineOperation(x) {
 }
 function normalizeOnlineStatus(x) {
   if (!object(x) || !version2(x.currentVersion) || typeof x.available !== "boolean" || !nullableCode(x.reason)) throw invalid3();
+  const source = typeof x.source === "string" && x.source.length > 0 && x.source.length <= 200 && !/[\u0000-\u001f\u007f]/u.test(x.source) ? x.source : null;
   return Object.freeze({
     currentVersion: x.currentVersion,
     available: x.available,
     reason: x.reason,
+    source,
     operation: x.operation === null ? null : normalizeOnlineOperation(x.operation)
   });
 }
@@ -2251,7 +2257,18 @@ function OnlineUpdatePanelContent({ snapshot = initialOnlineSnapshot(), updateAv
     ) : null,
     !data && !localError && !markerCleared ? h6("p", { role: "status" }, t("online.loading")) : null,
     data && !operation && !uncertain ? h6("p", { className: "lpa-note" }, t("online.noRecord")) : null,
-    data && !data.available ? h6("p", { className: "lpa-note" }, t("online.unavailable"), data.reason ? " (" + data.reason + ")" : null) : null,
+    data && !data.available ? h6(
+      import_react7.default.Fragment,
+      null,
+      h6(
+        "p",
+        { className: "lpa-note" },
+        t("online.unavailable"),
+        data.reason ? " (" + data.reason + ")" : null,
+        data.source ? h6(import_react7.default.Fragment, null, " \xB7 " + t("online.sourceObserved") + ": ", h6("code", null, data.source)) : null
+      ),
+      data.reason === "unsupported-source" ? h6("p", { className: "lpa-note" }, t("online.unsupportedSourceHint")) : null
+    ) : null,
     recordLost || uncertain ? h6("p", { className: "lpa-error", role: "alert" }, t(recordLost ? "online.recordLost" : "online.uncertain")) : null,
     localError ? h6("p", { className: "lpa-error", role: "alert" }, t(confirmationRejected ? "online.confirmationRejected" : "online.requestFailed"), " ", h6("code", null, localError)) : null,
     recordLost || uncertain ? h6(

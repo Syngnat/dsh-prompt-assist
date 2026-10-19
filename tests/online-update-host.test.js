@@ -35,6 +35,22 @@ test('cancellation before removal changes nothing',async()=>{const f=fixture();a
 test('cancellation after removal still performs recovery',async()=>{const f=fixture({onRemove:()=>f.records[0].hooks.cancel()});await f.start();const r=await f.settled();assert.equal(r.phase,'restored');assert.equal(r.cancelRequested,true);assert.equal(f.records[0].status,'killed');assert.equal(f.row.version,OLD);});
 test('another caller installation is not overwritten by recovery',async()=>{const f=fixture({installFail:true,beforeInstall:()=>{f.row={...f.row,name:BUNDLE_NAME,installed:true,version:'8.8.8',source:'github:other/plugin',enabled:true,availability:'profile'};}});await f.start();assert.equal((await f.settled()).phase,'repair-required');assert.equal(f.calls.filter(x=>x[0]==='install').length,1);});
 for(const source of ['file:C:/dev','github:someone/else',INSTALL_SPEC+'#main'])test('unsupported source '+source,async()=>{const f=fixture();f.row={...f.row,source};assert.equal((await f.service.status()).reason,'unsupported-source');await assert.rejects(f.service.prepare());assert.deepEqual(f.calls,[]);});
+test('the official repository stays updatable in every equivalent spelling',async()=>{
+ const f=fixture(),version=f.row.version;
+ const accepted=[INSTALL_SPEC,INSTALL_SPEC+'#v'+version,INSTALL_SPEC+'#'+'a'.repeat(40),INSTALL_SPEC+'#'+'a'.repeat(7),
+  'https://github.com/Syngnat/dsh-prompt-assist','git+https://github.com/Syngnat/dsh-prompt-assist.git',
+  'GitHub:Syngnat/DSH-Prompt-Assist'];
+ for(const source of accepted){f.row={...f.row,source};const status=await f.service.status();assert.equal(status.reason,null,'expected supported: '+source);assert.equal(status.source,source);}
+ const rejected=['github:someone/else',INSTALL_SPEC+'#main',INSTALL_SPEC+'#v9.9.9','https://github.com/Syngnat/other-repo','file:C:/dev','',null];
+ for(const source of rejected){f.row={...f.row,source};assert.equal((await f.service.status()).reason,'unsupported-source','expected rejected: '+String(source));}
+});
+test('a refused source is reported in bounded, control-free form',async()=>{
+ const f=fixture();
+ f.row={...f.row,source:'link:/Users/dev/dsh-prompt-assist'};
+ const status=await f.service.status();assert.equal(status.reason,'unsupported-source');assert.equal(status.source,'link:/Users/dev/dsh-prompt-assist');
+ f.row={...f.row,source:'file:/Users/dev/plugin\u0000'};assert.equal((await f.service.status()).source,null);
+ f.row={...f.row,source:'x'.repeat(400)};assert.equal((await f.service.status()).source,null);
+});
 test('HTTP body permits normalized native carriers but rejects cross-site hints, non-JSON and malformed consent',async()=>{
  const req=(value,headers={})=>new Request('http://localhost'+ONLINE_PATH,{method:'POST',headers:{origin:'http://localhost','sec-fetch-site':'same-origin','content-type':'application/json',...headers},body:JSON.stringify(value)});
  assert.deepEqual(await readOnlineBody(req({action:'prepare'})),{action:'prepare'});
