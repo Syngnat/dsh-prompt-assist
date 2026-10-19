@@ -31,5 +31,5 @@ export function installAssist(ctx){
  ctx.slots.inject('main',()=>ctx.slots.register({name:'main',key:'local-prompt-assist',locale:NS,inject:()=>({assistSend,globalSource,targetSource,connection:ctx.connection,returnToConversation:()=>ctx.layout.selectPanel(null),refreshAssist:id=>ctx.sessions.refreshProjections(id)})},SettingsSurface));
  ctx.slots.inject('conversation.input.right',()=>ctx.slots.register({name:'conversation.input.right',id:'local-prompt-enhance-action',order:1005,label:dictionaries.en.enhance,locale:NS,inject},EnhanceButton));
  ctx.slots.inject('conversation.input.right',()=>ctx.slots.register({name:'conversation.input.right',id:'local-next-question-action',order:1010,label:dictionaries.en.suggest,locale:NS,inject},SuggestButton));
- ctx.slots.inject('conversation.input.dock',()=>ctx.slots.register({name:'conversation.input.dock',id:'local-prompt-assist-results',order:50,label,locale:NS,inject},AssistPanel));
+ ctx.slots.inject('conversation.input.overlay',()=>ctx.slots.register({name:'conversation.input.overlay',id:'local-prompt-assist-results',order:50,label,locale:NS,inject},AssistPanel));
 }

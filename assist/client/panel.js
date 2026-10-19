@@ -1,4 +1,5 @@
 import {compactPanelModifier} from './result-layout.js';
+import {ResultAnchor} from './result-anchor.js';
 import React from 'react';
 import {enhanceAvailability,suggestAvailability} from './enhance-action.js';
 import {shouldShowPanel} from './panel-visibility.js';
@@ -27,11 +28,11 @@ export function AssistPanel(p){
  const undoApply=()=>{const result=undoText(undo,r.readInput,p.inputActions);if(result.ok)setUndo(null);else r.setNotice(result.reason);};
  const dismiss=()=>{r.controller.dismiss();r.setNotice(null);};
  const notice=r.result.error??r.notice;
- return h('section',{className:'lpa lpa-inline'+compactPanelModifier({pending:r.result.pending,preview:r.result.preview,referenceCount:r.input.occurrences.length,notice,validUndo}),'aria-label':t('preview')},h('style',null,css),
+ return h(ResultAnchor,null,h('section',{className:'lpa lpa-inline'+compactPanelModifier({pending:r.result.pending,preview:r.result.preview,referenceCount:r.input.occurrences.length,notice,validUndo}),'aria-label':t('preview')},h('style',null,css),
   h(SelectedFiles,{input:r.input,files,t,onChange:(key,entry)=>{r.controller.dismiss();setFiles(old=>({...old,[key]:entry}));}}),
   r.result.pending&&!r.result.preview?h('div',{className:'lpa-row lpa-pending',role:'status'},h('span',{className:'lpa-pending-mark','aria-hidden':true}),t(r.result.pending==='suggest'?'generatingSuggest':'generating'),button('cancel',()=>r.controller.cancel())):null,
   h(NoSuggestion,{runtime:r,t}),
   h(Preview,{runtime:r,actions:p.inputActions,t,onApplied:setUndo}),
   validUndo?h('div',{className:'lpa-undo-actions'},button('undo',undoApply,!r.allowed)):null,
-  visible&&notice?h('div',{className:'lpa-row',role:'status'},h('span',{className:r.result.error?'lpa-error':'lpa-note'},(typeof notice==='string'&&notice!=='requestError'?t(notice):errorText(notice,t))),button('dismiss',dismiss)):null);
+  visible&&notice?h('div',{className:'lpa-row',role:'status'},h('span',{className:r.result.error?'lpa-error':'lpa-note'},(typeof notice==='string'&&notice!=='requestError'?t(notice):errorText(notice,t))),button('dismiss',dismiss)):null));
 }

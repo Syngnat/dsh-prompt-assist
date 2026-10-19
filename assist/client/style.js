@@ -6,6 +6,10 @@ export const css = `
 /* Native hero/composer docks are flex children: keep card chrome intact and shrink only its scrollable content. */
 .lpa-inline{box-sizing:border-box;width:calc(100% - 32px);max-width:var(--dsh-composer-card-max-width,840px);margin:0 auto 8px;max-height:clamp(180px,38vh,320px);flex:none;overflow:auto;overscroll-behavior:contain;padding:12px 14px;border:1px solid var(--dsw-alias-border-l1);border-radius:12px;background:var(--dsw-alias-bg-layer-1);display:flex;flex-direction:column;gap:8px}
 .lpa-inline--pending{width:fit-content;max-width:calc(100% - 32px);padding:7px 12px;border-radius:24px}
+/* Only our result floats in the native, zero-height composer overlay. Native menus stay above it. */
+.lpa-result-anchor{position:absolute;inset-inline:0;bottom:8px;z-index:90;display:flex;flex-direction:column;align-items:stretch;pointer-events:none}
+.lpa-result-anchor>.lpa-inline{width:100%;max-width:none;margin:0;max-height:min(clamp(180px,38vh,320px),var(--lpa-result-height,320px));pointer-events:auto}
+.lpa-result-anchor>.lpa-inline--pending,.lpa-result-anchor>.lpa-inline--undo{width:fit-content;max-width:100%;align-self:center}
 .lpa-inline .lpa-pending{justify-content:space-between;gap:12px}
 .lpa-pending-mark{width:6px;height:6px;border-radius:50%;background:var(--dsw-alias-brand-primary);flex:none}
 .lpa-settings-page{box-sizing:border-box;width:100%;height:100%;overflow:auto;padding:28px;max-width:1120px;margin:0 auto;font-size:14px}

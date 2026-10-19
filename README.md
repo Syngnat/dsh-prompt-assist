@@ -6,7 +6,7 @@ Provides prompt enhancement, next-question suggestions, and OpenAI / xAI Priorit
 
 A plugin bundle for the DeepSeek Harness (DSH) Web GUI. Enhancement and suggestions are independent features: enable either or both for the current DSH profile. Settings live on the sidebar page, not in a composer popup. Feature switches and auxiliary controls are profile-wide; conversation content remains isolated.
 
-> **v1.2.26:** auxiliary models and complete-QA counts are profile-wide; namespaced Grok IDs are recognized; enhancement failures retain safe provider categories. Source-only offline evaluation adds no default validation call or automatic semantic near-paraphrase detector. **On first upgrade, save each enhancement/suggestion global configuration once before using that feature.**
+> **v1.2.27:** enhancement and suggestion results now anchor directly above the resident composer, avoiding the large gap in Claude Style's new-conversation studio layout. Height follows the visible space and zoom; native menus retain precedence. No theme files, model-call policy or saved global settings change. **If upgrading from v1.2.25 or earlier, save each feature's global configuration once; already-confirmed v1.2.26 settings remain valid.**
 
 ## Compatibility policy
 
@@ -182,7 +182,7 @@ Use an isolated DSH Web profile and a fresh, unsent conversation, with a disposa
 | macOS and Linux | Builds/offline suite are required CI gates; DSH runtime not tested |
 | Independent security audit | Not performed/claimed |
 
-v1.2.26 passes 948 offline tests locally, including 17 evaluation-tool regressions. The 24-reference corpus passes structure, quotation and declared-consistency checks, not semantic or model-quality verification. [GitHub Actions](https://github.com/Syngnat/dsh-prompt-assist/actions) gates stable publication on five exact-commit jobs: Windows/macOS/Linux builds/tests and DSH rc.1/rc.2 contracts. Historical update-page, layout and global-switch checks do not constitute full GUI acceptance of this version; full browser visual and live-model quality checks were not performed for it. The specific Hualong/DeepSeek failure remains unconfirmed, and no automatic semantic near-paraphrase blocker was added. Maintainer publication does not upgrade the current profile.
+v1.2.27 passes 956 offline tests locally, including 8 new anchor regressions and the existing 17 evaluation-tool regressions. A synthetic Chromium layout regression passes 93 geometry combinations plus menu, hidden-state, click and disposal checks; this is not authenticated live-profile visual acceptance. The 24-reference corpus passes structure, quotation and declared-consistency checks, not semantic or model-quality verification. [GitHub Actions](https://github.com/Syngnat/dsh-prompt-assist/actions) gates stable publication on five exact-commit jobs: Windows/macOS/Linux builds/tests and DSH rc.1/rc.2 contracts. Historical update-page, layout and global-switch checks do not constitute full GUI acceptance of this version; full browser visual and live-model quality checks were not performed for it. The specific Hualong/DeepSeek failure remains unconfirmed, and no automatic semantic near-paraphrase blocker was added. Maintainer publication does not upgrade the current profile.
 
 ## License
 

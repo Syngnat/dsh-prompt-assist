@@ -2,6 +2,12 @@
 
 [English](<README.md>) | [简体中文](<README.zh-CN.md>)
 
+## 1.2.27 — 输入框结果锚定 / Composer-anchored results
+
+- Anchor enhancement/suggestion results to the native resident composer overlay, rather than the hero-level input dock. This avoids the Claude Style studio rule that orders all dock entries above an auto-margin workspace row, separating results from the bottom composer.
+- Bound the result height to its own containing scrollports and visual viewport, including zoom; preserve compact pending/undo cards and native-menu precedence. No fixed screen coordinates, theme installation edits, extra model calls or draft mutation are introduced.
+- Add focused geometry/disposal regressions and an explicitly synthetic Chromium layout regression. The latter reproduces the detached dock and exercises 93 combinations plus menu/click/cleanup checks; it is not authenticated live-profile visual acceptance.
+
 ## 1.2.26 — 全局配置与增强离线评测 / Global controls and offline enhancement evaluation
 
 - Add a source-only offline enhancement evaluation workbench: intent-first four-way rubric, contrast references with explicit confirmation status, answer-free review export, evidence traceability checks and reference-label confusion/error reports. No runtime validation calls, semantic auto-approval, model benchmarks or profile changes are enabled by this tooling.
