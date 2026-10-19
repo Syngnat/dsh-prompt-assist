@@ -1012,7 +1012,7 @@ var init_result_layout = __esm({
 function shouldShowPanel({ open, result, undo, input, sessionId }) {
   const preview = ownsResult(result?.preview, sessionId);
   const actionableUndo = ownsResult(undo, sessionId) && input.draft === undo.original && input.draftRev === undo.draftRev;
-  return Boolean(open || preview || ownsResult(result?.noSuggestion, sessionId) || result?.pending || result?.error || actionableUndo);
+  return Boolean(open || preview || ownsResult(result?.noSuggestion, sessionId) && result.noSuggestion.automatic !== true || result?.pending || result?.error || actionableUndo);
 }
 var init_panel_visibility = __esm({
   "assist/client/panel-visibility.js"() {
@@ -1195,7 +1195,7 @@ function createAssistController(deps) {
         if (requested.size > 64) requested.delete(requested.values().next().value);
         candidate = null;
         explain("requested", "new-qa");
-        void generate("suggest");
+        void generate("suggest", [], true);
         return;
       }
     }
@@ -1208,7 +1208,7 @@ function createAssistController(deps) {
     else if (requested.has(`${next.sessionId}:${next.qaId}`)) explain("skipped", "already-requested");
     else explain("skipped", "no-new-qa");
   }
-  async function generate(feature, selectedFiles = []) {
+  async function generate(feature, selectedFiles = [], automatic = false) {
     if (disposed || !current || current.paused || !configured(feature)) return false;
     if (current.input.phase === "adjudicating" || current.input.phase === "submitting") return false;
     if (feature === "suggest" && (current.busy || !canSuggest(current.input))) return false;
@@ -1255,7 +1255,7 @@ function createAssistController(deps) {
         return false;
       }
       const receipt = { ...result, sessionId, snapshot: { ...snapshot, structured: snapshot.structured || result.structured === true } };
-      publish(noSuggestion ? { noSuggestion: receipt, preview: null } : { preview: receipt, noSuggestion: null });
+      publish(noSuggestion ? { noSuggestion: { ...receipt, automatic: automatic === true }, preview: null } : { preview: receipt, noSuggestion: null });
       return true;
     } catch (error) {
       if (!disposed && !abort.signal.aborted && revision === epoch) publish({ error, preview: null });
@@ -1690,7 +1690,7 @@ var init_enhance_result = __esm({
 // assist/client/preview.js
 function NoSuggestion({ runtime: r, t }) {
   const value = r.result.noSuggestion;
-  if (!ownsResult(value, r.sessionId) || value.feature !== "suggest" || value.outcome !== "no-suggestion" || value.text !== "") return null;
+  if (!ownsResult(value, r.sessionId) || value.feature !== "suggest" || value.outcome !== "no-suggestion" || value.text !== "" || value.automatic === true) return null;
   return h3(
     "div",
     { className: "lpa-row lpa-note", role: "status" },

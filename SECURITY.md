@@ -14,6 +14,7 @@ This policy covers this plugin. Vulnerabilities in DSH itself, a provider, or an
 - The plugin does not upload data to a developer-operated service and does not add telemetry. DSH and the selected provider can have their own storage, logging, retention, and billing policies.
 - Existing file references are not permission to read everything nearby. Only explicitly selected supported files are read; limits are 64 KiB per file and 128 KiB total. Folder recursion, session-reference content, and uploaded image/attachment content are not read.
 - File checks can reject known sensitive paths or unsupported data, but they are not a complete data-loss-prevention system. Inspect your files and context before sending them.
+- Automatic next-message abstention is stored as a normal empty result but does not open a status banner. Manual requests still report abstention; invalid output, timeout and provider failure remain errors. Origin is determined locally, not accepted from a remote receipt. This behavior adds no retries, telemetry, hidden context or authorization.
 - Preview is not execution. Review model output before copying or applying it. Structured references/commands support preview and copy only; plain-text apply uses draft/revision checks and leaves attachments alone.
 - DSH Host plugins execute with local host-user authority, outside the workspace sandbox. Install code only from a source you trust, review the stable-channel policy and inspect build-script requests before approving them. A tag or commit can be used for an explicit audit/reproduction pin.
 

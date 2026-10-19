@@ -6,7 +6,7 @@ Provides prompt enhancement, next-question suggestions, and OpenAI / xAI Priorit
 
 A plugin bundle for the DeepSeek Harness (DSH) Web GUI. Enhancement and suggestions are independent features: enable either or both for the current DSH profile. Settings live on the sidebar page, not in a composer popup. Feature switches are profile-wide; model controls remain per-conversation.
 
-> **v1.2.24:** Fast recognizes Grok 4.6/4.7 and future Grok 4+ model names on authorized routes. Enhancement now explicitly requests structured replacement text; exact echoes show a no-rewrite notice instead of allowing a redundant Apply. Upstream Priority availability and semantic output quality remain model-dependent.
+> **v1.2.25:** suggestions aim for the user's natural next message instead of generic task planning. Automatic empty outcomes end quietly; manual requests still report no suggestion, and real errors remain visible. Permissions, QA scope and model-call counts are unchanged. This is not a claim of measured live-model quality improvement.
 
 ## Compatibility policy
 
@@ -71,7 +71,11 @@ Automatic suggestions use the latest selected complete Q&A pairs. They run only 
 
 Suggestions are unavailable while the main conversation is busy. If typing, settings, model, conversation, or Q&A changes invalidate a request, its result is discarded. A cancelled automatic attempt is not silently repeated; use the manual button when needed.
 
-Suggestions preserve user questions and permission boundaries, do not promote unconfirmed assistant advice, and abstain when no grounded next step is available. A normal no-suggestion result displays a neutral dismissible status, never adoptable/copyable prompt text. Suggestions wait for complete protocol validation before display; enhancement keeps its streaming preview. Empty, malformed, truncated or failed responses remain errors, not normal abstentions.
+Suggestions preserve user questions and permission boundaries, do not promote unconfirmed assistant advice, and abstain when no grounded next step is available. From v1.2.25, a normal automatic abstention ends quietly; manual generation still displays a neutral dismissible status, never adoptable/copyable prompt text. The empty outcome remains recorded as none, not a successful suggestion, and is not automatically retried.
+
+The role predicts the user's natural next message and style rather than planning new work. Completion claims, multiple options and pending authorization are not blanket abstention rules: first look for a concrete unanswered gap in the original goal or an explicitly agreed next step. Do not force verification checklists or invent permission. This adapts verified mechanisms in an installed Codex desktop build, not its undisclosed server-side prompt. The user's selected QA scope stays unchanged.
+
+ Suggestions wait for complete protocol validation before display; enhancement keeps its streaming preview. Empty, malformed, truncated or failed responses remain errors, not normal abstentions.
 
 ### Fast
 

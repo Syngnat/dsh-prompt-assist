@@ -6,7 +6,7 @@ import {isUnchangedEnhancement} from './enhance-result.js';
 const h=React.createElement;
 export function NoSuggestion({runtime:r,t}){
  const value=r.result.noSuggestion;
- if(!ownsResult(value,r.sessionId)||value.feature!=='suggest'||value.outcome!=='no-suggestion'||value.text!=='')return null;
+ if(!ownsResult(value,r.sessionId)||value.feature!=='suggest'||value.outcome!=='no-suggestion'||value.text!==''||value.automatic===true)return null;
  return h('div',{className:'lpa-row lpa-note',role:'status'},
   h('span',null,t('noSuggestion')),
   value.fastSkipped===true?h('span',{className:'lpa-note'},t('fastSkipped')):null,

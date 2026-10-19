@@ -70,7 +70,7 @@ export function createAssistController(deps) {
         if (requested.size > 64) requested.delete(requested.values().next().value);
         candidate = null;
         explain('requested', 'new-qa');
-        void generate('suggest');
+        void generate('suggest', [], true);
         return;
       }
     }
@@ -84,7 +84,7 @@ export function createAssistController(deps) {
     else explain('skipped', 'no-new-qa');
   }
 
-  async function generate(feature, selectedFiles = []) {
+  async function generate(feature, selectedFiles = [], automatic = false) {
     if (disposed || !current || current.paused || !configured(feature)) return false;
     if (current.input.phase === "adjudicating" || current.input.phase === "submitting") return false;
     if (feature === 'suggest' && (current.busy || !canSuggest(current.input))) return false;
@@ -121,7 +121,9 @@ export function createAssistController(deps) {
         publish({ error: 'requestError', preview: null, noSuggestion: null }); return false;
       }
       const receipt = { ...result, sessionId, snapshot: { ...snapshot, structured: snapshot.structured || result.structured === true } };
-      publish(noSuggestion ? { noSuggestion: receipt, preview: null } : { preview: receipt, noSuggestion: null });
+      // Automatic abstention stays observable in state but does not interrupt the composer.
+      // Derive origin locally, never trust a cached/remote receipt to choose its visibility.
+      publish(noSuggestion ? { noSuggestion: { ...receipt, automatic: automatic === true }, preview: null } : { preview: receipt, noSuggestion: null });
       return true;
     } catch (error) {
       if (!disposed && !abort.signal.aborted && revision === epoch) publish({ error, preview: null });

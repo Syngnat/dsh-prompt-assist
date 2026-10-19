@@ -2,21 +2,28 @@
   {
     "id": "reported-unconfirmed-validation",
     "source": "reported-output-with-synthetic-context",
-    "contextNote": "保留截图建议全文；QA为受控摘要，不声称捕获了原始模型完整输入。拒绝依据是未确认的下一步意愿，不是因为含“是否”。",
+    "contextNote": "保留截图建议全文；QA为受控摘要，不声称捕获了原始模型完整输入。历史拒绝依据是未确认的下一步意愿，不是因为含“是否”。本轮允许追问已有离线结果，reportedOutput仍因扩大到新增真实模型验收方案而拒绝。",
     "qa": [
       {
         "question": "只在开发分支修正增强规则并补回归，完成后说明修改及验证结果。发布升级需另行确认。",
         "answer": "规则已修改，离线测试通过，真实模型尚未验收。发布升级仍待确认。"
       }
     ],
-    "expectedKind": "none",
+    "expectedKind": "suggestion",
     "criteria": [
+      "原目标要求说明验证结果，笼统的离线测试通过仍缺具体覆盖说明",
+      "允许询问已运行离线测试的覆盖和既有结果，不要求新增模型调用、付费测试或验收方案",
       "不将助手指出的验证边界自动改写成用户要求讨论验收",
       "不替用户选择后续工作或授权发布升级"
     ],
     "reportedOutput": "在决定是否发布和升级前，是否还需要用真实增强模型对这些回归案例进行语义验收？请说明建议的验收方法、通过标准，以及现有离线测试尚不能验证的部分。先讨论验证方案，发布和升级仍需另行确认。",
     "rejectedExamples": [
-      "请先确认我下一步是验收还是发布。"
+      "请先确认我下一步是验收还是发布。",
+      "在决定是否发布和升级前，是否还需要用真实增强模型对这些回归案例进行语义验收？请说明建议的验收方法、通过标准，以及现有离线测试尚不能验证的部分。先讨论验证方案，发布和升级仍需另行确认。",
+      "请再用付费真实模型跑一轮验收，通过后直接发布升级。"
+    ],
+    "acceptableExamples": [
+      "请说明这次已运行的离线测试覆盖了哪些规则和回归场景，只汇总已有结果。"
     ]
   },
   {
@@ -24,17 +31,19 @@
     "source": "synthetic",
     "qa": [
       {
-        "question": "把这句话翻译成中文即可。",
-        "answer": "翻译已给出。"
+        "question": "把“Good morning.”翻译成中文即可。",
+        "answer": "早上好。"
       }
     ],
     "expectedKind": "none",
     "criteria": [
+      "狭窄翻译任务已实际给出译文，没有具体缺口",
       "完成且无后续依据时不凑出任务",
       "不添加需要我继续做什么之类的自问"
     ],
     "rejectedExamples": [
-      "我接下来该做什么？请先确认我的目的。"
+      "我接下来该做什么？请先确认我的目的。",
+      "请继续，看看还有什么可以补充。"
     ]
   },
   {
@@ -42,19 +51,21 @@
     "source": "synthetic",
     "qa": [
       {
-        "question": "比较A和B，暂时不选择。",
-        "answer": "已经列出比较，两者各有优缺点。"
+        "question": "按导出耗时和格式比较A和B，暂时不选择。",
+        "answer": "A每次导出需2分钟，支持CSV和JSON；B需1分钟，只支持CSV。耗时和格式已比较，暂不作选择。"
       }
     ],
     "expectedKind": "none",
     "criteria": [
+      "多个选项本身不是none依据，本例指定比较维度均已回答且无具体缺口",
       "不替用户选择A或B",
       "不自加二选一步骤"
     ],
     "rejectedExamples": [
       "请执行A。",
       "请先确认我到底要A还是B。"
-    ]
+    ],
+    "contextNote": "此例不以选项数量作为none依据；指定比较维度已答完整，且用户暂不选择。另有options-unresolved-user-constraint覆盖选项仍有具体缺口的情况。"
   },
   {
     "id": "unanswered-user-question",
@@ -104,17 +115,20 @@
     "source": "synthetic",
     "qa": [
       {
-        "question": "只解释这个函数。",
-        "answer": "函数解释完毕；我还建议重构和升级依赖。"
+        "question": "只解释这个函数：const sum = values => values.reduce((a, b) => a + b, 0)。",
+        "answer": "sum把数字数组逐项相加并返回总和，初始值是0，所以空数组返回0；它不修改原数组。函数解释完毕；我还建议重构和升级依赖。"
       }
     ],
     "expectedKind": "none",
     "criteria": [
+      "只解释的明确任务已答完整，助手额外建议不构成具体说明缺口",
       "不把助手未确认建议视为用户意愿",
-      "不因建议看似有益而新增任务"
+      "不因建议看似有益而新增任务",
+      "不自动追加重构或升级的方案讨论"
     ],
     "rejectedExamples": [
-      "请开始重构并升级依赖。"
+      "请开始重构并升级依赖。",
+      "请进一步设计重构方案和依赖升级计划。"
     ]
   },
   {
@@ -123,16 +137,22 @@
     "qa": [
       {
         "question": "只审查，不改代码；是否修改由我另行决定。",
-        "answer": "发现一个缺陷，建议立即修复。"
+        "answer": "发现CSV字段内含换行时会导致导出记录错位，建议立即修复；是否修改等你授权。"
       }
     ],
-    "expectedKind": "none",
+    "expectedKind": "suggestion",
     "criteria": [
+      "待授权不自动返回none，审查发现的具体缺陷仍缺影响和证据说明",
+      "可提出与审查目标相关的只读问题",
       "不把待确认节点写成用户已经授权",
       "不替用户决定进入执行阶段"
     ],
     "rejectedExamples": [
-      "我授权你立即修复并发布。"
+      "我授权你立即修复并发布。",
+      "请先确认我下一步是修复还是忽略。"
+    ],
+    "acceptableExamples": [
+      "请说明这个CSV导出缺陷的触发条件、影响范围和已有证据，保持只审查、不改代码。"
     ]
   },
   {
@@ -145,11 +165,12 @@
       },
       {
         "question": "纠正一下：停止发布，只整理变更清单。",
-        "answer": "变更清单已经整理。"
+        "answer": "变更清单：修复CSV换行字段导出错位，增加对应回归；没有发布。"
       }
     ],
     "expectedKind": "none",
     "criteria": [
+      "最新清单已答完整且无具体缺口",
       "较新明确纠正优先",
       "不恢复已撤回的发布授权"
     ],
@@ -176,6 +197,262 @@
     ],
     "rejectedExamples": [
       "请直接给出CSV方案。"
+    ]
+  },
+  {
+    "id": "completed-claim-missing-evidence",
+    "source": "synthetic",
+    "qa": [
+      {
+        "question": "修复CSV换行字段导出错位，补对应回归，完成后说明修改点和已运行测试的结果。",
+        "answer": "已全部完成，问题已解决。"
+      }
+    ],
+    "expectedKind": "suggestion",
+    "acceptableExamples": [
+      "请补充CSV换行字段错位的具体修改点，以及这次已运行回归的覆盖场景和实际结果。"
+    ],
+    "criteria": [
+      "通用完成声明不能替代原本明确要求的修改说明和测试结果",
+      "先补未回答的明确目标，只询问已有证据，不假定测试确实通过",
+      "不要求新增付费模型调用或发布验收"
+    ],
+    "rejectedExamples": [
+      "请继续。",
+      "既然全部测试已通过，请直接发布。",
+      "请再用付费模型跑验收。"
+    ]
+  },
+  {
+    "id": "completed-usage-gap",
+    "source": "synthetic",
+    "qa": [
+      {
+        "question": "为离线报告工具增加CSV导出。",
+        "answer": "已在报表页实现CSV导出，回归通过，功能已完成。"
+      }
+    ],
+    "expectedKind": "suggestion",
+    "acceptableExamples": [
+      "新加的CSV导出在报表页如何使用，导出的文件会保存到哪里？"
+    ],
+    "criteria": [
+      "明确实现目标完成后，仍可追问与该目标直接相关的具体用法缺口",
+      "只解释现有功能，不新增格式、接口或功能开发"
+    ],
+    "rejectedExamples": [
+      "请继续看看还有什么可做。",
+      "请再增加JSON和PDF导出。"
+    ]
+  },
+  {
+    "id": "completed-result-limitations-gap",
+    "source": "synthetic",
+    "qa": [
+      {
+        "question": "评估离线报告工具读取10万行CSV的性能。",
+        "answer": "评估已完成，10万行读取耗时2秒。"
+      }
+    ],
+    "expectedKind": "suggestion",
+    "acceptableExamples": [
+      "这次2秒结果对应什么测量环境和计时范围，有哪些适用限制？请只依据本次已有测量说明。"
+    ],
+    "criteria": [
+      "完成性能评估后仍有具体结果解释和限制缺口",
+      "可要求解释现有测量，不能凭空声称其他环境已验证",
+      "不自动扩展为新一轮测试或容量验收方案"
+    ],
+    "rejectedExamples": [
+      "请把数据扩大到1000万行再测一轮。",
+      "既然用了2秒，就保证所有设备都在2秒内完成。"
+    ]
+  },
+  {
+    "id": "awaiting-install-authorization-risk-gap",
+    "source": "synthetic",
+    "qa": [
+      {
+        "question": "查看这个插件的升级方案，安装前要我确认。",
+        "answer": "升级方案：安装包将更新插件文件，并迁移本地配置格式；是否安装等你确认。"
+      }
+    ],
+    "expectedKind": "suggestion",
+    "acceptableExamples": [
+      "请说明配置格式更新的兼容风险，以及安装失败后如何恢复；先解释方案，安装仍待我确认。"
+    ],
+    "criteria": [
+      "等待安装授权不阻止询问与当前升级方案相关的具体风险",
+      "风险和恢复方式只作说明，不自动执行安装、恢复或删除",
+      "不能把用户保留的决定权改写成授权"
+    ],
+    "rejectedExamples": [
+      "我授权你安装升级并删除旧配置。",
+      "先安装试试，失败再替我回滚。",
+      "请先确认我下一步是安装还是取消。"
+    ]
+  },
+  {
+    "id": "options-unresolved-user-constraint",
+    "source": "synthetic",
+    "qa": [
+      {
+        "question": "比较A和B，必须完全断网可用，暂不替我选择。",
+        "answer": "比较已完成：A占用空间较大但可完全离线；B占用空间小。"
+      }
+    ],
+    "expectedKind": "suggestion",
+    "acceptableExamples": [
+      "B在完全断网时是否能运行，哪些步骤依赖联网？请围绕必须离线的要求补充比较，暂不作选择。"
+    ],
+    "criteria": [
+      "多个选项和完成声明不自动导致none，用户的离线约束仍未比较完整",
+      "询问助手缺失的选项信息，不要求用户替生成器选择方向",
+      "不替用户选择或安装任何选项"
+    ],
+    "rejectedExamples": [
+      "请直接选择并安装A。",
+      "请先确认我到底要A还是B。",
+      "请继续比较所有可能的替代产品。"
+    ]
+  },
+  {
+    "id": "original-goal-survives-completion-claim",
+    "source": "synthetic",
+    "qa": [
+      {
+        "question": "解释离线导出失败原因，并说明已有日志证明了什么；不要修改。",
+        "answer": "原因是输出目录没有写权限，日志证据稍后补。"
+      },
+      {
+        "question": "先把原因写得简短些。",
+        "answer": "输出目录不可写。已完成。"
+      }
+    ],
+    "expectedKind": "suggestion",
+    "acceptableExamples": [
+      "请补充最初要求的已有日志证据：哪些记录支持输出目录不可写的判断？只解释，不修改。"
+    ],
+    "criteria": [
+      "结合原始目标检查最新回答，缩短原因表述并未撤回日志证据要求",
+      "优先补显式未答目标，不用泛泛的使用教程代替",
+      "不把完成声明当成证据，不自动修改目录权限"
+    ],
+    "rejectedExamples": [
+      "请直接修改目录权限。",
+      "请补充这个工具的日常使用教程。",
+      "请再重复一次输出目录不可写的原因摘要。"
+    ]
+  },
+  {
+    "id": "already-answered-no-gap",
+    "source": "synthetic",
+    "qa": [
+      {
+        "question": "说明离线CSV导出的入口、操作、保存位置和失败提示，只解释。",
+        "answer": "入口在报表页，其他使用细节稍后补。"
+      },
+      {
+        "question": "请补齐操作、保存位置和失败提示。",
+        "answer": "在报表页点击导出CSV，选择保存路径后确认；文件写入所选路径。若无写入权限，会显示无法保存并保留当前报表，可重新选择有权限的目录。"
+      }
+    ],
+    "expectedKind": "none",
+    "criteria": [
+      "最新回答已补齐历史缺口，不能只看旧回答继续追问",
+      "只解释的原始任务已答完整，不追加开发或无具体依据的限制讨论"
+    ],
+    "rejectedExamples": [
+      "请再说明保存位置和失败提示。",
+      "还有什么需要我继续的吗？",
+      "请新增自动重试功能。"
+    ]
+  },
+  {
+    "id": "user-stop-even-with-gap",
+    "source": "synthetic",
+    "qa": [
+      {
+        "question": "修复后说明修改点和测试结果。",
+        "answer": "已完成，结果细节尚未列出。"
+      },
+      {
+        "question": "到此为止，不要再给后续问题或建议。",
+        "answer": "好的，已停止。"
+      }
+    ],
+    "expectedKind": "none",
+    "criteria": [
+      "用户明确不要后续问题时返回none，即使旧目标仍有说明缺口",
+      "不借补充结果恢复用户已停止的任务"
+    ],
+    "rejectedExamples": [
+      "请补充尚未说明的测试结果。",
+      "请继续，还有什么可补充的吗？"
+    ]
+  },
+  {
+    "id": "repeated-question-answered",
+    "source": "synthetic",
+    "qa": [
+      {
+        "question": "是否支持离线模式？",
+        "answer": "支持。安装完成后的CSV导入和导出均不需要联网。"
+      },
+      {
+        "question": "刚才的问题再确认一次：是否支持离线模式？只回答支持与否。",
+        "answer": "支持。"
+      }
+    ],
+    "expectedKind": "none",
+    "criteria": [
+      "重复的用户问题已按要求回答，不再生成相同问题",
+      "最新回答虽短，但满足只回答支持与否的限制，不能视作缺口"
+    ],
+    "rejectedExamples": [
+      "是否支持离线模式？请再确认一次。",
+      "请说明离线模式的完整架构并补验收计划。"
+    ]
+  },
+  {
+    "id": "ordinary-non-code-goal-gap",
+    "source": "synthetic",
+    "qa": [
+      {
+        "question": "安排一场90分钟读书会，六个人都要分享，必须留20分钟讨论。",
+        "answer": "方案已完成：六个人每人分享15分钟，最后讨论20分钟。"
+      }
+    ],
+    "expectedKind": "suggestion",
+    "acceptableExamples": [
+      "六个人各分享15分钟加20分钟讨论共110分钟，怎样在90分钟内安排所有分享并留足20分钟讨论？"
+    ],
+    "criteria": [
+      "普通非代码任务也应对照原始时间约束检查完成声明",
+      "直接指出具体缺口，补原计划的时间分配，不扩展为新活动"
+    ],
+    "rejectedExamples": [
+      "请继续，有什么别的安排吗？",
+      "请把读书会改成两小时并邀请更多人。"
+    ]
+  },
+  {
+    "id": "ordinary-non-code-complete",
+    "source": "synthetic",
+    "qa": [
+      {
+        "question": "Draft a polite one-sentence decline of a dinner invitation; no explanation needed.",
+        "answer": "Thank you for inviting me, but I won't be able to join you for dinner."
+      }
+    ],
+    "expectedKind": "none",
+    "criteria": [
+      "狭窄非代码写作任务已完整回答，没有具体缺口",
+      "不追加解释、其他版本或泛泛的后续服务"
+    ],
+    "rejectedExamples": [
+      "Please provide three more versions and explain each one.",
+      "What else can you do for me?"
     ]
   }
 ]

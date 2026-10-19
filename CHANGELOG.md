@@ -2,6 +2,13 @@
 
 [English](<README.md>) | [简体中文](<README.zh-CN.md>)
 
+## 1.2.25 — 自然下一句与低干扰空结果 / Natural follow-ups and quiet abstention
+
+- Reframe suggestion generation as the user's natural next message, not generic task planning. Check grounded gaps and agreed next steps before abstaining; completion, multiple directions or awaiting authorization are not blanket none rules.
+- Adapt verified mechanics from installed Codex Desktop 26.1013.40934: automatic abstention stays quiet, manual generation still reports none. Codex's actual prediction prompt is remote-configured and was not obtained or copied.
+- Preserve explicit permissions, configured QA scope, model controls, per-QA deduplication, cancellation and error separation. No additional generation or automatic retries.
+- Expand human reference cases and offline flow coverage; these tests do not establish a measured improvement in live-model suggestion quality or abstention rate.
+
 ## 1.2.24 — Grok Priority 与增强结构化 / Grok Priority and structured enhancement
 
 - Strengthen enhancement instructions: independent points require real line breaks or lists, complete replacement text rather than appended commentary, and no synonym-only edits where restructuring is needed. Preserve intent, literal code and genuinely clear short requests.

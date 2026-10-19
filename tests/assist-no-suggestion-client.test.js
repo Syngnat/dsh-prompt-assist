@@ -43,8 +43,24 @@ test('raw suggest stream never exposes JSON or placeholders and enhancement reta
  const f=fixture();const work=f.controller.generate('suggest');for(const text of ['{"kind":','{"kind":"none"}','暂无建议','partial question']){f.requests[0].onText(text);assert.equal(f.latest.preview,null);assert.equal(f.latest.noSuggestion,null);assert.equal(f.latest.pending,'suggest');}f.reply();await work;f.controller.dispose();
  const g=fixture();g.observe({input:{...g.frame.input,draft:'original'}});const enhanced=g.controller.generate('enhance');g.requests[0].onText('partial');assert.equal(g.latest.preview.text,'partial');assert.equal(g.latest.preview.streaming,true);g.reply({outcome:undefined,text:'complete'});assert.equal(await enhanced,true);g.controller.dispose();
 });
-test('normal empty panel is session-owned, dismissible and SSR has no apply/copy/body',async()=>{
- const f=await none();const props={open:false,result:f.latest,undo:null,input:f.frame.input,sessionId:'a'};
+test('automatic empty results are retained as none but do not open a status panel',async()=>{
+ const f=await none();
+ assert.equal(f.latest.noSuggestion.automatic,true);
+ assert.equal(f.latest.noSuggestion.outcome,'no-suggestion');
+ assert.equal(shouldShowPanel({open:false,result:f.latest,undo:null,input:f.frame.input,sessionId:'a'}),false);
+ assert.equal(renderToStaticMarkup(React.createElement(NoSuggestion,{runtime:{sessionId:'a',result:f.latest,controller:f.controller},t:key=>key})), '');
+ for(let i=0;i<3;i++)f.observe({});assert.equal(f.requests.length,1);
+ assert.equal(shouldShowPanel({open:false,result:{...f.latest,error:'requestError'},undo:null,input:f.frame.input,sessionId:'a'}),true);
+ f.controller.dispose();
+});
+test('manual empty results stay visible even when a receipt claims automatic origin',async()=>{
+ const f=fixture();const work=f.controller.generate('suggest');f.reply({automatic:true,cached:true});await work;
+ assert.equal(f.latest.noSuggestion.automatic,false);
+ assert.equal(shouldShowPanel({open:false,result:f.latest,undo:null,input:f.frame.input,sessionId:'a'}),true);
+ f.controller.dispose();
+});
+test('normal manual empty panel is session-owned, dismissible and SSR has no apply/copy/body',async()=>{
+ const f=fixture();const work=f.controller.generate('suggest');f.reply();await work;const props={open:false,result:f.latest,undo:null,input:f.frame.input,sessionId:'a'};
  assert.equal(shouldShowPanel(props),true);assert.equal(shouldShowPanel({...props,sessionId:'b'}),false);
  const runtime={sessionId:'a',result:f.latest,controller:f.controller};
  const html=renderToStaticMarkup(React.createElement(React.Fragment,null,React.createElement(NoSuggestion,{runtime,t:key=>dictionaries.en[key]}),React.createElement(Preview,{runtime,t:key=>key})));
