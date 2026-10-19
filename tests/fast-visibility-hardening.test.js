@@ -173,6 +173,71 @@ test("the Host provider allowlist stays explicit and case-sensitive", () => {
   assert.equal(policy.isOpenAISelection(selected, ["cpa"]), true);
 });
 
+for (const model of ["grok-4.6", "grok-4.7", "grok-4.8"]) {
+  test(`${model}: Fast presentation supports explicit and default selections without implicit authorization`, () => {
+    const bundle = pure(), selection = {provider: "xai", model};
+    for (const enabled of [false, true]) {
+      const wire = {enabled, providers: ["xai"]};
+      const expected = {visible: true, enabled, eligible: true, reason: "ready"};
+      assert.deepEqual(bundle.derivePresentation(wire, selection, null), expected);
+      assert.deepEqual(bundle.derivePresentation(wire, null, selection), expected);
+    }
+    for (const providers of [[], ["openai"], ["XAI"]]) {
+      assert.deepEqual(bundle.derivePresentation({enabled: true, providers}, selection, null),
+        {visible: true, enabled: false, eligible: false, reason: "unsupported-provider"});
+    }
+    for (const wire of [undefined, null, true, false, {enabled: true}, {enabled: "true", providers: ["xai"]}]) {
+      assert.deepEqual(bundle.derivePresentation(wire, selection, null),
+        {visible: true, enabled: false, eligible: false, reason: "loading"});
+    }
+  });
+
+  test(`${model}: the registered Fast control reflects Host authorization, preference and command access`, () => {
+    const selection = {provider: "xai", model};
+    const blocked = toggleFixture({enabled: true, providers: ["openai"]}, selection);
+    assert.match(blocked.render(), /<button[^>]*role="switch"[^>]*aria-checked="false"[^>]*aria-disabled="true"/);
+    for (const enabled of [false, true]) {
+      const authorized = toggleFixture({enabled, providers: ["xai"]}, selection);
+      assert.ok(authorized.render().includes(`aria-checked="${enabled}"`));
+      assert.match(authorized.render(), /aria-disabled="false"/);
+      const granted = toggleFixture({enabled, providers: ["openai"]}, selection, {
+        prioritySource: source({status: "ready", revision: 1, authorized: ["xai"], effective: ["openai", "xai"]}),
+      });
+      assert.match(granted.render(), /aria-disabled="false"/);
+      assert.ok(granted.render().includes(`aria-checked="${enabled}"`));
+      assert.equal(authorized.writes + granted.writes, 0);
+    }
+    for (const status of ["idle", "error"]) {
+      const unconfirmed = toggleFixture({enabled: true, providers: ["openai"]}, selection, {
+        prioritySource: source({status, authorized: ["xai"], effective: ["openai", "xai"]}),
+      });
+      assert.match(unconfirmed.render(), /aria-disabled="true"/);
+    }
+    assert.match(toggleFixture({enabled: false, providers: ["xai"]}, selection, {allowed: false}).render(), /aria-disabled="true"/);
+    for (const session of [{subagent: true}, {removed: true}]) {
+      assert.equal(toggleFixture({enabled: true, providers: ["xai"]}, selection, {session}).render(), "");
+    }
+    assert.equal(blocked.writes, 0); assert.equal(blocked.catalogReads, 0);
+  });
+
+  test(`${model}: a current revocation receipt disables Fast even when the session projection still lists the provider`, () => {
+    const revoked = toggleFixture({enabled: true, providers: ["openai", "xai"]}, {provider: "xai", model}, {
+      prioritySource: source({status: "ready", revision: 2, configured: ["openai"], authorized: [], effective: ["openai"]}),
+    });
+    const html = revoked.render();
+    assert.match(html, /<button[^>]*role="switch"/);
+    assert.match(html, /aria-disabled="true"/);
+    assert.match(html, /aria-checked="false"/);
+    assert.equal(revoked.writes, 0);
+  });
+}
+
+test("Fast still hides legacy Grok even on an explicitly authorized provider", () => {
+  for (const model of ["grok-1", "grok-2", "grok-3", "grok-3-mini", "grok-4x"]) {
+    assert.equal(toggleFixture({enabled: true, providers: ["xai"]}, {provider: "xai", model}).render(), "", model);
+  }
+});
+
 test("hydration shares one pending Promise and marks ready only after success", async () => {
   const bundle = pure(), ready = new WeakSet(), binding = {}, ack = deferred();
   const reads = [];

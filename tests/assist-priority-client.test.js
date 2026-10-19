@@ -274,3 +274,58 @@ test("both shipped languages contain every Priority key consumed by this module"
     assert.ok(html.includes(dictionaries[locale]["priority.title"]));
   }
 });
+
+for (const model of ["grok-4.6", "grok-4.7", "grok-4.8"]) {
+  test(`${model}: SSR admits Grok-only candidates and configured samples while preserving consent and revoke guards`, () => {
+    const grok = {id: "xai", name: "xAI only", configured: false, openAIModels: [null, "grok-3", model, "deepseek-chat"]};
+    const props = {candidates: [grok], selected: "xai"};
+    for (const consent of [undefined, false, 1, "true"]) {
+      const html = render({...props, consent});
+      assert.match(html, /<option[^>]*value="xai"/);
+      assert.ok(html.includes("xAI only (xai)"));
+      assert.ok(html.includes("priority.exampleModels: " + model));
+      assert.doesNotMatch(html, /grok-3|deepseek-chat/);
+      assert.match(html, /<button[^>]*disabled=""[^>]*>priority.authorize<\/button>/);
+    }
+    assert.match(render({...props, consent: true}), /<button(?![^>]*disabled)[^>]*>priority.authorize<\/button>/);
+    const granted = {...state, authorized: ["proxy", "xai"], effective: ["openai", "proxy", "xai"]};
+    const authorized = render({...props, state: granted, consent: true});
+    assert.doesNotMatch(authorized, /<option[^>]*value="xai"/);
+    assert.match(authorized, /aria-label="priority.revoke: xai"/);
+    const configured = render({...props, consent: true,
+      state: {...state, configured: ["openai", "xai"], effective: ["openai", "xai", "proxy"], names: {...state.names, xai: "xAI only"}},
+      candidates: [{...grok, configured: true}]});
+    assert.match(configured, /<strong>xAI only<\/strong><code>xai<\/code>/);
+    assert.ok(configured.includes("priority.visibleModels: " + model));
+    assert.doesNotMatch(configured, /grok-3|deepseek-chat|aria-label="priority.revoke: xai"|<option[^>]*value="xai"/);
+  });
+
+  test(`${model}: the Client controller can grant and revoke a Grok-only provider through revisioned owner RPC`, async t => {
+    const initial = {revision: 0, configured: ["openai"], authorized: [], effective: ["openai"], names: {xai: "xAI only"}};
+    const grok = {id: "xai", name: "xAI only", configured: false, openAIModels: [model]};
+    const granted = {...initial, revision: 1, authorized: ["xai"], effective: ["openai", "xai"]};
+    const revoked = {...initial, revision: 2};
+    const replies = {snapshot: initial, candidates: {...initial, candidates: [grok]}, authorize: granted, revoke: revoked};
+    const io = fakeConnection(payload => ok(replies[payload.action]));
+    let changed = 0;
+    const controller = panel().createPriorityController(io.connection, {onChanged: () => {changed++;}});
+    t.after(() => controller.dispose());
+    await controller.start();
+    assert.deepEqual(controller.getSnapshot().candidates, [grok]);
+    assert.deepEqual(controller.getSnapshot().state.authorized, []);
+    for (const consent of [undefined, false, 1, "true"]) {
+      assert.equal(await controller.authorize("xai", consent), false);
+      assert.equal(controller.getSnapshot().notice, "priority.noConsent");
+    }
+    assert.equal(io.calls.length, 2); assert.equal(changed, 0);
+    assert.equal(await controller.authorize("xai", true), true);
+    assert.deepEqual(io.calls[2].payload, {action: "authorize", provider: "xai", consent: true, expectedRevision: 0});
+    assert.deepEqual(controller.getSnapshot().state, granted); assert.equal(changed, 1);
+    assert.equal(await controller.authorize("xai", true), false, "a granted provider cannot be submitted again");
+    assert.equal(io.calls.length, 3);
+    assert.equal(await controller.revoke("xai"), true);
+    assert.deepEqual(io.calls[3].payload, {action: "revoke", provider: "xai", expectedRevision: 1});
+    assert.deepEqual(controller.getSnapshot().state, revoked); assert.equal(changed, 2);
+    assert.ok(io.calls.every(call => call.channel === ASSIST_CHANNEL && call.method === endpoint));
+  });
+}

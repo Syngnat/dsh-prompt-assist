@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { foldFastState, initialFastState, PROJECTION_KEY } from '../projection.js';
-import { isOpenAISelection, priorityPayload } from '../policy.js';
+import { DEFAULT_PROVIDERS, isOpenAIModel, isGrokModel, isPriorityModel, isOpenAISelection, priorityPayload } from '../policy.js';
 import { OpenAIFastService } from '../service.js';
 
 function event(type, seq, data) { return { type, seq, data }; }
@@ -60,6 +60,60 @@ test('route allowlist precedes model-family detection', () => {
   assert.equal(isOpenAISelection({ provider: 'custom', model: 'gpt-6.1-sol' }, ['custom']), true);
 });
 
+for (const model of ['grok-4.6', 'grok-4.7', 'grok-4.8']) {
+  test(`${model}: recognition supports Priority without granting provider authorization`, () => {
+    for (const id of [model, model.toUpperCase(), `${model}-fast-reasoning`]) {
+      assert.equal(isGrokModel(id), true, id);
+      assert.equal(isPriorityModel(id), true, id);
+      assert.equal(isOpenAIModel(id), false, id);
+      const selection = { provider: 'xai', model: id };
+      assert.equal(isOpenAISelection(selection), false, 'Grok is not a default provider grant');
+      for (const providers of [[], ['openai'], ['XAI'], null, 'xai']) {
+        assert.equal(isOpenAISelection(selection, providers), false);
+      }
+      assert.equal(isOpenAISelection(selection, ['xai']), true);
+      assert.equal(isOpenAISelection(selection, () => ['xai']), true);
+    }
+    assert.deepEqual(DEFAULT_PROVIDERS, ['openai', 'openai-codex']);
+  });
+}
+
+test('Grok selections follow live provider grants and revocations', () => {
+  let providers = ['openai'];
+  const allowed = () => providers;
+  for (const model of ['grok-4.6', 'grok-4.7', 'grok-4.8']) {
+    const selection = { provider: 'xai', model };
+    assert.equal(isOpenAISelection(selection, allowed), false);
+    providers = ['openai', 'xai'];
+    assert.equal(isOpenAISelection(selection, allowed), true);
+    providers = ['openai'];
+    assert.equal(isOpenAISelection(selection, allowed), false);
+  }
+});
+
+test('legacy, malformed and unrelated model ids never enter the Priority union', () => {
+  for (const model of ['grok', 'grok-0', 'grok-1', 'grok-1.5', 'grok-2', 'grok-3', 'grok-3-mini',
+    'grok-3.99', 'grok-04.7', 'grok-4x', 'grokish-4.7', 'xai/grok-4.7', 'my-grok-4.8',
+    'deepseek-chat', 'claude-sonnet-4', '', null, undefined, true, 4.7, {}, []]) {
+    assert.equal(isGrokModel(model), false, String(model));
+    assert.equal(isPriorityModel(model), false, String(model));
+    assert.equal(isOpenAISelection({ provider: 'xai', model }, ['xai']), false, String(model));
+  }
+  for (const model of ['gpt-4o', 'chatgpt-4o-latest', 'codex', 'o3']) {
+    assert.equal(isGrokModel(model), false, model);
+    assert.equal(isOpenAIModel(model), true, model);
+    assert.equal(isPriorityModel(model), true, model);
+  }
+});
+
+test('Grok 4 and later recognition crosses the major-version digit boundary', () => {
+  for (const model of ['grok-4', 'grok-4-1-fast-reasoning', 'grok-5', 'grok-9', 'grok-10', 'grok-10.1', 'grok-20']) {
+    assert.equal(isGrokModel(model), true, model);
+    assert.equal(isPriorityModel(model), true, model);
+    assert.equal(isOpenAISelection({ provider: 'xai', model }, ['xai']), true, model);
+  }
+});
+
 test('Priority copies only the wire body; invalid upstream bodies fail', () => {
   const body = Object.freeze({ model: 'gpt-test', input: [], service_tier: 'auto' });
   const result = priorityPayload(body);
@@ -116,3 +170,19 @@ test('unsupported routes reject enabling but always allow disabling', async () =
   await assert.rejects(service.run(agent, 'invalid'), /fast.invalid/);
   await assert.rejects(service.run(undefined, 'on'), /current session/);
 });
+
+for (const model of ['grok-4.6', 'grok-4.7', 'grok-4.8']) {
+  test(`${model}: the session command needs an authorized provider before enabling Fast`, async () => {
+    const { service, agent, selection } = fixture();
+    Object.assign(selection, { provider: 'xai', model });
+    assert.equal(service.status(agent).eligible, false);
+    await assert.rejects(service.run(agent, 'on'), /fast.unsupported/);
+    service.providers = ['openai', 'xai'];
+    assert.equal((await service.run(agent, 'on')).enabled, true);
+    assert.equal(service.status(agent).eligible, true);
+    service.providers = ['openai'];
+    assert.equal(service.status(agent).enabled, false);
+    assert.equal(service.status(agent).eligible, false);
+    assert.equal((await service.run(agent, 'off')).enabled, false);
+  });
+}

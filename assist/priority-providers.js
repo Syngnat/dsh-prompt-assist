@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 import { isAbsolute, resolve } from "node:path";
-import { isOpenAIModel, mergeProviders } from "../policy.js";
+import { isPriorityModel, mergeProviders } from "../policy.js";
 export { mergeProviders as effectiveProviders } from "../policy.js";
 
 const failure = code => Object.assign(new Error(code), { code });
@@ -62,7 +62,7 @@ async function registry(ctx, signal) {
   } catch { checkSignal(signal); throw failure("provider-unknown"); }
 }
 
-async function openAIModels(llm, provider, signal) {
+async function recognizedModels(llm, provider, signal) {
   checkSignal(signal);
   let models;
   try { models = typeof llm.listModels === "function" ? await llm.listModels(provider) : []; }
@@ -73,7 +73,7 @@ async function openAIModels(llm, provider, signal) {
   try {
     for (const model of models) {
       const id = model?.id;
-      if (isOpenAIModel(id) && !ids.includes(id)) ids.push(id);
+      if (isPriorityModel(id) && !ids.includes(id)) ids.push(id);
       if (ids.length === 8) break;
     }
     return ids;
@@ -93,7 +93,7 @@ function createStore(ctx, domain, global, schema, loaded, configured) {
     if (closing) throw unavailable();
     const { llm, entries } = await registry(ctx, signal), values = [];
     for (const entry of entries) {
-      const models = await openAIModels(llm, entry.id, signal);
+      const models = await recognizedModels(llm, entry.id, signal);
       if (closing) throw unavailable();
       if (models.length) values.push({ id: entry.id, name: typeof entry.name === "string" ? entry.name : entry.id,
         configured: builtins.has(entry.id), openAIModels: models });
@@ -120,7 +120,7 @@ function createStore(ctx, domain, global, schema, loaded, configured) {
         // Revalidate at the write boundary; a previous candidates response is not authorization.
         const { llm, entries } = await registry(ctx, signal);
         if (!entries.some(entry => entry.id === provider)) throw failure("provider-unknown");
-        if (!(await openAIModels(llm, provider, signal)).length) throw failure("provider-not-openai");
+        if (!(await recognizedModels(llm, provider, signal)).length) throw failure("provider-not-openai");
       }
       checkSignal(signal);
       const present = snapshot.authorized.includes(provider);

@@ -1,6 +1,6 @@
 import React from "react";
 import {ASSIST_CHANNEL} from "../identity.js";
-import {isOpenAIModel} from "../../policy.js";
+import {isPriorityModel} from "../../policy.js";
 import {notifyPriorityChanged} from "./priority-source.js";
 const h = React.createElement;
 const ENDPOINT = "local-openai-fast.priority";
@@ -14,7 +14,7 @@ function availableCandidates(candidates, state) {
   return (Array.isArray(candidates) ? candidates : []).flatMap(item => {
     if (!item || typeof item.id !== "string" || !PROVIDER.test(item.id) || item.configured !== false
       || excluded.has(item.id) || seen.has(item.id) || !Array.isArray(item.openAIModels)) return [];
-    const openAIModels = item.openAIModels.filter(model => typeof model === "string" && isOpenAIModel(model)).slice(0, 8);
+    const openAIModels = item.openAIModels.filter(model => typeof model === "string" && isPriorityModel(model)).slice(0, 8);
     if (!openAIModels.length) return [];
     seen.add(item.id);
     return [{id: item.id, configured: false, name: typeof item.name === "string" ? item.name : item.id, openAIModels}];
@@ -32,7 +32,7 @@ export function PriorityPanelContent({state, candidates = [], consent = false, n
   // Model settings identify a provider by display name, so both must be visible together.
   const nameOf = id => typeof names[id] === "string" && names[id] && names[id] !== id ? names[id] : null;
   const builtinModels = new Map(raw.filter(item => item && item.configured === true && Array.isArray(item.openAIModels))
-    .map(item => [item.id, item.openAIModels.filter(model => typeof model === "string" && isOpenAIModel(model)).slice(0, 8)]));
+    .map(item => [item.id, item.openAIModels.filter(model => typeof model === "string" && isPriorityModel(model)).slice(0, 8)]));
   const button = (key, action, disabled = false, extra = {}) => h("button",
     {type: "button", className: "lpa-button", onClick: action, disabled, ...extra}, t(key));
   return h("section", {className: "lpa-feature lpa-card", "aria-label": t("priority.title"), "aria-busy": Boolean(pending)},

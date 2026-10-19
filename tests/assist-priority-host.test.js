@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { resolve } from "node:path";
 import { openPriorityProviders, effectiveProviders } from "../assist/priority-providers.js";
+import { isOpenAISelection } from "../policy.js";
 
 const deferred = () => { let resolve; const promise = new Promise(done => { resolve = done; }); return { promise, resolve }; };
 class Schema {
@@ -55,6 +56,59 @@ test("only registered providers with OpenAI catalog models can be granted persis
   assert.deepEqual(effectiveProviders(["openai", "proxy", "openai"], value.authorized), ["openai", "proxy"]);
   await store.close(); const again = await openPriorityProviders(f.ctx(), z, ["openai"]); t.after(() => again.close());
   assert.deepEqual(again.snapshot(), value);
+});
+
+for (const model of ["grok-4.6", "grok-4.7", "grok-4.8"]) {
+  test(`${model}: owner RPC lists, grants and revokes a Grok-only provider with explicit consent`, async t => {
+    const f = fixture();
+    f.providers.splice(0, f.providers.length, { id: "xai", name: "xAI only" });
+    f.models.clear(); f.models.set("xai", [{ id: model }, { id: model }]);
+    const { store } = await opened(t, f);
+    const rpc = await rpcFixture(t, store, f.llm);
+    const allowed = () => effectiveProviders(["openai"], store.snapshot().authorized);
+    const selection = { provider: "xai", model };
+    const listed = (await (await rpc.post({ action: "candidates" })).json()).result;
+    assert.equal(listed.ok, true);
+    assert.deepEqual(listed.value.candidates, [{ id: "xai", name: "xAI only", configured: false, openAIModels: [model] }]);
+    assert.deepEqual(listed.value.authorized, []); assert.deepEqual(listed.value.effective, ["openai"]);
+    assert.equal(isOpenAISelection(selection, allowed), false); assert.equal(f.writes.length, 0);
+    for (const consent of [undefined, false, 1, "true"]) {
+      const refused = (await (await rpc.post({ action: "authorize", provider: "xai", consent, expectedRevision: 0 })).json()).result;
+      assert.equal(refused.ok, false); assert.equal(refused.error.code, "consent-required");
+    }
+    assert.equal(f.writes.length, 0);
+    const granted = (await (await rpc.post({ action: "authorize", provider: "xai", consent: true, expectedRevision: 0 })).json()).result;
+    assert.equal(granted.ok, true);
+    assert.deepEqual(granted.value, { revision: 1, configured: ["openai"], authorized: ["xai"],
+      effective: ["openai", "xai"], names: { xai: "xAI only" } });
+    assert.equal(isOpenAISelection(selection, allowed), true);
+    const stale = (await (await rpc.post({ action: "revoke", provider: "xai", expectedRevision: 0 })).json()).result;
+    assert.equal(stale.error.code, "stale-revision"); assert.equal(f.writes.length, 1);
+    f.providers.length = 0; f.models.clear(); const reads = f.modelReads.length;
+    const revoked = (await (await rpc.post({ action: "revoke", provider: "xai", expectedRevision: 1 })).json()).result;
+    assert.equal(revoked.ok, true);
+    assert.deepEqual(revoked.value, { revision: 2, configured: ["openai"], authorized: [], effective: ["openai"], names: {} });
+    assert.equal(isOpenAISelection(selection, allowed), false);
+    assert.equal(f.modelReads.length, reads, "an offline provider must remain revocable");
+    assert.deepEqual(f.writes, [{ revision: 1, providers: ["xai"] }, { revision: 2, providers: [] }]);
+    await store.close();
+    const reopened = await openPriorityProviders(f.ctx(), z, ["openai"]); t.after(() => reopened.close());
+    assert.deepEqual(reopened.snapshot(), { revision: 2, authorized: [] });
+  });
+}
+
+test("Grok candidates use the Priority union while legacy catalogs and stale discovery remain ungrantable", async t => {
+  const f = fixture();
+  f.models.set("proxy", [{ id: "grok-3" }, { id: "grok-4.6" }, { id: "gpt-4o" }, { id: "grok-4.7" },
+    { id: "grok-4.6" }, { id: "deepseek-chat" }, { id: "grok-4.8" }, { id: "o3" }]);
+  const { store } = await opened(t, f);
+  assert.deepEqual((await store.candidates())[0].openAIModels, ["grok-4.6", "gpt-4o", "grok-4.7", "grok-4.8", "o3"]);
+  for (const model of ["grok-1", "grok-2", "grok-3", "grok-3-mini", "not-grok-4.8"]) {
+    f.models.set("proxy", [{ id: model }]);
+    assert.deepEqual(await store.candidates(), []);
+    await assert.rejects(store.authorize("proxy", { expectedRevision: 0, consent: true }), { code: "provider-not-openai" });
+  }
+  assert.equal(f.writes.length, 0); assert.deepEqual(store.snapshot().authorized, []);
 });
 
 test("candidate model samples are unique, bounded to eight, and mark configured providers", async t => {

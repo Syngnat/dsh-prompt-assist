@@ -2,11 +2,11 @@
 
 # Prompt Assistance & Fast Acceleration
 
-Provides prompt enhancement, next-question suggestions, and OpenAI Fast acceleration, with per-session configuration of models, reasoning effort, and auxiliary Fast.
+Provides prompt enhancement, next-question suggestions, and OpenAI / xAI Priority acceleration, with per-session configuration of models, reasoning effort, and auxiliary Fast.
 
 A plugin bundle for the DeepSeek Harness (DSH) Web GUI. Enhancement and suggestions are independent features: enable either or both for the current DSH profile. Settings live on the sidebar page, not in a composer popup. Feature switches are profile-wide; model controls remain per-conversation.
 
-> **v1.2.23:** online update accepts the official repository in every equivalent spelling (`github:`, `github.com/`, `https://github.com/…`, `git+`, `.git`, tag or commit pin), still refuses foreign repos, `#main` and `file:`/`link:` origins, and now shows the installation source it detected plus how to fix it.
+> **v1.2.24:** Fast recognizes Grok 4.6/4.7 and future Grok 4+ model names on authorized routes. Enhancement now explicitly requests structured replacement text; exact echoes show a no-rewrite notice instead of allowing a redundant Apply. Upstream Priority availability and semantic output quality remain model-dependent.
 
 ## Compatibility policy
 
@@ -63,6 +63,8 @@ Review the inline result, compare the original when needed, then copy or apply i
 
 Enhancement keeps the user speaking to the assistant. It uses relevant confirmed context without adding clarification steps; when core meaning cannot be established, it conservatively edits or retains the original rather than guessing.
 
+Enhancement instructions require real line breaks, short paragraphs or lists for independent points, and a complete replacement draft rather than appended commentary. Clear short requests need not be expanded. A finalized exact echo (ignoring outer whitespace and line-ending encoding only) shows a no-rewrite notice and cannot be applied again. This is not a semantic quality score: light paraphrases are not automatically rejected. Lists and code line breaks are preserved; no punctuation-based autoformatter or automatic paid retry is added.
+
 ### Suggest the next question
 
 Automatic suggestions use the latest selected complete Q&A pairs. They run only after a **new** complete Q&A becomes available, while the conversation is idle and the draft contains no text, references, or attachments. Mounting or reopening the UI establishes a baseline; it does not replay an old Q&A. The toolbar suggestion button can request a suggestion from existing complete Q&A when eligible.
@@ -73,11 +75,13 @@ Suggestions preserve user questions and permission boundaries, do not promote un
 
 ### Fast
 
+**Grok support (v1.2.24):** recognizes `grok-4.6`, `grok-4.7`, future `grok-4.8` and later major versions using the same naming convention. Recognition is not a guarantee of upstream Priority availability. Provider authorization and a supported API are still required. The request adds only `service_tier: "priority"`; it does not switch models, lower reasoning effort or automatically retry at the default tier. New models must first be configured or discovered in the provider catalog. xAI documents a 2× standard token rate for Priority; DSH estimates may not reflect that surcharge, so use the provider bill. No live paid xAI request or actual-tier display has been verified.
+
 > **From v1.2.13:** a recognized GPT/OpenAI model keeps its Fast control visible even when the provider is not authorized or the Host snapshot is unavailable. The control stays disabled and explains the condition; metadata retries are bounded and never submit a model request. Model-name matching ignores case, but provider route IDs are exact and an OpenAI-compatible protocol alone does not grant Priority support.
 
-The main **Fast** icon button sits next to the model selector. It applies Priority handling only to explicitly allowed OpenAI model routes, subject to upstream support. It may incur extra charges; it is not a guarantee of lower latency. Supported subagents inherit the parent preference until they override it.
+The main **Fast** icon button sits next to the model selector. It applies Priority handling only to explicitly allowed OpenAI or Grok 4+ model routes, subject to upstream support. It may incur extra charges; it is not a guarantee of lower latency. Supported subagents inherit the parent preference until they override it.
 
-**Authorizing another provider (from v1.2.16).** The plugin authorizes `openai`, `openai-codex` and `cpa` by default. If your route uses another provider ID, open **Prompt assist → Priority provider authorization** and authorize it explicitly. The Host offers only providers that are registered *and* whose model catalog contains at least one OpenAI-family model; it re-checks both at write time, so a stale or crafted client request cannot authorize anything else. Authorization needs its own risk confirmation, keeps a monotonic revision, caps the list at 32 additions, and cannot revoke the package-configured IDs. Authorizing a provider confirms only that *you* accept Priority handling and possible charges for that endpoint; it does not prove the endpoint implements `service_tier`, and routing still requires an OpenAI-family model and a supported OpenAI API. A disabled Fast control stays visible and explains whether the provider is unauthorized, the state is unsynchronized, or the session may not run commands.
+**Authorizing another provider (from v1.2.16).** The plugin authorizes `openai`, `openai-codex` and `cpa` by default. If your route uses another provider ID, open **Prompt assist → Priority provider authorization** and authorize it explicitly. The Host offers only providers that are registered *and* whose model catalog contains at least one OpenAI-family or Grok 4+ model; it re-checks both at write time, so a stale or crafted client request cannot authorize anything else. Authorization needs its own risk confirmation, keeps a monotonic revision, caps the list at 32 additions, and cannot revoke the package-configured IDs. Authorizing a provider confirms only that *you* accept Priority handling and possible charges for that endpoint; it does not prove the endpoint implements `service_tier`, and routing still requires an OpenAI-family or Grok 4+ model and a supported OpenAI API. A disabled Fast control stays visible and explains whether the provider is unauthorized, the state is unsynchronized, or the session may not run commands.
 
 The Fast switch for each auxiliary feature is separate from the main Fast button and from the other auxiliary feature. Enabling one does not enable the others. Unsupported routes cannot enable auxiliary Fast, and an already checked switch can still be turned off.
 

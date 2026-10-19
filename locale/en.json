@@ -1,17 +1,17 @@
 {
   "meta": {
     "title": "Prompt Assistance & Fast Acceleration",
-    "description": "Provides prompt enhancement, next-question suggestions, and OpenAI Fast acceleration, with per-session configuration of models, reasoning effort, and auxiliary Fast."
+    "description": "Provides prompt enhancement, next-question suggestions, and Priority acceleration (OpenAI / xAI), with per-session configuration of models, reasoning effort, and auxiliary Fast."
   },
   "fast.label": "Fast",
-  "fast.off": "Fast is off. Enable Priority for this session and inheriting OpenAI subagents; provider support is required and additional charges may apply.",
-  "fast.on": "Fast is on for this session and inheriting OpenAI subagents; additional charges may apply. Click to turn off.",
+  "fast.off": "Fast is off. Enable Priority for this session and inheriting subagents on authorized models (OpenAI gpt/o families, xAI Grok 4 and later); provider support is required and billing follows the tier the provider actually used.",
+  "fast.on": "Fast is on for this session and inheriting subagents on authorized models (OpenAI gpt/o families, xAI Grok 4 and later). The provider bills the tier it actually used. Click to turn off.",
   "fast.saving": "Saving Fast preference…",
   "fast.error": "Could not change Fast. Try again.",
-  "fast.command": "Read or set this session's OpenAI Fast; subagents inherit their parent until explicitly overridden (on / off / status).",
+  "fast.command": "Read or set this session's Fast (request-level Priority); subagents inherit their parent until explicitly overridden (on / off / status).",
   "fast.invalid": "Use /openai-fast on, off, or status.",
-  "fast.unsupported": "Fast is only available for explicitly allowed OpenAI model routes.",
-  "fast.enabled": "OpenAI Fast enabled for this session and inheriting subagents. Priority may incur additional charges.",
+  "fast.unsupported": "Fast is only available for explicitly allowed routes in a supported accelerated family (OpenAI gpt/o, or xAI Grok 4 and later).",
+  "fast.enabled": "Fast enabled for this session and inheriting subagents. The provider bills the tier it actually used.",
   "fast.disabled": "Fast disabled for this session and inheriting subagents. Subsequent requests keep provider defaults.",
   "assist.command": "Save this session's model, reasoning, Fast and Q&A controls; global switches are separate.",
   "assist.retired": "The retired assist configuration entry is disabled. Use Prompt assist."

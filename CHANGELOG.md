@@ -2,6 +2,17 @@
 
 [English](<README.md>) | [简体中文](<README.zh-CN.md>)
 
+## 1.2.24 — Grok Priority 与增强结构化 / Grok Priority and structured enhancement
+
+- Strengthen enhancement instructions: independent points require real line breaks or lists, complete replacement text rather than appended commentary, and no synonym-only edits where restructuring is needed. Preserve intent, literal code and genuinely clear short requests.
+- Detect finalized exact enhancement echoes conservatively, show a localized no-rewrite notice, and prevent redundant Apply actions. Formatting-only improvements remain usable. No extra model retry or heuristic prose splitting is added; semantic model quality is not claimed as live-tested.
+- Recognize Grok 4+ alongside OpenAI models: `grok-4.6`, `grok-4.7`, future `grok-4.8` and later numeric major versions. This local naming rule is not a provider capability guarantee.
+- Allow registered Grok-only providers through both Host and Client authorization candidate filters. Default provider authorization, consent, revision checks and exact provider IDs remain unchanged.
+- Keep the existing request-level `service_tier: "priority"` injection and supported API checks for main and auxiliary calls. No model substitution, reasoning reduction or automatic default-tier retry.
+- Update bilingual copy and document billing and verification limits. Existing command, storage and wire field identifiers remain compatible.
+- A ready Host authorization snapshot now replaces the stale session allowlist in the Fast control, so revoked providers no longer remain visually authorized.
+- 未调用真实或付费 xAI 模型；新模型仍须在供应商目录配置，上游可用性与实际计费由服务商决定。
+
 ## 1.2.23 — 在线更新来源判定与可诊断性 / Online-update source recognition and diagnosis
 
 - Accept the official repository in every equivalent spelling the bundle manager may record: `github:…`, `github.com/…`, `https://github.com/Syngnat/dsh-prompt-assist`, an optional `git+` prefix, an optional `.git` suffix, any letter case, and a tag or commit pin (full or short SHA). Foreign repositories, a moving `#main` ref and non-Git origins such as `file:`/`link:` remain refused.

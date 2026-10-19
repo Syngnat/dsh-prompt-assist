@@ -43,7 +43,7 @@ export async function apply(ctx, config = {}) {
   });
   ctx.tools.register({
     name: 'openai_fast',
-    description: 'Read or change OpenAI Fast for this session. Root sessions start off; local subagents inherit their parent unless explicitly overridden. Priority requests may incur additional charges.',
+    description: 'Read or change Fast (request-level Priority) for this session. It applies to authorized OpenAI gpt/o and xAI Grok 4+ routes; Priority may incur extra charges. Root sessions start off; local subagents inherit their parent unless explicitly overridden.',
     parameters: {
       type: 'object', properties: {
         action: { type: 'string', enum: ['status', 'on', 'off'], description: 'status reads preference, inheritance and model capabilities; on/off explicitly sets this session’s preference.' },

@@ -53,6 +53,12 @@ var init_identity = __esm({
 function isOpenAIModel(model) {
   return typeof model === "string" && /^(?:gpt-|chatgpt-|codex(?:-|$)|o[1-9](?:-|$))/i.test(model);
 }
+function isGrokModel(model) {
+  return typeof model === "string" && /^grok-(?:[4-9]|[1-9]\d+)(?:[.-]|$)/i.test(model);
+}
+function isPriorityModel(model) {
+  return isOpenAIModel(model) || isGrokModel(model);
+}
 var DEFAULT_PROVIDERS;
 var init_policy = __esm({
   "policy.js"() {
@@ -592,16 +598,16 @@ var init_messages = __esm({
         "updates.availableTitle": "\u53D1\u73B0\u65B0\u7248\u672C",
         "updates.availableHint": "\u53EF\u5728\u4E0B\u65B9\u51C6\u5907\u5728\u7EBF\u66F4\u65B0\uFF1B\u63D0\u4EA4\u524D\u9700\u8981\u9605\u8BFB\u98CE\u9669\u5E76\u52FE\u9009\u786E\u8BA4\u3002",
         "priority.title": "Priority \u4F9B\u5E94\u5546\u6388\u6743\uFF08\u9AD8\u7EA7\uFF09",
-        "priority.scope": "Fast \u901A\u8FC7\u8BF7\u6C42\u7EA7 service_tier \u751F\u6548\uFF0C\u5C5E\u4E8E\u63A5\u5165\u70B9\u80FD\u529B\uFF0C\u4E0D\u662F\u6A21\u578B\u540D\u5B57\u7684\u5C5E\u6027\u3002\u9ED8\u8BA4\u4EC5\u6388\u6743 openai\u3001openai-codex\u3001cpa\uFF1B\u4E0B\u9762\u53EA\u80FD\u6388\u6743\u5DF2\u6CE8\u518C\u4E14\u786E\u5B9E\u63D0\u4F9B OpenAI \u7CFB\u5217\u6A21\u578B\u7684\u4F9B\u5E94\u5546\u3002",
+        "priority.scope": "Fast \u901A\u8FC7\u8BF7\u6C42\u7EA7 service_tier \u751F\u6548\uFF0C\u5C5E\u4E8E\u63A5\u5165\u70B9\u80FD\u529B\uFF0C\u4E0D\u662F\u6A21\u578B\u540D\u5B57\u7684\u5C5E\u6027\u3002\u9ED8\u8BA4\u4EC5\u6388\u6743 openai\u3001openai-codex\u3001cpa\uFF1B\u4E0B\u9762\u53EA\u80FD\u6388\u6743\u5DF2\u6CE8\u518C\u4E14\u786E\u5B9E\u63D0\u4F9B\u53D7\u652F\u6301\u52A0\u901F\u6A21\u578B\u7684\u4F9B\u5E94\u5546\uFF1AOpenAI gpt/o \u7CFB\u5217\uFF0C\u6216 xAI Grok 4 \u53CA\u4EE5\u4E0A\u3002\u8D39\u7528\u7531\u670D\u52A1\u5546\u6309\u5B9E\u9645\u6863\u4F4D\u8BA1\u6536\u2014\u2014xAI Priority \u4E3A 2\xD7 \u6807\u51C6\u4EF7\u2014\u2014DSH \u8D39\u7528\u4F30\u7B97\u4E0D\u4FDD\u8BC1\u53CD\u6620 Priority \u6EA2\u4EF7\uFF0C\u8BF7\u4EE5\u670D\u52A1\u5546\u8D26\u5355\u4E3A\u51C6\u3002",
         "priority.configured": "\u5185\u7F6E\u6388\u6743",
         "priority.authorized": "\u5DF2\u81EA\u52A9\u6388\u6743",
         "priority.none": "\u5C1A\u672A\u81EA\u52A9\u6388\u6743\u5176\u4ED6\u4F9B\u5E94\u5546\u3002",
         "priority.candidates": "\u53EF\u6388\u6743\u4F9B\u5E94\u5546",
         "priority.choose": "\u8BF7\u9009\u62E9\u4F9B\u5E94\u5546",
-        "priority.noCandidates": "\u6CA1\u6709\u5176\u4ED6\u53EF\u6388\u6743\u4F9B\u5E94\u5546\uFF1A\u672A\u6CE8\u518C\uFF0C\u6216\u672A\u63D0\u4F9B OpenAI \u7CFB\u5217\u6A21\u578B\u3002",
-        "priority.allAuthorized": "\u5F53\u524D\u6240\u6709\u63D0\u4F9B OpenAI \u7CFB\u5217\u6A21\u578B\u7684\u4F9B\u5E94\u5546\u90FD\u5DF2\u5728\u5185\u7F6E\u6388\u6743\u4E2D\uFF0C\u65E0\u9700\u518D\u6B21\u6388\u6743\u3002\u82E5\u4F60\u8981\u7528\u7684\u662F\u5176\u4ED6\u63A5\u5165\u70B9\uFF0C\u8BF7\u5148\u5728\u63D2\u4EF6\u8BBE\u7F6E\u4E2D\u914D\u7F6E\u8BE5\u4F9B\u5E94\u5546\uFF0C\u786E\u8BA4\u5B83\u7684\u6A21\u578B\u76EE\u5F55\u91CC\u5B58\u5728 OpenAI \u7CFB\u5217\u6A21\u578B\uFF0C\u518D\u70B9\u51FB\u201C\u91CD\u65B0\u8BFB\u53D6\u6388\u6743\u201D\u3002",
-        "priority.noProviderModels": "\u5F53\u524D\u6CA1\u6709\u5DF2\u6CE8\u518C\u4E14\u63D0\u4F9B OpenAI \u7CFB\u5217\u6A21\u578B\u7684\u4F9B\u5E94\u5546\u3002\u8BF7\u5148\u914D\u7F6E\u4F9B\u5E94\u5546\u4E0E\u6A21\u578B\uFF0C\u518D\u56DE\u5230\u8FD9\u91CC\u70B9\u51FB\u201C\u91CD\u65B0\u8BFB\u53D6\u6388\u6743\u201D\u3002",
-        "priority.visibleModels": "\u53EF\u8BC6\u522B\u7684 OpenAI \u6A21\u578B",
+        "priority.noCandidates": "\u6CA1\u6709\u5176\u4ED6\u53EF\u6388\u6743\u4F9B\u5E94\u5546\uFF1A\u672A\u6CE8\u518C\uFF0C\u6216\u672A\u63D0\u4F9B\u53D7\u652F\u6301\u7684\u52A0\u901F\u6A21\u578B\u3002",
+        "priority.allAuthorized": "\u5F53\u524D\u6240\u6709\u63D0\u4F9B\u53D7\u652F\u6301\u52A0\u901F\u6A21\u578B\u7684\u4F9B\u5E94\u5546\u90FD\u5DF2\u5728\u5185\u7F6E\u6388\u6743\u4E2D\uFF0C\u65E0\u9700\u518D\u6B21\u6388\u6743\u3002\u82E5\u4F60\u8981\u7528\u7684\u662F\u5176\u4ED6\u63A5\u5165\u70B9\uFF0C\u8BF7\u5148\u5728\u63D2\u4EF6\u8BBE\u7F6E\u4E2D\u914D\u7F6E\u8BE5\u4F9B\u5E94\u5546\uFF0C\u786E\u8BA4\u5B83\u7684\u6A21\u578B\u76EE\u5F55\u91CC\u5B58\u5728\u8FD9\u7C7B\u6A21\u578B\uFF08OpenAI gpt/o \u7CFB\u5217\u6216 xAI Grok 4+\uFF09\uFF0C\u518D\u70B9\u51FB\u201C\u91CD\u65B0\u8BFB\u53D6\u6388\u6743\u201D\u3002",
+        "priority.noProviderModels": "\u5F53\u524D\u6CA1\u6709\u5DF2\u6CE8\u518C\u4E14\u63D0\u4F9B\u53D7\u652F\u6301\u52A0\u901F\u6A21\u578B\u7684\u4F9B\u5E94\u5546\u3002\u8BF7\u5148\u914D\u7F6E\u4F9B\u5E94\u5546\u4E0E\u6A21\u578B\uFF0C\u518D\u56DE\u5230\u8FD9\u91CC\u70B9\u51FB\u201C\u91CD\u65B0\u8BFB\u53D6\u6388\u6743\u201D\u3002",
+        "priority.visibleModels": "\u53EF\u8BC6\u522B\u7684\u52A0\u901F\u6A21\u578B",
         "priority.exampleModels": "\u793A\u4F8B\u6A21\u578B",
         "priority.consent": "\u6211\u786E\u8BA4\u8BE5\u63A5\u5165\u70B9\u652F\u6301 Priority\uFF0C\u53EF\u80FD\u4EA7\u751F\u989D\u5916\u8D39\u7528\uFF0C\u5E76\u540C\u610F\u628A\u5B83\u52A0\u5165\u672C profile \u7684 Priority \u5141\u8BB8\u540D\u5355\u3002",
         "priority.authorize": "\u6388\u6743",
@@ -609,7 +615,7 @@ var init_messages = __esm({
         "priority.reload": "\u91CD\u65B0\u8BFB\u53D6\u6388\u6743",
         "priority.loading": "\u6B63\u5728\u8BFB\u53D6\u4F9B\u5E94\u5546\u6388\u6743\u2026",
         "priority.stale": "\u5176\u4ED6\u7A97\u53E3\u5DF2\u4FEE\u6539\u6388\u6743\u540D\u5355\u3002\u5DF2\u91CD\u65B0\u8BFB\u53D6\uFF0C\u8BF7\u786E\u8BA4\u540E\u91CD\u8BD5\u3002",
-        "priority.refused": "\u8BE5\u4F9B\u5E94\u5546\u4E0D\u80FD\u88AB\u6388\u6743\uFF1A\u672A\u6CE8\u518C\uFF0C\u6216\u6CA1\u6709 OpenAI \u7CFB\u5217\u6A21\u578B\u3002",
+        "priority.refused": "\u8BE5\u4F9B\u5E94\u5546\u4E0D\u80FD\u88AB\u6388\u6743\uFF1A\u672A\u6CE8\u518C\uFF0C\u6216\u6CA1\u6709\u53D7\u652F\u6301\u7684\u52A0\u901F\u6A21\u578B\uFF08OpenAI gpt/o \u7CFB\u5217\u6216 xAI Grok 4+\uFF09\u3002",
         "priority.noConsent": "\u8BF7\u5148\u52FE\u9009\u98CE\u9669\u786E\u8BA4\u3002",
         "priority.saved": "\u6388\u6743\u540D\u5355\u5DF2\u66F4\u65B0\uFF1B\u5F53\u524D\u4F1A\u8BDD\u7684 Fast \u63A7\u4EF6\u4F1A\u5728\u91CD\u65B0\u8BFB\u53D6\u6295\u5F71\u540E\u751F\u6548\u3002",
         "priority.error": "\u6388\u6743\u64CD\u4F5C\u672A\u5B8C\u6210\uFF0C\u672A\u786E\u8BA4\u4EFB\u4F55\u6539\u52A8\u3002\u8BF7\u91CD\u65B0\u8BFB\u53D6\u540E\u91CD\u8BD5\u3002",
@@ -708,6 +714,7 @@ var init_messages = __esm({
         requestError: "\u8BF7\u6C42\u672A\u5B8C\u6210\uFF0C\u8349\u7A3F\u4FDD\u6301\u4E0D\u53D8\uFF1B\u8BF7\u68C0\u67E5\u914D\u7F6E\u540E\u91CD\u8BD5\u3002",
         fastSkipped: "\u5F53\u524D\u6A21\u578B\u4E0D\u652F\u6301\u8F85\u52A9 Fast\uFF0C\u672C\u6B21\u6309\u666E\u901A\u8BF7\u6C42\u6267\u884C\uFF0C\u672A\u542F\u7528 Priority\uFF1B\u5DF2\u4FDD\u5B58\u7684 Fast \u8BBE\u7F6E\u4FDD\u6301\u4E0D\u53D8\u3002",
         emptyResult: "\u6A21\u578B\u6CA1\u6709\u8FD4\u56DE\u53EF\u7528\u6587\u672C\uFF0C\u672A\u5E94\u7528\u7ED3\u679C\uFF1B\u8349\u7A3F\u4FDD\u6301\u4E0D\u53D8\u3002\u53EF\u91CD\u8BD5\uFF0C\u6216\u964D\u4F4E\u63A8\u7406\u6863\u540E\u91CD\u8BD5\u3002",
+        enhanceUnchanged: "\u6A21\u578B\u8FD4\u56DE\u4E86\u76F8\u540C\u6587\u672C\uFF0C\u672A\u4EA7\u751F\u6709\u6548\u6539\u5199\uFF1B\u8349\u7A3F\u4FDD\u6301\u4E0D\u53D8\u3002\u8BF7\u5C1D\u8BD5\u5176\u4ED6\u6A21\u578B\u6216\u8C03\u6574\u8981\u6C42\u3002",
         cancelled: "\u672C\u6B21\u751F\u6210\u5DF2\u53D6\u6D88\uFF0C\u672A\u5E94\u7528\u7ED3\u679C\uFF1B\u8349\u7A3F\u4FDD\u6301\u4E0D\u53D8\u3002",
         modelFailed: "\u6A21\u578B\u8BF7\u6C42\u5931\u8D25\uFF08\u4F9B\u5E94\u5546\u6216\u7F51\u7EDC\u539F\u56E0\uFF09\uFF0C\u672A\u5E94\u7528\u7ED3\u679C\uFF1B\u8349\u7A3F\u4FDD\u6301\u4E0D\u53D8\u3002\u8BF7\u7A0D\u540E\u91CD\u8BD5\uFF0C\u6216\u68C0\u67E5\u8BE5\u670D\u52A1\u5546\u914D\u7F6E\u3002",
         safeCodeLabel: "\u5B89\u5168\u9519\u8BEF\u7801",
@@ -837,16 +844,16 @@ var init_messages = __esm({
         "updates.availableTitle": "New version available",
         "updates.availableHint": "Prepare the online update below; review the risks and tick consent before submitting.",
         "priority.title": "Priority provider authorization (advanced)",
-        "priority.scope": "Fast works through the request-level service_tier, which is an endpoint capability rather than a property of the model name. Only openai, openai-codex and cpa are authorized by default; this section can authorize another provider only when it is registered and actually offers OpenAI-family models.",
+        "priority.scope": "Fast works through the request-level service_tier, which is an endpoint capability rather than a property of the model name. Only openai, openai-codex and cpa are authorized by default; this section can authorize another provider only when it is registered and actually offers a supported accelerated model: the OpenAI gpt/o families, or xAI Grok 4 and later. The provider bills by the tier actually used \u2014 xAI Priority costs 2\xD7 the standard rate \u2014 and DSH cost estimates may not reflect the Priority surcharge; use the provider bill as the source of truth.",
         "priority.configured": "Configured by the package",
         "priority.authorized": "Authorized here",
         "priority.none": "No additional provider is authorized yet.",
         "priority.candidates": "Providers that may be authorized",
         "priority.choose": "Choose a provider",
-        "priority.noCandidates": "No other provider can be authorized: it is not registered or offers no OpenAI-family model.",
-        "priority.allAuthorized": "Every provider that offers OpenAI-family models is already authorized by the package, so there is nothing to add. To use another endpoint, configure that provider and make sure its model catalog lists OpenAI-family models, then choose Reload authorization.",
-        "priority.noProviderModels": "No registered provider currently offers an OpenAI-family model. Configure a provider and model first, then choose Reload authorization here.",
-        "priority.visibleModels": "Recognized OpenAI models",
+        "priority.noCandidates": "No other provider can be authorized: it is not registered or offers no supported accelerated model.",
+        "priority.allAuthorized": "Every provider that offers a supported accelerated model is already authorized by the package, so there is nothing to add. To use another endpoint, configure that provider and make sure its model catalog lists such a model (OpenAI gpt/o, or xAI Grok 4+), then choose Reload authorization.",
+        "priority.noProviderModels": "No registered provider currently offers a supported accelerated model. Configure a provider and model first, then choose Reload authorization here.",
+        "priority.visibleModels": "Recognized accelerated models",
         "priority.exampleModels": "Example models",
         "priority.consent": "I confirm this endpoint supports Priority, that extra charges may apply, and that it joins this profile's Priority allowlist.",
         "priority.authorize": "Authorize",
@@ -854,7 +861,7 @@ var init_messages = __esm({
         "priority.reload": "Reload authorization",
         "priority.loading": "Reading provider authorization\u2026",
         "priority.stale": "Another window changed the allowlist. It was reloaded; review it and try again.",
-        "priority.refused": "This provider cannot be authorized: it is not registered or offers no OpenAI-family model.",
+        "priority.refused": "This provider cannot be authorized: it is not registered or offers no supported accelerated model (OpenAI gpt/o, or xAI Grok 4+).",
         "priority.noConsent": "Tick the risk confirmation first.",
         "priority.saved": "The allowlist changed. The Fast control in this session updates after projections are read again.",
         "priority.error": "The authorization request did not complete and no change is confirmed. Reload and try again.",
@@ -953,6 +960,7 @@ var init_messages = __esm({
         requestError: "The request did not finish. Your draft is unchanged. Check settings and retry.",
         fastSkipped: "This model does not support assist Fast, so this request ran without Priority. Your saved Fast setting is unchanged.",
         emptyResult: "The model returned no usable text, so nothing was applied. Your draft is unchanged. Retry, or lower the reasoning effort and retry.",
+        enhanceUnchanged: "The model returned the same text with no effective rewrite. Your draft is unchanged. Try another model or adjust your requirements.",
         cancelled: "Generation was cancelled; nothing was applied. Your draft is unchanged.",
         modelFailed: "The model request failed (provider or network), so nothing was applied. Your draft is unchanged. Retry later or check that provider configuration.",
         safeCodeLabel: "Safe error code",
@@ -1668,6 +1676,17 @@ var init_duration = __esm({
   }
 });
 
+// assist/client/enhance-result.js
+function isUnchangedEnhancement(original, text) {
+  if (typeof original !== "string" || typeof text !== "string") return false;
+  const normalize = (value) => value.replace(/\r\n/g, "\n").trim();
+  return normalize(original) === normalize(text);
+}
+var init_enhance_result = __esm({
+  "assist/client/enhance-result.js"() {
+  }
+});
+
 // assist/client/preview.js
 function NoSuggestion({ runtime: r, t }) {
   const value = r.result.noSuggestion;
@@ -1685,9 +1704,10 @@ function Preview({ runtime: r, actions, t, onApplied }) {
   if (!value || !ownsResult(value, r.sessionId)) return null;
   if (value.feature === "suggest" && (value.outcome !== void 0 && value.outcome !== "suggestion" || typeof value.text !== "string" || !value.text.trim() || isNoSuggestionPlaceholder(value.text))) return null;
   const blocked = value.snapshot.structured;
+  const unchanged = value.feature === "enhance" && !value.streaming && isUnchangedEnhancement(value.original, value.text);
   const button = (key, action, disabled = false, primary = false) => h3("button", { type: "button", className: "lpa-button" + (primary ? " lpa-button--primary" : ""), onClick: action, disabled }, t(key));
   function apply2() {
-    if (value.streaming || !ownsResult(value, r.sessionId)) return;
+    if (value.streaming || unchanged || !ownsResult(value, r.sessionId)) return;
     const outcome = applyText(value.snapshot, value.text, r.readInput, actions);
     if (outcome.ok) {
       onApplied({ ...outcome.undo, sessionId: r.sessionId });
@@ -1708,12 +1728,13 @@ function Preview({ runtime: r, actions, t, onApplied }) {
     { className: "lpa-preview", "aria-label": t(value.feature), "aria-busy": Boolean(value.streaming) },
     h3("header", { className: "lpa-preview-header" }, h3("span", null, t(value.feature)), value.streaming ? h3("span", { className: "lpa-preview-status" }, t("streamingShort")) : null),
     h3("pre", { className: "lpa-result-text" }, value.text),
+    unchanged ? h3("p", { className: "lpa-note", role: "status" }, t("enhanceUnchanged")) : null,
     value.fastSkipped === true ? h3("p", { className: "lpa-note", role: "status" }, t("fastSkipped")) : null,
     blocked ? h3("p", { className: "lpa-note" }, t("structured")) : null,
     h3(
       "div",
       { className: "lpa-preview-actions" },
-      button(value.feature === "suggest" ? "accept" : "apply", apply2, value.streaming || blocked || !r.allowed || value.feature === "suggest" && r.busy || r.dirty, true),
+      button(value.feature === "suggest" ? "accept" : "apply", apply2, value.streaming || unchanged || blocked || !r.allowed || value.feature === "suggest" && r.busy || r.dirty, true),
       button("copy", copy, Boolean(value.streaming)),
       value.streaming ? button("cancel", () => r.controller.cancel()) : button("dismiss", () => r.controller.dismiss())
     ),
@@ -1740,6 +1761,7 @@ var init_preview = __esm({
     import_react4 = __toESM(require("react"), 1);
     init_duration();
     init_editor();
+    init_enhance_result();
     h3 = import_react4.default.createElement;
   }
 });
@@ -2602,7 +2624,7 @@ function availableCandidates(candidates, state) {
   const seen = /* @__PURE__ */ new Set();
   return (Array.isArray(candidates) ? candidates : []).flatMap((item) => {
     if (!item || typeof item.id !== "string" || !PROVIDER.test(item.id) || item.configured !== false || excluded.has(item.id) || seen.has(item.id) || !Array.isArray(item.openAIModels)) return [];
-    const openAIModels = item.openAIModels.filter((model) => typeof model === "string" && isOpenAIModel(model)).slice(0, 8);
+    const openAIModels = item.openAIModels.filter((model) => typeof model === "string" && isPriorityModel(model)).slice(0, 8);
     if (!openAIModels.length) return [];
     seen.add(item.id);
     return [{ id: item.id, configured: false, name: typeof item.name === "string" ? item.name : item.id, openAIModels }];
@@ -2629,7 +2651,7 @@ function PriorityPanelContent({
   const raw = Array.isArray(candidates) ? candidates : [];
   const names = state?.names && typeof state.names === "object" ? state.names : {};
   const nameOf = (id2) => typeof names[id2] === "string" && names[id2] && names[id2] !== id2 ? names[id2] : null;
-  const builtinModels = new Map(raw.filter((item) => item && item.configured === true && Array.isArray(item.openAIModels)).map((item) => [item.id, item.openAIModels.filter((model) => typeof model === "string" && isOpenAIModel(model)).slice(0, 8)]));
+  const builtinModels = new Map(raw.filter((item) => item && item.configured === true && Array.isArray(item.openAIModels)).map((item) => [item.id, item.openAIModels.filter((model) => typeof model === "string" && isPriorityModel(model)).slice(0, 8)]));
   const button = (key, action, disabled = false, extra = {}) => h10(
     "button",
     { type: "button", className: "lpa-button", onClick: action, disabled, ...extra },
@@ -3193,7 +3215,7 @@ function createFast(require2) {
   }
   function derivePresentation2(fastState, selected, fallback) {
     const selection = selected ?? fallback;
-    const family = isOpenAIModel(selection?.model);
+    const family = isPriorityModel(selection?.model);
     const ready = hasFastState(fastState);
     const eligible = Boolean(family && ready && fastState.providers.includes(selection.provider));
     return {
@@ -3341,24 +3363,24 @@ function createFast(require2) {
   const dictionaries2 = {
     zh: {
       label: "Fast",
-      off: "Fast \u5DF2\u5173\u95ED\u3002\u5F00\u542F\u540E\uFF0C\u540E\u7EED\u672C\u4F1A\u8BDD\u53CA\u7EE7\u627F\u8BBE\u7F6E\u7684 OpenAI \u5B50\u667A\u80FD\u4F53\u8BF7\u6C42\u4F7F\u7528 Priority \u4F18\u5148\u5904\u7406\uFF1B\u9700\u8981\u670D\u52A1\u5546\u652F\u6301\uFF0C\u53EF\u80FD\u989D\u5916\u8BA1\u8D39\u3002",
-      on: "Fast \u5DF2\u5F00\u542F\u3002\u540E\u7EED\u672C\u4F1A\u8BDD\u53CA\u7EE7\u627F\u8BBE\u7F6E\u7684 OpenAI \u5B50\u667A\u80FD\u4F53\u8BF7\u6C42\u4F7F\u7528 Priority \u4F18\u5148\u5904\u7406\uFF0C\u53EF\u80FD\u989D\u5916\u8BA1\u8D39\uFF1B\u70B9\u51FB\u5173\u95ED\u3002",
+      off: "Fast \u5DF2\u5173\u95ED\u3002\u5F00\u542F\u540E\uFF0C\u672C\u4F1A\u8BDD\u53CA\u7EE7\u627F\u8BBE\u7F6E\u7684\u5DF2\u6388\u6743\u6A21\u578B\uFF08OpenAI gpt/o \u7CFB\u5217\u3001xAI Grok 4 \u53CA\u4EE5\u4E0A\uFF09\u8BF7\u6C42\u4F7F\u7528 Priority \u4F18\u5148\u5904\u7406\uFF1B\u9700\u670D\u52A1\u5546\u652F\u6301\uFF0C\u8D39\u7528\u6309\u5176\u5B9E\u9645\u6863\u4F4D\u8BA1\u6536\u3002",
+      on: "Fast \u5DF2\u5F00\u542F\u3002\u672C\u4F1A\u8BDD\u53CA\u7EE7\u627F\u8BBE\u7F6E\u7684\u5DF2\u6388\u6743\u6A21\u578B\uFF08OpenAI gpt/o \u7CFB\u5217\u3001xAI Grok 4 \u53CA\u4EE5\u4E0A\uFF09\u8BF7\u6C42\u4F7F\u7528 Priority \u4F18\u5148\u5904\u7406\uFF1B\u8D39\u7528\u6309\u670D\u52A1\u5546\u5B9E\u9645\u6863\u4F4D\u8BA1\u6536\uFF0C\u70B9\u51FB\u5173\u95ED\u3002",
       saving: "\u6B63\u5728\u4FDD\u5B58 Fast \u8BBE\u7F6E\u2026",
       error: "Fast \u8BBE\u7F6E\u672A\u4FDD\u5B58\uFF0C\u8BF7\u91CD\u8BD5\u3002",
       loading: "Fast \u72B6\u6001\u5C1A\u672A\u786E\u8BA4\uFF0C\u5F00\u5173\u6682\u4E0D\u53EF\u7528\uFF1B\u8FD9\u4E0D\u4F1A\u66F4\u6539\u5DF2\u4FDD\u5B58\u7684 Fast \u8BBE\u7F6E\u3002",
       loadError: "Fast \u72B6\u6001\u540C\u6B65\u5931\u8D25\u3002\u8BF7\u5237\u65B0\u9875\u9762\uFF0C\u6216\u68C0\u67E5 Host \u4E0E Client \u63D2\u4EF6\u7248\u672C\u662F\u5426\u4E00\u81F4\u3002",
-      unsupportedProvider: "\u6B64\u4F9B\u5E94\u5546\u672A\u5728 Priority \u5141\u8BB8\u540D\u5355\u4E2D\uFF0CFast \u4E0D\u4F1A\u5F00\u542F\u3002\u53EF\u5728\u201C\u63D0\u793A\u8BCD\u8F85\u52A9 \u2192 Priority \u4F9B\u5E94\u5546\u6388\u6743\u201D\u4E2D\u81EA\u52A9\u6388\u6743\uFF08\u8BE5\u4F9B\u5E94\u5546\u5FC5\u987B\u786E\u5B9E\u63D0\u4F9B OpenAI \u7CFB\u5217\u6A21\u578B\uFF09\u3002\u4F9B\u5E94\u5546 ID",
+      unsupportedProvider: "\u6B64\u4F9B\u5E94\u5546\u672A\u5728 Priority \u5141\u8BB8\u540D\u5355\u4E2D\uFF0CFast \u4E0D\u4F1A\u5F00\u542F\u3002\u53EF\u5728\u201C\u63D0\u793A\u8BCD\u8F85\u52A9 \u2192 Priority \u4F9B\u5E94\u5546\u6388\u6743\u201D\u4E2D\u81EA\u52A9\u6388\u6743\uFF08\u8BE5\u4F9B\u5E94\u5546\u5FC5\u987B\u63D0\u4F9B OpenAI \u7CFB\u5217\u6216 Grok 4+ \u6A21\u578B\uFF0C\u5E76\u652F\u6301 Priority\uFF09\u3002\u4F9B\u5E94\u5546 ID",
       access: "\u5F53\u524D\u4F1A\u8BDD\u6CA1\u6709\u6267\u884C Fast \u5F00\u5173\u547D\u4EE4\u7684\u6743\u9650\u3002"
     },
     en: {
       label: "Fast",
-      off: "Fast is off. Enable Priority for this session and inheriting OpenAI subagents; provider support is required and additional charges may apply.",
-      on: "Fast is on for this session and inheriting OpenAI subagents; additional charges may apply. Click to turn off.",
+      off: "Fast is off. Enable Priority for this session and inheriting subagents on authorized models (OpenAI gpt/o families, xAI Grok 4 and later); provider support is required and billing follows the tier the provider actually used.",
+      on: "Fast is on for this session and inheriting subagents on authorized models (OpenAI gpt/o families, xAI Grok 4 and later). The provider bills the tier it actually used. Click to turn off.",
       saving: "Saving Fast preference\u2026",
       error: "Could not change Fast. Try again.",
       loading: "Fast status is not confirmed yet; the control is temporarily unavailable. Existing Host settings are unchanged.",
       loadError: "Fast state could not be loaded. Refresh or check that Host and Client plugin versions match.",
-      unsupportedProvider: "This provider is not authorized for Priority, so Fast stays off. Authorize it under \u201CPrompt assist \u2192 Priority provider authorization\u201D; the provider must actually offer OpenAI-family models. Provider ID",
+      unsupportedProvider: "This provider is not authorized for Priority, so Fast stays off. Authorize it under \u201CPrompt assist \u2192 Priority provider authorization\u201D; the provider must offer OpenAI-family or Grok 4+ models and support Priority. Provider ID",
       access: "This session cannot execute Fast toggle commands."
     }
   };
@@ -3397,10 +3419,8 @@ function createFast(require2) {
     const unavailable = Boolean(sessionState?.subagent) || sessionState?.removed === true;
     const allowed = props.useAccess("commands/execute");
     const wireProviders = Array.isArray(fastState?.providers) ? fastState.providers : [];
-    const authorized = priorityState?.status === "ready" && Array.isArray(priorityState.authorized) ? priorityState.authorized : [];
-    const providers = [...wireProviders];
-    for (const provider2 of authorized) if (typeof provider2 === "string" && !providers.includes(provider2)) providers.push(provider2);
-    const priorityReady = priorityState?.status === "ready" && (Array.isArray(priorityState.effective) || providers.length > 0);
+    const priorityReady = priorityState?.status === "ready" && Array.isArray(priorityState.effective);
+    const providers = priorityReady ? priorityState.effective.filter((provider2) => typeof provider2 === "string") : wireProviders;
     const viewState = hasFastState(fastState) ? { enabled: fastState.enabled === true, providers } : priorityReady ? { enabled: false, providers } : fastState;
     const { visible, enabled, eligible, reason } = derivePresentation2(viewState, selected, defaultSelection);
     const ready = hasFastState(fastState);

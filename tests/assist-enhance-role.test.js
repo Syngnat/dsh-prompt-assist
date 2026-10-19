@@ -17,6 +17,18 @@ test('multi-turn scattered requirements remain ordered source data, assistant su
  const qa=[{question:'按钮放输入框旁边',answer:'还可以自动发送'}, {question:'不要自动发送，配置仍在面板里',answer:'好'}];
  const value=buildAssistPrompt('enhance','就这样，优化下表达',qa);assert.deepEqual(JSON.parse(value.user).qa,qa);assert.equal(value.system,ENHANCE_ROLE_PROMPT);assert.ok(!value.system.includes('还可以自动发送'));
 });
+test('enhancement requires multi-point structure, not synonym-only edits or appended commentary',()=>{
+ const draft='发现个问题，有的模型使用增强提示词会直接复述原文，没有增强效果，同时有效果的文案需要结构化，现在全挤到后面，没有换行格式。';
+ const prompt=buildAssistPrompt('enhance',draft);
+ assert.equal(JSON.parse(prompt.user).draft,draft);
+ for(const text of ['不能只换同义词或调整标点','两个或更多可独立表达的要点','真实换行','完整替换稿','不得先照抄原文再在末尾追加'])assert.ok(prompt.system.includes(text),text);
+ assert.match(prompt.system,/短请求保持简洁/);
+ assert.match(prompt.system,/不要为了完整而编造/);
+});
+test('formatting guidance preserves literal code and permits genuinely clear short drafts',()=>{
+ for(const text of ['已有的有效段落、列表和代码换行','不把代码、命令、路径','确实没有可改善之处'])assert.ok(ENHANCE_ROLE_PROMPT.includes(text),text);
+ assert.match(ENHANCE_ROLE_PROMPT,/不回答问题、不执行任务/);
+});
 test('suggest outcome protocol is separate from plain enhancement output',()=>{
  const suggestion=buildAssistPrompt('suggest','').system;assert.notEqual(suggestion,ENHANCE_ROLE_PROMPT);
  assert.match(suggestion,/"kind":"none"/);assert.match(ENHANCE_ROLE_PROMPT,/不输出 JSON/);

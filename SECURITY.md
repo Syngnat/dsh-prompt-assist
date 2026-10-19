@@ -21,6 +21,8 @@ Cancellation stops obsolete local work and asks the transport to stop. It cannot
 
 Fast UI synchronization is read-only. A disabled/loading control does not clear an existing Host Fast preference or promise that Priority billing has stopped. Model-family recognition is case-insensitive, but provider route authorization remains explicit; an OpenAI-compatible endpoint is not automatically trusted to support Priority.
 
+Grok 4+ recognition permits requesting Priority on authorized routes; it does not certify upstream support for each model. Existing authorizations also apply to recognized Grok models on those routes. The default provider list is unchanged, and no xAI route is automatically added. Fast sends `service_tier: "priority"`, not a different model or reduced reasoning setting. Actual tier, availability and billing remain provider-controlled; DSH cost estimates may not reflect the surcharge. Future model IDs still require provider/catalog configuration. No paid xAI call was used for this change.
+
 ## Update checks
 
 Only an explicit check requests `https://api.github.com/repos/Syngnat/dsh-prompt-assist/releases/latest`. Opening the panel reads local cached state only. No API token, chat data, draft, files or provider secrets are attached. GitHub can log normal network metadata. Redirects, draft/prerelease metadata, oversized or malformed responses and foreign release links are refused. Responses are treated as data, never instructions or HTML. Checking alone never installs or writes a profile. The update tool exposes only status, check and read-only operation state.

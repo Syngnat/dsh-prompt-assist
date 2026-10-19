@@ -1,4 +1,4 @@
-import { isOpenAIModel } from './policy.js';
+import { isPriorityModel } from './policy.js';
 import { createPrioritySource, onPriorityChanged } from './assist/client/priority-source.js';
 
 export function createFast(require) {
@@ -15,7 +15,7 @@ export function createFast(require) {
     }
     function derivePresentation(fastState, selected, fallback) {
       const selection = selected ?? fallback;
-      const family = isOpenAIModel(selection?.model);
+      const family = isPriorityModel(selection?.model);
       const ready = hasFastState(fastState);
       const eligible = Boolean(family && ready && fastState.providers.includes(selection.provider));
       return {
@@ -133,22 +133,22 @@ export function createFast(require) {
     const dictionaries = {
       zh: {
         label: 'Fast',
-        off: 'Fast 已关闭。开启后，后续本会话及继承设置的 OpenAI 子智能体请求使用 Priority 优先处理；需要服务商支持，可能额外计费。',
-        on: 'Fast 已开启。后续本会话及继承设置的 OpenAI 子智能体请求使用 Priority 优先处理，可能额外计费；点击关闭。',
+        off: 'Fast 已关闭。开启后，本会话及继承设置的已授权模型（OpenAI gpt/o 系列、xAI Grok 4 及以上）请求使用 Priority 优先处理；需服务商支持，费用按其实际档位计收。',
+        on: 'Fast 已开启。本会话及继承设置的已授权模型（OpenAI gpt/o 系列、xAI Grok 4 及以上）请求使用 Priority 优先处理；费用按服务商实际档位计收，点击关闭。',
         saving: '正在保存 Fast 设置…', error: 'Fast 设置未保存，请重试。',
         loading: 'Fast 状态尚未确认，开关暂不可用；这不会更改已保存的 Fast 设置。',
         loadError: 'Fast 状态同步失败。请刷新页面，或检查 Host 与 Client 插件版本是否一致。',
-        unsupportedProvider: '此供应商未在 Priority 允许名单中，Fast 不会开启。可在“提示词辅助 → Priority 供应商授权”中自助授权（该供应商必须确实提供 OpenAI 系列模型）。供应商 ID',
+        unsupportedProvider: '此供应商未在 Priority 允许名单中，Fast 不会开启。可在“提示词辅助 → Priority 供应商授权”中自助授权（该供应商必须提供 OpenAI 系列或 Grok 4+ 模型，并支持 Priority）。供应商 ID',
         access: '当前会话没有执行 Fast 开关命令的权限。',
       },
       en: {
         label: 'Fast',
-        off: 'Fast is off. Enable Priority for this session and inheriting OpenAI subagents; provider support is required and additional charges may apply.',
-        on: 'Fast is on for this session and inheriting OpenAI subagents; additional charges may apply. Click to turn off.',
+        off: 'Fast is off. Enable Priority for this session and inheriting subagents on authorized models (OpenAI gpt/o families, xAI Grok 4 and later); provider support is required and billing follows the tier the provider actually used.',
+        on: 'Fast is on for this session and inheriting subagents on authorized models (OpenAI gpt/o families, xAI Grok 4 and later). The provider bills the tier it actually used. Click to turn off.',
         saving: 'Saving Fast preference…', error: 'Could not change Fast. Try again.',
         loading: 'Fast status is not confirmed yet; the control is temporarily unavailable. Existing Host settings are unchanged.',
         loadError: 'Fast state could not be loaded. Refresh or check that Host and Client plugin versions match.',
-        unsupportedProvider: 'This provider is not authorized for Priority, so Fast stays off. Authorize it under “Prompt assist → Priority provider authorization”; the provider must actually offer OpenAI-family models. Provider ID',
+        unsupportedProvider: 'This provider is not authorized for Priority, so Fast stays off. Authorize it under “Prompt assist → Priority provider authorization”; the provider must offer OpenAI-family or Grok 4+ models and support Priority. Provider ID',
         access: 'This session cannot execute Fast toggle commands.',
       },
     };
@@ -187,13 +187,11 @@ export function createFast(require) {
       const sessionState = React.useSyncExternalStore(props.sessionSource.subscribe, props.sessionSource.getSnapshot, props.sessionSource.getSnapshot);
       const unavailable = Boolean(sessionState?.subagent) || sessionState?.removed === true;
       const allowed = props.useAccess('commands/execute');
-      // A profile authorization is durable profile state, not a session event: merge the Host snapshot so
-      // the control reacts even though the projection wire predates the authorization.
+      // A fresh Host authorization snapshot replaces the session projection's allowlist.
+      // Unioning the lists would preserve revoked providers from a stale projection.
       const wireProviders = Array.isArray(fastState?.providers) ? fastState.providers : [];
-      const authorized = priorityState?.status === 'ready' && Array.isArray(priorityState.authorized) ? priorityState.authorized : [];
-      const providers = [...wireProviders];
-      for (const provider of authorized) if (typeof provider === 'string' && !providers.includes(provider)) providers.push(provider);
-      const priorityReady = priorityState?.status === 'ready' && (Array.isArray(priorityState.effective) || providers.length > 0);
+      const priorityReady = priorityState?.status === 'ready' && Array.isArray(priorityState.effective);
+      const providers = priorityReady ? priorityState.effective.filter(provider => typeof provider === 'string') : wireProviders;
       const viewState = hasFastState(fastState) ? { enabled: fastState.enabled === true, providers }
         : priorityReady ? { enabled: false, providers }
         : fastState;

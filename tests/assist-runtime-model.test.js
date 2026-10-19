@@ -11,12 +11,12 @@ const capabilities = () => ({ context: { contextWindow: 1000000 },
   reasoning: { efforts: ["low", "medium", "high", "xhigh", "max"].map(id => ({ id, name: id })), defaultEffort: "medium" } });
 
 /** Offline adapter/SDK seam, shaped after inspected Native prepareCall. No provider I/O. */
-function wireFixture(mainEnabled, api = "openai-responses") {
+function wireFixture(mainEnabled, api = "openai-responses", selection = {provider: "openai", model: "gpt-test"}, providers = ["openai"]) {
   const payloads = [], prepared = [], observations = [], originalBodies = [];
   const metadata = capabilities();
   let nativeEfforts = metadata.reasoning.efforts.map(item => item.id);
   const nativeRejection = Object.assign(new Error("native capability changed"), { code: "NATIVE_EFFORT_REJECTED" });
-  const model = Object.freeze({ api, provider: "openai", id: "gpt-test" });
+  const model = Object.freeze({ api, provider: selection.provider, id: selection.model });
   const models = Object.freeze({
     async streamSimple(actualModel, messages, options) {
       await Promise.resolve();
@@ -41,7 +41,7 @@ function wireFixture(mainEnabled, api = "openai-responses") {
     }
   }
   const adapter = new Adapter();
-  const dispose = installFastBridge(Adapter, id => typeof mainEnabled === "function" ? mainEnabled(id) : mainEnabled, ["openai"]);
+  const dispose = installFastBridge(Adapter, id => typeof mainEnabled === "function" ? mainEnabled(id) : mainEnabled, providers);
   const ctx = { llm: {
     async resolveModelInfo() { return structuredClone(metadata); },
     async prepareCall(config, signal) {
@@ -77,6 +77,33 @@ test("auxiliary on/off overrides opposite main Fast and preserves actual reasoni
     } finally { f.dispose(); }
   }
 });
+
+for (const model of ["grok-4.6", "grok-4.7", "grok-4.8"]) {
+  for (const [name, fast, authorized] of [["authorized on", true, true], ["authorized off", false, true], ["unapproved on", true, false]]) {
+    test(`${model}: auxiliary ${name} applies independently to enhancement and suggestions`, async t => {
+      const selection = {provider: "xai", model, reasoningEffort: "high"};
+      const providers = authorized ? ["openai", "xai"] : ["openai"];
+      const f = wireFixture(!fast, "openai-responses", selection, providers); t.after(f.dispose);
+      for (const feature of ["enhance", "suggest"]) {
+        const route = await resolveAssistRoute(f.ctx, agent,
+          {followSession: feature === "suggest", ...selection, fast}, {selection: () => selection}, providers);
+        assert.equal(route.fast, fast && authorized); assert.equal(route.fastSkipped, fast && !authorized);
+        const result = await callAssistModel(f.ctx, agent, route, prompt, feature);
+        const index = f.payloads.length - 1, body = f.payloads[index].body;
+        assert.equal(body.model, model); assert.equal(body.service_tier, fast && authorized ? "priority" : undefined);
+        assert.equal(body.reasoning.effort, "high");
+        assert.strictEqual(body.input, f.originalBodies[index].input);
+        assert.equal(f.originalBodies[index].service_tier, undefined);
+        assert.deepEqual(f.prepared[index], {provider: "xai", model, reasoningEffort: "high"});
+        assert.equal(result.text, "generated prompt"); assert.equal(priorityOverride(agent.id), undefined);
+      }
+      assert.deepEqual(f.observations, Array(4).fill(fast && authorized));
+      for await (const _ of f.adapter.streamWithSnapshot({...selection, sessionId: agent.id, messages: []}, f.snapshot)) {}
+      assert.equal(f.payloads[2].body.service_tier, !fast && authorized ? "priority" : undefined,
+        "an auxiliary call must not change the next main-session request");
+    });
+  }
+}
 
 test("concurrent sessions and opposite same-session feature overrides remain isolated", async () => {
   const f = wireFixture(id => id === "root-b");
