@@ -120,14 +120,21 @@ test("HTTP errors and invalid JSON are safe failures, never authority", async ()
 });
 for (const lang of ["zh", "en"]) {
   test("SSR " + lang + " labels a historical record instead of implying the running version", () => {
-    const stale = {...initialOnlineSnapshot(), data: status(op({phase: "updated", terminal: true, installedVersion: "1.2.13"}), {currentVersion: "1.2.18"})};
+    const stale = {...initialOnlineSnapshot(), data: status(op({phase: "updated", terminal: true, fromVersion: "1.2.12", targetVersion: "1.2.13", installedVersion: "1.2.13"}), {currentVersion: "1.2.18"})};
     const html = render(stale, lang, {currentVersion: "1.2.18"});
     assert.ok(html.includes(dictionaries[lang]["online.runningVersion"]));
     assert.ok(html.includes(dictionaries[lang]["online.taskFrom"]));
     assert.ok(html.includes(dictionaries[lang]["online.recordStale"]));
     assert.ok(html.includes("1.2.18") && html.includes("1.2.13"));
+    // An expired record is demoted into a collapsed history block, so the main view cannot be misread.
+    assert.match(html, /<details class="lpa-update-history">/);
+    assert.match(html, /<summary>[^<]*<code>1\.2\.12<\/code> → <code>1\.2\.13<\/code>/);
+    assert.ok(html.includes(dictionaries[lang]["online.history"]));
     const same = {...initialOnlineSnapshot(), data: status(op({phase: "updated", terminal: true, installedVersion: "1.2.13"}), {currentVersion: "1.2.13"})};
-    assert.ok(!render(same, lang, {currentVersion: "1.2.13"}).includes(dictionaries[lang]["online.recordStale"]));
+    const current = render(same, lang, {currentVersion: "1.2.13"});
+    assert.ok(!current.includes(dictionaries[lang]["online.recordStale"]));
+    assert.doesNotMatch(current, /lpa-update-history/);
+    assert.ok(current.includes(dictionaries[lang]["online.phase.updated"]));
     // Confirmation expiry is readable too, while the machine-readable attribute stays exact.
     const preparation = render({...initialOnlineSnapshot(), data: status(), preparation: prep()}, lang);
     assert.match(preparation, /<time dateTime="[^"]+">\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2} UTC<\/time>/);

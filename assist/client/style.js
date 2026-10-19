@@ -59,6 +59,10 @@ export const css = `
 .lpa-update-install{display:flex;align-items:center;gap:8px;flex-wrap:wrap;min-width:0}.lpa-update-install code{overflow-wrap:anywhere;user-select:text}
 .lpa-update-guide summary{cursor:pointer;color:var(--dsw-alias-label-secondary)}.lpa-update-guide ol{padding-inline-start:20px;margin:10px 0}.lpa-update-guide li{margin:7px 0;line-height:1.5}
 .lpa-update-panel a.lpa-button{text-decoration:none;display:inline-flex;align-items:center}
+.lpa-update-history{box-sizing:border-box;padding:10px 12px;border:1px solid var(--dsw-alias-border-l1);border-radius:7px;background:var(--dsw-alias-bg-layer-1);color:var(--dsw-alias-label-secondary)}
+.lpa-update-history summary{cursor:pointer;overflow-wrap:anywhere}
+.lpa-update-history[open] summary{margin-bottom:8px}
+.lpa-update-history .lpa-update-versions{margin:8px 0}
 /* Filled actions retain their own foreground during hover; warning rim distinguishes profile-wide confirmation. */
 .lpa-button.lpa-button--primary{box-sizing:border-box;max-width:100%;white-space:normal;overflow-wrap:anywhere;background:var(--dsw-alias-brand-primary);border-color:var(--dsw-alias-brand-primary);color:var(--dsw-alias-bg-layer-1);font-weight:700;padding:8px 14px;min-height:36px}
 .lpa-button.lpa-button--primary:hover:not(:disabled){background:color-mix(in srgb,var(--dsw-alias-brand-primary) 88%,var(--dsw-alias-label-primary));color:var(--dsw-alias-bg-layer-1)}

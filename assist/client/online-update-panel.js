@@ -8,10 +8,18 @@ export function OnlineUpdatePanelContent({snapshot = initialOnlineSnapshot(), up
   const operation = data?.operation;
   const canForget = canForgetOnlineMarker(snapshot);
   const active = operation && !operation.terminal;
-  // A terminal record can predate the running version; label it instead of implying the current version.
-  const staleRecord = Boolean(currentVersion && operation?.installedVersion && operation.installedVersion !== currentVersion);
+  // A terminal record that predates the running version is history, not the current state.
+  const staleRecord = Boolean(currentVersion && operation?.terminal && operation?.installedVersion && operation.installedVersion !== currentVersion);
   const button = (key, onClick, disabled = false, emphasis = "") => h("button", {type: "button", className: "lpa-button" + emphasis, onClick, disabled}, t("online." + key));
   const field = (label, value) => h("div", {className: "lpa-update-field", key: label}, h("dt", null, t("online." + label)), h("dd", null, value));
+  const operationFields = () => h("dl", {className: "lpa-update-versions"}, field("jobId", operation.jobId), field("taskFrom", operation.fromVersion), field("taskTarget", operation.targetVersion),
+    field("installedVersion", operation.installedVersion ?? t("updates.unknown")),
+    currentVersion ? field("runningVersion", currentVersion) : null);
+  const operationNotes = () => [
+    operation.error ? h("p", {className: "lpa-error", key: "error"}, t("online.errorCode"), " ", h("code", null, operation.error)) : null,
+    operation.detailCode ? h("p", {className: "lpa-note", key: "detail"}, t("online.detailCode"), " ", h("code", null, operation.detailCode)) : null,
+    operation.restartRequired ? h("p", {className: "lpa-note", key: "restart"}, t("online.restart")) : null,
+    operation.cancelRequested ? h("p", {className: "lpa-note", key: "cancel"}, t("online.cancelRequested")) : null];
   return h("section", {className: "lpa-update-panel", "aria-label": t("online.title"), "aria-busy": !!pending},
     h("h3", null, t("online.title")),
     updateAvailable && data?.available && !active && !pending && !uncertain && !recordLost && operation?.phase !== "unknown" ? h("div", {className: "lpa-update-banner", role: "status", "aria-live": "polite", "aria-atomic": true},
@@ -19,17 +27,16 @@ export function OnlineUpdatePanelContent({snapshot = initialOnlineSnapshot(), up
       h("div", {className: "lpa-update-banner-copy"}, h("h4", null, t("online.availableTitle")), h("p", null, t("online.availableHint")))) : null,
     h("p", {className: "lpa-note"}, t("online.userOnly")),
     h("p", {className: "lpa-note"}, t("online.continuity")),
-    operation && !uncertain ? h("div", {role: "status", "aria-live": "polite", "aria-atomic": true},
+    operation && !uncertain && staleRecord ? h("details", {className: "lpa-update-history"},
+      h("summary", null, t("online.history"), ": ", h("code", null, operation.fromVersion), " → ", h("code", null, operation.targetVersion),
+        operation.installedVersion ? " · " + t("online.installedVersion") + " " + operation.installedVersion : "",
+        currentVersion ? " · " + t("online.runningVersion") + " " + currentVersion : ""),
+      h("p", {className: "lpa-note"}, t("online.recordStale")),
+      h("p", {className: "lpa-note"}, t("online.phase." + operation.phase)),
+      operationFields(), operationNotes()) : null,
+    operation && !uncertain && !staleRecord ? h("div", {role: "status", "aria-live": "polite", "aria-atomic": true},
       h("p", null, t("online.phase." + operation.phase)),
-      h("dl", {className: "lpa-update-versions"}, field("jobId", operation.jobId), field("taskFrom", operation.fromVersion), field("taskTarget", operation.targetVersion),
-        field("installedVersion", operation.installedVersion ?? t("updates.unknown")),
-        currentVersion ? field("runningVersion", currentVersion) : null),
-      staleRecord ? h("p", {className: "lpa-note", role: "status"}, t("online.recordStale"), " ",
-        h("code", null, currentVersion), " / ", h("code", null, operation.installedVersion ?? t("updates.unknown"))) : null,
-      operation.error ? h("p", {className: "lpa-error"}, t("online.errorCode"), " ", h("code", null, operation.error)) : null,
-      operation.detailCode ? h("p", {className: "lpa-note"}, t("online.detailCode"), " ", h("code", null, operation.detailCode)) : null,
-      operation.restartRequired ? h("p", {className: "lpa-note"}, t("online.restart")) : null,
-      operation.cancelRequested ? h("p", {className: "lpa-note"}, t("online.cancelRequested")) : null) : null,
+      operationFields(), operationNotes()) : null,
     !data && !localError && !markerCleared ? h("p", {role: "status"}, t("online.loading")) : null,
     data && !operation && !uncertain ? h("p", {className: "lpa-note"}, t("online.noRecord")) : null,
     data && !data.available ? h("p", {className: "lpa-note"}, t("online.unavailable"), data.reason ? " (" + data.reason + ")" : null) : null,

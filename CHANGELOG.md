@@ -2,6 +2,15 @@
 
 [English](<README.md>) | [简体中文](<README.zh-CN.md>)
 
+## 1.2.20 — 过期的更新记录默认折叠
+
+- A terminal update record whose verified version differs from the running version is now demoted into a collapsed **Earlier update record** block. The main view no longer shows an old task's `1.2.12 / 1.2.13` next to the running version, so it cannot be mistaken for the current release.
+- The collapsed summary carries the task's own versions plus the verified and currently running versions; expanding it still shows the job id, task versions and any error or restart notes.
+- A record that matches the running version keeps the full, expanded presentation, and an in-progress task is never collapsed.
+- Add regressions for the collapsed history block, the summary versions, and the unchanged presentation when the versions agree.
+
+中文：与当前运行版本不一致的已结束更新记录，改为默认折叠的「历史更新记录」；主视图不再把旧任务的 1.2.12 / 1.2.13 与当前版本并列，避免误读。摘要仍显示任务版本、已验证版本与当前运行版本，展开后可看任务编号与错误/重启信息。与当前版本一致的记录保持完整展示，进行中的任务不会被折叠。
+
 ## 1.2.19 — 时间可读与历史更新记录不再误导 / Readable timestamps and honest update records
 
 - Render the update check time as a readable UTC stamp (`2026-10-19 01:10:30 UTC`) instead of a raw ISO string, while keeping the exact machine-readable `dateTime` attribute. Confirmation expiry uses the same formatting.

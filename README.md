@@ -6,7 +6,7 @@ Provides prompt enhancement, next-question suggestions, and OpenAI Fast accelera
 
 A plugin bundle for the DeepSeek Harness (DSH) Web GUI. Enhancement and suggestions are independent features: enable either or both for the current DSH profile. Settings live on the sidebar page, not in a composer popup. Feature switches are profile-wide; model controls remain per-conversation.
 
-> **v1.2.19:** the update check time renders as a readable UTC stamp instead of a raw ISO string, and a terminal update record now shows the task versions, the currently running version, and a note when that record predates the running version.
+> **v1.2.20:** a finished update record whose verified version differs from the running version collapses into an **Earlier update record** block, so an old task cannot be mistaken for the current release; a record matching the running version stays expanded.
 
 ## Compatibility policy
 
