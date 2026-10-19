@@ -2,6 +2,8 @@ import {fixtureEnablement} from './assist-enablement-fixture.js';
 import test from "node:test";
 import assert from "node:assert/strict";
 import { AssistRuntime, ASSIST_KEY } from "../assist/runtime.js";
+import { installFastBridge } from "../bridge-v2.js";
+import { priorityOverride } from "../assist/priority-scope.js";
 import { initialContextState, foldContextState } from "../assist/context.js";
 import { normalizeConfig } from "../assist/config.js";
 
@@ -89,7 +91,8 @@ test("automatic suggestion admission rejects busy, changed draft or stale QA bef
   f.goals.clear(); f.states.get("a").settings.enhance = normalizeConfig({ enabled: true, followSession: false, provider: "openai", model: "gpt-test", reasoningEffort: "unsupported" });
   await assert.rejects(f.generate(), { code: "unsupported-effort" });
   f.states.get("a").settings.enhance = normalizeConfig({ enabled: true, followSession: false, provider: "deepseek", model: "deepseek-chat", fast: true });
-  await assert.rejects(f.generate(), { code: "fast-unsupported" }); assert.equal(f.prepares.length, 0);
+  const skipped = await f.generate();
+  assert.equal(skipped.route.fast, false); assert.equal(skipped.fastSkipped, true); assert.equal(f.prepares.length, 1);
 });
 
 test("same-feature concurrent requests deduplicate, cache briefly, then refresh after expiry", async t => {
@@ -246,3 +249,71 @@ for(const dimension of ['budget','window','effort'])test('captured '+dimension+'
 });
 
 test('long draft and complete enhancement follow model context, not former 20K/64K text caps',async t=>{const f=fixture(t),draft='文'.repeat(100000);const result=await f.generate('a',{draft});assert.equal(result.original,draft);assert.equal(result.text,'generated a '+draft);assert.equal(f.streams.length,1);assert.equal(result.contextWindowTokens,1000000);assert.equal(result.outputBudgetTokens,null);assert.equal(f.commandLog.length,0);});
+
+function priorityWire(t, f, mainFast) {
+  const packets = [];
+  class Adapter {
+    modelOf() { return { api: "openai-responses" }; }
+    streamWithSnapshot(options, snapshot) { return snapshot.models.streamSimple(this.modelOf(), {}, options); }
+  }
+  const restore = installFastBridge(Adapter, () => mainFast, f.runtime.providers); t.after(restore);
+  const adapter = new Adapter();
+  f.hooks.stream = async options => {
+    const original = { model: options.model, input: "synthetic", reasoning: { effort: options.reasoningEffort } };
+    const models = { async streamSimple(model, _context, controls) {
+      const body = controls.onPayload ? await controls.onPayload(original, model) : original;
+      packets.push({ body, original, override: priorityOverride(options.sessionId) });
+    } };
+    await adapter.streamWithSnapshot(options, { models });
+  };
+  return packets;
+}
+
+test("follow-session DeepSeek with saved auxiliary Fast generates normally without Priority", async t => {
+  const f = fixture(t), packets = priorityWire(t, f, true);
+  f.states.get("a").settings.enhance = normalizeConfig({ enabled: true, fast: true });
+  f.selections.set("a", { provider: "deepseek", model: "deepseek-chat", reasoningEffort: "high" });
+  const value = await f.generate();
+  assert.equal(value.fastSkipped, true); assert.equal(value.route.fast, false); assert.equal(f.prepares.length, 1);
+  assert.equal(f.prepares[0].provider, "deepseek"); assert.equal(f.states.get("a").settings.enhance.fast, true);
+  assert.equal(packets[0].override, false); assert.equal(Object.hasOwn(packets[0].body, "service_tier"), false);
+  assert.equal(priorityOverride("a"), undefined);
+});
+
+test("explicit DeepSeek auxiliary Fast skips without changing the saved route or reasoning", async t => {
+  const f = fixture(t), packets = priorityWire(t, f, true);
+  f.states.get("a").settings.enhance = normalizeConfig({ enabled: true, followSession: false, provider: "deepseek", model: "deepseek-chat", reasoningEffort: "xhigh", fast: true });
+  const value = await f.generate();
+  assert.equal(value.fastSkipped, true); assert.equal(value.route.fast, false); assert.equal(value.route.reasoningEffort, "xhigh");
+  assert.equal(f.prepares.length, 1); assert.equal(f.prepares[0].model, "deepseek-chat");
+  assert.equal(Object.hasOwn(packets[0].body, "service_tier"), false); assert.equal(packets[0].override, false);
+});
+
+test("OpenAI auxiliary Fast still adds only Priority and preserves native reasoning", async t => {
+  const f = fixture(t), packets = priorityWire(t, f, false);
+  f.states.get("a").settings.enhance = normalizeConfig({ enabled: true, fast: true });
+  const value = await f.generate();
+  assert.equal(value.route.fast, true); assert.equal(value.fastSkipped, false); assert.equal(packets[0].override, true);
+  assert.deepEqual(packets[0].body, { ...packets[0].original, service_tier: "priority" });
+  assert.deepEqual(packets[0].original.reasoning, { effort: "high" }); assert.equal(Object.hasOwn(packets[0].original, "service_tier"), false);
+});
+
+test("saved Fast off never inherits main Fast and is not reported as skipped", async t => {
+  const f = fixture(t), packets = priorityWire(t, f, true); const value = await f.generate();
+  assert.equal(value.route.fast, false); assert.equal(value.fastSkipped, false); assert.equal(packets[0].override, false);
+  assert.equal(Object.hasOwn(packets[0].body, "service_tier"), false);
+});
+
+test("cached skip diagnostics remain specific to the selected route and saved Fast preference", async t => {
+  const f = fixture(t);
+  f.states.get("a").settings.enhance = normalizeConfig({ enabled: true, fast: true });
+  f.selections.set("a", { provider: "deepseek", model: "deepseek-chat", reasoningEffort: "high" });
+  const skipped = await f.generate(); assert.equal(skipped.fastSkipped, true);
+  const hit = await f.generate(); assert.equal(hit.cached, true); assert.equal(hit.fastSkipped, true);
+  f.states.get("a").settings.enhance = normalizeConfig({ enabled: true, fast: false });
+  const normal = await f.generate(); assert.notEqual(normal.cached, true); assert.equal(normal.fastSkipped, false); assert.equal(normal.route.fast, false);
+  f.states.get("a").settings.enhance = normalizeConfig({ enabled: true, fast: true });
+  f.selections.set("a", { provider: "openai", model: "gpt-test", reasoningEffort: "high" });
+  const priority = await f.generate(); assert.notEqual(priority.cached, true); assert.equal(priority.route.fast, true); assert.equal(priority.fastSkipped, false);
+  assert.equal(f.prepares.length, 3);
+});

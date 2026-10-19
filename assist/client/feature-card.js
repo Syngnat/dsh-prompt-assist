@@ -4,7 +4,7 @@ import React from "react";
 import {useModelOptions} from "./runtime.js";
 import {Settings} from "./settings.js";
 import {Preview} from "./preview.js";
-import {errorKey} from "./api.js";
+import {errorText} from "./api.js";
 import {ownsResult} from "./editor.js";
 const h=React.createElement;
 
@@ -21,7 +21,7 @@ export function FeatureCard({feature,runtime:r,config,open,actions,t,onChange,on
     open?h("p",{className:"lpa-note"},t(feature==="suggest"?"suggestContext":"enhanceOriginal")):null,
     open&&r.state?h(Settings,{t,config,catalog:options.catalog,capabilities:options.capabilities,
       allowed:r.allowed,saving:r.saving,onChange,save:onSave}):null,
-    open&&options.error?h("p",{className:"lpa-error",role:"status"},t(errorKey(options.error))):null,
+    open&&options.error?h("p",{className:"lpa-error",role:"status"},errorText(options.error,t)):null,
     open?children:null,
     open&&feature==='suggest'?h('div',{className:'lpa-feature-actions'},
       h('p',{className:'lpa-note'},t(!r.settings.suggest.enabled?'suggestDisabled':r.busy?'busy':!canSuggest(r.input)?'draftOccupied':triggerStatusKey(r.result.trigger?.reason))),

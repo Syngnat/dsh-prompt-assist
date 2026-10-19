@@ -6,7 +6,7 @@ import {useAssistRuntime} from './runtime.js';
 import {Preview,NoSuggestion} from './preview.js';
 import {SelectedFiles} from './selected-files.js';
 import {undoText,ownsResult} from './editor.js';
-import {errorKey} from './api.js';
+import {errorText} from './api.js';
 import {css} from './style.js';
 const h=React.createElement;
 export function AssistPanel(p){
@@ -33,5 +33,5 @@ export function AssistPanel(p){
   h(NoSuggestion,{runtime:r,t}),
   h(Preview,{runtime:r,actions:p.inputActions,t,onApplied:setUndo}),
   validUndo?h('div',{className:'lpa-undo-actions'},button('undo',undoApply,!r.allowed)):null,
-  visible&&notice?h('div',{className:'lpa-row',role:'status'},h('span',{className:r.result.error?'lpa-error':'lpa-note'},t(typeof notice==='string'?notice:errorKey(notice))),button('dismiss',dismiss)):null);
+  visible&&notice?h('div',{className:'lpa-row',role:'status'},h('span',{className:r.result.error?'lpa-error':'lpa-note'},(typeof notice==='string'&&notice!=='requestError'?t(notice):errorText(notice,t))),button('dismiss',dismiss)):null);
 }

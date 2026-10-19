@@ -8,6 +8,7 @@ export function NoSuggestion({runtime:r,t}){
  if(!ownsResult(value,r.sessionId)||value.feature!=='suggest'||value.outcome!=='no-suggestion'||value.text!=='')return null;
  return h('div',{className:'lpa-row lpa-note',role:'status'},
   h('span',null,t('noSuggestion')),
+  value.fastSkipped===true?h('span',{className:'lpa-note'},t('fastSkipped')):null,
   h('button',{type:'button',className:'lpa-button',onClick:()=>r.controller.dismiss()},t('dismiss')));
 }
 export function Preview({runtime:r,actions,t,onApplied}){
@@ -26,6 +27,7 @@ export function Preview({runtime:r,actions,t,onApplied}){
  return h('section',{className:'lpa-preview','aria-label':t(value.feature),'aria-busy':Boolean(value.streaming)},
   h('header',{className:'lpa-preview-header'},h('span',null,t(value.feature)),value.streaming?h('span',{className:'lpa-preview-status'},t('streamingShort')):null),
   h('pre',{className:'lpa-result-text'},value.text),
+  value.fastSkipped===true?h('p',{className:'lpa-note',role:'status'},t('fastSkipped')):null,
   blocked?h('p',{className:'lpa-note'},t('structured')):null,
   h('div',{className:'lpa-preview-actions'},
    button(value.feature==='suggest'?'accept':'apply',apply,value.streaming||blocked||!r.allowed||(value.feature==='suggest'&&r.busy)||r.dirty,true),

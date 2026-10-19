@@ -266,3 +266,16 @@ for (const lang of ["en", "zh"]) {
 }
 
 test('terminal receipt continues local polling until the registry releases its busy flag',async()=>{const finished=op({phase:'updated',terminal:true,installedVersion:'1.2.11'});let data=status(finished,{available:false,reason:'busy'});const h=harness(async()=>response(data));await h.controller.start();assert.equal(h.timers.size,1);data=status(finished);await h.poll();assert.equal(h.timers.size,0);h.controller.dispose();});
+
+for(const lang of ['en','zh'])test('SSR '+lang+' gives available updates and confirmation distinct emphasis',()=>{
+ const base={...initialOnlineSnapshot(),data:status()};const html=render(base,lang);
+ assert.match(html,/class="lpa-update-banner"[^>]*role="status"/);
+ assert.ok(html.includes(dictionaries[lang]['online.badge']));assert.ok(html.includes(dictionaries[lang]['online.availableTitle']));assert.ok(html.includes(dictionaries[lang]['online.availableHint']));
+ assert.match(html,/<button[^>]*class="lpa-button lpa-button--primary"[^>]*>/);
+ const review=render({...base,preparation:prep()},lang);
+ assert.match(review,/class="lpa-update-review"/);assert.match(review,/class="lpa-update-risk"/);assert.match(review,/class="lpa-update-consent"/);
+ assert.ok(review.includes(dictionaries[lang]['online.consentTitle']));
+ assert.match(review,/<button[^>]*class="lpa-button lpa-button--primary lpa-button--danger"[^>]*disabled=""/);
+ for(const patch of [{data:status(op())},{data:status(op({phase:'unknown',terminal:true}))},{uncertain:true},{recordLost:true},{pending:'confirm'},{data:status(null,{available:false})}])assert.doesNotMatch(render({...base,...patch},lang),/class="lpa-update-banner"/);
+ assert.doesNotMatch(render(base,lang,{updateAvailable:false}),/class="lpa-update-banner"/);
+});

@@ -229,3 +229,10 @@ test("all new copy is bilingual and client uses no auto-check timers or remote H
     assert.doesNotMatch(source, /setInterval|setTimeout|dangerouslySetInnerHTML|innerHTML|plugin_manager/);
   }
 });
+
+for(const lang of ['en','zh'])test('SSR '+lang+' highlights an available release without highlighting stale status',()=>{
+ const html=render(snapshot('update-available'),lang);
+ assert.match(html,/lpa-update-summary lpa-update-summary--available/);assert.match(html,/lpa-update-field--highlight/);
+ assert.ok(html.includes(dictionaries[lang]['updates.availableTitle']));assert.ok(html.includes(dictionaries[lang]['updates.availableHint']));
+ for(const patch of [{pending:'check'},{cancelled:true},{localError:'network'}]){const stale=render(snapshot('update-available',patch),lang);assert.doesNotMatch(stale,/lpa-update-summary--available|lpa-update-field--highlight/);}
+});

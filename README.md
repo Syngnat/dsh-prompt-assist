@@ -6,7 +6,7 @@ Provides prompt enhancement, next-question suggestions, and OpenAI Fast accelera
 
 A plugin bundle for the DeepSeek Harness (DSH) Web GUI. Enhancement and suggestions are independent features: enable either or both for the current DSH profile. Settings live on the sidebar page, not in a composer popup. Feature switches are profile-wide; model controls remain per-conversation.
 
-> **v1.2.13:** recognized OpenAI-family models keep a visible, disabled Fast control when provider authorization or projection state is unavailable, with an explanation instead of silent hiding. Startup reads can recover through bounded metadata retries. Existing Fast preferences, v1.2.12 global feature switches and per-conversation model controls are preserved.
+> **v1.2.14:** enhancement and suggestions no longer fail when the saved auxiliary Fast setting cannot apply to the followed model. The request runs without Priority and says so, and the saved setting is kept for an eligible route. Auxiliary failures now name their cause (cancelled, empty result, provider failure, incompatible Fast) and unknown codes expose a sanitized safe code. The online update page gains an availability banner, filled primary actions, a risk-accented confirmation card and an emphasized latest version. Prior Fast visibility, global feature switches and per-conversation model controls are preserved.
 
 ## Compatibility policy
 
@@ -164,7 +164,7 @@ Use an isolated DSH Web profile and a fresh, unsent conversation, with a disposa
 | macOS and Linux | Builds/offline suite are required CI gates; DSH runtime not tested |
 | Independent security audit | Not performed/claimed |
 
-v1.2.13 passes 574 offline tests locally. [GitHub Actions](https://github.com/Syngnat/dsh-prompt-assist/actions) covers Windows, macOS and Linux builds/tests plus real DSH adapter-contract checks; stable publication requires successful exact-commit CI. Earlier update-page, layout and global-switch checks do not constitute full v1.2.13 visual or live-model acceptance. Isolated Fast-control installation/browser evidence is recorded in the release notes. The separately reported machine was not available; this release does not claim its root cause was confirmed. No live model semantic or output-protocol adherence evaluation was performed for this release.
+v1.2.14 passes 601 offline tests locally. [GitHub Actions](https://github.com/Syngnat/dsh-prompt-assist/actions) covers Windows, macOS and Linux builds/tests plus real DSH adapter-contract checks; stable publication requires successful exact-commit CI. Earlier update-page, layout and global-switch checks do not constitute full v1.2.14 visual or live-model acceptance. Isolated Fast-control installation/browser evidence is recorded in the release notes. The separately reported machine was not available; this release does not claim its root cause was confirmed. No live model semantic or output-protocol adherence evaluation was performed for this release.
 
 ## License
 

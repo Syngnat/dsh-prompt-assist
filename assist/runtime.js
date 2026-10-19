@@ -192,7 +192,7 @@ export class AssistRuntime {
     const files = await readSelectedFiles(input.files, { ...readers, signal });
     check();
     const prompt = buildAssistPrompt(input.feature, input.draft, qa, files.files, input.references);
-    const identity = { provider: route.provider, model: route.model, effort: route.reasoningEffort ?? route.metadata.reasoning?.defaultEffort ?? '', fast: route.fast, outputBudget: route.metadata.defaultMaxTokens ?? null, contextWindow: route.metadata.context?.contextWindow ?? null };
+    const identity = { provider: route.provider, model: route.model, effort: route.reasoningEffort ?? route.metadata.reasoning?.defaultEffort ?? '', fast: route.fast, fastSkipped: route.fastSkipped === true, outputBudget: route.metadata.defaultMaxTokens ?? null, contextWindow: route.metadata.context?.contextWindow ?? null };
     const key = createHash('sha256').update(JSON.stringify([input.feature, input.draft, qaId, settings, prompt, identity])).digest('hex');
     const cached = this.cache.get(slot);
     if (cached?.key === key && cached.expires > Date.now()) return { ...cached.value, draftRev: input.draftRev, cached: true };
@@ -211,7 +211,7 @@ export class AssistRuntime {
     const generated = await callAssistModel(this.ctx, agent, route, prompt, input.feature, signal, this.createUserMessage, onText, onPrepared);
     if (input.feature === 'suggest' && this.projection(agent).qaId !== qaId) throw failure('stale-context');
     return {
-      ...generated, original: input.draft, draftRev: input.draftRev, qaId, feature: input.feature,
+      ...generated, original: input.draft, draftRev: input.draftRev, qaId, feature: input.feature, fastSkipped: route.fastSkipped === true,
       structured: (input.references?.length ?? 0) > 0,
       route: { provider: route.provider, model: route.model, reasoningEffort: generated.resolvedReasoningEffort ?? route.reasoningEffort ?? '', fast: route.fast },
       filesRead: files.files.map(file => ({ name: file.name, bytes: file.bytes })), warnings: files.warnings,

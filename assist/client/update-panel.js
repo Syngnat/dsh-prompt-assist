@@ -7,16 +7,19 @@ const h = React.createElement;
 export function UpdatePanelContent({snapshot = initialUpdateSnapshot(), t, onCheck, onReload, onCancel, onCopy, copyStatus, children}) {
   const view = updateDisplay(snapshot);
   const data = snapshot.data;
+  const available = view.status === "update-available";
   const button = (key, onClick, disabled = false) => h("button", {type: "button", className: "lpa-button", onClick, disabled}, t(key));
-  const field = (label, value) => h("div", {className: "lpa-update-field", key: label},
+  const field = (label, value, highlight = false) => h("div", {className: "lpa-update-field" + (highlight ? " lpa-update-field--highlight" : ""), key: label},
     h("dt", null, t(label)), h("dd", null, value));
   return h("section", {className: "lpa-update-panel", "aria-label": t("updates.title")},
     h("h2", {className: "lpa-update-title"}, t("updates.title")),
     h("p", {className: "lpa-note"}, t("updates.readOnly")),
     h("dl", {className: "lpa-update-versions"},
       field("updates.installedVersion", data?.currentVersion ?? t("updates.unknown")),
-      field("updates.latestVersion", data?.latestVersion ?? t("updates.unknown")),
+      field("updates.latestVersion", data?.latestVersion ?? t("updates.unknown"), available),
       field("updates.checkedAt", view.checkedAt ? h("time", {dateTime: view.checkedAt}, view.checkedAt) : t("updates.notChecked"))),
+    available ? h("div", {className: "lpa-update-summary lpa-update-summary--available", role: "status", "aria-live": "polite", "aria-atomic": true},
+      h("strong", null, t("updates.availableTitle")), h("p", null, t(view.message)), h("p", null, t("updates.availableHint"))) :
     h("p", {className: view.status === "error" ? "lpa-error" : "lpa-note",
       role: view.status === "error" ? "alert" : "status", "aria-live": "polite", "aria-atomic": true},
       t(view.message), view.status === "error" && view.error ? " " + t("updates.error." + view.error) : null),

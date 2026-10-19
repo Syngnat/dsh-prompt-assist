@@ -174,7 +174,7 @@ var init_style = __esm({
 .lpa-row{display:flex;align-items:center;gap:7px;flex-wrap:wrap;min-width:0}.lpa-row--spread{justify-content:space-between}
 .lpa-button{font:inherit;font-size:12px;color:var(--dsw-alias-label-secondary);background:transparent;border:1px solid var(--dsw-alias-border-l1);border-radius:6px;padding:4px 8px;min-height:28px;cursor:pointer}
 .lpa-button:hover:not(:disabled){background:var(--dsw-alias-bg-layer-2);color:var(--dsw-alias-label-primary)}
-.lpa-button[aria-pressed=true],.lpa-button--primary{border-color:var(--dsw-alias-brand-primary);color:var(--dsw-alias-brand-primary)}
+.lpa-button[aria-pressed=true]{border-color:var(--dsw-alias-brand-primary);color:var(--dsw-alias-brand-primary)}
 .lpa-button:disabled{opacity:.5;cursor:default}.lpa :is(button,input,select,summary):focus-visible{outline:2px solid var(--dsw-alias-brand-primary);outline-offset:2px}
 .lpa-note{margin:0;color:var(--dsw-alias-label-tertiary);font-size:11px;line-height:1.5}.lpa-error{color:var(--dsw-alias-state-error-primary);margin:0}
 .lpa-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.lpa-field{display:grid;gap:4px;min-width:0}
@@ -213,6 +213,31 @@ var init_style = __esm({
 .lpa-update-install{display:flex;align-items:center;gap:8px;flex-wrap:wrap;min-width:0}.lpa-update-install code{overflow-wrap:anywhere;user-select:text}
 .lpa-update-guide summary{cursor:pointer;color:var(--dsw-alias-label-secondary)}.lpa-update-guide ol{padding-inline-start:20px;margin:10px 0}.lpa-update-guide li{margin:7px 0;line-height:1.5}
 .lpa-update-panel a.lpa-button{text-decoration:none;display:inline-flex;align-items:center}
+/* Filled actions retain their own foreground during hover; warning rim distinguishes profile-wide confirmation. */
+.lpa-button.lpa-button--primary{box-sizing:border-box;max-width:100%;white-space:normal;overflow-wrap:anywhere;background:var(--dsw-alias-brand-primary);border-color:var(--dsw-alias-brand-primary);color:var(--dsw-alias-bg-layer-1);font-weight:700;padding:8px 14px;min-height:36px}
+.lpa-button.lpa-button--primary:hover:not(:disabled){background:color-mix(in srgb,var(--dsw-alias-brand-primary) 88%,var(--dsw-alias-label-primary));color:var(--dsw-alias-bg-layer-1)}
+.lpa-button.lpa-button--primary:active:not(:disabled){background:color-mix(in srgb,var(--dsw-alias-brand-primary) 76%,var(--dsw-alias-label-primary));box-shadow:inset 0 2px 3px var(--dsw-alias-bg-overlay)}
+.lpa-button.lpa-button--danger{border:3px solid var(--dsw-alias-state-warn-primary);padding:6px 12px;box-shadow:0 0 0 1px color-mix(in srgb,var(--dsw-alias-state-warn-primary) 35%,var(--dsw-alias-bg-layer-1))}
+.lpa-button.lpa-button--primary:disabled{opacity:1;background:var(--dsw-alias-bg-layer-2);border-color:var(--dsw-alias-border-l2);color:var(--dsw-alias-label-secondary);box-shadow:none;cursor:not-allowed}
+.lpa-update-panel{box-sizing:border-box;overflow-wrap:anywhere}
+.lpa-update-panel>.lpa-update-panel{margin-top:8px}
+.lpa-update-panel .lpa-button{box-sizing:border-box;max-width:100%;white-space:normal;overflow-wrap:anywhere}
+.lpa-update-banner,.lpa-update-summary--available{box-sizing:border-box;min-width:0;padding:16px;border:1px solid var(--dsw-alias-brand-primary);border-inline-start-width:4px;border-radius:9px;background:color-mix(in srgb,var(--dsw-alias-brand-primary) 10%,var(--dsw-alias-bg-layer-1));color:var(--dsw-alias-label-primary)}
+.lpa-update-banner{display:grid;grid-template-columns:auto minmax(0,1fr);align-items:start;gap:12px}
+.lpa-update-badge{justify-self:start;max-width:100%;box-sizing:border-box;padding:4px 9px;border-radius:20px;background:var(--dsw-alias-brand-primary);color:var(--dsw-alias-bg-layer-1);font-size:11px;font-weight:700;line-height:1.5}
+.lpa-update-banner-copy{min-width:0;display:grid;gap:6px}
+.lpa-update-banner-copy h4,.lpa-update-review h4{margin:0;font-size:15px;font-weight:700}
+.lpa-update-banner-copy p,.lpa-update-summary p{margin:0;line-height:1.6}
+.lpa-update-summary{display:grid;gap:6px}.lpa-update-summary strong{font-size:15px;color:var(--dsw-alias-brand-primary)}
+.lpa-update-field--highlight{padding:10px 12px;border-radius:7px;background:var(--dsw-alias-bg-layer-2);border:1px solid var(--dsw-alias-border-l2)}
+.lpa-update-field--highlight dd{color:var(--dsw-alias-brand-primary);font-weight:700;font-size:16px}
+.lpa-update-review{display:grid;min-width:0;gap:14px;padding:18px;border:1px solid var(--dsw-alias-border-l2);border-inline-start:4px solid var(--dsw-alias-state-warn-primary);border-radius:9px;background:var(--dsw-alias-bg-layer-2)}
+.lpa-update-risk{margin:0;color:var(--dsw-alias-state-warn-primary);font-weight:600;line-height:1.6}
+.lpa-update-consent{box-sizing:border-box;min-width:0;margin:0;padding:12px;border:1px solid var(--dsw-alias-state-warn-primary);border-radius:7px;background:color-mix(in srgb,var(--dsw-alias-state-warn-primary) 8%,var(--dsw-alias-bg-layer-1))}
+.lpa-update-consent legend{max-width:100%;padding:0 6px;font-weight:700;color:var(--dsw-alias-state-warn-primary);overflow-wrap:anywhere}
+.lpa-update-consent>.lpa-row{display:grid;grid-template-columns:auto minmax(0,1fr);align-items:start;gap:9px;line-height:1.6;color:var(--dsw-alias-label-primary)}
+.lpa-update-consent input{margin:3px 0 0;accent-color:var(--dsw-alias-state-warn-primary)}
+@media(max-width:600px){.lpa-update-panel{padding:12px;margin-top:18px}.lpa-update-banner{grid-template-columns:minmax(0,1fr);gap:8px}.lpa-update-review{padding:12px}.lpa-update-versions{grid-template-columns:minmax(0,1fr)}.lpa-update-panel>.lpa-row,.lpa-update-review>.lpa-row{align-items:stretch}.lpa-update-panel>.lpa-row>.lpa-button,.lpa-update-review>.lpa-row>.lpa-button{width:100%}.lpa-update-install>.lpa-button{max-width:100%}}
 `;
   }
 });
@@ -374,6 +399,10 @@ var init_messages = __esm({
         "online.uncertain": "\u786E\u8BA4\u8BF7\u6C42\u7684\u7ED3\u679C\u5C1A\u4E0D\u786E\u5B9A\uFF0C\u4EFB\u52A1\u53EF\u80FD\u5DF2\u542F\u52A8\u3002\u53EA\u91CD\u8BFB\u72B6\u6001\uFF0C\u4E0D\u4F1A\u81EA\u52A8\u91CD\u53D1\u786E\u8BA4\uFF1B\u8BF7\u52FF\u91CD\u590D\u66F4\u65B0\u3002",
         "online.requestFailed": "\u8BF7\u6C42\u672A\u5B8C\u6210\uFF0C\u8BF7\u624B\u52A8\u91CD\u8BFB\u72B6\u6001\u3002\u5B89\u5168\u9519\u8BEF\u7801\uFF1A",
         "online.review": "\u786E\u8BA4\u672C\u6B21\u66F4\u65B0",
+        "online.badge": "\u6709\u65B0\u7248\u672C",
+        "online.availableTitle": "\u53EF\u4EE5\u66F4\u65B0\u5230\u6700\u65B0\u7684\u7A33\u5B9A\u7248",
+        "online.availableHint": "\u5148\u5728\u4E0B\u65B9\u51C6\u5907\u66F4\u65B0\uFF0C\u518D\u9605\u8BFB\u98CE\u9669\u3001\u52FE\u9009\u786E\u8BA4\u5E76\u70B9\u51FB\u201C\u786E\u8BA4\u66F4\u65B0\u201D\u3002",
+        "online.consentTitle": "\u98CE\u9669\u786E\u8BA4",
         "online.fromVersion": "\u539F\u7248\u672C",
         "online.targetVersion": "\u76EE\u6807\u7248\u672C",
         "online.installedVersion": "\u5DF2\u9A8C\u8BC1\u7684\u5B89\u88C5\u7248\u672C",
@@ -419,6 +448,8 @@ var init_messages = __esm({
         "updates.checking": "\u6B63\u5728\u5411 GitHub \u68C0\u67E5\u516C\u5F00\u7A33\u5B9A\u7248\u4FE1\u606F\u2026",
         "updates.current": "\u5F53\u524D\u8FD0\u884C\u7248\u672C\u4E0E\u4E0A\u6B21\u68C0\u67E5\u5230\u7684\u6700\u65B0\u7A33\u5B9A\u7248\u4E00\u81F4\u3002",
         "updates.update-available": "\u53D1\u73B0\u8F83\u65B0\u7684\u7A33\u5B9A\u7248\uFF0C\u53EF\u51C6\u5907\u5728\u7EBF\u66F4\u65B0\uFF0C\u6216\u9009\u62E9\u4E0B\u65B9\u7684\u624B\u52A8\u5347\u7EA7\u8DEF\u5F84\u3002",
+        "updates.availableTitle": "\u53D1\u73B0\u65B0\u7248\u672C",
+        "updates.availableHint": "\u53EF\u5728\u4E0B\u65B9\u51C6\u5907\u5728\u7EBF\u66F4\u65B0\uFF1B\u63D0\u4EA4\u524D\u9700\u8981\u9605\u8BFB\u98CE\u9669\u5E76\u52FE\u9009\u786E\u8BA4\u3002",
         "updates.ahead": "\u5F53\u524D\u8FD0\u884C\u7248\u672C\u9886\u5148\u4E8E\u6700\u65B0\u7A33\u5B9A\u7248\uFF0C\u53EF\u80FD\u662F\u5F00\u53D1\u6216\u5019\u9009\u6784\u5EFA\uFF1B\u5F53\u524D\u4E0D\u63D0\u793A\u7A33\u5B9A\u7248\u5347\u7EA7\u3002",
         "updates.error": "\u66F4\u65B0\u68C0\u67E5\u672A\u5B8C\u6210\uFF0C\u4E0D\u80FD\u786E\u8BA4\u662F\u5426\u5DF2\u662F\u6700\u65B0\u7248\u672C\u3002",
         "updates.cancelled": "\u672C\u6B21\u8BFB\u53D6\u6216\u68C0\u67E5\u5DF2\u53D6\u6D88\uFF0C\u6CA1\u6709\u4E0B\u8F7D\u6216\u5B89\u88C5\u4EFB\u4F55\u5185\u5BB9\u3002",
@@ -511,6 +542,11 @@ var init_messages = __esm({
         manual: "\u589E\u5F3A\u53EA\u5728\u70B9\u51FB\u540E\u8BF7\u6C42\uFF1B\u751F\u6210\u671F\u95F4\u4ECD\u53EF\u7F16\u8F91\uFF0C\u7F16\u8F91\u4F1A\u53D6\u6D88\u8FC7\u671F\u7ED3\u679C\u3002",
         busy: "\u4F1A\u8BDD\u4ECD\u5728\u8FD0\u884C\uFF0C\u7ED3\u675F\u540E\u518D\u8BD5\u3002",
         requestError: "\u8BF7\u6C42\u672A\u5B8C\u6210\uFF0C\u8349\u7A3F\u4FDD\u6301\u4E0D\u53D8\uFF1B\u8BF7\u68C0\u67E5\u914D\u7F6E\u540E\u91CD\u8BD5\u3002",
+        fastSkipped: "\u5F53\u524D\u6A21\u578B\u4E0D\u652F\u6301\u8F85\u52A9 Fast\uFF0C\u672C\u6B21\u6309\u666E\u901A\u8BF7\u6C42\u6267\u884C\uFF0C\u672A\u542F\u7528 Priority\uFF1B\u5DF2\u4FDD\u5B58\u7684 Fast \u8BBE\u7F6E\u4FDD\u6301\u4E0D\u53D8\u3002",
+        emptyResult: "\u6A21\u578B\u6CA1\u6709\u8FD4\u56DE\u53EF\u7528\u6587\u672C\uFF0C\u672A\u5E94\u7528\u7ED3\u679C\uFF1B\u8349\u7A3F\u4FDD\u6301\u4E0D\u53D8\u3002\u53EF\u91CD\u8BD5\uFF0C\u6216\u964D\u4F4E\u63A8\u7406\u6863\u540E\u91CD\u8BD5\u3002",
+        cancelled: "\u672C\u6B21\u751F\u6210\u5DF2\u53D6\u6D88\uFF0C\u672A\u5E94\u7528\u7ED3\u679C\uFF1B\u8349\u7A3F\u4FDD\u6301\u4E0D\u53D8\u3002",
+        modelFailed: "\u6A21\u578B\u8BF7\u6C42\u5931\u8D25\uFF08\u4F9B\u5E94\u5546\u6216\u7F51\u7EDC\u539F\u56E0\uFF09\uFF0C\u672A\u5E94\u7528\u7ED3\u679C\uFF1B\u8349\u7A3F\u4FDD\u6301\u4E0D\u53D8\u3002\u8BF7\u7A0D\u540E\u91CD\u8BD5\uFF0C\u6216\u68C0\u67E5\u8BE5\u670D\u52A1\u5546\u914D\u7F6E\u3002",
+        safeCodeLabel: "\u5B89\u5168\u9519\u8BEF\u7801",
         configError: "\u6A21\u578B\u3001\u63A8\u7406\u6863\u6216\u914D\u7F6E\u65E0\u6548\uFF0C\u8BF7\u91CD\u65B0\u9009\u62E9\u540E\u4FDD\u5B58\u3002",
         contextError: "\u9009\u5B9A\u5B8C\u6574\u95EE\u7B54\u4E0D\u53EF\u7528\u6216\u8D85\u51FA\u4E0A\u4E0B\u6587\u9650\u5236\uFF0C\u8BF7\u51CF\u5C11\u8F6E\u6570\u3002",
         fileError: "\u6587\u4EF6\u672A\u8BFB\u53D6\uFF1A\u53EF\u80FD\u8D85\u9650\u3001\u654F\u611F\u6216\u4E0D\u652F\u6301\u3002\u8BF7\u53D6\u6D88\u8BE5\u6587\u4EF6\u540E\u91CD\u8BD5\u3002",
@@ -569,6 +605,10 @@ var init_messages = __esm({
         "online.uncertain": "The confirmation outcome is uncertain; the job may have started. Reload status only. Confirmation will not be resent automatically. Do not start a duplicate update.",
         "online.requestFailed": "The request did not complete. Reload status manually. Safe error code:",
         "online.review": "Review this update",
+        "online.badge": "Update available",
+        "online.availableTitle": "A newer stable version can be installed",
+        "online.availableHint": "Prepare the update below, review the risks, tick consent, then choose Confirm update.",
+        "online.consentTitle": "Risk confirmation",
         "online.fromVersion": "Original version",
         "online.targetVersion": "Target version",
         "online.installedVersion": "Verified installed version",
@@ -614,6 +654,8 @@ var init_messages = __esm({
         "updates.checking": "Checking public stable-release information on GitHub\u2026",
         "updates.current": "The running version matches the latest stable release from the last check.",
         "updates.update-available": "A newer stable release is available. Prepare an online update or use the optional manual upgrade path below.",
+        "updates.availableTitle": "New version available",
+        "updates.availableHint": "Prepare the online update below; review the risks and tick consent before submitting.",
         "updates.ahead": "The running version is ahead of the latest stable release and may be a development or candidate build. No stable upgrade is offered.",
         "updates.error": "The update check did not complete. The latest version is not confirmed.",
         "updates.cancelled": "This read or check was cancelled. Nothing was downloaded or installed.",
@@ -706,6 +748,11 @@ var init_messages = __esm({
         manual: "Enhancement runs only on click. You can keep editing; edits cancel stale results.",
         busy: "The session is still running. Try again after it ends.",
         requestError: "The request did not finish. Your draft is unchanged. Check settings and retry.",
+        fastSkipped: "This model does not support assist Fast, so this request ran without Priority. Your saved Fast setting is unchanged.",
+        emptyResult: "The model returned no usable text, so nothing was applied. Your draft is unchanged. Retry, or lower the reasoning effort and retry.",
+        cancelled: "Generation was cancelled; nothing was applied. Your draft is unchanged.",
+        modelFailed: "The model request failed (provider or network), so nothing was applied. Your draft is unchanged. Retry later or check that provider configuration.",
+        safeCodeLabel: "Safe error code",
         configError: "The model, effort, or settings are invalid. Select again and save.",
         contextError: "Complete Q&A is unavailable, or input is estimated to exceed the model context window. Reduce input/rounds or check provider/model settings; input is not silently truncated.",
         fileError: "File not read: it may be oversized, sensitive, or unsupported. Deselect it and retry.",
@@ -791,7 +838,12 @@ function referenceNames(occurrences = []) {
   return occurrences.flatMap((item) => typeof item?.label === "string" ? [{ name: item.label }] : []);
 }
 function errorKey(error) {
-  const code2 = String(error?.code ?? "request_failed").toLowerCase();
+  const raw = typeof error === "string" ? error : error?.code;
+  const code2 = typeof raw === "string" ? raw.toLowerCase() : "request_failed";
+  if (code2 === "fast-unsupported") return "fastUnsupported";
+  if (code2 === "empty-result") return "emptyResult";
+  if (code2 === "cancelled") return "cancelled";
+  if (code2 === "model-failed") return "modelFailed";
   if (code2.startsWith("transport-")) return "transportError";
   if (code2 === "forbidden") return "authError";
   if (code2 === "output-limit") return "outputLimit";
@@ -812,6 +864,14 @@ function reconcileState(host, wire, session, allowed) {
 }
 function catalogInput(config, provider) {
   return config.followSession ? {} : { provider };
+}
+function safeCode(error) {
+  const code2 = typeof error === "string" ? error : error?.code;
+  return typeof code2 === "string" && code2.length > 0 && code2.length <= 64 && !/[^a-z0-9-]/u.test(code2) ? code2 : "unknown";
+}
+function errorText(error, t) {
+  const key = errorKey(error);
+  return t(key) + (key === "requestError" ? " " + t("safeCodeLabel") + " " + safeCode(error) : "");
 }
 var DEFAULT_SETTINGS, SESSION_FIELDS;
 var init_api = __esm({
@@ -1413,6 +1473,7 @@ function NoSuggestion({ runtime: r, t }) {
     "div",
     { className: "lpa-row lpa-note", role: "status" },
     h3("span", null, t("noSuggestion")),
+    value.fastSkipped === true ? h3("span", { className: "lpa-note" }, t("fastSkipped")) : null,
     h3("button", { type: "button", className: "lpa-button", onClick: () => r.controller.dismiss() }, t("dismiss"))
   );
 }
@@ -1444,6 +1505,7 @@ function Preview({ runtime: r, actions, t, onApplied }) {
     { className: "lpa-preview", "aria-label": t(value.feature), "aria-busy": Boolean(value.streaming) },
     h3("header", { className: "lpa-preview-header" }, h3("span", null, t(value.feature)), value.streaming ? h3("span", { className: "lpa-preview-status" }, t("streamingShort")) : null),
     h3("pre", { className: "lpa-result-text" }, value.text),
+    value.fastSkipped === true ? h3("p", { className: "lpa-note", role: "status" }, t("fastSkipped")) : null,
     blocked ? h3("p", { className: "lpa-note" }, t("structured")) : null,
     h3(
       "div",
@@ -1549,7 +1611,7 @@ function AssistPanel(p) {
     h5(NoSuggestion, { runtime: r, t }),
     h5(Preview, { runtime: r, actions: p.inputActions, t, onApplied: setUndo }),
     validUndo ? h5("div", { className: "lpa-undo-actions" }, button("undo", undoApply, !r.allowed)) : null,
-    visible && notice ? h5("div", { className: "lpa-row", role: "status" }, h5("span", { className: r.result.error ? "lpa-error" : "lpa-note" }, t(typeof notice === "string" ? notice : errorKey(notice))), button("dismiss", dismiss)) : null
+    visible && notice ? h5("div", { className: "lpa-row", role: "status" }, h5("span", { className: r.result.error ? "lpa-error" : "lpa-note" }, typeof notice === "string" && notice !== "requestError" ? t(notice) : errorText(notice, t)), button("dismiss", dismiss)) : null
   );
 }
 var import_react6, h5;
@@ -1923,12 +1985,18 @@ function OnlineUpdatePanelContent({ snapshot = initialOnlineSnapshot(), updateAv
   const operation = data?.operation;
   const canForget = canForgetOnlineMarker(snapshot);
   const active = operation && !operation.terminal;
-  const button = (key, onClick, disabled = false) => h6("button", { type: "button", className: "lpa-button", onClick, disabled }, t("online." + key));
+  const button = (key, onClick, disabled = false, emphasis = "") => h6("button", { type: "button", className: "lpa-button" + emphasis, onClick, disabled }, t("online." + key));
   const field = (label, value) => h6("div", { className: "lpa-update-field", key: label }, h6("dt", null, t("online." + label)), h6("dd", null, value));
   return h6(
     "section",
     { className: "lpa-update-panel", "aria-label": t("online.title"), "aria-busy": !!pending },
     h6("h3", null, t("online.title")),
+    updateAvailable && data?.available && !active && !pending && !uncertain && !recordLost && operation?.phase !== "unknown" ? h6(
+      "div",
+      { className: "lpa-update-banner", role: "status", "aria-live": "polite", "aria-atomic": true },
+      h6("span", { className: "lpa-update-badge" }, t("online.badge")),
+      h6("div", { className: "lpa-update-banner-copy" }, h6("h4", null, t("online.availableTitle")), h6("p", null, t("online.availableHint")))
+    ) : null,
     h6("p", { className: "lpa-note" }, t("online.userOnly")),
     h6("p", { className: "lpa-note" }, t("online.continuity")),
     operation && !uncertain ? h6(
@@ -1968,7 +2036,7 @@ function OnlineUpdatePanelContent({ snapshot = initialOnlineSnapshot(), updateAv
     markerCleared ? h6("p", { className: "lpa-note", role: "status" }, t("online.markerCleared")) : null,
     preparation ? h6(
       "div",
-      { className: "lpa-update-install" },
+      { className: "lpa-update-review" },
       h6("h4", null, t("online.review")),
       h6(
         "dl",
@@ -1979,14 +2047,19 @@ function OnlineUpdatePanelContent({ snapshot = initialOnlineSnapshot(), updateAv
         field("restoreSpec", h6("code", null, preparation.restoreSpec)),
         field("expiresAt", h6("time", { dateTime: new Date(preparation.expiresAt).toISOString() }, new Date(preparation.expiresAt).toISOString()))
       ),
-      h6("p", { className: "lpa-note" }, t("online.risks")),
-      h6("label", { className: "lpa-row" }, h6("input", { type: "checkbox", checked: consent, disabled: !!pending, onChange: (event) => onConsent?.(event.target.checked) }), t("online.consent")),
-      h6("div", { className: "lpa-row" }, button("confirm", onConfirm, !consent || !!pending || uncertain), button("dismiss", onDismiss, !!pending))
+      h6("p", { className: "lpa-update-risk" }, t("online.risks")),
+      h6(
+        "fieldset",
+        { className: "lpa-update-consent" },
+        h6("legend", null, t("online.consentTitle")),
+        h6("label", { className: "lpa-row" }, h6("input", { type: "checkbox", checked: consent, disabled: !!pending, onChange: (event) => onConsent?.(event.target.checked) }), t("online.consent"))
+      ),
+      h6("div", { className: "lpa-row" }, button("confirm", onConfirm, !consent || !!pending || uncertain, " lpa-button--primary lpa-button--danger"), button("dismiss", onDismiss, !!pending))
     ) : null,
     h6(
       "div",
       { className: "lpa-row" },
-      !preparation && updateAvailable ? button(pending === "prepare" ? "preparing" : "prepare", onPrepare, !!pending || !data?.available || !!active || uncertain) : null,
+      !preparation && updateAvailable ? button(pending === "prepare" ? "preparing" : "prepare", onPrepare, !!pending || !data?.available || !!active || uncertain, " lpa-button--primary") : null,
       button("reload", onReload, !!pending)
     ),
     pending === "confirm" ? h6("p", { role: "status" }, t("online.submitting")) : null
@@ -2031,10 +2104,11 @@ var init_online_update_panel = __esm({
 function UpdatePanelContent({ snapshot = initialUpdateSnapshot(), t, onCheck, onReload, onCancel, onCopy, copyStatus, children }) {
   const view = updateDisplay(snapshot);
   const data = snapshot.data;
+  const available = view.status === "update-available";
   const button = (key, onClick, disabled = false) => h7("button", { type: "button", className: "lpa-button", onClick, disabled }, t(key));
-  const field = (label, value) => h7(
+  const field = (label, value, highlight = false) => h7(
     "div",
-    { className: "lpa-update-field", key: label },
+    { className: "lpa-update-field" + (highlight ? " lpa-update-field--highlight" : ""), key: label },
     h7("dt", null, t(label)),
     h7("dd", null, value)
   );
@@ -2047,10 +2121,16 @@ function UpdatePanelContent({ snapshot = initialUpdateSnapshot(), t, onCheck, on
       "dl",
       { className: "lpa-update-versions" },
       field("updates.installedVersion", data?.currentVersion ?? t("updates.unknown")),
-      field("updates.latestVersion", data?.latestVersion ?? t("updates.unknown")),
+      field("updates.latestVersion", data?.latestVersion ?? t("updates.unknown"), available),
       field("updates.checkedAt", view.checkedAt ? h7("time", { dateTime: view.checkedAt }, view.checkedAt) : t("updates.notChecked"))
     ),
-    h7(
+    available ? h7(
+      "div",
+      { className: "lpa-update-summary lpa-update-summary--available", role: "status", "aria-live": "polite", "aria-atomic": true },
+      h7("strong", null, t("updates.availableTitle")),
+      h7("p", null, t(view.message)),
+      h7("p", null, t("updates.availableHint"))
+    ) : h7(
       "p",
       {
         className: view.status === "error" ? "lpa-error" : "lpa-note",
@@ -2160,7 +2240,7 @@ function Settings(p) {
     e.preventDefault();
     const problem = validateSettings(v);
     setError(problem === "rounds" ? "roundsError" : problem ? "modelError" : null);
-    if (!problem && !invalidEffort && !invalidFast) p.save(sessionSettings(v));
+    if (!problem && !invalidEffort) p.save(sessionSettings(v));
   };
   const select = (key, value, items, change2) => field(key, h8("select", { value, onChange: (e) => change2(e.target.value) }, items.map((item) => h8("option", { key: item.id, value: item.id }, item.name))));
   return h8(
@@ -2178,7 +2258,7 @@ function Settings(p) {
     ) : null,
     invalidEffort ? h8("p", { className: "lpa-error", role: "alert" }, t("effortInvalid")) : null,
     check("fast", v.fast, (fast2) => change({ fast: fast2 }), !v.fast && cap?.fastEligible !== true),
-    invalidFast ? h8("p", { className: "lpa-error", role: "alert" }, t("fastUnsupported")) : null,
+    invalidFast ? h8("p", { className: "lpa-note", role: "status" }, t("fastSkipped")) : null,
     h8(
       "div",
       { className: "lpa-grid" },
@@ -2338,7 +2418,7 @@ function FeatureSettings({ feature, host, sessionId, p, allowed, onSaved }) {
       "div",
       { className: "lpa-settings-feedback" },
       draft.dirty ? h10("p", { className: "lpa-note" }, p.t("settingsChanged")) : null,
-      noticeValue ? h10("p", { role: "status", className: noticeValue === "saved" ? "lpa-note" : "lpa-error" }, p.t(typeof noticeValue === "string" ? noticeValue : errorKey(noticeValue))) : null
+      noticeValue ? h10("p", { role: "status", className: noticeValue === "saved" ? "lpa-note" : "lpa-error" }, typeof noticeValue === "string" && noticeValue !== "requestError" ? p.t(noticeValue) : errorText(noticeValue, p.t)) : null
     )
   );
 }
@@ -2362,7 +2442,7 @@ function SessionSettings({ sessionId, p }) {
     null,
     h10("p", { className: "lpa-note" }, p.t("editingSession"), ": ", h10("code", null, sessionId)),
     !allowed ? h10("p", { className: "lpa-note" }, p.t("access")) : null,
-    error ? h10("p", { className: "lpa-error", role: "alert" }, p.t(errorKey(error))) : null,
+    error ? h10("p", { className: "lpa-error", role: "alert" }, errorText(error, p.t)) : null,
     !host && !error ? h10("p", { role: "status" }, p.t("loading")) : null,
     host ? h10("div", { className: "lpa-settings-cards" }, ["suggest", "enhance"].map((feature) => h10(FeatureSettings, { key: feature, feature, host, sessionId, p, allowed, onSaved }))) : null
   );

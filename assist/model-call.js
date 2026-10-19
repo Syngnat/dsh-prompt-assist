@@ -12,8 +12,8 @@ export async function resolveAssistRoute(ctx, agent, settings, fastService, prov
   if (effort) route.reasoningEffort = effort;
   const metadata = await ctx.llm.resolveModelInfo(route.provider, route.model, signal);
   if (effort && !metadata.reasoning?.efforts.some(item => item.id === effort)) throw failure('unsupported-effort');
-  if (settings.fast && !isOpenAISelection(route, providers)) throw failure('fast-unsupported');
-  return { ...route, fast: settings.fast === true, metadata };
+  const fastSkipped = settings.fast === true && !isOpenAISelection(route, providers);
+  return { ...route, fast: settings.fast === true && !fastSkipped, fastSkipped, metadata };
 }
 
 /** Model quotas belong to the captured provider configuration, never this feature. */

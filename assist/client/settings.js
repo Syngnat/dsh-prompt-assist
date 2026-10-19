@@ -11,7 +11,7 @@ export function Settings(p) {
  const efforts=cap?.efforts??[];
  const invalidEffort=!v.followSession&&cap&&v.reasoningEffort&&!efforts.some(e=>e.id===v.reasoningEffort);
  const invalidFast=cap&&v.fast&&!cap.fastEligible;
- const submit=e=>{e.preventDefault();const problem=validateSettings(v);setError(problem==="rounds"?"roundsError":problem?"modelError":null);if(!problem&&!invalidEffort&&!invalidFast)p.save(sessionSettings(v));};
+ const submit=e=>{e.preventDefault();const problem=validateSettings(v);setError(problem==="rounds"?"roundsError":problem?"modelError":null);if(!problem&&!invalidEffort)p.save(sessionSettings(v));};
  const select=(key,value,items,change)=>field(key,h("select",{value,onChange:e=>change(e.target.value)},items.map(item=>h("option",{key:item.id,value:item.id},item.name))));
  return h("form",{onSubmit:submit},
  h("div",{className:"lpa-row"},check("follow",v.followSession,followSession=>change({followSession}))),
@@ -23,7 +23,7 @@ export function Settings(p) {
  select("effort",v.reasoningEffort,[{id:"",name:t("nativeDefault")},...(invalidEffort?[{id:v.reasoningEffort,name:v.reasoningEffort}]:[]),...efforts],reasoningEffort=>change({reasoningEffort}))):null,
  invalidEffort?h("p",{className:"lpa-error",role:"alert"},t("effortInvalid")):null,
  check("fast",v.fast,fast=>change({fast}),!v.fast&&cap?.fastEligible!==true),
- invalidFast?h("p",{className:"lpa-error",role:"alert"},t("fastUnsupported")):null,
+ invalidFast?h("p",{className:"lpa-note",role:"status"},t("fastSkipped")):null,
  h("div",{className:"lpa-grid"},select("rounds",custom?"custom":String(v.rounds),[1,3,5].map(n=>({id:String(n),name:n})).concat({id:"custom",name:t("custom")}),value=>{setCustom(value==="custom");if(value!=="custom")change({rounds:Number(value)});}),
  custom?field("custom",h("input",{type:"number",min:1,max:20,step:1,value:Number.isFinite(v.rounds)?v.rounds:"",onChange:e=>change({rounds:e.target.value===""?NaN:Number(e.target.value)})})):null),
  error?h("p",{role:"alert",className:"lpa-error"},t(error)):null,

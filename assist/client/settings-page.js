@@ -2,7 +2,7 @@ import {UpdatePanel} from "./update-panel.js";
 import React from 'react';
 import {Settings} from './settings.js';
 import {useModelOptions} from './runtime.js';
-import {errorKey,sessionSettings} from './api.js';
+import {errorText,sessionSettings} from './api.js';
 import {EnablementPanel} from './enablement-panel.js';
 import {createSettingsDraft,editSettingsDraft,acceptSettingsSave,createSettingsRequests} from './settings-page-state.js';
 const h=React.createElement;
@@ -35,7 +35,7 @@ function FeatureSettings({feature,host,sessionId,p,allowed,onSaved}){
   h('p',{className:'lpa-note'},p.t(feature==='suggest'?'suggestContext':'enhanceOriginal')),
   h(Settings,{t:p.t,config:draft.config,catalog:options.catalog,capabilities:options.capabilities,allowed,saving,onChange:edit,save}),
   h('div',{className:'lpa-settings-feedback'},draft.dirty?h('p',{className:'lpa-note'},p.t('settingsChanged')):null,
-  noticeValue?h('p',{role:'status',className:noticeValue==='saved'?'lpa-note':'lpa-error'},p.t(typeof noticeValue==='string'?noticeValue:errorKey(noticeValue))):null));
+  noticeValue?h('p',{role:'status',className:noticeValue==='saved'?'lpa-note':'lpa-error'},(typeof noticeValue==='string'&&noticeValue!=='requestError'?p.t(noticeValue):errorText(noticeValue,p.t))):null));
 }
 
 function SessionSettings({sessionId,p}){
@@ -50,7 +50,7 @@ function SessionSettings({sessionId,p}){
  return h(React.Fragment,null,
   h('p',{className:'lpa-note'},p.t('editingSession'),': ',h('code',null,sessionId)),
   !allowed?h('p',{className:'lpa-note'},p.t('access')):null,
-  error?h('p',{className:'lpa-error',role:'alert'},p.t(errorKey(error))):null,
+  error?h('p',{className:'lpa-error',role:'alert'},errorText(error,p.t)):null,
   !host&&!error?h('p',{role:'status'},p.t('loading')):null,
   host?h('div',{className:'lpa-settings-cards'},['suggest','enhance'].map(feature=>h(FeatureSettings,{key:feature,feature,host,sessionId,p,allowed,onSaved}))):null);
 }

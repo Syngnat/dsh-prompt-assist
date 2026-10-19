@@ -2,6 +2,16 @@
 
 [English](<README.md>) | [简体中文](<README.zh-CN.md>)
 
+## 1.2.14 — Assist error clarity and update-page hierarchy
+
+- Stop failing an enhancement or suggestion only because the saved auxiliary Fast setting cannot apply to the followed model. The request now runs without Priority and reports that Fast was skipped; the saved setting is untouched, so switching back to an eligible route restores it. No Priority payload is ever added for an ineligible route.
+- Name the actual auxiliary failure instead of showing one generic sentence: cancelled, empty result, provider/model failure and Fast incompatibility each get their own message, and unknown codes show a sanitized safe code for support.
+- Give the online update page a real visual hierarchy: an availability banner with a badge, filled high-contrast primary buttons, a warning-accented confirmation card with grouped risk consent, and an emphasized latest-version value. Colors use theme tokens only, so light and dark themes both follow the Host.
+- Preserve update semantics: checking still never installs, confirmation still requires explicit risk consent, and no new network request or automatic retry is added.
+- Add 27 offline regressions, bringing the suite to 601: route-level Fast skipping for followed and explicit non-OpenAI routes, unchanged Priority injection for eligible routes, specific error mapping with sanitized codes, the settings card's non-blocking Fast notice, and SSR checks for the new update-page structure in both languages.
+
+中文：增强/下一问建议不再因为“辅助 Fast 对当前模型不可用”而整体失败；改为跳过 Priority 继续生成并明确提示，已保存的 Fast 设置不变。失败信息改为具体原因并附安全错误码。在线更新页增加新版本横幅、醒目的主按钮、风险确认卡片和版本高亮，颜色全部使用主题 token。本版新增 27 项离线回归，总计 601 项。
+
 ## 1.2.13 — Defensive Fast visibility
 
 - Keep recognized OpenAI-family controls visible while Priority authorization or projection state is unavailable. Show a disabled switch with the reason rather than silently hiding it; an unapproved provider cannot enable Priority.

@@ -57,7 +57,12 @@ export function referenceNames(occurrences = []) {
 }
 
 export function errorKey(error) {
-  const code = String(error?.code ?? 'request_failed').toLowerCase();
+  const raw = typeof error === 'string' ? error : error?.code;
+  const code = typeof raw === 'string' ? raw.toLowerCase() : 'request_failed';
+  if (code === 'fast-unsupported') return 'fastUnsupported';
+  if (code === 'empty-result') return 'emptyResult';
+  if (code === 'cancelled') return 'cancelled';
+  if (code === 'model-failed') return 'modelFailed';
   if (code.startsWith('transport-')) return 'transportError';
   if (code === 'forbidden') return 'authError';
   if (code === 'output-limit') return 'outputLimit';
@@ -86,4 +91,16 @@ export function catalogInput(config, provider) {
 export function cleanDraftConfigs(drafts, dirtyFeatures) {
   const entries = Object.entries(drafts).filter(([key]) => dirtyFeatures.includes(key));
   return entries.length === Object.keys(drafts).length ? drafts : Object.fromEntries(entries);
+}
+
+/** A short protocol code only: never render provider prose, paths, or arbitrary objects. */
+export function safeCode(error) {
+  const code = typeof error === 'string' ? error : error?.code;
+  return typeof code === "string" && code.length > 0 && code.length <= 64 && !/[^a-z0-9-]/u.test(code) ? code : "unknown";
+}
+
+/** Keep generic diagnostics identical in composer, settings page, and feature cards. */
+export function errorText(error, t) {
+  const key = errorKey(error);
+  return t(key) + (key === "requestError" ? " " + t("safeCodeLabel") + " " + safeCode(error) : "");
 }
