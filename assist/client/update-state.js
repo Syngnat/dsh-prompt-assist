@@ -27,6 +27,20 @@ export function formatCheckedAt(value) {
   return Number.isNaN(date.getTime()) ? null : date.toISOString();
 }
 
+/** Human-readable UTC stamp: the label says UTC, so the display must not depend on the viewer's zone. */
+export function displayCheckedAt(value) {
+  const iso = formatCheckedAt(value);
+  if (!iso) return null;
+  const date = new Date(iso), pad = number => String(number).padStart(2, "0");
+  return date.getUTCFullYear() + "-" + pad(date.getUTCMonth() + 1) + "-" + pad(date.getUTCDate())
+    + " " + pad(date.getUTCHours()) + ":" + pad(date.getUTCMinutes()) + ":" + pad(date.getUTCSeconds()) + " UTC";
+}
+
+/** Same deterministic formatting for any millisecond timestamp rendered as UTC. */
+export function displayUtcTime(value) {
+  return displayCheckedAt(value) ?? "";
+}
+
 /** Pick only the public contract. Never trust a remote installation target or HTML. */
 export function normalizeUpdateState(value) {
   if (!value || typeof value !== "object" || !version(value.currentVersion) || !STATUSES.has(value.status)) throw invalid();

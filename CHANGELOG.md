@@ -2,6 +2,14 @@
 
 [English](<README.md>) | [简体中文](<README.zh-CN.md>)
 
+## 1.2.19 — 时间可读与历史更新记录不再误导 / Readable timestamps and honest update records
+
+- Render the update check time as a readable UTC stamp (`2026-10-19 01:10:30 UTC`) instead of a raw ISO string, while keeping the exact machine-readable `dateTime` attribute. Confirmation expiry uses the same formatting.
+- A terminal update record no longer looks like the current version: the record now shows the task's own versions, the currently running version, and — when the record's verified version differs from the running one — a note saying the record is from an earlier task.
+- Add regressions for the readable stamp, the exact `dateTime`, the stale-record note and its absence when the versions agree.
+
+中文：检查时间改为可读的 UTC 时间（如 `2026-10-19 01:10:30 UTC`），同时保留精确的 `dateTime` 属性；确认有效期使用同样格式。历史更新任务不再让人误以为是当前版本：分别显示任务原版本/目标版本、当前运行版本，并在记录内已验证版本与当前版本不一致时注明这是更早的任务记录。
+
 ## 1.2.18 — 授权后 Fast 立即生效 / Authorization reaches the Fast control
 
 - Fix: authorizing a provider in the settings page did not un-block the Fast control. A profile authorization is durable profile state, not a session event, so a session's projection wire can keep the allowlist it was built with. The Client now merges the Host-authoritative authorization snapshot into the control's eligibility, refreshes it after every successful authorize/revoke, and re-reads it on load.

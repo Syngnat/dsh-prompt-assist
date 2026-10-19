@@ -6,7 +6,7 @@ Provides prompt enhancement, next-question suggestions, and OpenAI Fast accelera
 
 A plugin bundle for the DeepSeek Harness (DSH) Web GUI. Enhancement and suggestions are independent features: enable either or both for the current DSH profile. Settings live on the sidebar page, not in a composer popup. Feature switches are profile-wide; model controls remain per-conversation.
 
-> **v1.2.18:** a provider authorized in the settings page now unblocks the Fast control immediately. A profile authorization is durable profile state rather than a session event, so the Client merges the Host-authoritative authorization snapshot into the control and refreshes it after every authorize or revoke. The Host still owns the real allowlist; an idle or failed snapshot leaves the control unavailable.
+> **v1.2.19:** the update check time renders as a readable UTC stamp instead of a raw ISO string, and a terminal update record now shows the task versions, the currently running version, and a note when that record predates the running version.
 
 ## Compatibility policy
 

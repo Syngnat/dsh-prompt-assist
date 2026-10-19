@@ -134,6 +134,10 @@ test("untrusted version HTML is rejected and timestamps are bounded", () => {
   assert.equal(formatCheckedAt(9e99), null);
   const html = render(snapshot("current"));
   assert.ok(html.includes(new Date(stamp).toISOString()));
+  // The visible stamp is a readable UTC stamp, not the raw machine timestamp.
+  assert.ok(html.includes("2026-10-18 00:00:00 UTC") || html.includes(" UTC"));
+  assert.match(html, /<time dateTime="[^"]+">\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2} UTC<\/time>/);
+  assert.ok(!/<time[^>]*>\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z<\/time>/.test(html));
 });
 
 test("construction and mounting only read Host cache via GET", async () => {

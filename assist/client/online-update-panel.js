@@ -1,12 +1,15 @@
 import React from "react";
 import {createOnlineUpdateController, initialOnlineSnapshot, canForgetOnlineMarker} from "./online-update-state.js";
+import {displayUtcTime} from "./update-state.js";
 const h = React.createElement;
 
-export function OnlineUpdatePanelContent({snapshot = initialOnlineSnapshot(), updateAvailable = false, t, onPrepare, onConfirm, onConsent, onDismiss, onReload, onRecoveryAcknowledged, onForgetMarker}) {
+export function OnlineUpdatePanelContent({snapshot = initialOnlineSnapshot(), updateAvailable = false, currentVersion = null, t, onPrepare, onConfirm, onConsent, onDismiss, onReload, onRecoveryAcknowledged, onForgetMarker}) {
   const {data, preparation, pending, consent, localError, uncertain, recordLost, confirmationRejected, recoveryAcknowledged, markerCleared} = snapshot;
   const operation = data?.operation;
   const canForget = canForgetOnlineMarker(snapshot);
   const active = operation && !operation.terminal;
+  // A terminal record can predate the running version; label it instead of implying the current version.
+  const staleRecord = Boolean(currentVersion && operation?.installedVersion && operation.installedVersion !== currentVersion);
   const button = (key, onClick, disabled = false, emphasis = "") => h("button", {type: "button", className: "lpa-button" + emphasis, onClick, disabled}, t("online." + key));
   const field = (label, value) => h("div", {className: "lpa-update-field", key: label}, h("dt", null, t("online." + label)), h("dd", null, value));
   return h("section", {className: "lpa-update-panel", "aria-label": t("online.title"), "aria-busy": !!pending},
@@ -18,8 +21,11 @@ export function OnlineUpdatePanelContent({snapshot = initialOnlineSnapshot(), up
     h("p", {className: "lpa-note"}, t("online.continuity")),
     operation && !uncertain ? h("div", {role: "status", "aria-live": "polite", "aria-atomic": true},
       h("p", null, t("online.phase." + operation.phase)),
-      h("dl", {className: "lpa-update-versions"}, field("jobId", operation.jobId), field("fromVersion", operation.fromVersion), field("targetVersion", operation.targetVersion),
-        field("installedVersion", operation.installedVersion ?? t("updates.unknown"))),
+      h("dl", {className: "lpa-update-versions"}, field("jobId", operation.jobId), field("taskFrom", operation.fromVersion), field("taskTarget", operation.targetVersion),
+        field("installedVersion", operation.installedVersion ?? t("updates.unknown")),
+        currentVersion ? field("runningVersion", currentVersion) : null),
+      staleRecord ? h("p", {className: "lpa-note", role: "status"}, t("online.recordStale"), " ",
+        h("code", null, currentVersion), " / ", h("code", null, operation.installedVersion ?? t("updates.unknown"))) : null,
       operation.error ? h("p", {className: "lpa-error"}, t("online.errorCode"), " ", h("code", null, operation.error)) : null,
       operation.detailCode ? h("p", {className: "lpa-note"}, t("online.detailCode"), " ", h("code", null, operation.detailCode)) : null,
       operation.restartRequired ? h("p", {className: "lpa-note"}, t("online.restart")) : null,
@@ -39,7 +45,7 @@ export function OnlineUpdatePanelContent({snapshot = initialOnlineSnapshot(), up
       h("h4", null, t("online.review")),
       h("dl", {className: "lpa-update-versions"}, field("fromVersion", preparation.fromVersion), field("targetVersion", preparation.targetVersion),
         field("targetSpec", h("code", null, preparation.targetSpec)), field("restoreSpec", h("code", null, preparation.restoreSpec)),
-        field("expiresAt", h("time", {dateTime: new Date(preparation.expiresAt).toISOString()}, new Date(preparation.expiresAt).toISOString()))),
+        field("expiresAt", h("time", {dateTime: new Date(preparation.expiresAt).toISOString()}, displayUtcTime(preparation.expiresAt)))),
       h("p", {className: "lpa-update-risk"}, t("online.risks")),
       h("fieldset", {className: "lpa-update-consent"}, h("legend", null, t("online.consentTitle")),
         h("label", {className: "lpa-row"}, h("input", {type: "checkbox", checked: consent, disabled: !!pending, onChange: event => onConsent?.(event.target.checked)}), t("online.consent"))),
@@ -50,11 +56,11 @@ export function OnlineUpdatePanelContent({snapshot = initialOnlineSnapshot(), up
     pending === "confirm" ? h("p", {role: "status"}, t("online.submitting")) : null);
 }
 
-export function OnlineUpdatePanel({t, updateAvailable, fetcher = globalThis.fetch}) {
+export function OnlineUpdatePanel({t, updateAvailable, currentVersion = null, fetcher = globalThis.fetch}) {
   const controller = React.useMemo(() => createOnlineUpdateController(fetcher), [fetcher]);
   const snapshot = React.useSyncExternalStore(controller.subscribe, controller.getSnapshot, controller.getSnapshot);
   React.useEffect(() => {void controller.start(); return () => controller.dispose();}, [controller]);
-  return h(OnlineUpdatePanelContent, {t, snapshot, updateAvailable,
+  return h(OnlineUpdatePanelContent, {t, snapshot, updateAvailable, currentVersion,
     onPrepare: () => {void controller.prepare();}, onConfirm: () => {void controller.confirm();},
     onRecoveryAcknowledged: value => controller.setRecoveryAcknowledged(value), onForgetMarker: () => controller.forgetMarker(),
     onConsent: value => controller.setConsent(value), onDismiss: () => controller.dismiss(), onReload: () => {void controller.load();}});

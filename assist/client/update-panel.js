@@ -1,5 +1,5 @@
 import React from "react";
-import {createUpdateController, initialUpdateSnapshot, updateDisplay, INSTALL_SPEC, copyInstallSpec} from "./update-state.js";
+import {createUpdateController, initialUpdateSnapshot, updateDisplay, INSTALL_SPEC, copyInstallSpec, displayCheckedAt} from "./update-state.js";
 import {OnlineUpdatePanel} from "./online-update-panel.js";
 const h = React.createElement;
 
@@ -17,7 +17,7 @@ export function UpdatePanelContent({snapshot = initialUpdateSnapshot(), t, onChe
     h("dl", {className: "lpa-update-versions"},
       field("updates.installedVersion", data?.currentVersion ?? t("updates.unknown")),
       field("updates.latestVersion", data?.latestVersion ?? t("updates.unknown"), available),
-      field("updates.checkedAt", view.checkedAt ? h("time", {dateTime: view.checkedAt}, view.checkedAt) : t("updates.notChecked"))),
+      field("updates.checkedAt", view.checkedAt ? h("time", {dateTime: view.checkedAt}, displayCheckedAt(new Date(view.checkedAt).getTime()) ?? view.checkedAt) : t("updates.notChecked"))),
     available ? h("div", {className: "lpa-update-summary lpa-update-summary--available", role: "status", "aria-live": "polite", "aria-atomic": true},
       h("strong", null, t("updates.availableTitle")), h("p", null, t(view.message)), h("p", null, t("updates.availableHint"))) :
     h("p", {className: view.status === "error" ? "lpa-error" : "lpa-note",
@@ -63,5 +63,6 @@ export function UpdatePanel({t, fetcher = globalThis.fetch}) {
   }
   return h(UpdatePanelContent, {snapshot, t, copyStatus, onCopy: copy,
     onCheck: () => {void controller.check();}, onReload: () => {void controller.load();}, onCancel: () => controller.cancel()},
-    h(OnlineUpdatePanel, {t, fetcher, updateAvailable: snapshot.data?.status === "update-available"}));
+    h(OnlineUpdatePanel, {t, fetcher, currentVersion: snapshot.data?.currentVersion ?? null,
+      updateAvailable: snapshot.data?.status === "update-available"}));
 }

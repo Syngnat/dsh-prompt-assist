@@ -119,6 +119,19 @@ test("HTTP errors and invalid JSON are safe failures, never authority", async ()
   }
 });
 for (const lang of ["zh", "en"]) {
+  test("SSR " + lang + " labels a historical record instead of implying the running version", () => {
+    const stale = {...initialOnlineSnapshot(), data: status(op({phase: "updated", terminal: true, installedVersion: "1.2.13"}), {currentVersion: "1.2.18"})};
+    const html = render(stale, lang, {currentVersion: "1.2.18"});
+    assert.ok(html.includes(dictionaries[lang]["online.runningVersion"]));
+    assert.ok(html.includes(dictionaries[lang]["online.taskFrom"]));
+    assert.ok(html.includes(dictionaries[lang]["online.recordStale"]));
+    assert.ok(html.includes("1.2.18") && html.includes("1.2.13"));
+    const same = {...initialOnlineSnapshot(), data: status(op({phase: "updated", terminal: true, installedVersion: "1.2.13"}), {currentVersion: "1.2.13"})};
+    assert.ok(!render(same, lang, {currentVersion: "1.2.13"}).includes(dictionaries[lang]["online.recordStale"]));
+    // Confirmation expiry is readable too, while the machine-readable attribute stays exact.
+    const preparation = render({...initialOnlineSnapshot(), data: status(), preparation: prep()}, lang);
+    assert.match(preparation, /<time dateTime="[^"]+">\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2} UTC<\/time>/);
+  });
   test("SSR " + lang + " confirmation names pinned versions and all risks without revealing nonce", () => {
     const snapshot = {...initialOnlineSnapshot(), data: status(), preparation: prep()}; const html = render(snapshot, lang);
     for (const key of ["online.risks", "online.continuity", "online.consent"]) assert.ok(html.includes(dictionaries[lang][key]));

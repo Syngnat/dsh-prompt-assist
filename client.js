@@ -497,6 +497,10 @@ var init_messages = __esm({
         "online.consentTitle": "\u98CE\u9669\u786E\u8BA4",
         "online.fromVersion": "\u539F\u7248\u672C",
         "online.targetVersion": "\u76EE\u6807\u7248\u672C",
+        "online.taskFrom": "\u4EFB\u52A1\u539F\u7248\u672C",
+        "online.taskTarget": "\u4EFB\u52A1\u76EE\u6807\u7248\u672C",
+        "online.runningVersion": "\u5F53\u524D\u8FD0\u884C\u7248\u672C",
+        "online.recordStale": "\u8FD9\u662F\u66F4\u65E9\u7684\u66F4\u65B0\u4EFB\u52A1\u8BB0\u5F55\uFF0C\u4E0D\u4EE3\u8868\u5F53\u524D\u7248\u672C\uFF1B\u4E0B\u65B9\u4F9D\u6B21\u662F\u5F53\u524D\u8FD0\u884C\u7248\u672C / \u8BB0\u5F55\u5185\u5DF2\u9A8C\u8BC1\u7248\u672C\u3002",
         "online.installedVersion": "\u5DF2\u9A8C\u8BC1\u7684\u5B89\u88C5\u7248\u672C",
         "online.targetSpec": "\u9501\u5B9A\u7684\u76EE\u6807\u6765\u6E90",
         "online.restoreSpec": "\u9501\u5B9A\u7684\u6062\u590D\u6765\u6E90",
@@ -726,6 +730,10 @@ var init_messages = __esm({
         "online.consentTitle": "Risk confirmation",
         "online.fromVersion": "Original version",
         "online.targetVersion": "Target version",
+        "online.taskFrom": "Task original version",
+        "online.taskTarget": "Task target version",
+        "online.runningVersion": "Currently running version",
+        "online.recordStale": "This is a record from an earlier update task and does not describe the running version. The codes below are the running version / the version that task verified.",
         "online.installedVersion": "Verified installed version",
         "online.targetSpec": "Pinned target source",
         "online.restoreSpec": "Pinned recovery source",
@@ -1789,6 +1797,15 @@ function formatCheckedAt(value) {
   const date = new Date(value);
   return Number.isNaN(date.getTime()) ? null : date.toISOString();
 }
+function displayCheckedAt(value) {
+  const iso = formatCheckedAt(value);
+  if (!iso) return null;
+  const date = new Date(iso), pad = (number) => String(number).padStart(2, "0");
+  return date.getUTCFullYear() + "-" + pad(date.getUTCMonth() + 1) + "-" + pad(date.getUTCDate()) + " " + pad(date.getUTCHours()) + ":" + pad(date.getUTCMinutes()) + ":" + pad(date.getUTCSeconds()) + " UTC";
+}
+function displayUtcTime(value) {
+  return displayCheckedAt(value) ?? "";
+}
 function normalizeUpdateState(value) {
   if (!value || typeof value !== "object" || !version(value.currentVersion) || !STATUSES.has(value.status)) throw invalid2();
   if (value.latestVersion !== null && (!version(value.latestVersion) || !/^v?\d+\.\d+\.\d+(?:\+[a-zA-Z0-9.-]+)?$/.test(value.latestVersion))) throw invalid2();
@@ -2118,11 +2135,12 @@ var init_online_update_state = __esm({
 });
 
 // assist/client/online-update-panel.js
-function OnlineUpdatePanelContent({ snapshot = initialOnlineSnapshot(), updateAvailable = false, t, onPrepare, onConfirm, onConsent, onDismiss, onReload, onRecoveryAcknowledged, onForgetMarker }) {
+function OnlineUpdatePanelContent({ snapshot = initialOnlineSnapshot(), updateAvailable = false, currentVersion = null, t, onPrepare, onConfirm, onConsent, onDismiss, onReload, onRecoveryAcknowledged, onForgetMarker }) {
   const { data, preparation, pending, consent, localError, uncertain, recordLost, confirmationRejected, recoveryAcknowledged, markerCleared } = snapshot;
   const operation = data?.operation;
   const canForget = canForgetOnlineMarker(snapshot);
   const active = operation && !operation.terminal;
+  const staleRecord = Boolean(currentVersion && operation?.installedVersion && operation.installedVersion !== currentVersion);
   const button = (key, onClick, disabled = false, emphasis = "") => h6("button", { type: "button", className: "lpa-button" + emphasis, onClick, disabled }, t("online." + key));
   const field = (label, value) => h6("div", { className: "lpa-update-field", key: label }, h6("dt", null, t("online." + label)), h6("dd", null, value));
   return h6(
@@ -2145,10 +2163,20 @@ function OnlineUpdatePanelContent({ snapshot = initialOnlineSnapshot(), updateAv
         "dl",
         { className: "lpa-update-versions" },
         field("jobId", operation.jobId),
-        field("fromVersion", operation.fromVersion),
-        field("targetVersion", operation.targetVersion),
-        field("installedVersion", operation.installedVersion ?? t("updates.unknown"))
+        field("taskFrom", operation.fromVersion),
+        field("taskTarget", operation.targetVersion),
+        field("installedVersion", operation.installedVersion ?? t("updates.unknown")),
+        currentVersion ? field("runningVersion", currentVersion) : null
       ),
+      staleRecord ? h6(
+        "p",
+        { className: "lpa-note", role: "status" },
+        t("online.recordStale"),
+        " ",
+        h6("code", null, currentVersion),
+        " / ",
+        h6("code", null, operation.installedVersion ?? t("updates.unknown"))
+      ) : null,
       operation.error ? h6("p", { className: "lpa-error" }, t("online.errorCode"), " ", h6("code", null, operation.error)) : null,
       operation.detailCode ? h6("p", { className: "lpa-note" }, t("online.detailCode"), " ", h6("code", null, operation.detailCode)) : null,
       operation.restartRequired ? h6("p", { className: "lpa-note" }, t("online.restart")) : null,
@@ -2183,7 +2211,7 @@ function OnlineUpdatePanelContent({ snapshot = initialOnlineSnapshot(), updateAv
         field("targetVersion", preparation.targetVersion),
         field("targetSpec", h6("code", null, preparation.targetSpec)),
         field("restoreSpec", h6("code", null, preparation.restoreSpec)),
-        field("expiresAt", h6("time", { dateTime: new Date(preparation.expiresAt).toISOString() }, new Date(preparation.expiresAt).toISOString()))
+        field("expiresAt", h6("time", { dateTime: new Date(preparation.expiresAt).toISOString() }, displayUtcTime(preparation.expiresAt)))
       ),
       h6("p", { className: "lpa-update-risk" }, t("online.risks")),
       h6(
@@ -2203,7 +2231,7 @@ function OnlineUpdatePanelContent({ snapshot = initialOnlineSnapshot(), updateAv
     pending === "confirm" ? h6("p", { role: "status" }, t("online.submitting")) : null
   );
 }
-function OnlineUpdatePanel({ t, updateAvailable, fetcher = globalThis.fetch }) {
+function OnlineUpdatePanel({ t, updateAvailable, currentVersion = null, fetcher = globalThis.fetch }) {
   const controller = import_react7.default.useMemo(() => createOnlineUpdateController(fetcher), [fetcher]);
   const snapshot = import_react7.default.useSyncExternalStore(controller.subscribe, controller.getSnapshot, controller.getSnapshot);
   import_react7.default.useEffect(() => {
@@ -2214,6 +2242,7 @@ function OnlineUpdatePanel({ t, updateAvailable, fetcher = globalThis.fetch }) {
     t,
     snapshot,
     updateAvailable,
+    currentVersion,
     onPrepare: () => {
       void controller.prepare();
     },
@@ -2234,6 +2263,7 @@ var init_online_update_panel = __esm({
   "assist/client/online-update-panel.js"() {
     import_react7 = __toESM(require("react"), 1);
     init_online_update_state();
+    init_update_state();
     h6 = import_react7.default.createElement;
   }
 });
@@ -2260,7 +2290,7 @@ function UpdatePanelContent({ snapshot = initialUpdateSnapshot(), t, onCheck, on
       { className: "lpa-update-versions" },
       field("updates.installedVersion", data?.currentVersion ?? t("updates.unknown")),
       field("updates.latestVersion", data?.latestVersion ?? t("updates.unknown"), available),
-      field("updates.checkedAt", view.checkedAt ? h7("time", { dateTime: view.checkedAt }, view.checkedAt) : t("updates.notChecked"))
+      field("updates.checkedAt", view.checkedAt ? h7("time", { dateTime: view.checkedAt }, displayCheckedAt(new Date(view.checkedAt).getTime()) ?? view.checkedAt) : t("updates.notChecked"))
     ),
     available ? h7(
       "div",
@@ -2350,7 +2380,12 @@ function UpdatePanel({ t, fetcher = globalThis.fetch }) {
       },
       onCancel: () => controller.cancel()
     },
-    h7(OnlineUpdatePanel, { t, fetcher, updateAvailable: snapshot.data?.status === "update-available" })
+    h7(OnlineUpdatePanel, {
+      t,
+      fetcher,
+      currentVersion: snapshot.data?.currentVersion ?? null,
+      updateAvailable: snapshot.data?.status === "update-available"
+    })
   );
 }
 var import_react8, h7;
