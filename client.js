@@ -48,6 +48,17 @@ var init_identity = __esm({
   }
 });
 
+// policy.js
+function isOpenAIModel(model) {
+  return typeof model === "string" && /^(?:gpt-|chatgpt-|codex(?:-|$)|o[1-9](?:-|$))/i.test(model);
+}
+var DEFAULT_PROVIDERS;
+var init_policy = __esm({
+  "policy.js"() {
+    DEFAULT_PROVIDERS = Object.freeze(["openai", "openai-codex"]);
+  }
+});
+
 // assist/client/editor.js
 function captureText(input, actions) {
   const span = actions.captureInsertion();
@@ -450,6 +461,25 @@ var init_messages = __esm({
         "updates.update-available": "\u53D1\u73B0\u8F83\u65B0\u7684\u7A33\u5B9A\u7248\uFF0C\u53EF\u51C6\u5907\u5728\u7EBF\u66F4\u65B0\uFF0C\u6216\u9009\u62E9\u4E0B\u65B9\u7684\u624B\u52A8\u5347\u7EA7\u8DEF\u5F84\u3002",
         "updates.availableTitle": "\u53D1\u73B0\u65B0\u7248\u672C",
         "updates.availableHint": "\u53EF\u5728\u4E0B\u65B9\u51C6\u5907\u5728\u7EBF\u66F4\u65B0\uFF1B\u63D0\u4EA4\u524D\u9700\u8981\u9605\u8BFB\u98CE\u9669\u5E76\u52FE\u9009\u786E\u8BA4\u3002",
+        "priority.title": "Priority \u4F9B\u5E94\u5546\u6388\u6743\uFF08\u9AD8\u7EA7\uFF09",
+        "priority.scope": "Fast \u901A\u8FC7\u8BF7\u6C42\u7EA7 service_tier \u751F\u6548\uFF0C\u5C5E\u4E8E\u63A5\u5165\u70B9\u80FD\u529B\uFF0C\u4E0D\u662F\u6A21\u578B\u540D\u5B57\u7684\u5C5E\u6027\u3002\u9ED8\u8BA4\u4EC5\u6388\u6743 openai\u3001openai-codex\u3001cpa\uFF1B\u4E0B\u9762\u53EA\u80FD\u6388\u6743\u5DF2\u6CE8\u518C\u4E14\u786E\u5B9E\u63D0\u4F9B OpenAI \u7CFB\u5217\u6A21\u578B\u7684\u4F9B\u5E94\u5546\u3002",
+        "priority.configured": "\u5185\u7F6E\u6388\u6743",
+        "priority.authorized": "\u5DF2\u81EA\u52A9\u6388\u6743",
+        "priority.none": "\u5C1A\u672A\u81EA\u52A9\u6388\u6743\u5176\u4ED6\u4F9B\u5E94\u5546\u3002",
+        "priority.candidates": "\u53EF\u6388\u6743\u4F9B\u5E94\u5546",
+        "priority.noCandidates": "\u6CA1\u6709\u5176\u4ED6\u53EF\u6388\u6743\u4F9B\u5E94\u5546\uFF1A\u672A\u6CE8\u518C\uFF0C\u6216\u672A\u63D0\u4F9B OpenAI \u7CFB\u5217\u6A21\u578B\u3002",
+        "priority.exampleModels": "\u793A\u4F8B\u6A21\u578B",
+        "priority.consent": "\u6211\u786E\u8BA4\u8BE5\u63A5\u5165\u70B9\u652F\u6301 Priority\uFF0C\u53EF\u80FD\u4EA7\u751F\u989D\u5916\u8D39\u7528\uFF0C\u5E76\u540C\u610F\u628A\u5B83\u52A0\u5165\u672C profile \u7684 Priority \u5141\u8BB8\u540D\u5355\u3002",
+        "priority.authorize": "\u6388\u6743",
+        "priority.revoke": "\u64A4\u9500\u6388\u6743",
+        "priority.reload": "\u91CD\u65B0\u8BFB\u53D6\u6388\u6743",
+        "priority.loading": "\u6B63\u5728\u8BFB\u53D6\u4F9B\u5E94\u5546\u6388\u6743\u2026",
+        "priority.stale": "\u5176\u4ED6\u7A97\u53E3\u5DF2\u4FEE\u6539\u6388\u6743\u540D\u5355\u3002\u5DF2\u91CD\u65B0\u8BFB\u53D6\uFF0C\u8BF7\u786E\u8BA4\u540E\u91CD\u8BD5\u3002",
+        "priority.refused": "\u8BE5\u4F9B\u5E94\u5546\u4E0D\u80FD\u88AB\u6388\u6743\uFF1A\u672A\u6CE8\u518C\uFF0C\u6216\u6CA1\u6709 OpenAI \u7CFB\u5217\u6A21\u578B\u3002",
+        "priority.noConsent": "\u8BF7\u5148\u52FE\u9009\u98CE\u9669\u786E\u8BA4\u3002",
+        "priority.saved": "\u6388\u6743\u540D\u5355\u5DF2\u66F4\u65B0\uFF1B\u5F53\u524D\u4F1A\u8BDD\u7684 Fast \u63A7\u4EF6\u4F1A\u5728\u91CD\u65B0\u8BFB\u53D6\u6295\u5F71\u540E\u751F\u6548\u3002",
+        "priority.error": "\u6388\u6743\u64CD\u4F5C\u672A\u5B8C\u6210\uFF0C\u672A\u786E\u8BA4\u4EFB\u4F55\u6539\u52A8\u3002\u8BF7\u91CD\u65B0\u8BFB\u53D6\u540E\u91CD\u8BD5\u3002",
+        "priority.unknownProvider": "\u4F9B\u5E94\u5546\u4E0D\u5B58\u5728\u6216\u672A\u6CE8\u518C",
         "updates.ahead": "\u5F53\u524D\u8FD0\u884C\u7248\u672C\u9886\u5148\u4E8E\u6700\u65B0\u7A33\u5B9A\u7248\uFF0C\u53EF\u80FD\u662F\u5F00\u53D1\u6216\u5019\u9009\u6784\u5EFA\uFF1B\u5F53\u524D\u4E0D\u63D0\u793A\u7A33\u5B9A\u7248\u5347\u7EA7\u3002",
         "updates.error": "\u66F4\u65B0\u68C0\u67E5\u672A\u5B8C\u6210\uFF0C\u4E0D\u80FD\u786E\u8BA4\u662F\u5426\u5DF2\u662F\u6700\u65B0\u7248\u672C\u3002",
         "updates.cancelled": "\u672C\u6B21\u8BFB\u53D6\u6216\u68C0\u67E5\u5DF2\u53D6\u6D88\uFF0C\u6CA1\u6709\u4E0B\u8F7D\u6216\u5B89\u88C5\u4EFB\u4F55\u5185\u5BB9\u3002",
@@ -656,6 +686,25 @@ var init_messages = __esm({
         "updates.update-available": "A newer stable release is available. Prepare an online update or use the optional manual upgrade path below.",
         "updates.availableTitle": "New version available",
         "updates.availableHint": "Prepare the online update below; review the risks and tick consent before submitting.",
+        "priority.title": "Priority provider authorization (advanced)",
+        "priority.scope": "Fast works through the request-level service_tier, which is an endpoint capability rather than a property of the model name. Only openai, openai-codex and cpa are authorized by default; this section can authorize another provider only when it is registered and actually offers OpenAI-family models.",
+        "priority.configured": "Configured by the package",
+        "priority.authorized": "Authorized here",
+        "priority.none": "No additional provider is authorized yet.",
+        "priority.candidates": "Providers that may be authorized",
+        "priority.noCandidates": "No other provider can be authorized: it is not registered or offers no OpenAI-family model.",
+        "priority.exampleModels": "Example models",
+        "priority.consent": "I confirm this endpoint supports Priority, that extra charges may apply, and that it joins this profile's Priority allowlist.",
+        "priority.authorize": "Authorize",
+        "priority.revoke": "Revoke",
+        "priority.reload": "Reload authorization",
+        "priority.loading": "Reading provider authorization\u2026",
+        "priority.stale": "Another window changed the allowlist. It was reloaded; review it and try again.",
+        "priority.refused": "This provider cannot be authorized: it is not registered or offers no OpenAI-family model.",
+        "priority.noConsent": "Tick the risk confirmation first.",
+        "priority.saved": "The allowlist changed. The Fast control in this session updates after projections are read again.",
+        "priority.error": "The authorization request did not complete and no change is confirmed. Reload and try again.",
+        "priority.unknownProvider": "The provider does not exist or is not registered",
         "updates.ahead": "The running version is ahead of the latest stable release and may be a development or candidate build. No stable upgrade is offered.",
         "updates.error": "The update check did not complete. The latest version is not confirmed.",
         "updates.cancelled": "This read or check was cancelled. Nothing was downloaded or installed.",
@@ -2323,6 +2372,285 @@ var init_enablement_panel = __esm({
   }
 });
 
+// assist/client/priority-panel.js
+function availableCandidates(candidates, state) {
+  const excluded = /* @__PURE__ */ new Set([...providerIds(state?.configured), ...providerIds(state?.authorized)]);
+  const seen = /* @__PURE__ */ new Set();
+  return (Array.isArray(candidates) ? candidates : []).flatMap((item) => {
+    if (!item || typeof item.id !== "string" || !PROVIDER.test(item.id) || item.configured !== false || excluded.has(item.id) || seen.has(item.id) || !Array.isArray(item.openAIModels)) return [];
+    const openAIModels = item.openAIModels.filter((model) => typeof model === "string" && isOpenAIModel(model)).slice(0, 8);
+    if (!openAIModels.length) return [];
+    seen.add(item.id);
+    return [{ id: item.id, configured: false, name: typeof item.name === "string" ? item.name : item.id, openAIModels }];
+  });
+}
+function PriorityPanelContent({
+  state,
+  candidates = [],
+  consent = false,
+  notice,
+  pending,
+  t,
+  onConsent,
+  onAuthorize,
+  onRevoke,
+  onReload,
+  selected = "",
+  onSelect
+}) {
+  const configured = providerIds(state?.configured);
+  const authorized = providerIds(state?.authorized).filter((id2) => !configured.includes(id2));
+  const available = availableCandidates(candidates, state);
+  const selection = available.find((item) => item.id === selected);
+  const button = (key, action, disabled = false, extra = {}) => h10(
+    "button",
+    { type: "button", className: "lpa-button", onClick: action, disabled, ...extra },
+    t(key)
+  );
+  return h10(
+    "section",
+    { className: "lpa-feature", "aria-label": t("priority.title"), "aria-busy": Boolean(pending) },
+    h10("h3", { className: "lpa-feature-title" }, t("priority.title")),
+    h10("p", { className: "lpa-note" }, t("priority.scope")),
+    h10(
+      "div",
+      { className: "lpa-field" },
+      h10("strong", null, t("priority.configured")),
+      configured.map((id2) => h10("p", { className: "lpa-note", key: id2 }, h10("code", null, id2)))
+    ),
+    h10(
+      "div",
+      { className: "lpa-field" },
+      h10("strong", null, t("priority.authorized")),
+      authorized.map((id2) => h10(
+        "div",
+        { className: "lpa-row", key: id2 },
+        h10("code", null, id2),
+        button("priority.revoke", () => onRevoke?.(id2), !state || Boolean(pending), { "aria-label": t("priority.revoke") + ": " + id2 })
+      )),
+      state && !authorized.length ? h10("p", { className: "lpa-note" }, t("priority.none")) : null
+    ),
+    h10(
+      "label",
+      { className: "lpa-field" },
+      t("priority.candidates"),
+      h10(
+        "select",
+        {
+          value: selection?.id ?? "",
+          disabled: !state || Boolean(pending) || !available.length,
+          onChange: (event) => onSelect?.(event.target.value)
+        },
+        h10("option", { value: "" }, t("priority.candidates")),
+        available.map((item) => h10("option", { key: item.id, value: item.id }, item.name + " (" + item.id + ")"))
+      )
+    ),
+    state && !available.length ? h10("p", { className: "lpa-note" }, t("priority.noCandidates")) : null,
+    selection ? h10("p", { className: "lpa-note" }, t("priority.exampleModels"), ": ", selection.openAIModels.join(", ")) : null,
+    h10("label", { className: "lpa-check" }, h10("input", {
+      type: "checkbox",
+      checked: consent === true,
+      disabled: !state || Boolean(pending),
+      onChange: (event) => onConsent?.(event.target.checked)
+    }), t("priority.consent")),
+    h10(
+      "div",
+      { className: "lpa-row" },
+      button("priority.authorize", () => onAuthorize?.(selected, consent), !state || Boolean(pending) || consent !== true || !selection),
+      button("priority.reload", () => onReload?.(), Boolean(pending))
+    ),
+    pending || !state && !notice ? h10("p", { className: "lpa-note", role: "status" }, t("priority.loading")) : null,
+    notice ? h10("p", { className: notice === "priority.error" ? "lpa-error" : "lpa-note", role: "status" }, t(notice)) : null
+  );
+}
+function readState(value) {
+  if (!value || !Number.isSafeInteger(value.revision) || value.revision < 0) throw { code: "invalid-response" };
+  for (const key of ["configured", "authorized", "effective"]) {
+    if (!Array.isArray(value[key]) || value[key].some((id2) => typeof id2 !== "string" || !PROVIDER.test(id2))) throw { code: "invalid-response" };
+  }
+  return Object.freeze({
+    revision: value.revision,
+    configured: Object.freeze([...value.configured]),
+    authorized: Object.freeze([...value.authorized]),
+    effective: Object.freeze([...value.effective])
+  });
+}
+function createPriorityController(connection, { onChanged } = {}) {
+  let snapshot = { state: null, candidates: [], pending: null, notice: null };
+  let active = false, epoch = 0, flight = null;
+  const listeners = /* @__PURE__ */ new Set();
+  const publish = (patch) => {
+    snapshot = { ...snapshot, ...patch };
+    listeners.forEach((listener) => listener());
+  };
+  const stop = () => {
+    epoch += 1;
+    flight?.abort();
+    flight = null;
+  };
+  async function rpc(payload, signal) {
+    const result = await connection.rpc.call(ASSIST_CHANNEL, ENDPOINT, payload, signal);
+    if (signal.aborted) throw { code: "cancelled" };
+    if (result?.ok !== true) throw { code: result?.error?.code };
+    return result.value;
+  }
+  async function read(signal) {
+    readState(await rpc({ action: "snapshot" }, signal));
+    const value = await rpc({ action: "candidates" }, signal);
+    const state = readState(value);
+    if (!Array.isArray(value.candidates)) throw { code: "invalid-response" };
+    return { state, candidates: availableCandidates(value.candidates, null) };
+  }
+  async function run(action, input = {}) {
+    if (!active || snapshot.pending) return false;
+    stop();
+    const token = epoch, abort = new AbortController();
+    flight = abort;
+    const valid = () => active && epoch === token && !abort.signal.aborted;
+    publish({ pending: action, notice: null });
+    try {
+      if (action === "load") {
+        const loaded = await read(abort.signal);
+        if (!valid()) return false;
+        publish({ ...loaded, notice: null });
+      } else {
+        const value = await rpc({ action, ...input }, abort.signal);
+        const state = readState(value);
+        if (!valid()) return false;
+        publish({ state, notice: "priority.saved" });
+        if (valid()) {
+          try {
+            Promise.resolve(onChanged?.()).catch(() => {
+            });
+          } catch {
+          }
+        }
+      }
+      return true;
+    } catch (error) {
+      if (!valid()) return false;
+      if (error?.code === "stale-revision") {
+        try {
+          const loaded = await read(abort.signal);
+          if (valid()) publish({ ...loaded, notice: "priority.stale" });
+        } catch {
+          if (valid()) publish({ state: null, candidates: [], notice: "priority.error" });
+        }
+      } else publish({ ...action === "load" ? { state: null, candidates: [] } : {}, notice: noticeFor(error?.code) });
+      return false;
+    } finally {
+      if (valid()) {
+        flight = null;
+        publish({ pending: null });
+      }
+    }
+  }
+  const ready = () => active && !snapshot.pending && snapshot.state !== null;
+  return {
+    subscribe(listener) {
+      listeners.add(listener);
+      return () => listeners.delete(listener);
+    },
+    getSnapshot: () => snapshot,
+    start() {
+      if (!active) {
+        active = true;
+        publish({ pending: null });
+      }
+      return run("load");
+    },
+    reload() {
+      return run("load");
+    },
+    authorize(provider, consent) {
+      if (!ready()) return Promise.resolve(false);
+      if (consent !== true) {
+        publish({ notice: "priority.noConsent" });
+        return Promise.resolve(false);
+      }
+      if (!availableCandidates(snapshot.candidates, snapshot.state).some((item) => item.id === provider)) {
+        publish({ notice: "priority.refused" });
+        return Promise.resolve(false);
+      }
+      return run("authorize", { provider, consent: true, expectedRevision: snapshot.state.revision });
+    },
+    revoke(provider) {
+      if (!ready()) return Promise.resolve(false);
+      if (!snapshot.state.authorized.includes(provider) || snapshot.state.configured.includes(provider)) {
+        publish({ notice: "priority.refused" });
+        return Promise.resolve(false);
+      }
+      return run("revoke", { provider, expectedRevision: snapshot.state.revision });
+    },
+    dispose() {
+      active = false;
+      stop();
+    }
+  };
+}
+function PriorityPanel({ connection, t, onChanged }) {
+  const changed = import_react11.default.useRef(onChanged);
+  changed.current = onChanged;
+  const controller = import_react11.default.useMemo(() => createPriorityController(connection, { onChanged: () => changed.current?.() }), [connection]);
+  const snapshot = import_react11.default.useSyncExternalStore(controller.subscribe, controller.getSnapshot, controller.getSnapshot);
+  const [selected, setSelected] = import_react11.default.useState("");
+  const [consent, setConsent] = import_react11.default.useState(false);
+  import_react11.default.useEffect(() => {
+    void controller.start();
+    return () => controller.dispose();
+  }, [controller]);
+  import_react11.default.useEffect(() => {
+    setConsent(false);
+  }, [snapshot.state?.revision, snapshot.notice]);
+  import_react11.default.useEffect(() => {
+    if (selected && !availableCandidates(snapshot.candidates, snapshot.state).some((item) => item.id === selected)) {
+      setSelected("");
+      setConsent(false);
+    }
+  }, [snapshot.candidates, snapshot.state, selected]);
+  return h10(PriorityPanelContent, {
+    ...snapshot,
+    consent,
+    selected,
+    t,
+    onSelect: (value) => {
+      setSelected(value);
+      setConsent(false);
+    },
+    onConsent: (value) => setConsent(value === true),
+    onAuthorize: (provider, confirmed) => {
+      void controller.authorize(provider, confirmed);
+    },
+    onRevoke: (provider) => {
+      void controller.revoke(provider);
+    },
+    onReload: () => {
+      setConsent(false);
+      void controller.reload();
+    }
+  });
+}
+var import_react11, h10, ENDPOINT, PROVIDER, providerIds, notices, noticeFor;
+var init_priority_panel = __esm({
+  "assist/client/priority-panel.js"() {
+    import_react11 = __toESM(require("react"), 1);
+    init_identity();
+    init_policy();
+    h10 = import_react11.default.createElement;
+    ENDPOINT = "local-openai-fast.priority";
+    PROVIDER = /^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$/;
+    providerIds = (values) => Array.isArray(values) ? [...new Set(values.filter((value) => typeof value === "string" && PROVIDER.test(value)))] : [];
+    notices = Object.freeze({
+      "consent-required": "priority.noConsent",
+      "provider-unknown": "priority.unknownProvider",
+      "provider-not-openai": "priority.refused",
+      "invalid-provider": "priority.refused",
+      "configured-provider": "priority.refused"
+    });
+    noticeFor = (code2) => typeof code2 === "string" && Object.hasOwn(notices, code2) ? notices[code2] : "priority.error";
+  }
+});
+
 // assist/client/settings-page-state.js
 function createSettingsDraft(config) {
   return { config: sessionSettings(config), version: 0, dirty: false };
@@ -2363,12 +2691,12 @@ var init_settings_page_state = __esm({
 
 // assist/client/settings-page.js
 function FeatureSettings({ feature, host, sessionId, p, allowed, onSaved }) {
-  const [draft, setDraft] = import_react11.default.useState(() => createSettingsDraft(host.settings[feature]));
-  const current = import_react11.default.useRef(draft);
+  const [draft, setDraft] = import_react12.default.useState(() => createSettingsDraft(host.settings[feature]));
+  const current = import_react12.default.useRef(draft);
   current.current = draft;
-  const [saving, setSaving] = import_react11.default.useState(false), [notice, setNotice] = import_react11.default.useState(null);
-  const scope = import_react11.default.useRef(null), inFlight = import_react11.default.useRef(false);
-  import_react11.default.useEffect(() => {
+  const [saving, setSaving] = import_react12.default.useState(false), [notice, setNotice] = import_react12.default.useState(null);
+  const scope = import_react12.default.useRef(null), inFlight = import_react12.default.useRef(false);
+  import_react12.default.useEffect(() => {
     scope.current = createSettingsRequests();
     inFlight.current = false;
     return () => scope.current.close();
@@ -2408,24 +2736,24 @@ function FeatureSettings({ feature, host, sessionId, p, allowed, onSaved }) {
     }
   }
   const noticeValue = notice ?? options.error;
-  return h10(
+  return h11(
     "section",
     { className: "lpa-feature", "aria-label": p.t(feature) },
-    h10("h2", { className: "lpa-feature-title" }, p.t(feature)),
-    h10("p", { className: "lpa-note" }, p.t(feature === "suggest" ? "suggestContext" : "enhanceOriginal")),
-    h10(Settings, { t: p.t, config: draft.config, catalog: options.catalog, capabilities: options.capabilities, allowed, saving, onChange: edit, save }),
-    h10(
+    h11("h2", { className: "lpa-feature-title" }, p.t(feature)),
+    h11("p", { className: "lpa-note" }, p.t(feature === "suggest" ? "suggestContext" : "enhanceOriginal")),
+    h11(Settings, { t: p.t, config: draft.config, catalog: options.catalog, capabilities: options.capabilities, allowed, saving, onChange: edit, save }),
+    h11(
       "div",
       { className: "lpa-settings-feedback" },
-      draft.dirty ? h10("p", { className: "lpa-note" }, p.t("settingsChanged")) : null,
-      noticeValue ? h10("p", { role: "status", className: noticeValue === "saved" ? "lpa-note" : "lpa-error" }, typeof noticeValue === "string" && noticeValue !== "requestError" ? p.t(noticeValue) : errorText(noticeValue, p.t)) : null
+      draft.dirty ? h11("p", { className: "lpa-note" }, p.t("settingsChanged")) : null,
+      noticeValue ? h11("p", { role: "status", className: noticeValue === "saved" ? "lpa-note" : "lpa-error" }, typeof noticeValue === "string" && noticeValue !== "requestError" ? p.t(noticeValue) : errorText(noticeValue, p.t)) : null
     )
   );
 }
 function SessionSettings({ sessionId, p }) {
   const allowed = p.useSessionAccess(sessionId, "commands/execute");
-  const [host, setHost] = import_react11.default.useState(null), [error, setError] = import_react11.default.useState(null);
-  import_react11.default.useEffect(() => {
+  const [host, setHost] = import_react12.default.useState(null), [error, setError] = import_react12.default.useState(null);
+  import_react12.default.useEffect(() => {
     const abort = new AbortController();
     setHost(null);
     setError(null);
@@ -2437,39 +2765,44 @@ function SessionSettings({ sessionId, p }) {
     return () => abort.abort();
   }, [sessionId, p.assistSend]);
   const onSaved = (feature, value) => setHost((old) => ({ ...old, settings: { ...old.settings, [feature]: value.settings[feature] } }));
-  return h10(
-    import_react11.default.Fragment,
+  return h11(
+    import_react12.default.Fragment,
     null,
-    h10("p", { className: "lpa-note" }, p.t("editingSession"), ": ", h10("code", null, sessionId)),
-    !allowed ? h10("p", { className: "lpa-note" }, p.t("access")) : null,
-    error ? h10("p", { className: "lpa-error", role: "alert" }, errorText(error, p.t)) : null,
-    !host && !error ? h10("p", { role: "status" }, p.t("loading")) : null,
-    host ? h10("div", { className: "lpa-settings-cards" }, ["suggest", "enhance"].map((feature) => h10(FeatureSettings, { key: feature, feature, host, sessionId, p, allowed, onSaved }))) : null
+    h11("p", { className: "lpa-note" }, p.t("editingSession"), ": ", h11("code", null, sessionId)),
+    !allowed ? h11("p", { className: "lpa-note" }, p.t("access")) : null,
+    error ? h11("p", { className: "lpa-error", role: "alert" }, errorText(error, p.t)) : null,
+    !host && !error ? h11("p", { role: "status" }, p.t("loading")) : null,
+    host ? h11("div", { className: "lpa-settings-cards" }, ["suggest", "enhance"].map((feature) => h11(FeatureSettings, { key: feature, feature, host, sessionId, p, allowed, onSaved }))) : null
   );
 }
 function SettingsPage(p) {
-  const target = import_react11.default.useSyncExternalStore(p.targetSource.subscribe, p.targetSource.getSnapshot, p.targetSource.getSnapshot);
-  return h10(
+  const target = import_react12.default.useSyncExternalStore(p.targetSource.subscribe, p.targetSource.getSnapshot, p.targetSource.getSnapshot);
+  return h11(
     "section",
     { className: "lpa lpa-settings-page", "aria-label": p.t("title") },
-    h10("header", { className: "lpa-settings-header" }, h10("h1", null, p.t("title")), h10("button", { type: "button", className: "lpa-button", onClick: p.returnToConversation }, p.t("returnConversation"))),
-    h10(EnablementPanel, { globalSource: p.globalSource, t: p.t }),
-    h10("p", { className: "lpa-note" }, p.t("sessionScope")),
-    target.sessionId ? h10(SessionSettings, { key: target.sessionId, sessionId: target.sessionId, p }) : h10("p", { role: "status" }, p.t("chooseSession")),
-    h10(UpdatePanel, { t: p.t })
+    h11("header", { className: "lpa-settings-header" }, h11("h1", null, p.t("title")), h11("button", { type: "button", className: "lpa-button", onClick: p.returnToConversation }, p.t("returnConversation"))),
+    h11(EnablementPanel, { globalSource: p.globalSource, t: p.t }),
+    h11("p", { className: "lpa-note" }, p.t("sessionScope")),
+    target.sessionId ? h11(SessionSettings, { key: target.sessionId, sessionId: target.sessionId, p }) : h11("p", { role: "status" }, p.t("chooseSession")),
+    p.connection ? h11(PriorityPanel, { connection: p.connection, t: p.t, onChanged: () => {
+      if (target.sessionId) void p.refreshAssist(target.sessionId).catch(() => {
+      });
+    } }) : null,
+    h11(UpdatePanel, { t: p.t })
   );
 }
-var import_react11, h10;
+var import_react12, h11;
 var init_settings_page = __esm({
   "assist/client/settings-page.js"() {
     init_update_panel();
-    import_react11 = __toESM(require("react"), 1);
+    import_react12 = __toESM(require("react"), 1);
     init_settings();
     init_runtime();
     init_api();
     init_enablement_panel();
+    init_priority_panel();
     init_settings_page_state();
-    h10 = import_react11.default.createElement;
+    h11 = import_react12.default.createElement;
   }
 });
 
@@ -2497,10 +2830,10 @@ __export(client_exports, {
   installAssist: () => installAssist
 });
 function AssistIcon({ size = 20 }) {
-  return h11("svg", { width: size, height: size, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: 1.7, "aria-hidden": true }, h11("path", { d: "M4 5h10M4 10h7M4 15h6M14 4v4m-2-2h4M17 10l3 3-7 7H10v-3Z" }));
+  return h12("svg", { width: size, height: size, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: 1.7, "aria-hidden": true }, h12("path", { d: "M4 5h10M4 10h7M4 15h6M14 4v4m-2-2h4M17 10l3 3-7 7H10v-3Z" }));
 }
 function SettingsSurface(p) {
-  return h11(import_react12.default.Fragment, null, h11("style", null, css), h11(SettingsPage, p));
+  return h12(import_react13.default.Fragment, null, h12("style", null, css), h12(SettingsPage, p));
 }
 function installAssist(ctx) {
   ctx.effect(() => ctx.locale.register(NS, dictionaries));
@@ -2532,15 +2865,15 @@ function installAssist(ctx) {
     return dictionaries[language]?.title ?? (language.startsWith("zh") ? dictionaries.zh.title : dictionaries.en.title);
   };
   ctx.slots.inject("sidebar.panellist", () => ctx.slots.register({ name: "sidebar.panellist", id: "local-prompt-assist", order: 40, label, locale: NS }, AssistIcon));
-  ctx.slots.inject("main", () => ctx.slots.register({ name: "main", key: "local-prompt-assist", locale: NS, inject: () => ({ assistSend, globalSource, targetSource, returnToConversation: () => ctx.layout.selectPanel(null), refreshAssist: (id2) => ctx.sessions.refreshProjections(id2) }) }, SettingsSurface));
+  ctx.slots.inject("main", () => ctx.slots.register({ name: "main", key: "local-prompt-assist", locale: NS, inject: () => ({ assistSend, globalSource, targetSource, connection: ctx.connection, returnToConversation: () => ctx.layout.selectPanel(null), refreshAssist: (id2) => ctx.sessions.refreshProjections(id2) }) }, SettingsSurface));
   ctx.slots.inject("conversation.input.right", () => ctx.slots.register({ name: "conversation.input.right", id: "local-prompt-enhance-action", order: 1005, label: dictionaries.en.enhance, locale: NS, inject: inject2 }, EnhanceButton));
   ctx.slots.inject("conversation.input.right", () => ctx.slots.register({ name: "conversation.input.right", id: "local-next-question-action", order: 1010, label: dictionaries.en.suggest, locale: NS, inject: inject2 }, SuggestButton));
   ctx.slots.inject("conversation.input.dock", () => ctx.slots.register({ name: "conversation.input.dock", id: "local-prompt-assist-results", order: 50, label, locale: NS, inject: inject2 }, AssistPanel));
 }
-var import_react12, h11;
+var import_react13, h12;
 var init_client = __esm({
   "assist/client/index.js"() {
-    import_react12 = __toESM(require("react"), 1);
+    import_react13 = __toESM(require("react"), 1);
     init_enhance_action();
     init_enhance_button();
     init_suggest_button();
@@ -2552,7 +2885,7 @@ var init_client = __esm({
     init_style();
     init_settings_target();
     init_enablement_source();
-    h11 = import_react12.default.createElement;
+    h12 = import_react13.default.createElement;
   }
 });
 
@@ -2570,16 +2903,11 @@ __export(client_entry_exports, {
 module.exports = __toCommonJS(client_entry_exports);
 init_identity();
 
-// policy.js
-var DEFAULT_PROVIDERS = Object.freeze(["openai", "openai-codex"]);
-function isOpenAIModel(model) {
-  return typeof model === "string" && /^(?:gpt-|chatgpt-|codex(?:-|$)|o[1-9](?:-|$))/i.test(model);
-}
-
 // client-fast-core.js
+init_policy();
 function createFast(require2) {
-  let React13;
-  let h12;
+  let React14;
+  let h13;
   const NS2 = "local-openai-fast";
   const quietCommandNames2 = Object.freeze(["openai-fast", "openai-fast-ui-health"]);
   function HiddenFastCommand2() {
@@ -2745,7 +3073,7 @@ function createFast(require2) {
       error: "Fast \u8BBE\u7F6E\u672A\u4FDD\u5B58\uFF0C\u8BF7\u91CD\u8BD5\u3002",
       loading: "Fast \u72B6\u6001\u5C1A\u672A\u786E\u8BA4\uFF0C\u5F00\u5173\u6682\u4E0D\u53EF\u7528\uFF1B\u8FD9\u4E0D\u4F1A\u66F4\u6539\u5DF2\u4FDD\u5B58\u7684 Fast \u8BBE\u7F6E\u3002",
       loadError: "Fast \u72B6\u6001\u540C\u6B65\u5931\u8D25\u3002\u8BF7\u5237\u65B0\u9875\u9762\uFF0C\u6216\u68C0\u67E5 Host \u4E0E Client \u63D2\u4EF6\u7248\u672C\u662F\u5426\u4E00\u81F4\u3002",
-      unsupportedProvider: "\u6B64\u4F9B\u5E94\u5546\u672A\u5728 Priority \u5141\u8BB8\u540D\u5355\u4E2D\uFF0CFast \u4E0D\u4F1A\u5F00\u542F\u3002\u786E\u8BA4\u670D\u52A1\u5546\u652F\u6301\u540E\uFF0C\u9700\u663E\u5F0F\u914D\u7F6E\u672C\u63D2\u4EF6\u7684 providers\u3002\u4F9B\u5E94\u5546 ID",
+      unsupportedProvider: "\u6B64\u4F9B\u5E94\u5546\u672A\u5728 Priority \u5141\u8BB8\u540D\u5355\u4E2D\uFF0CFast \u4E0D\u4F1A\u5F00\u542F\u3002\u53EF\u5728\u201C\u63D0\u793A\u8BCD\u8F85\u52A9 \u2192 Priority \u4F9B\u5E94\u5546\u6388\u6743\u201D\u4E2D\u81EA\u52A9\u6388\u6743\uFF08\u8BE5\u4F9B\u5E94\u5546\u5FC5\u987B\u786E\u5B9E\u63D0\u4F9B OpenAI \u7CFB\u5217\u6A21\u578B\uFF09\u3002\u4F9B\u5E94\u5546 ID",
       access: "\u5F53\u524D\u4F1A\u8BDD\u6CA1\u6709\u6267\u884C Fast \u5F00\u5173\u547D\u4EE4\u7684\u6743\u9650\u3002"
     },
     en: {
@@ -2756,7 +3084,7 @@ function createFast(require2) {
       error: "Could not change Fast. Try again.",
       loading: "Fast status is not confirmed yet; the control is temporarily unavailable. Existing Host settings are unchanged.",
       loadError: "Fast state could not be loaded. Refresh or check that Host and Client plugin versions match.",
-      unsupportedProvider: "This provider is not authorized for Priority; Fast stays off. Confirm provider support before explicitly configuring this plugin\u2019s providers allowlist. Provider ID",
+      unsupportedProvider: "This provider is not authorized for Priority, so Fast stays off. Authorize it under \u201CPrompt assist \u2192 Priority provider authorization\u201D; the provider must actually offer OpenAI-family models. Provider ID",
       access: "This session cannot execute Fast toggle commands."
     }
   };
@@ -2772,8 +3100,8 @@ function createFast(require2) {
       .local-openai-fast__notice{position:absolute;bottom:34px;right:0;max-width:280px;width:max-content;padding:8px 10px;border:1px solid var(--dsw-alias-border-l2);border-radius:7px;background:var(--dsw-alias-bg-overlay);color:var(--dsw-alias-label-primary);font-size:12px;line-height:18px;z-index:20}
     `;
   function useDefaultSelection(remote) {
-    const [selection, setSelection] = React13.useState(null);
-    React13.useEffect(() => {
+    const [selection, setSelection] = React14.useState(null);
+    React14.useEffect(() => {
       let active = true;
       remote.session.modelCatalog().then((result) => {
         if (active && result.ok) setSelection(result.value.default);
@@ -2786,17 +3114,17 @@ function createFast(require2) {
     return selection;
   }
   function FastToggle(props) {
-    const fastState = React13.useSyncExternalStore(props.fastSource.subscribe, props.fastSource.getSnapshot, props.fastSource.getSnapshot);
-    const modelState = React13.useSyncExternalStore(props.modelSource.subscribe, props.modelSource.getSnapshot, props.modelSource.getSnapshot);
+    const fastState = React14.useSyncExternalStore(props.fastSource.subscribe, props.fastSource.getSnapshot, props.fastSource.getSnapshot);
+    const modelState = React14.useSyncExternalStore(props.modelSource.subscribe, props.modelSource.getSnapshot, props.modelSource.getSnapshot);
     const selected = modelState?.next ?? null;
     const defaultSelection = useDefaultSelection(props.remote);
-    const sessionState = React13.useSyncExternalStore(props.sessionSource.subscribe, props.sessionSource.getSnapshot, props.sessionSource.getSnapshot);
+    const sessionState = React14.useSyncExternalStore(props.sessionSource.subscribe, props.sessionSource.getSnapshot, props.sessionSource.getSnapshot);
     const unavailable = Boolean(sessionState?.subagent) || sessionState?.removed === true;
     const allowed = props.useAccess("commands/execute");
     const { visible, enabled, eligible, reason } = derivePresentation2(fastState, selected, defaultSelection);
     const ready = hasFastState(fastState);
-    const [loadFailed, setLoadFailed] = React13.useState(false);
-    React13.useEffect(() => {
+    const [loadFailed, setLoadFailed] = React14.useState(false);
+    React14.useEffect(() => {
       setLoadFailed(false);
       const retry = createHydrationRetry({
         attempt: props.ensureHydrated,
@@ -2806,17 +3134,17 @@ function createFast(require2) {
       void retry.start();
       return () => retry.dispose();
     }, [props.hydrationKey, props.sessionId, ready]);
-    const [interaction, setInteraction] = React13.useState({ enabled: null, pending: false });
-    const [error, setError] = React13.useState("");
-    const [notice, setNotice] = React13.useState("");
-    const alive = React13.useRef(true);
-    React13.useEffect(() => {
+    const [interaction, setInteraction] = React14.useState({ enabled: null, pending: false });
+    const [error, setError] = React14.useState("");
+    const [notice, setNotice] = React14.useState("");
+    const alive = React14.useRef(true);
+    React14.useEffect(() => {
       alive.current = true;
       return () => {
         alive.current = false;
       };
     }, []);
-    const controller = React13.useMemo(() => createToggleController2({
+    const controller = React14.useMemo(() => createToggleController2({
       initial: enabled,
       send: async (next) => {
         const result = await props.remote.commands.execute(
@@ -2838,11 +3166,11 @@ function createFast(require2) {
         });
       }
     }), [props.remote, props.sessionId]);
-    React13.useEffect(() => controller.sync(enabled), [controller, enabled]);
+    React14.useEffect(() => controller.sync(enabled), [controller, enabled]);
     const checked = eligible && (interaction.enabled ?? enabled);
     const provider = (selected ?? defaultSelection)?.provider ?? "";
     const blocked = reason === "loading" ? props.t(loadFailed ? "loadError" : "loading") : reason === "unsupported-provider" ? props.t("unsupportedProvider") + ": " + provider : !allowed ? props.t("access") : null;
-    React13.useEffect(() => {
+    React14.useEffect(() => {
       if (!blocked) setNotice("");
     }, [blocked]);
     if (!visible || unavailable) return null;
@@ -2856,11 +3184,11 @@ function createFast(require2) {
       controller.toggle().catch(() => {
       });
     }
-    return h12(
+    return h13(
       "span",
       { className: "local-openai-fast", title: blocked ?? props.t(checked ? "on" : "off") },
-      h12("style", null, css2),
-      h12("button", {
+      h13("style", null, css2),
+      h13("button", {
         type: "button",
         role: "switch",
         className: "local-openai-fast__button",
@@ -2869,10 +3197,10 @@ function createFast(require2) {
         "aria-busy": interaction.pending || reason === "loading" && !loadFailed,
         "aria-disabled": !allowed || !eligible,
         onClick: toggle
-      }, h12(
+      }, h13(
         "svg",
         { viewBox: "0 0 20 20", width: 14, height: 14, fill: "none", "aria-hidden": true },
-        h12("path", {
+        h13("path", {
           d: "M11.5 2 4 11h5l-.5 7L16 8h-5l.5-6Z",
           stroke: "currentColor",
           strokeWidth: 1.5,
@@ -2880,8 +3208,8 @@ function createFast(require2) {
           fill: checked ? "currentColor" : "none"
         })
       ), props.t("label")),
-      notice ? h12("span", { role: "status", className: "local-openai-fast__notice" }, notice) : null,
-      error ? h12("span", { role: "alert", className: "local-openai-fast__error" }, error) : null
+      notice ? h13("span", { role: "status", className: "local-openai-fast__notice" }, notice) : null,
+      error ? h13("span", { role: "alert", className: "local-openai-fast__error" }, error) : null
     );
   }
   return {
@@ -2893,8 +3221,8 @@ function createFast(require2) {
     HiddenFastCommand: HiddenFastCommand2,
     inject: ["slots", "locale", "sessions", "remote", "remote.commands", "remote.session"],
     apply(ctx) {
-      React13 = require2("react");
-      h12 = React13.createElement;
+      React14 = require2("react");
+      h13 = React14.createElement;
       ctx.effect(() => ctx.locale.register(NS2, dictionaries2));
       ctx.slots.inject("conversation.chat.commandview", () => quietCommandNames2.map((key) => ctx.slots.register({ name: "conversation.chat.commandview", key }, HiddenFastCommand2)));
       const readyBindings = /* @__PURE__ */ new WeakSet();

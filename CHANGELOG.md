@@ -2,6 +2,18 @@
 
 [English](<README.md>) | [简体中文](<README.zh-CN.md>)
 
+## 1.2.16 — Priority 供应商自助授权 / Self-service provider authorization
+
+- Add **Prompt assist → Priority provider authorization**. A profile can now authorize another provider ID without editing or reinstalling the package; the shipped `openai`, `openai-codex` and `cpa` entries stay the baseline.
+- Restrict authorization on the Host, not just in the UI: the provider must be registered in the live LLM registry *and* its model catalog must contain at least one OpenAI-family model. Both checks run again at write time, so a stale or crafted request cannot authorize anything else. Missing, failing or changed catalogs never grant access.
+- Require a separate risk confirmation, a monotonic revision for every write, a 32-entry cap, and refuse to authorize or revoke the package-configured IDs. Unknown or offline providers cannot be granted, but an already authorized provider can still be revoked after it disappears.
+- Publish the effective allowlist (configuration plus profile authorizations) through the existing projection wire, so the Fast control becomes usable without rebuilding the projection. The resolver stays live, and previously returned wire views remain frozen copies.
+- Runtime gating is unchanged: Priority still requires an OpenAI-family model, an authorized provider and a supported OpenAI API. Authorization records user consent for that endpoint; it does not prove the endpoint implements `service_tier`.
+- The disabled Fast control now points to this settings section, so an unauthorized provider explains exactly where to fix it.
+- Add 63 offline regressions (host store, RPC envelope, candidate filtering, consent/revision/limits, client controller and SSR), bringing the suite to 665.
+
+中文：设置页新增 Priority 供应商自助授权，无需改包即可授权其他接入点。Host 强制限制候选：必须已在 LLM 注册表注册，且模型目录确实包含 OpenAI 系列模型；写入时会重新校验，陈旧或伪造请求无法授权别的东西。授权需单独风险确认、带 revision、最多 32 项，包内置项不可撤销或重复授权。有效名单通过投影即时生效；运行时仍要求 OpenAI 系列模型 + 已授权供应商 + 受支持协议。Fast 不可用时的提示会指向该设置项。
+
 ## 1.2.15 — Fast 禁用原因可见 / Visible Fast availability reasons
 
 - The Fast control no longer uses a native `disabled` button. It keeps `aria-disabled` semantics, stays focusable and hoverable, and clicking it explains why the toggle is unavailable — including the exact provider ID when that provider is not authorized for Priority.

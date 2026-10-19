@@ -4,6 +4,7 @@ import {Settings} from './settings.js';
 import {useModelOptions} from './runtime.js';
 import {errorText,sessionSettings} from './api.js';
 import {EnablementPanel} from './enablement-panel.js';
+import {PriorityPanel} from './priority-panel.js';
 import {createSettingsDraft,editSettingsDraft,acceptSettingsSave,createSettingsRequests} from './settings-page-state.js';
 const h=React.createElement;
 
@@ -62,5 +63,6 @@ export function SettingsPage(p){
   h(EnablementPanel,{globalSource:p.globalSource,t:p.t}),
   h('p',{className:'lpa-note'},p.t('sessionScope')),
   target.sessionId?h(SessionSettings,{key:target.sessionId,sessionId:target.sessionId,p}):h('p',{role:'status'},p.t('chooseSession')),
+  p.connection?h(PriorityPanel,{connection:p.connection,t:p.t,onChanged:()=>{if(target.sessionId)void p.refreshAssist(target.sessionId).catch(()=>{});}}):null,
    h(UpdatePanel,{t:p.t}));
 }

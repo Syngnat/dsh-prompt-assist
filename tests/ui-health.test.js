@@ -10,8 +10,13 @@ test('wire publishes the complete Host allowlist while Fast is off', () => {
   assert.deepEqual(off.providers, providers);
   assert.equal(off.enabled, false);
   providers.push('untrusted');
+  // An already-returned view is a frozen copy and never mutates.
   assert.equal(off.providers.includes('untrusted'), false);
-  assert.strictEqual(view({ enabled: false, pending: {} }), off);
+  // The resolver is live by design: profile authorization must reach the wire without re-registering.
+  const next = view({ enabled: false, pending: {} });
+  assert.notStrictEqual(next, off);
+  assert.deepEqual(next.providers, ['openai', 'openai-codex', 'cpa', 'untrusted']);
+  assert.strictEqual(view({ enabled: false, pending: {} }), next);
   assert.equal(view({ enabled: true }).enabled, true);
 });
 

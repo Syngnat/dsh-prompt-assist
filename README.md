@@ -6,7 +6,7 @@ Provides prompt enhancement, next-question suggestions, and OpenAI Fast accelera
 
 A plugin bundle for the DeepSeek Harness (DSH) Web GUI. Enhancement and suggestions are independent features: enable either or both for the current DSH profile. Settings live on the sidebar page, not in a composer popup. Feature switches are profile-wide; model controls remain per-conversation.
 
-> **v1.2.15:** the Fast control keeps `aria-disabled` semantics instead of a native disabled button, so hovering and clicking both explain why it is unavailable — including the exact provider ID when that provider is not authorized for Priority. The 1.2.14 improvements (assist error clarity, update-page hierarchy) remain unchanged.
+> **v1.2.16:** add **Prompt assist → Priority provider authorization**. Any provider can be authorized without editing the package, but only when the Host registry knows it and its model catalog actually contains an OpenAI-family model; both checks run again on write. Authorization needs explicit risk consent, uses a revision guard, and cannot remove the shipped IDs. Priority routing still requires an OpenAI-family model and a supported OpenAI API. The 1.2.15 Fast availability explanations remain unchanged.
 
 ## Compatibility policy
 
@@ -76,6 +76,8 @@ Suggestions preserve user questions and permission boundaries, do not promote un
 > **From v1.2.13:** a recognized GPT/OpenAI model keeps its Fast control visible even when the provider is not authorized or the Host snapshot is unavailable. The control stays disabled and explains the condition; metadata retries are bounded and never submit a model request. Model-name matching ignores case, but provider route IDs are exact and an OpenAI-compatible protocol alone does not grant Priority support.
 
 The main **Fast** icon button sits next to the model selector. It applies Priority handling only to explicitly allowed OpenAI model routes, subject to upstream support. It may incur extra charges; it is not a guarantee of lower latency. Supported subagents inherit the parent preference until they override it.
+
+**Authorizing another provider (from v1.2.16).** The plugin authorizes `openai`, `openai-codex` and `cpa` by default. If your route uses another provider ID, open **Prompt assist → Priority provider authorization** and authorize it explicitly. The Host offers only providers that are registered *and* whose model catalog contains at least one OpenAI-family model; it re-checks both at write time, so a stale or crafted client request cannot authorize anything else. Authorization needs its own risk confirmation, keeps a monotonic revision, caps the list at 32 additions, and cannot revoke the package-configured IDs. Authorizing a provider confirms only that *you* accept Priority handling and possible charges for that endpoint; it does not prove the endpoint implements `service_tier`, and routing still requires an OpenAI-family model and a supported OpenAI API. A disabled Fast control stays visible and explains whether the provider is unauthorized, the state is unsynchronized, or the session may not run commands.
 
 The Fast switch for each auxiliary feature is separate from the main Fast button and from the other auxiliary feature. Enabling one does not enable the others. Unsupported routes cannot enable auxiliary Fast, and an already checked switch can still be turned off.
 

@@ -101,7 +101,10 @@ test("shipped patch removes only local adapter location while retaining provider
 test("both authored Host entry paths use the shared locator and preserve Fast hooks", async () => {
   const [source, fast] = await Promise.all(["host-source.js", "host-v1.0.4.js"].map(name => readFile(new URL(`../${name}`, import.meta.url), "utf8")));
   assert.match(source, /await resolveAdapterEntry\(ctx, config\)/);
-  assert.match(source, /await applyFast\(ctx, \{ \.\.\.config, adapterEntry \}\)/);
+  assert.match(source, /await applyFast\(ctx, \{ \.\.\.config, adapterEntry, providers \}\)/);
+  assert.match(source, /openPriorityProviders\(ctx, z, configured\)/);
+  assert.match(source, /installPriorityRpc\(ctx, priority, configured\)/);
+  assert.match(source, /mergeProviders\(configured, priority\.snapshot\(\)\.authorized\)/);
   assert.match(fast, /await resolveAdapterEntry\(ctx, config\)/);
   assert.match(fast, /installFastBridge/); assert.match(fast, /applyModelCapabilities\(ctx, config\.modelCapabilities/);
   assert.doesNotMatch(source + fast, /[A-Z]:\/Work\/DevTools|resources\/app\.asar/);

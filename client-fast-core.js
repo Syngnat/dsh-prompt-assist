@@ -137,7 +137,7 @@ export function createFast(require) {
         saving: '正在保存 Fast 设置…', error: 'Fast 设置未保存，请重试。',
         loading: 'Fast 状态尚未确认，开关暂不可用；这不会更改已保存的 Fast 设置。',
         loadError: 'Fast 状态同步失败。请刷新页面，或检查 Host 与 Client 插件版本是否一致。',
-        unsupportedProvider: '此供应商未在 Priority 允许名单中，Fast 不会开启。确认服务商支持后，需显式配置本插件的 providers。供应商 ID',
+        unsupportedProvider: '此供应商未在 Priority 允许名单中，Fast 不会开启。可在“提示词辅助 → Priority 供应商授权”中自助授权（该供应商必须确实提供 OpenAI 系列模型）。供应商 ID',
         access: '当前会话没有执行 Fast 开关命令的权限。',
       },
       en: {
@@ -147,7 +147,7 @@ export function createFast(require) {
         saving: 'Saving Fast preference…', error: 'Could not change Fast. Try again.',
         loading: 'Fast status is not confirmed yet; the control is temporarily unavailable. Existing Host settings are unchanged.',
         loadError: 'Fast state could not be loaded. Refresh or check that Host and Client plugin versions match.',
-        unsupportedProvider: 'This provider is not authorized for Priority; Fast stays off. Confirm provider support before explicitly configuring this plugin’s providers allowlist. Provider ID',
+        unsupportedProvider: 'This provider is not authorized for Priority, so Fast stays off. Authorize it under “Prompt assist → Priority provider authorization”; the provider must actually offer OpenAI-family models. Provider ID',
         access: 'This session cannot execute Fast toggle commands.',
       },
     };

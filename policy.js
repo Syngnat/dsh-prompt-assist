@@ -11,8 +11,19 @@ export function isOpenAIModel(model) {
 
 /** Family matching is deliberately secondary to an explicit provider allowlist. */
 export function isOpenAISelection(selection, providers = DEFAULT_PROVIDERS) {
-  return Boolean(selection && providers.includes(selection.provider)
+  // The list may be a live getter, so profile-authorized providers apply without rebuilding units.
+  const allowed = typeof providers === 'function' ? providers() : providers;
+  return Boolean(selection && Array.isArray(allowed) && allowed.includes(selection.provider)
     && isOpenAIModel(selection.model));
+}
+
+/** One order-preserving union: package configuration first, profile authorizations after it. */
+export function mergeProviders(configured, authorized) {
+  const merged = [];
+  for (const provider of [...(Array.isArray(configured) ? configured : []), ...(Array.isArray(authorized) ? authorized : [])]) {
+    if (typeof provider === 'string' && provider && !merged.includes(provider)) merged.push(provider);
+  }
+  return merged;
 }
 
 /** Return a fresh wire body; never mutate SDK-owned/cached input. */

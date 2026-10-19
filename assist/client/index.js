@@ -28,7 +28,7 @@ export function installAssist(ctx){
  };
  const label=()=>{const language=ctx.locale.getLocale().active;return dictionaries[language]?.title??(language.startsWith('zh')?dictionaries.zh.title:dictionaries.en.title);};
  ctx.slots.inject('sidebar.panellist',()=>ctx.slots.register({name:'sidebar.panellist',id:'local-prompt-assist',order:40,label,locale:NS},AssistIcon));
- ctx.slots.inject('main',()=>ctx.slots.register({name:'main',key:'local-prompt-assist',locale:NS,inject:()=>({assistSend,globalSource,targetSource,returnToConversation:()=>ctx.layout.selectPanel(null),refreshAssist:id=>ctx.sessions.refreshProjections(id)})},SettingsSurface));
+ ctx.slots.inject('main',()=>ctx.slots.register({name:'main',key:'local-prompt-assist',locale:NS,inject:()=>({assistSend,globalSource,targetSource,connection:ctx.connection,returnToConversation:()=>ctx.layout.selectPanel(null),refreshAssist:id=>ctx.sessions.refreshProjections(id)})},SettingsSurface));
  ctx.slots.inject('conversation.input.right',()=>ctx.slots.register({name:'conversation.input.right',id:'local-prompt-enhance-action',order:1005,label:dictionaries.en.enhance,locale:NS,inject},EnhanceButton));
  ctx.slots.inject('conversation.input.right',()=>ctx.slots.register({name:'conversation.input.right',id:'local-next-question-action',order:1010,label:dictionaries.en.suggest,locale:NS,inject},SuggestButton));
  ctx.slots.inject('conversation.input.dock',()=>ctx.slots.register({name:'conversation.input.dock',id:'local-prompt-assist-results',order:50,label,locale:NS,inject},AssistPanel));

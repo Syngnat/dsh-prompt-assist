@@ -18,10 +18,16 @@ export async function apply(ctx, config = {}) {
   const [{ PiAiAdapter }, { z }] = await Promise.all([
     import(adapterURL.href), import(pathToFileURL(schemaRequire.resolve('zod')).href),
   ]);
-  const providers = config?.providers ?? [...DEFAULT_PROVIDERS];
-  if (!Array.isArray(providers) || providers.some(value => typeof value !== 'string' || !value)) {
-    throw new Error('OpenAI Fast: providers must contain explicit non-empty route IDs');
+  const configured = config?.providers ?? [...DEFAULT_PROVIDERS];
+  if (Array.isArray(configured)) {
+    if (configured.some(value => typeof value !== 'string' || !value)) {
+      throw new Error('OpenAI Fast: providers must contain explicit non-empty route IDs');
+    }
+  } else if (typeof configured !== 'function') {
+    throw new Error('OpenAI Fast: providers must be a list or a live provider resolver');
   }
+  // A resolver lets profile authorization take effect without rebuilding projections or the bridge.
+  const providers = typeof configured === 'function' ? configured : () => configured;
   const capabilityUpdates = await applyModelCapabilities(ctx, config.modelCapabilities ?? []);
   const t = key => zh[key] ?? key;
   ctx.sessionProjections.register(createFastProjection(z, providers));

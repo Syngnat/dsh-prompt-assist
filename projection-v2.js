@@ -4,10 +4,18 @@ export { COMMAND_NAME } from './projection.js';
 
 /** Host configuration is not a Client boot field. Publish safe policy explicitly. */
 export function createFastViews(providers = DEFAULT_PROVIDERS) {
-  const allowed = Object.freeze([...providers]);
-  const off = Object.freeze({ enabled: false, providers: allowed });
-  const on = Object.freeze({ enabled: true, providers: allowed });
-  return state => state.enabled ? on : off;
+  // A getter keeps the wire view current after profile authorization without re-registering the unit.
+  const list = typeof providers === 'function' ? providers : () => providers;
+  let cachedKey = null, cached = null;
+  return state => {
+    const allowed = Object.freeze([...list()]);
+    // Keep referential stability: projection change detection compares wire results by Object.is.
+    const key = (state.enabled === true ? '1' : '0') + '\u0000' + allowed.join('\u0000');
+    if (key === cachedKey) return cached;
+    cachedKey = key;
+    cached = Object.freeze({ enabled: state.enabled === true, providers: allowed });
+    return cached;
+  };
 }
 
 export function createFastProjection(z, providers = DEFAULT_PROVIDERS) {

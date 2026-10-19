@@ -5,19 +5,30 @@ import { pathToFileURL } from "node:url";
 import { resolveAdapterEntry } from "./adapter-locator.js";
 import { apply as applyFast, inject as fastInject } from "./host-v1.0.4.js";
 import { OpenAIFastService } from "./service-v2.js";
-import { DEFAULT_PROVIDERS } from "./policy.js";
+import { DEFAULT_PROVIDERS, mergeProviders } from "./policy.js";
 import { installAssistHost } from "./assist/bootstrap.js";
+import { openPriorityProviders } from "./assist/priority-providers.js";
+import { installPriorityRpc } from "./assist/priority-transport.js";
 export const inject = [...fastInject, "webServer", "connection", "fs", "workingDirectory", "fileUploads", "attachments", "sessionController", "storageDomain", "profileContext"];
 export async function apply(ctx, config = {}) {
   assertRuntimeContract(ctx);
   const adapterEntry = await resolveAdapterEntry(ctx, config);
-  await applyFast(ctx, { ...config, adapterEntry });
   const requireAdapter = createRequire(pathToFileURL(adapterEntry));
   const requireSchema = createRequire(requireAdapter.resolve("@deepseek-ai/schemastery"));
   const { z } = await import(pathToFileURL(requireSchema.resolve("zod")).href);
   const { createUserMessage } = await import(pathToFileURL(requireAdapter.resolve("@deepseek-ai/dsh-llm")).href);
-  const providers = config.providers ?? [...DEFAULT_PROVIDERS];
+  const configured = config.providers ?? [...DEFAULT_PROVIDERS];
+  if (!Array.isArray(configured) || configured.some(value => typeof value !== "string" || !value)) {
+    throw new Error("OpenAI Fast: providers must contain explicit non-empty route IDs");
+  }
+  // Package configuration stays the baseline; a profile may only add providers through the audited
+  // authorization store, and every read goes through this single resolver.
+  const priority = await openPriorityProviders(ctx, z, configured);
+  ctx.effect(() => () => priority.close());
+  const providers = () => mergeProviders(configured, priority.snapshot().authorized);
+  await applyFast(ctx, { ...config, adapterEntry, providers });
   const fastService = new OpenAIFastService(ctx, providers, key => key);
   await installAssistHost(ctx, { z, fastService, providers, createUserMessage });
+  installPriorityRpc(ctx, priority, configured);
   installUpdateHost(ctx);
 }
