@@ -6,7 +6,7 @@ Provides prompt enhancement, next-question suggestions, and OpenAI Fast accelera
 
 A plugin bundle for the DeepSeek Harness (DSH) Web GUI. Enhancement and suggestions are independent features: enable either or both for the current DSH profile. Settings live on the sidebar page, not in a composer popup. Feature switches are profile-wide; model controls remain per-conversation.
 
-> **v1.2.16:** add **Prompt assist → Priority provider authorization**. Any provider can be authorized without editing the package, but only when the Host registry knows it and its model catalog actually contains an OpenAI-family model; both checks run again on write. Authorization needs explicit risk consent, uses a revision guard, and cannot remove the shipped IDs. Priority routing still requires an OpenAI-family model and a supported OpenAI API. The 1.2.15 Fast availability explanations remain unchanged.
+> **v1.2.17:** an empty authorization candidate list no longer renders an empty disabled selector. It states whether every provider offering OpenAI-family models is already authorized by the package, or whether no registered provider qualifies. Built-in IDs show the recognized model names (for example `cpa / gpt-6.1-sol`). The 1.2.16 authorization flow and 1.2.15 Fast explanations are unchanged.
 
 ## Compatibility policy
 

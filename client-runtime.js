@@ -467,7 +467,11 @@ var init_messages = __esm({
         "priority.authorized": "\u5DF2\u81EA\u52A9\u6388\u6743",
         "priority.none": "\u5C1A\u672A\u81EA\u52A9\u6388\u6743\u5176\u4ED6\u4F9B\u5E94\u5546\u3002",
         "priority.candidates": "\u53EF\u6388\u6743\u4F9B\u5E94\u5546",
+        "priority.choose": "\u8BF7\u9009\u62E9\u4F9B\u5E94\u5546",
         "priority.noCandidates": "\u6CA1\u6709\u5176\u4ED6\u53EF\u6388\u6743\u4F9B\u5E94\u5546\uFF1A\u672A\u6CE8\u518C\uFF0C\u6216\u672A\u63D0\u4F9B OpenAI \u7CFB\u5217\u6A21\u578B\u3002",
+        "priority.allAuthorized": "\u5F53\u524D\u6240\u6709\u63D0\u4F9B OpenAI \u7CFB\u5217\u6A21\u578B\u7684\u4F9B\u5E94\u5546\u90FD\u5DF2\u5728\u5185\u7F6E\u6388\u6743\u4E2D\uFF0C\u65E0\u9700\u518D\u6B21\u6388\u6743\u3002\u82E5\u4F60\u8981\u7528\u7684\u662F\u5176\u4ED6\u63A5\u5165\u70B9\uFF0C\u8BF7\u5148\u5728\u63D2\u4EF6\u8BBE\u7F6E\u4E2D\u914D\u7F6E\u8BE5\u4F9B\u5E94\u5546\uFF0C\u786E\u8BA4\u5B83\u7684\u6A21\u578B\u76EE\u5F55\u91CC\u5B58\u5728 OpenAI \u7CFB\u5217\u6A21\u578B\uFF0C\u518D\u70B9\u51FB\u201C\u91CD\u65B0\u8BFB\u53D6\u6388\u6743\u201D\u3002",
+        "priority.noProviderModels": "\u5F53\u524D\u6CA1\u6709\u5DF2\u6CE8\u518C\u4E14\u63D0\u4F9B OpenAI \u7CFB\u5217\u6A21\u578B\u7684\u4F9B\u5E94\u5546\u3002\u8BF7\u5148\u914D\u7F6E\u4F9B\u5E94\u5546\u4E0E\u6A21\u578B\uFF0C\u518D\u56DE\u5230\u8FD9\u91CC\u70B9\u51FB\u201C\u91CD\u65B0\u8BFB\u53D6\u6388\u6743\u201D\u3002",
+        "priority.visibleModels": "\u53EF\u8BC6\u522B\u7684 OpenAI \u6A21\u578B",
         "priority.exampleModels": "\u793A\u4F8B\u6A21\u578B",
         "priority.consent": "\u6211\u786E\u8BA4\u8BE5\u63A5\u5165\u70B9\u652F\u6301 Priority\uFF0C\u53EF\u80FD\u4EA7\u751F\u989D\u5916\u8D39\u7528\uFF0C\u5E76\u540C\u610F\u628A\u5B83\u52A0\u5165\u672C profile \u7684 Priority \u5141\u8BB8\u540D\u5355\u3002",
         "priority.authorize": "\u6388\u6743",
@@ -692,7 +696,11 @@ var init_messages = __esm({
         "priority.authorized": "Authorized here",
         "priority.none": "No additional provider is authorized yet.",
         "priority.candidates": "Providers that may be authorized",
+        "priority.choose": "Choose a provider",
         "priority.noCandidates": "No other provider can be authorized: it is not registered or offers no OpenAI-family model.",
+        "priority.allAuthorized": "Every provider that offers OpenAI-family models is already authorized by the package, so there is nothing to add. To use another endpoint, configure that provider and make sure its model catalog lists OpenAI-family models, then choose Reload authorization.",
+        "priority.noProviderModels": "No registered provider currently offers an OpenAI-family model. Configure a provider and model first, then choose Reload authorization here.",
+        "priority.visibleModels": "Recognized OpenAI models",
         "priority.exampleModels": "Example models",
         "priority.consent": "I confirm this endpoint supports Priority, that extra charges may apply, and that it joins this profile's Priority allowlist.",
         "priority.authorize": "Authorize",
@@ -2402,6 +2410,8 @@ function PriorityPanelContent({
   const authorized = providerIds(state?.authorized).filter((id2) => !configured.includes(id2));
   const available = availableCandidates(candidates, state);
   const selection = available.find((item) => item.id === selected);
+  const raw = Array.isArray(candidates) ? candidates : [];
+  const builtinModels = new Map(raw.filter((item) => item && item.configured === true && Array.isArray(item.openAIModels)).map((item) => [item.id, item.openAIModels.filter((model) => typeof model === "string" && isOpenAIModel(model)).slice(0, 8)]));
   const button = (key, action, disabled = false, extra = {}) => h10(
     "button",
     { type: "button", className: "lpa-button", onClick: action, disabled, ...extra },
@@ -2416,7 +2426,12 @@ function PriorityPanelContent({
       "div",
       { className: "lpa-field" },
       h10("strong", null, t("priority.configured")),
-      configured.map((id2) => h10("p", { className: "lpa-note", key: id2 }, h10("code", null, id2)))
+      configured.map((id2) => h10(
+        "p",
+        { className: "lpa-note", key: id2 },
+        h10("code", null, id2),
+        builtinModels.get(id2)?.length ? " \xB7 " + t("priority.visibleModels") + ": " + builtinModels.get(id2).join(", ") : null
+      ))
     ),
     h10(
       "div",
@@ -2430,7 +2445,7 @@ function PriorityPanelContent({
       )),
       state && !authorized.length ? h10("p", { className: "lpa-note" }, t("priority.none")) : null
     ),
-    h10(
+    available.length ? h10(
       "label",
       { className: "lpa-field" },
       t("priority.candidates"),
@@ -2438,14 +2453,14 @@ function PriorityPanelContent({
         "select",
         {
           value: selection?.id ?? "",
-          disabled: !state || Boolean(pending) || !available.length,
+          disabled: !state || Boolean(pending),
           onChange: (event) => onSelect?.(event.target.value)
         },
-        h10("option", { value: "" }, t("priority.candidates")),
+        h10("option", { value: "" }, t("priority.choose")),
         available.map((item) => h10("option", { key: item.id, value: item.id }, item.name + " (" + item.id + ")"))
       )
-    ),
-    state && !available.length ? h10("p", { className: "lpa-note" }, t("priority.noCandidates")) : null,
+    ) : null,
+    state && !available.length ? h10("p", { className: "lpa-note" }, t(raw.length ? "priority.allAuthorized" : "priority.noProviderModels")) : null,
     selection ? h10("p", { className: "lpa-note" }, t("priority.exampleModels"), ": ", selection.openAIModels.join(", ")) : null,
     h10("label", { className: "lpa-check" }, h10("input", {
       type: "checkbox",
@@ -2499,7 +2514,7 @@ function createPriorityController(connection, { onChanged } = {}) {
     const value = await rpc({ action: "candidates" }, signal);
     const state = readState(value);
     if (!Array.isArray(value.candidates)) throw { code: "invalid-response" };
-    return { state, candidates: availableCandidates(value.candidates, null) };
+    return { state, candidates: value.candidates };
   }
   async function run(action, input = {}) {
     if (!active || snapshot.pending) return false;

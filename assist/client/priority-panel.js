@@ -26,23 +26,29 @@ export function PriorityPanelContent({state, candidates = [], consent = false, n
   const authorized = providerIds(state?.authorized).filter(id => !configured.includes(id));
   const available = availableCandidates(candidates, state);
   const selection = available.find(item => item.id === selected);
+  const raw = Array.isArray(candidates) ? candidates : [];
+  // Built-in IDs are already authorized; show their recognized models so users can see why they are
+  // not offered again instead of staring at an empty selector.
+  const builtinModels = new Map(raw.filter(item => item && item.configured === true && Array.isArray(item.openAIModels))
+    .map(item => [item.id, item.openAIModels.filter(model => typeof model === "string" && isOpenAIModel(model)).slice(0, 8)]));
   const button = (key, action, disabled = false, extra = {}) => h("button",
     {type: "button", className: "lpa-button", onClick: action, disabled, ...extra}, t(key));
   return h("section", {className: "lpa-feature", "aria-label": t("priority.title"), "aria-busy": Boolean(pending)},
     h("h3", {className: "lpa-feature-title"}, t("priority.title")),
     h("p", {className: "lpa-note"}, t("priority.scope")),
     h("div", {className: "lpa-field"}, h("strong", null, t("priority.configured")),
-      configured.map(id => h("p", {className: "lpa-note", key: id}, h("code", null, id)))),
+      configured.map(id => h("p", {className: "lpa-note", key: id}, h("code", null, id),
+        builtinModels.get(id)?.length ? " · " + t("priority.visibleModels") + ": " + builtinModels.get(id).join(", ") : null))),
     h("div", {className: "lpa-field"}, h("strong", null, t("priority.authorized")),
       authorized.map(id => h("div", {className: "lpa-row", key: id}, h("code", null, id),
         button("priority.revoke", () => onRevoke?.(id), !state || Boolean(pending), {"aria-label": t("priority.revoke") + ": " + id}))),
       state && !authorized.length ? h("p", {className: "lpa-note"}, t("priority.none")) : null),
-    h("label", {className: "lpa-field"}, t("priority.candidates"),
-      h("select", {value: selection?.id ?? "", disabled: !state || Boolean(pending) || !available.length,
+    available.length ? h("label", {className: "lpa-field"}, t("priority.candidates"),
+      h("select", {value: selection?.id ?? "", disabled: !state || Boolean(pending),
         onChange: event => onSelect?.(event.target.value)},
-        h("option", {value: ""}, t("priority.candidates")),
-        available.map(item => h("option", {key: item.id, value: item.id}, item.name + " (" + item.id + ")")))),
-    state && !available.length ? h("p", {className: "lpa-note"}, t("priority.noCandidates")) : null,
+        h("option", {value: ""}, t("priority.choose")),
+        available.map(item => h("option", {key: item.id, value: item.id}, item.name + " (" + item.id + ")")))) : null,
+    state && !available.length ? h("p", {className: "lpa-note"}, t(raw.length ? "priority.allAuthorized" : "priority.noProviderModels")) : null,
     selection ? h("p", {className: "lpa-note"}, t("priority.exampleModels"), ": ", selection.openAIModels.join(", ")) : null,
     h("label", {className: "lpa-check"}, h("input", {type: "checkbox", checked: consent === true,
       disabled: !state || Boolean(pending), onChange: event => onConsent?.(event.target.checked)}), t("priority.consent")),
@@ -85,7 +91,7 @@ export function createPriorityController(connection, {onChanged} = {}) {
     const value = await rpc({action: "candidates"}, signal);
     const state = readState(value);
     if (!Array.isArray(value.candidates)) throw {code: "invalid-response"};
-    return {state, candidates: availableCandidates(value.candidates, null)};
+    return {state, candidates: value.candidates};
   }
   async function run(action, input = {}) {
     if (!active || snapshot.pending) return false;

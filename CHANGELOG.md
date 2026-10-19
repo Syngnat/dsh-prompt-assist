@@ -2,6 +2,15 @@
 
 [English](<README.md>) | [简体中文](<README.zh-CN.md>)
 
+## 1.2.17 — 授权候选为空时给出明确原因 / Explaining an empty candidate list
+
+- When no additional provider can be authorized, the settings section no longer renders an empty, disabled selector. It now explains which case applies: every provider that offers OpenAI-family models is already authorized by the package, or no registered provider currently offers an OpenAI-family model.
+- Built-in IDs list the OpenAI-family models the Host recognized for them, so a user can see whether the actual route (for example `cpa / gpt-6.1-sol`) is already covered instead of assuming the section is broken.
+- The selector placeholder is its own label instead of repeating the field label.
+- Unchanged: authorization is still limited to registered providers with an OpenAI-family model, still needs explicit consent and a revision guard, and still cannot grant the package-configured IDs.
+
+中文：候选为空时不再显示空的禁用下拉框，而是说明是“所有提供 OpenAI 系列模型的供应商都已内置授权”，还是“当前没有已注册且提供 OpenAI 系列模型的供应商”；内置项会显示 Host 识别到的模型名，便于确认实际路由（例如 cpa / gpt-6.1-sol）是否已被覆盖。授权限制不变。
+
 ## 1.2.16 — Priority 供应商自助授权 / Self-service provider authorization
 
 - Add **Prompt assist → Priority provider authorization**. A profile can now authorize another provider ID without editing or reinstalling the package; the shipped `openai`, `openai-codex` and `cpa` entries stay the baseline.

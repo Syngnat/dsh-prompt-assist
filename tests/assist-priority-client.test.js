@@ -73,7 +73,7 @@ for (const [name, props] of [
   test("SSR disables authorize for " + name, () => {
     const html = render(props);
     assert.match(html, /<button[^>]*disabled=""[^>]*>priority.authorize<\/button>/);
-    if (!props.candidates?.length && props.candidates) assert.match(html, /priority.noCandidates/);
+    if (!props.candidates?.length && props.candidates) assert.match(html, /priority.noProviderModels/);
   });
 }
 
@@ -97,7 +97,7 @@ test("SSR rejects malformed, built-in, authorized, and no-model candidates", () 
     {...candidate, id: "configured", configured: true}, {...candidate, id: "../unsafe"},
   ];
   const html = render({candidates: values, selected: "deepseek", consent: true});
-  assert.match(html, /priority.noCandidates/);
+  assert.match(html, /priority.allAuthorized/);
   assert.doesNotMatch(html, /<option[^>]*value="(?:deepseek|openai|proxy|configured|unknown-models)/);
   assert.match(html, /<button[^>]*disabled=""[^>]*>priority.authorize<\/button>/);
 });
@@ -249,6 +249,7 @@ test("StrictMode-style dispose/start prevents the old read from publishing", asy
 
 test("both shipped languages contain every Priority key consumed by this module", () => {
   const required = ["title", "scope", "configured", "authorized", "none", "candidates", "noCandidates", "exampleModels",
+    "choose", "allAuthorized", "noProviderModels", "visibleModels",
     "consent", "authorize", "revoke", "reload", "loading", "stale", "refused", "noConsent", "saved", "error", "unknownProvider"];
   for (const locale of ["en", "zh"]) {
     for (const key of required) assert.equal(typeof dictionaries[locale]["priority." + key], "string");
