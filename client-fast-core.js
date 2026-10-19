@@ -1,4 +1,5 @@
 import { isOpenAIModel } from './policy.js';
+import { createPrioritySource, onPriorityChanged } from './assist/client/priority-source.js';
 
 export function createFast(require) {
     let React;
@@ -178,12 +179,25 @@ export function createFast(require) {
     function FastToggle(props) {
       const fastState = React.useSyncExternalStore(props.fastSource.subscribe, props.fastSource.getSnapshot, props.fastSource.getSnapshot);
       const modelState = React.useSyncExternalStore(props.modelSource.subscribe, props.modelSource.getSnapshot, props.modelSource.getSnapshot);
+      const priorityState = props.prioritySource
+        ? React.useSyncExternalStore(props.prioritySource.subscribe, props.prioritySource.getSnapshot, props.prioritySource.getSnapshot)
+        : null;
       const selected = modelState?.next ?? null;
       const defaultSelection = useDefaultSelection(props.remote);
       const sessionState = React.useSyncExternalStore(props.sessionSource.subscribe, props.sessionSource.getSnapshot, props.sessionSource.getSnapshot);
       const unavailable = Boolean(sessionState?.subagent) || sessionState?.removed === true;
       const allowed = props.useAccess('commands/execute');
-      const { visible, enabled, eligible, reason } = derivePresentation(fastState, selected, defaultSelection);
+      // A profile authorization is durable profile state, not a session event: merge the Host snapshot so
+      // the control reacts even though the projection wire predates the authorization.
+      const wireProviders = Array.isArray(fastState?.providers) ? fastState.providers : [];
+      const authorized = priorityState?.status === 'ready' && Array.isArray(priorityState.authorized) ? priorityState.authorized : [];
+      const providers = [...wireProviders];
+      for (const provider of authorized) if (typeof provider === 'string' && !providers.includes(provider)) providers.push(provider);
+      const priorityReady = priorityState?.status === 'ready' && (Array.isArray(priorityState.effective) || providers.length > 0);
+      const viewState = hasFastState(fastState) ? { enabled: fastState.enabled === true, providers }
+        : priorityReady ? { enabled: false, providers }
+        : fastState;
+      const { visible, enabled, eligible, reason } = derivePresentation(viewState, selected, defaultSelection);
        const ready = hasFastState(fastState);
        const [loadFailed, setLoadFailed] = React.useState(false);
        React.useEffect(() => {
@@ -258,6 +272,12 @@ export function createFast(require) {
         React = require('react');
         h = React.createElement;
         ctx.effect(() => ctx.locale.register(NS, dictionaries));
+        const prioritySource = createPrioritySource(ctx.connection);
+        ctx.effect(() => {
+          const off = onPriorityChanged(() => { void prioritySource.refresh(); });
+          void prioritySource.refresh();
+          return () => { off(); prioritySource.dispose(); };
+        });
         ctx.slots.inject('conversation.chat.commandview', () => quietCommandNames.map(key =>
           ctx.slots.register({ name: 'conversation.chat.commandview', key }, HiddenFastCommand)));
        const readyBindings = new WeakSet();
@@ -274,7 +294,7 @@ export function createFast(require) {
             const refresh = () => ctx.sessions.refreshProjections(sessionId);
             const fastSource = observe(binding.session.projections.faceOf('local.openaiFast'));
             return {
-              remote: ctx.remote, refresh, hydrationKey: binding,
+              remote: ctx.remote, refresh, hydrationKey: binding, prioritySource,
               ensureHydrated: () => hydrateSession(readyBindings, binding, sessionId, refresh, () => hasFastState(fastSource.getSnapshot())),
               fastSource,
               modelSource: observe(binding.session.projections.faceOf('modelSelection')),

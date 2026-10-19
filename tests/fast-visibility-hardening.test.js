@@ -18,11 +18,13 @@ function toggleFixture(fastState, selection = selected, options = {}) {
   let catalogReads = 0;
   const bundle = createFast(name => {assert.equal(name, "react"); return React;});
   const ctx = {effect: callback => callback(), locale: {register: (ns, value) => {dictionary = value[options.locale ?? "en"]; return () => {}; }},
+    connection: {rpc: {call: async () => ({ok: true, value: {revision: 0, configured: [], authorized: [], effective: []}})}},
     slots: {inject: (name, callback) => callback(), register: (declaration, Component) => {registered.push({declaration, Component}); return () => {}; }}};
   bundle.apply(ctx);
   const item = registered.find(value => value.declaration.name === "conversation.input.right" && value.declaration.id === "local-openai-fast");
   assert.ok(item, "the production FastToggle must be registered");
   const props = {sessionId: "test-session", fastSource: source(fastState),
+    prioritySource: options.prioritySource,
     modelSource: source({next: selection}), sessionSource: source(options.session ?? {}),
     useAccess: permission => {assert.equal(permission, "commands/execute"); return options.allowed !== false;},
     remote: {commands: {execute: async () => {writes++; throw new Error("SSR must not execute commands");}},
@@ -49,6 +51,25 @@ test("a blocked Fast control explains itself without relying on a disabled toolt
   // Chromium suppresses title on disabled buttons: the reason lives on the wrapper instead.
   assert.match(html, /<span class="local-openai-fast" title="[^"]*Provider ID: cpa/);
   assert.doesNotMatch(html, /<button[^>]*\stitle=/);
+});
+
+test("a profile authorization reaches the Fast control even when the wire predates it", () => {
+  const fixture = toggleFixture({enabled: false, providers: ["openai"]}, selected, {
+    prioritySource: source({status: "ready", revision: 1, authorized: ["cpa"], effective: ["openai", "cpa"]}),
+  });
+  const html = fixture.render();
+  assert.match(html, /<button[^>]*role="switch"/);
+  assert.doesNotMatch(html, /<button[^>]*aria-disabled="true"/);
+  assert.equal(fixture.writes, 0);
+});
+
+test("an idle or failed priority snapshot never grants access", () => {
+  for (const status of ["idle", "error"]) {
+    const fixture = toggleFixture({enabled: false, providers: ["openai"]}, selected, {
+      prioritySource: source({status, revision: null, authorized: [], effective: []}),
+    });
+    assert.match(fixture.render(), /<button[^>]*aria-disabled="true"/);
+  }
 });
 
 const pure = () => createFast(() => {throw new Error("Pure helpers must not require React");});const deferred = () => {let resolve, reject; const promise = new Promise((yes, no) => {resolve = yes; reject = no;}); return {promise, resolve, reject};};

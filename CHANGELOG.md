@@ -2,6 +2,14 @@
 
 [English](<README.md>) | [简体中文](<README.zh-CN.md>)
 
+## 1.2.18 — 授权后 Fast 立即生效 / Authorization reaches the Fast control
+
+- Fix: authorizing a provider in the settings page did not un-block the Fast control. A profile authorization is durable profile state, not a session event, so a session's projection wire can keep the allowlist it was built with. The Client now merges the Host-authoritative authorization snapshot into the control's eligibility, refreshes it after every successful authorize/revoke, and re-reads it on load.
+- The merge never grants anything by itself: the Host still owns the real allowlist and the request-time check. An idle or failed snapshot leaves the control unavailable instead of assuming access.
+- Add regressions for a profile authorization that postdates the wire, idle/failed snapshots that must not grant, and the snapshot source's request de-duplication, filtering and disposal.
+
+中文：修复“已在设置页授权供应商，但 Fast 仍显示未授权”的问题。授权属于 profile 持久状态而不是会话事件，因此会话投影可能仍带着旧的允许名单；客户端现在会把 Host 权威的授权快照合并进 Fast 的可用性判断，并在每次授权/撤销成功及页面加载后重新读取。合并本身不授予任何权限，Host 仍是唯一权威，快照不可用时保持不可用。
+
 ## 1.2.17 — 授权候选为空时给出明确原因 / Explaining an empty candidate list
 
 - When no additional provider can be authorized, the settings section no longer renders an empty, disabled selector. It now explains which case applies: every provider that offers OpenAI-family models is already authorized by the package, or no registered provider currently offers an OpenAI-family model.

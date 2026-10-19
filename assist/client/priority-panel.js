@@ -1,6 +1,7 @@
 import React from "react";
 import {ASSIST_CHANNEL} from "../identity.js";
 import {isOpenAIModel} from "../../policy.js";
+import {notifyPriorityChanged} from "./priority-source.js";
 const h = React.createElement;
 const ENDPOINT = "local-openai-fast.priority";
 const PROVIDER = /^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$/;
@@ -108,6 +109,8 @@ export function createPriorityController(connection, {onChanged} = {}) {
         const state = readState(value);
         if (!valid()) return false;
         publish({state, notice: "priority.saved"});
+        // The projection wire cannot observe profile authorization, so wake the Fast control explicitly.
+        try { notifyPriorityChanged(); } catch {}
         if (valid()) {try {Promise.resolve(onChanged?.()).catch(() => {});} catch {}}
       }
       return true;

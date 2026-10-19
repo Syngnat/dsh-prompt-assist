@@ -36,7 +36,7 @@ var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__ge
 var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
 
 // assist/identity.js
-var ASSIST_KEY, ASSIST_COMMAND, ASSIST_CHANNEL, ASSIST_ENDPOINT, LEGACY_COMMAND, ENABLEMENT_PATH;
+var ASSIST_KEY, ASSIST_COMMAND, ASSIST_CHANNEL, ASSIST_ENDPOINT, LEGACY_COMMAND, ENABLEMENT_PATH, PRIORITY_ENDPOINT;
 var init_identity = __esm({
   "assist/identity.js"() {
     ASSIST_KEY = "local.promptAssist.v2";
@@ -45,6 +45,7 @@ var init_identity = __esm({
     ASSIST_ENDPOINT = "local-openai-fast.assist";
     LEGACY_COMMAND = "prompt-assist-config";
     ENABLEMENT_PATH = "/api/local-openai-fast.enablement";
+    PRIORITY_ENDPOINT = "local-openai-fast.priority";
   }
 });
 
@@ -56,6 +57,86 @@ var DEFAULT_PROVIDERS;
 var init_policy = __esm({
   "policy.js"() {
     DEFAULT_PROVIDERS = Object.freeze(["openai", "openai-codex"]);
+  }
+});
+
+// assist/client/priority-source.js
+function notifyPriorityChanged() {
+  for (const listener of [...listeners]) {
+    try {
+      listener();
+    } catch {
+    }
+  }
+}
+function onPriorityChanged(listener) {
+  if (typeof listener !== "function") return () => {
+  };
+  listeners.add(listener);
+  return () => listeners.delete(listener);
+}
+function createPrioritySource(connection) {
+  let snapshot = Object.freeze({ status: "idle", revision: null, authorized: Object.freeze([]), effective: Object.freeze([]) });
+  const subscribers = /* @__PURE__ */ new Set();
+  let epoch = 0, disposed = false, inflight = null;
+  const publish = (next) => {
+    snapshot = Object.freeze(next);
+    for (const notify of [...subscribers]) {
+      try {
+        notify();
+      } catch {
+      }
+    }
+  };
+  function refresh() {
+    if (disposed || !connection?.rpc?.call) return Promise.resolve(snapshot);
+    if (inflight) return inflight;
+    const token = ++epoch;
+    inflight = (async () => {
+      try {
+        const result = await connection.rpc.call(ASSIST_CHANNEL, PRIORITY_ENDPOINT, { action: "snapshot" });
+        if (disposed || token !== epoch) return snapshot;
+        if (result?.ok !== true) {
+          publish({ ...snapshot, status: "error" });
+          return snapshot;
+        }
+        const value = result.value;
+        publish({
+          status: "ready",
+          revision: Number.isSafeInteger(value?.revision) ? value.revision : null,
+          authorized: Object.freeze(ids(value?.authorized)),
+          effective: Object.freeze(ids(value?.effective))
+        });
+      } catch {
+        if (!disposed && token === epoch) publish({ ...snapshot, status: "error" });
+      } finally {
+        if (token === epoch) inflight = null;
+      }
+      return snapshot;
+    })();
+    return inflight;
+  }
+  return {
+    getSnapshot: () => snapshot,
+    subscribe(listener) {
+      subscribers.add(listener);
+      return () => subscribers.delete(listener);
+    },
+    refresh,
+    dispose() {
+      disposed = true;
+      epoch += 1;
+      inflight = null;
+      subscribers.clear();
+    }
+  };
+}
+var listeners, ids;
+var init_priority_source = __esm({
+  "assist/client/priority-source.js"() {
+    init_identity();
+    listeners = /* @__PURE__ */ new Set();
+    ids = (value) => Array.isArray(value) ? [...new Set(value.filter((item) => typeof item === "string"))] : [];
   }
 });
 
@@ -112,18 +193,18 @@ function enhanceAvailability(r) {
 function createEnhanceAction() {
   let handler = null, running = false, base = { ready: false, pending: false, reason: "load" };
   let snapshot = base;
-  const listeners = /* @__PURE__ */ new Set();
+  const listeners2 = /* @__PURE__ */ new Set();
   const publish = () => {
     const next = { ...base, ready: base.ready && !running, pending: base.pending || running };
     if (JSON.stringify(next) === JSON.stringify(snapshot)) return;
     snapshot = next;
-    listeners.forEach((fn) => fn());
+    listeners2.forEach((fn) => fn());
   };
   return {
     getSnapshot: () => snapshot,
     subscribe(fn) {
-      listeners.add(fn);
-      return () => listeners.delete(fn);
+      listeners2.add(fn);
+      return () => listeners2.delete(fn);
     },
     update(value, run) {
       base = value;
@@ -1175,11 +1256,11 @@ function createEnablementObserver(controller) {
 }
 function createEnablementSource({ send, fetcher = (...args) => globalThis.fetch(...args), setTimer = setTimeout, clearTimer = clearTimeout }) {
   let state = initial(), disposed = true, epoch = 0, readEpoch = 0, readAbort = null, writeAbort = null, watchAbort = null, reader = null, timer = null, backoff = 1e3;
-  const listeners = /* @__PURE__ */ new Set();
+  const listeners2 = /* @__PURE__ */ new Set();
   const publish = (patch) => {
     if (Object.keys(patch).every((key) => state[key] === patch[key])) return;
     state = { ...state, ...patch };
-    for (const listener of listeners) listener();
+    for (const listener of listeners2) listener();
   };
   const accept = (value) => {
     const data = normalizeEnablement(value), old = state.data;
@@ -1321,8 +1402,8 @@ function createEnablementSource({ send, fetcher = (...args) => globalThis.fetch(
   return {
     getSnapshot: () => state,
     subscribe(listener) {
-      listeners.add(listener);
-      return () => listeners.delete(listener);
+      listeners2.add(listener);
+      return () => listeners2.delete(listener);
     },
     start() {
       if (!disposed) return Promise.resolve(false);
@@ -1744,10 +1825,10 @@ function createUpdateController(fetcher = globalThis.fetch) {
   let disposed = true;
   let epoch = 0;
   let flight = null;
-  const listeners = /* @__PURE__ */ new Set();
+  const listeners2 = /* @__PURE__ */ new Set();
   const publish = (patch) => {
     state = { ...state, ...patch };
-    for (const listener of listeners) listener();
+    for (const listener of listeners2) listener();
   };
   const invalidate = () => {
     epoch += 1;
@@ -1794,8 +1875,8 @@ function createUpdateController(fetcher = globalThis.fetch) {
   return {
     getSnapshot: () => state,
     subscribe(listener) {
-      listeners.add(listener);
-      return () => listeners.delete(listener);
+      listeners2.add(listener);
+      return () => listeners2.delete(listener);
     },
     start() {
       disposed = false;
@@ -1883,10 +1964,10 @@ function createOnlineUpdateController(fetcher = globalThis.fetch, { now = Date.n
     saveMarker(operation.terminal ? null : { fromVersion: operation.fromVersion, targetVersion: operation.targetVersion, jobId: operation.jobId });
     return true;
   };
-  const listeners = /* @__PURE__ */ new Set();
+  const listeners2 = /* @__PURE__ */ new Set();
   const publish = (patch) => {
     state = { ...state, ...patch };
-    for (const listener of listeners) listener();
+    for (const listener of listeners2) listener();
   };
   const clearPoll = () => {
     if (timer !== null) clearTimer(timer);
@@ -1972,8 +2053,8 @@ function createOnlineUpdateController(fetcher = globalThis.fetch, { now = Date.n
   return {
     getSnapshot: () => state,
     subscribe(listener) {
-      listeners.add(listener);
-      return () => listeners.delete(listener);
+      listeners2.add(listener);
+      return () => listeners2.delete(listener);
     },
     start() {
       disposed = false;
@@ -2493,10 +2574,10 @@ function readState(value) {
 function createPriorityController(connection, { onChanged } = {}) {
   let snapshot = { state: null, candidates: [], pending: null, notice: null };
   let active = false, epoch = 0, flight = null;
-  const listeners = /* @__PURE__ */ new Set();
+  const listeners2 = /* @__PURE__ */ new Set();
   const publish = (patch) => {
     snapshot = { ...snapshot, ...patch };
-    listeners.forEach((listener) => listener());
+    listeners2.forEach((listener) => listener());
   };
   const stop = () => {
     epoch += 1;
@@ -2533,6 +2614,10 @@ function createPriorityController(connection, { onChanged } = {}) {
         const state = readState(value);
         if (!valid()) return false;
         publish({ state, notice: "priority.saved" });
+        try {
+          notifyPriorityChanged();
+        } catch {
+        }
         if (valid()) {
           try {
             Promise.resolve(onChanged?.()).catch(() => {
@@ -2563,8 +2648,8 @@ function createPriorityController(connection, { onChanged } = {}) {
   const ready = () => active && !snapshot.pending && snapshot.state !== null;
   return {
     subscribe(listener) {
-      listeners.add(listener);
-      return () => listeners.delete(listener);
+      listeners2.add(listener);
+      return () => listeners2.delete(listener);
     },
     getSnapshot: () => snapshot,
     start() {
@@ -2651,6 +2736,7 @@ var init_priority_panel = __esm({
     import_react11 = __toESM(require("react"), 1);
     init_identity();
     init_policy();
+    init_priority_source();
     h10 = import_react11.default.createElement;
     ENDPOINT = "local-openai-fast.priority";
     PROVIDER = /^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$/;
@@ -2824,14 +2910,14 @@ var init_settings_page = __esm({
 // assist/client/settings-target.js
 function createSettingsTarget() {
   let state = { sessionId: null };
-  const listeners = /* @__PURE__ */ new Set();
+  const listeners2 = /* @__PURE__ */ new Set();
   return { getSnapshot: () => state, subscribe(fn) {
-    listeners.add(fn);
-    return () => listeners.delete(fn);
+    listeners2.add(fn);
+    return () => listeners2.delete(fn);
   }, select(sessionId) {
     if (state.sessionId === sessionId) return;
     state = { sessionId };
-    listeners.forEach((fn) => fn());
+    listeners2.forEach((fn) => fn());
   } };
 }
 var init_settings_target = __esm({
@@ -2920,6 +3006,7 @@ init_identity();
 
 // client-fast-core.js
 init_policy();
+init_priority_source();
 function createFast(require2) {
   let React14;
   let h13;
@@ -3131,12 +3218,19 @@ function createFast(require2) {
   function FastToggle(props) {
     const fastState = React14.useSyncExternalStore(props.fastSource.subscribe, props.fastSource.getSnapshot, props.fastSource.getSnapshot);
     const modelState = React14.useSyncExternalStore(props.modelSource.subscribe, props.modelSource.getSnapshot, props.modelSource.getSnapshot);
+    const priorityState = props.prioritySource ? React14.useSyncExternalStore(props.prioritySource.subscribe, props.prioritySource.getSnapshot, props.prioritySource.getSnapshot) : null;
     const selected = modelState?.next ?? null;
     const defaultSelection = useDefaultSelection(props.remote);
     const sessionState = React14.useSyncExternalStore(props.sessionSource.subscribe, props.sessionSource.getSnapshot, props.sessionSource.getSnapshot);
     const unavailable = Boolean(sessionState?.subagent) || sessionState?.removed === true;
     const allowed = props.useAccess("commands/execute");
-    const { visible, enabled, eligible, reason } = derivePresentation2(fastState, selected, defaultSelection);
+    const wireProviders = Array.isArray(fastState?.providers) ? fastState.providers : [];
+    const authorized = priorityState?.status === "ready" && Array.isArray(priorityState.authorized) ? priorityState.authorized : [];
+    const providers = [...wireProviders];
+    for (const provider2 of authorized) if (typeof provider2 === "string" && !providers.includes(provider2)) providers.push(provider2);
+    const priorityReady = priorityState?.status === "ready" && (Array.isArray(priorityState.effective) || providers.length > 0);
+    const viewState = hasFastState(fastState) ? { enabled: fastState.enabled === true, providers } : priorityReady ? { enabled: false, providers } : fastState;
+    const { visible, enabled, eligible, reason } = derivePresentation2(viewState, selected, defaultSelection);
     const ready = hasFastState(fastState);
     const [loadFailed, setLoadFailed] = React14.useState(false);
     React14.useEffect(() => {
@@ -3239,6 +3333,17 @@ function createFast(require2) {
       React14 = require2("react");
       h13 = React14.createElement;
       ctx.effect(() => ctx.locale.register(NS2, dictionaries2));
+      const prioritySource = createPrioritySource(ctx.connection);
+      ctx.effect(() => {
+        const off = onPriorityChanged(() => {
+          void prioritySource.refresh();
+        });
+        void prioritySource.refresh();
+        return () => {
+          off();
+          prioritySource.dispose();
+        };
+      });
       ctx.slots.inject("conversation.chat.commandview", () => quietCommandNames2.map((key) => ctx.slots.register({ name: "conversation.chat.commandview", key }, HiddenFastCommand2)));
       const readyBindings = /* @__PURE__ */ new WeakSet();
       ctx.slots.inject("conversation.input.right", () => ctx.slots.register({
@@ -3260,6 +3365,7 @@ function createFast(require2) {
             remote: ctx.remote,
             refresh,
             hydrationKey: binding,
+            prioritySource,
             ensureHydrated: () => hydrateSession2(readyBindings, binding, sessionId, refresh, () => hasFastState(fastSource.getSnapshot())),
             fastSource,
             modelSource: observe(binding.session.projections.faceOf("modelSelection")),

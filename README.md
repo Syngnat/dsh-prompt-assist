@@ -6,7 +6,7 @@ Provides prompt enhancement, next-question suggestions, and OpenAI Fast accelera
 
 A plugin bundle for the DeepSeek Harness (DSH) Web GUI. Enhancement and suggestions are independent features: enable either or both for the current DSH profile. Settings live on the sidebar page, not in a composer popup. Feature switches are profile-wide; model controls remain per-conversation.
 
-> **v1.2.17:** an empty authorization candidate list no longer renders an empty disabled selector. It states whether every provider offering OpenAI-family models is already authorized by the package, or whether no registered provider qualifies. Built-in IDs show the recognized model names (for example `cpa / gpt-6.1-sol`). The 1.2.16 authorization flow and 1.2.15 Fast explanations are unchanged.
+> **v1.2.18:** a provider authorized in the settings page now unblocks the Fast control immediately. A profile authorization is durable profile state rather than a session event, so the Client merges the Host-authoritative authorization snapshot into the control and refreshes it after every authorize or revoke. The Host still owns the real allowlist; an idle or failed snapshot leaves the control unavailable.
 
 ## Compatibility policy
 
