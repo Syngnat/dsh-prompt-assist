@@ -59,7 +59,7 @@ test('off → on → off controls actual wire payload without modifying frozen i
   assert.strictEqual(Adapter.prototype.streamWithSnapshot, original);
 });
 
-for (const model of ['grok-4.6', 'grok-4.7', 'grok-4.8']) {
+for (const model of ['grok-4.6', 'grok-4.7', 'grok-4.8', '安和桥/grok-4.7']) {
   test(`${model}: Responses Priority requires a live provider grant and an enabled session`, async t => {
     const Adapter = adapterClass(), original = Adapter.prototype.streamWithSnapshot;
     let enabled = true, providers = ['openai'], checks = 0;

@@ -1,7 +1,7 @@
 {
   "meta": {
     "title": "Prompt Assistance & Fast Acceleration",
-    "description": "Provides prompt enhancement, next-question suggestions, and Priority acceleration (OpenAI / xAI), with per-session configuration of models, reasoning effort, and auxiliary Fast."
+    "description": "Provides prompt enhancement, next-question suggestions, and Priority acceleration (OpenAI / xAI), with profile-wide auxiliary models, reasoning effort, Fast and QA scope for each feature."
   },
   "fast.label": "Fast",
   "fast.off": "Fast is off. Enable Priority for this session and inheriting subagents on authorized models (OpenAI gpt/o families, xAI Grok 4 and later); provider support is required and billing follows the tier the provider actually used.",
@@ -13,6 +13,6 @@
   "fast.unsupported": "Fast is only available for explicitly allowed routes in a supported accelerated family (OpenAI gpt/o, or xAI Grok 4 and later).",
   "fast.enabled": "Fast enabled for this session and inheriting subagents. The provider bills the tier it actually used.",
   "fast.disabled": "Fast disabled for this session and inheriting subagents. Subsequent requests keep provider defaults.",
-  "assist.command": "Save this session's model, reasoning, Fast and Q&A controls; global switches are separate.",
+  "assist.command": "Session-local configuration is retired. Configure auxiliary models and QA scope in the profile-wide Prompt assist settings.",
   "assist.retired": "The retired assist configuration entry is disabled. Use Prompt assist."
 }

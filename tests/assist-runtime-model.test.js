@@ -78,7 +78,7 @@ test("auxiliary on/off overrides opposite main Fast and preserves actual reasoni
   }
 });
 
-for (const model of ["grok-4.6", "grok-4.7", "grok-4.8"]) {
+for (const model of ["grok-4.6", "grok-4.7", "grok-4.8", "安和桥/grok-4.7"]) {
   for (const [name, fast, authorized] of [["authorized on", true, true], ["authorized off", false, true], ["unapproved on", true, false]]) {
     test(`${model}: auxiliary ${name} applies independently to enhancement and suggestions`, async t => {
       const selection = {provider: "xai", model, reasoningEffort: "high"};

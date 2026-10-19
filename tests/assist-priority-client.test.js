@@ -275,7 +275,7 @@ test("both shipped languages contain every Priority key consumed by this module"
   }
 });
 
-for (const model of ["grok-4.6", "grok-4.7", "grok-4.8"]) {
+for (const model of ["grok-4.6", "grok-4.7", "grok-4.8", "安和桥/grok-4.7"]) {
   test(`${model}: SSR admits Grok-only candidates and configured samples while preserving consent and revoke guards`, () => {
     const grok = {id: "xai", name: "xAI only", configured: false, openAIModels: [null, "grok-3", model, "deepseek-chat"]};
     const props = {candidates: [grok], selected: "xai"};

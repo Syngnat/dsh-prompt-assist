@@ -10,7 +10,7 @@ test('distribution retains package identity and contains prebuilt exported resou
  assert.equal(read('client.js'),read('client-runtime.js'));for(const hook of ['preinstall','install','postinstall','prepare'])assert.equal(pkg.scripts?.[hook],undefined);
 });
 test('approved metadata and persistence identities remain unchanged',()=>{
- const meta=JSON.parse(read('locale/zh.json')).meta;assert.equal(meta.title,'提示词辅助与 Fast 加速');assert.equal(meta.description,'提供提示词增强、下一问建议和 Priority 加速（OpenAI / xAI），支持按会话独立配置模型、推理档位及辅助 Fast。');
+ const meta=JSON.parse(read('locale/zh.json')).meta;assert.equal(meta.title,'提示词辅助与 Fast 加速');assert.equal(meta.description,'提供提示词增强、下一问建议和 Priority 加速（OpenAI / xAI），增强与建议各自的模型、推理档位、辅助 Fast 和 QA 轮数在当前 profile 全局共用。');
  assert.match(read('cordis.patch.yml'),/id: local-openai-fast/);assert.match(read('assist/identity.js'),/local.promptAssist.v2/);
 });
 test('public runtime and patch contain no developer-specific checkout or home paths',()=>{

@@ -54,7 +54,10 @@ function isOpenAIModel(model) {
   return typeof model === "string" && /^(?:gpt-|chatgpt-|codex(?:-|$)|o[1-9](?:-|$))/i.test(model);
 }
 function isGrokModel(model) {
-  return typeof model === "string" && /^grok-(?:[4-9]|[1-9]\d+)(?:[.-]|$)/i.test(model);
+  if (typeof model !== "string" || /[\s\\?#\u0000-\u001f\u007f]/u.test(model)) return false;
+  const segments = model.split("/");
+  if (segments.some((part) => !part || part === "." || part === "..") || segments.slice(0, -1).some((part) => !/^[\p{L}\p{M}\p{N}_.-]+$/u.test(part))) return false;
+  return /^grok-(?:[4-9]|[1-9]\d+)(?:[.-]|$)/i.test(segments.at(-1));
 }
 function isPriorityModel(model) {
   return isOpenAIModel(model) || isGrokModel(model);
@@ -503,27 +506,37 @@ var init_messages = __esm({
     dictionaries = {
       zh: {
         "global.title": "\u5168\u5C40\u529F\u80FD\u5F00\u5173\uFF08\u5F53\u524D profile\uFF09",
-        "global.scope": "\u8FD9\u4E24\u4E2A\u5F00\u5173\u7ACB\u5373\u4FDD\u5B58\u5E76\u4F5C\u7528\u4E8E\u5F53\u524D profile \u7684\u6240\u6709\u73B0\u6709\u548C\u65B0\u5EFA\u4F1A\u8BDD\uFF0C\u65E0\u9700\u5148\u9009\u62E9\u4F1A\u8BDD\u3002\u6A21\u578B\u3001\u63A8\u7406\u6863\u3001\u8F85\u52A9 Fast \u548C\u95EE\u7B54\u8F6E\u6570\u4ECD\u5206\u522B\u6309\u4F1A\u8BDD\u8BBE\u7F6E\u3002",
+        "global.scope": "\u5F00\u5173\u4E0E\u4E24\u9879\u529F\u80FD\u5404\u81EA\u7684\u6A21\u578B\u3001\u63A8\u7406\u6863\u3001\u8F85\u52A9 Fast \u548C\u95EE\u7B54\u8F6E\u6570\u5747\u4F5C\u7528\u4E8E\u5F53\u524D profile \u7684\u6240\u6709\u73B0\u6709\u548C\u65B0\u5EFA\u4F1A\u8BDD\uFF0C\u65E0\u9700\u9009\u62E9\u4F1A\u8BDD\u3002\u4E3B\u4F1A\u8BDD Fast \u4E0D\u53D8\u3002",
         "global.charge": "\u5F00\u542F\u4E0B\u4E00\u95EE\u5EFA\u8BAE\u540E\uFF0C\u5404\u4F1A\u8BDD\u5728\u65B0\u7684\u5B8C\u6574\u95EE\u7B54\u7ED3\u675F\u3001\u7A7A\u95F2\u4E14\u8349\u7A3F\u4E3A\u7A7A\u65F6\u53EF\u81EA\u52A8\u8BF7\u6C42\u6A21\u578B\u5E76\u4EA7\u751F\u8D39\u7528\uFF1B\u589E\u5F3A\u4ECD\u53EA\u5728\u4E3B\u52A8\u70B9\u51FB\u65F6\u8BF7\u6C42\u3002\u5173\u95ED\u4F1A\u53D6\u6D88\u8BE5\u529F\u80FD\u7684\u8FC7\u671F\u7ED3\u679C\u3002",
         "global.suggest": "\u5168\u5C40\u542F\u7528\u4E0B\u4E00\u95EE\u5EFA\u8BAE",
         "global.enhance": "\u5168\u5C40\u542F\u7528\u63D0\u793A\u8BCD\u589E\u5F3A",
         "global.suggestHint": "\u65B0\u7684\u5B8C\u6574\u95EE\u7B54\u7ED3\u675F\u3001\u4F1A\u8BDD\u7A7A\u95F2\u4E14\u8349\u7A3F\u4E3A\u7A7A\u65F6\u81EA\u52A8\u8BF7\u6C42\u4E0B\u4E00\u95EE\u3002",
         "global.enhanceHint": "\u53EA\u5728\u70B9\u51FB\u201C\u589E\u5F3A\u63D0\u793A\u8BCD\u201D\u65F6\u8BF7\u6C42\uFF0C\u4E0D\u4F1A\u81EA\u52A8\u89E6\u53D1\u3002",
-        "settings.subtitle": "\u5168\u5C40\u5F00\u5173\u3001\u4F1A\u8BDD\u53C2\u6570\u3001Priority \u6388\u6743\u4E0E\u7248\u672C\u66F4\u65B0\u5206\u533A\u5C55\u793A\uFF1B\u53EA\u6709\u5168\u5C40\u5F00\u5173\u548C Priority \u6388\u6743\u662F profile \u7EA7\u3002",
+        "settings.subtitle": "\u5F53\u524D profile \u7684\u5168\u5C40\u5F00\u5173\u3001\u72EC\u7ACB\u8F85\u52A9\u6A21\u578B\u4E0E\u8F6E\u6570\u3001Priority \u6388\u6743\u548C\u7248\u672C\u66F4\u65B0\uFF1B\u4E0D\u5FC5\u9009\u62E9\u4F1A\u8BDD\u3002",
+        "settings.profileSection": "\u5168\u5C40\u8F85\u52A9\u53C2\u6570\uFF08\u5F53\u524D profile\uFF09",
+        "settings.hostUpgrade": "\u5BBF\u4E3B\u5C1A\u672A\u63D0\u4F9B\u5168\u5C40\u6A21\u578B\u53C2\u6570\uFF1B\u4E3A\u5B89\u5168\u8D77\u89C1\uFF0C\u53C2\u6570\u4FDD\u5B58\u4E0E\u8F85\u52A9\u8BF7\u6C42\u5DF2\u505C\u7528\u3002\u8BF7\u66F4\u65B0\u5E76\u91CD\u542F\u5BBF\u4E3B\u540E\u91CD\u8BFB\uFF0C\u4E0D\u4F1A\u91C7\u7528\u65E7\u4F1A\u8BDD\u53C2\u6570\u3002",
+        "profileScope": "\u4E24\u9879\u529F\u80FD\u5206\u522B\u4FDD\u5B58\u6A21\u578B\u3001\u63A8\u7406\u6863\u3001\u8F85\u52A9 Fast \u4E0E\u95EE\u7B54\u8F6E\u6570\uFF0C\u4F9B\u6240\u6709\u4F1A\u8BDD\u4F7F\u7528\u3002\u8DDF\u968F\u4F1A\u8BDD\u9009\u9879\u5728\u5168\u5C40\u4FDD\u5B58\uFF0C\u8C03\u7528\u65F6\u624D\u89E3\u6790\u6240\u5728\u4F1A\u8BDD\u7684\u6A21\u578B\u3002",
+        "settings.profileEmpty": "\u5C1A\u672A\u8BFB\u53D6\u5168\u5C40\u53C2\u6570\u3002\u8FDE\u63A5\u6062\u590D\u540E\u53EF\u5728\u6B64\u914D\u7F6E\uFF0C\u65E0\u9700\u5148\u6253\u5F00\u4F1A\u8BDD\u3002",
+        "settings.unconfigured": "\u6B64\u529F\u80FD\u5C1A\u672A\u4FDD\u5B58\u5168\u5C40\u53C2\u6570\u3002\u65E7\u4F1A\u8BDD\u53C2\u6570\u4E0D\u4F1A\u81EA\u52A8\u8FC1\u79FB\uFF1B\u8BF7\u6838\u5BF9\u5E76\u4FDD\u5B58\u4E00\u6B21\uFF0C\u5DF2\u5F00\u542F\u7684\u5F00\u5173\u624D\u4F1A\u751F\u6548\u3002",
+        "settings.modelUnknown": "\u6A21\u578B\u80FD\u529B\u6682\u672A\u77E5\uFF1A\u8FD0\u884C\u65F6\u8DDF\u968F\u6240\u5728\u4F1A\u8BDD\u7684\u6A21\u578B\u4E0E\u63A8\u7406\u6863\u3002\u8FD9\u4E0D\u5F71\u54CD\u4FDD\u5B58\u5168\u5C40\u8BBE\u7F6E\uFF1B\u8F85\u52A9 Fast \u4EC5\u5728\u5B9E\u9645\u8DEF\u7531\u652F\u6301\u65F6\u751F\u6548\u3002",
+        "settings.stale": "\u5176\u4ED6\u7A97\u53E3\u5DF2\u66F4\u65B0\u5168\u5C40\u53C2\u6570\u3002\u5DF2\u4FDD\u7559\u672C\u5730\u8349\u7A3F\u4E0E\u539F\u59CB\u7248\u672C\uFF0C\u672A\u8986\u76D6\u8FDC\u7AEF\uFF1B\u8BF7\u91CD\u65B0\u8BFB\u53D6\u5E76\u6838\u5BF9\uFF0C\u6216\u653E\u5F03\u8349\u7A3F\u540E\u91C7\u7528\u6700\u65B0\u53C2\u6570\u518D\u7F16\u8F91\u3002",
+        "settings.resetDraft": "\u653E\u5F03\u8349\u7A3F\uFF0C\u91C7\u7528\u6700\u65B0\u5168\u5C40\u53C2\u6570",
+        "settings.unavailable": "\u5168\u5C40\u53C2\u6570\u6682\u4E0D\u53EF\u7528\uFF0C\u8F85\u52A9\u8BF7\u6C42\u4E0E\u53C2\u6570\u4FDD\u5B58\u5DF2\u6682\u505C\u3002\u8BF7\u91CD\u8BFB\u72B6\u6001\uFF1B\u4E0D\u4F1A\u81EA\u52A8\u91CD\u53D1\u4FDD\u5B58\u3002",
+        "settings.globalOnly": "\u8BF7\u5728\u4FA7\u680F\u201C\u63D0\u793A\u8BCD\u8F85\u52A9\u201D\u9875\u9762\u7F16\u8F91\u5168\u5C40\u53C2\u6570\uFF1B\u8FD9\u91CC\u4E0D\u518D\u4FDD\u5B58\u4F1A\u8BDD\u53C2\u6570\u3002",
         "settings.globalSection": "\u5168\u5C40\u529F\u80FD\u5F00\u5173",
-        "settings.sessionSection": "\u4F1A\u8BDD\u53C2\u6570",
+        "settings.sessionSection": "\u5168\u5C40\u8F85\u52A9\u53C2\u6570",
         "settings.prioritySection": "Priority \u4F9B\u5E94\u5546\u6388\u6743\uFF08\u9AD8\u7EA7\uFF09",
         "settings.updatesSection": "\u7248\u672C\u4E0E\u66F4\u65B0",
-        "settings.sessionEmpty": "\u5C1A\u672A\u9009\u62E9\u4F1A\u8BDD\u3002\u5168\u5C40\u5F00\u5173\u4E0E Priority \u6388\u6743\u53EF\u76F4\u63A5\u4F7F\u7528\uFF1B\u8981\u7F16\u8F91\u6A21\u578B\u7B49\u4F1A\u8BDD\u53C2\u6570\uFF0C\u8BF7\u5148\u5728\u5DE6\u4FA7\u6253\u5F00\u76EE\u6807\u4F1A\u8BDD\u3002",
+        "settings.sessionEmpty": "\u65E0\u9700\u9009\u62E9\u4F1A\u8BDD\uFF1B\u5168\u5C40\u5F00\u5173\u3001\u6A21\u578B\u53C2\u6570\u4E0E Priority \u6388\u6743\u53EF\u76F4\u63A5\u914D\u7F6E\u3002",
         "settings.advanced": "\u9690\u79C1\u4E0E\u9650\u5236\u8BF4\u660E",
-        "global.migration": "\u9996\u6B21\u5168\u5C40\u5F00\u5173\u9ED8\u8BA4\u5173\u95ED\uFF1B\u65E7\u4F1A\u8BDD\u7684\u542F\u7528\u6807\u8BB0\u4E0D\u4F1A\u81EA\u52A8\u8FC1\u79FB\u3002\u9700\u8981\u65F6\u5728\u8FD9\u91CC\u5F00\u542F\u4E00\u6B21\uFF0C\u65B0\u65E7\u4F1A\u8BDD\u5171\u540C\u7EE7\u627F\u3002\u5F00\u542F\u6216\u91CD\u8FDE\u4E0D\u4F1A\u8FFD\u6EAF\u5386\u53F2\u95EE\u7B54\u3002",
+        "global.migration": "\u4FDD\u7559\u5DF2\u6709\u5168\u5C40\u5F00\u5173\uFF0C\u4F46\u4E0D\u8FC1\u79FB\u4EFB\u4E00\u65E7\u4F1A\u8BDD\u7684\u53C2\u6570\u3002\u8BF7\u4E3A\u6BCF\u9879\u529F\u80FD\u6838\u5BF9\u5E76\u4FDD\u5B58\u4E00\u6B21\u5168\u5C40\u53C2\u6570\uFF0C\u5176\u5F00\u5173\u624D\u4F1A\u751F\u6548\u3002\u65B0\u65E7\u4F1A\u8BDD\u5171\u540C\u4F7F\u7528\uFF1B\u4FDD\u5B58\u3001\u5F00\u542F\u6216\u91CD\u8FDE\u5747\u4E0D\u8FFD\u6EAF\u5386\u53F2\u95EE\u7B54\u3002",
         "global.loading": "\u6B63\u5728\u8BFB\u53D6\u5168\u5C40\u5F00\u5173\u5E76\u8FDE\u63A5\u540C\u6B65\u2026",
         "global.disconnected": "\u5168\u5C40\u540C\u6B65\u6682\u4E0D\u53EF\u7528\uFF1B\u4E0B\u65B9\u53EF\u80FD\u663E\u793A\u4E0A\u6B21\u786E\u8BA4\u503C\uFF0C\u4F46\u5404\u4F1A\u8BDD\u6682\u4E0D\u542F\u7528\u8F85\u52A9\u8BF7\u6C42\u3002\u6062\u590D\u8FDE\u63A5\u53EA\u91CD\u8BFB\u72B6\u6001\uFF0C\u4E0D\u4F1A\u81EA\u52A8\u91CD\u53D1\u4FDD\u5B58\u3002",
-        "global.saving": "\u6B63\u5728\u4FDD\u5B58\u5168\u5C40\u5F00\u5173\u2026",
+        "global.saving": "\u6B63\u5728\u4FDD\u5B58\u5168\u5C40\u8BBE\u7F6E\u2026",
         "global.saved": "\u5168\u5C40\u5F00\u5173\u5DF2\u7531\u5BBF\u4E3B\u786E\u8BA4\u4FDD\u5B58\u3002",
         "global.saveFailed": "\u672A\u786E\u8BA4\u4FDD\u5B58\u6210\u529F\uFF0C\u4E0D\u80FD\u89C6\u4E3A\u5F00\u5173\u5DF2\u66F4\u6539\uFF1B\u8BF7\u91CD\u8BFB\u72B6\u6001\u540E\u624B\u52A8\u91CD\u8BD5\u3002\u4E0D\u4F1A\u81EA\u52A8\u91CD\u53D1\u4FDD\u5B58\u3002",
         "global.stale": "\u5176\u4ED6\u7A97\u53E3\u5DF2\u66F4\u65B0\u5168\u5C40\u5F00\u5173\u3002\u672C\u6B21\u65E7\u7248\u672C\u64CD\u4F5C\u672A\u4F5C\u4E3A\u5F53\u524D\u4FDD\u5B58\u6210\u529F\u5904\u7406\uFF1B\u8BF7\u91CD\u8BFB\u5E76\u6838\u5BF9\u540E\u518D\u64CD\u4F5C\uFF0C\u4E0D\u4F1A\u81EA\u52A8\u91CD\u53D1\u4FDD\u5B58\u3002",
-        "global.reload": "\u91CD\u8BFB\u5168\u5C40\u5F00\u5173",
+        "global.reload": "\u91CD\u8BFB\u5168\u5C40\u8BBE\u7F6E",
         "online.confirmationRejected": "\u5BBF\u4E3B\u660E\u786E\u62D2\u7EDD\u4E86\u672C\u6B21\u786E\u8BA4\uFF0C\u672A\u4E3A\u6B64\u8BF7\u6C42\u542F\u52A8\u66F4\u65B0\u4EFB\u52A1\u3002\u8BF7\u91CD\u65B0\u8BFB\u53D6\u72B6\u6001\uFF0C\u7136\u540E\u91CD\u65B0\u51C6\u5907\u5E76\u786E\u8BA4\uFF1B\u4E0D\u4F1A\u81EA\u52A8\u91CD\u8BD5\u3002\u9519\u8BEF\u7801\uFF1A",
         "online.forgetWarning": "\u82E5\u8BB0\u5F55\u65E0\u6CD5\u6062\u590D\uFF0C\u8BF7\u5148\u5728\u63D2\u4EF6\u7BA1\u7406\u4E2D\u4EBA\u5DE5\u6838\u5BF9\u5B9E\u9645\u5B89\u88C5\u7248\u672C\u5E76\u786E\u8BA4\u6CA1\u6709\u66F4\u65B0\u4EFB\u52A1\u4ECD\u5728\u6267\u884C\u3002\u6E05\u9664\u4EC5\u79FB\u9664\u672C\u6807\u7B7E\u9875\u7684\u672C\u5730\u8DDF\u8E2A\u6807\u8BB0\uFF0C\u4E0D\u4EE3\u8868\u66F4\u65B0\u6210\u529F\uFF0C\u4E0D\u4F1A\u53D6\u6D88\u3001\u542F\u52A8\u6216\u91CD\u8BD5\u4EFB\u4F55\u5BBF\u4E3B\u4EFB\u52A1\u3002\u987B\u5148\u6210\u529F\u91CD\u8BFB\u72B6\u6001\uFF0C\u4E14\u6CA1\u6709\u6D3B\u52A8\u4EFB\u52A1\uFF0C\u624D\u80FD\u6E05\u9664\u3002",
         "online.forgetAcknowledgement": "\u6211\u5DF2\u4EBA\u5DE5\u6838\u5BF9\u5B89\u88C5\u72B6\u6001\uFF0C\u786E\u8BA4\u6CA1\u6709\u66F4\u65B0\u4EFB\u52A1\u4ECD\u5728\u6267\u884C\uFF0C\u5E76\u7406\u89E3\u6E05\u9664\u6807\u8BB0\u4E0D\u662F\u66F4\u65B0\u7ED3\u679C\u3002",
@@ -653,13 +666,13 @@ var init_messages = __esm({
         firstTokenLabel: "\u9996\u5B57",
         totalTimeLabel: "\u603B\u8017\u65F6",
         warningsLabel: "\u5904\u7406\u63D0\u793A",
-        chooseSession: "\u5168\u5C40\u5F00\u5173\u53EF\u76F4\u63A5\u8C03\u6574\u3002\u8981\u7F16\u8F91\u4F1A\u8BDD\u53C2\u6570\uFF0C\u8BF7\u5148\u6253\u5F00\u76EE\u6807\u4F1A\u8BDD\uFF0C\u518D\u8FDB\u5165\u6B64\u9875\u3002",
+        chooseSession: "\u65E0\u9700\u9009\u62E9\u4F1A\u8BDD\uFF0C\u53EF\u76F4\u63A5\u7F16\u8F91\u5F53\u524D profile \u7684\u5168\u5C40\u8F85\u52A9\u53C2\u6570\u3002",
         returnConversation: "\u8FD4\u56DE\u5BF9\u8BDD",
-        sessionScope: "\u4E0B\u9762\u7684\u6A21\u578B\u3001\u63A8\u7406\u6863\u3001\u8F85\u52A9 Fast \u548C\u8F6E\u6570\u4EC5\u5E94\u7528\u4E8E\u6240\u793A\u4F1A\u8BDD\uFF1B\u4E0D\u5305\u542B\u5168\u5C40\u5F00\u5173\u3002\u5207\u6362\u914D\u7F6E\u5BF9\u8C61\u65F6\uFF0C\u8BF7\u5148\u6253\u5F00\u53E6\u4E00\u4F1A\u8BDD\uFF0C\u518D\u8FDB\u5165\u6B64\u9875\u3002",
-        editingSession: "\u6B63\u5728\u914D\u7F6E\u7684\u4F1A\u8BDD",
+        sessionScope: "\u6A21\u578B\u3001\u63A8\u7406\u6863\u3001\u8F85\u52A9 Fast \u548C\u8F6E\u6570\u5747\u6309\u529F\u80FD\u5728\u5F53\u524D profile \u5168\u5C40\u4FDD\u5B58\uFF1B\u8DDF\u968F\u4F1A\u8BDD\u5728\u8FD0\u884C\u65F6\u89E3\u6790\u3002",
+        editingSession: "\u53EF\u9009\u7684\u5F53\u524D\u4F1A\u8BDD",
         loading: "\u6B63\u5728\u52A0\u8F7D\u8BBE\u7F6E\u2026",
         generatingSuggest: "\u6B63\u5728\u5EFA\u8BAE\u2026",
-        enableSuggest: "\u8BF7\u5148\u5728\u63D0\u793A\u8BCD\u8F85\u52A9\u4E2D\u5F00\u542F\u5F53\u524D profile \u7684\u5168\u5C40\u4E0B\u4E00\u95EE\u5EFA\u8BAE\u5F00\u5173\u3002",
+        enableSuggest: "\u8BF7\u5728\u63D0\u793A\u8BCD\u8F85\u52A9\u4E2D\u4FDD\u5B58\u5168\u5C40\u5EFA\u8BAE\u53C2\u6570\uFF0C\u5E76\u5F00\u542F\u5F53\u524D profile \u7684\u4E0B\u4E00\u95EE\u5EFA\u8BAE\u5F00\u5173\u3002",
         suggestReset: "\u8F93\u5165\u6216\u914D\u7F6E\u53D1\u751F\u53D8\u5316\uFF0C\u672C\u8F6E\u81EA\u52A8\u5EFA\u8BAE\u5DF2\u53D6\u6D88\uFF1B\u53EF\u624B\u52A8\u91CD\u65B0\u751F\u6210\u3002",
         suggestRequested: "\u672C\u8F6E\u5DF2\u89E6\u53D1\u8FC7\u5EFA\u8BAE\uFF0C\u4E0D\u4F1A\u81EA\u52A8\u91CD\u590D\u8BF7\u6C42\uFF1B\u9700\u8981\u65F6\u53EF\u624B\u52A8\u91CD\u8BD5\u3002",
         streaming: "\u6B63\u5728\u6D41\u5F0F\u751F\u6210\uFF0C\u5B8C\u6210\u540E\u53EF\u5E94\u7528",
@@ -668,7 +681,7 @@ var init_messages = __esm({
         draftOccupied: "\u8349\u7A3F\u542B\u6587\u5B57\u3001\u5F15\u7528\u6216\u9644\u4EF6\uFF0C\u81EA\u52A8\u5EFA\u8BAE\u5DF2\u8DF3\u8FC7\uFF0C\u4E0D\u4F1A\u8986\u76D6\u8F93\u5165\u3002",
         waitingQA: "\u81EA\u52A8\u7B49\u5F85\u4E0B\u4E00\u8F6E\u5B8C\u6574 QA\uFF1B\u4E5F\u53EF\u70B9\u51FB\u4E0B\u65B9\u6309\u94AE\uFF0C\u57FA\u4E8E\u5DF2\u6709 QA \u751F\u6210\u3002",
         enhancing: "\u6B63\u5728\u589E\u5F3A\u2026",
-        enableEnhance: "\u8BF7\u5148\u5F00\u542F\u5F53\u524D profile \u7684\u5168\u5C40\u589E\u5F3A\u5F00\u5173\uFF1B\u4F1A\u8BDD\u6A21\u578B\u7B49\u53C2\u6570\u5728\u4E0B\u65B9\u5355\u72EC\u4FDD\u5B58\u3002",
+        enableEnhance: "\u8BF7\u5728\u5168\u5C40\u9875\u9762\u4FDD\u5B58\u589E\u5F3A\u53C2\u6570\uFF0C\u5E76\u5F00\u542F\u5F53\u524D profile \u7684\u589E\u5F3A\u5F00\u5173\u3002",
         transportError: "\u8F85\u52A9\u670D\u52A1\u8FDE\u63A5\u5931\u8D25\uFF08\u4F20\u8F93\u5C42\uFF09\uFF0C\u4E0D\u662F\u6A21\u578B\u914D\u7F6E\u9519\u8BEF\u3002\u8BF7\u5237\u65B0\u9875\u9762\u540E\u91CD\u8BD5\u3002",
         authError: "\u8F85\u52A9\u670D\u52A1\u8BBF\u95EE\u88AB\u62D2\u7EDD\uFF0C\u8BF7\u68C0\u67E5\u5F53\u524D\u8FDE\u63A5\u4E0E\u4F1A\u8BDD\u6743\u9650\u3002",
         parallel: "\u4E24\u9879\u72EC\u7ACB\uFF0C\u53EF\u540C\u65F6\u542F\u7528\uFF1B\u4E0D\u662F\u4E8C\u9009\u4E00\u7684\u6A21\u5F0F\u3002",
@@ -708,7 +721,7 @@ var init_messages = __esm({
         dismiss: "\u5FFD\u7565",
         unsupported: "\u5F53\u524D\u7248\u672C\u4E0D\u652F\u6301\u539F\u751F Ghost \u6216 \u2192 \u91C7\u7EB3\uFF1B\u8BF7\u70B9\u51FB\u91C7\u7528\u3002\u672C\u529F\u80FD\u672A\u6CE8\u518C Ctrl+Alt+E \u5FEB\u6377\u952E\u3002",
         structured: "\u542B\u5F15\u7528\u6216\u547D\u4EE4\u7684\u8349\u7A3F\u4EC5\u652F\u6301\u9884\u89C8/\u590D\u5236\uFF1B\u7ED3\u6784\u5316\u5E94\u7528\u5C1A\u4E0D\u652F\u6301\uFF0C\u4E0D\u4F1A\u66FF\u6362\u5F15\u7528\u6216\u9644\u4EF6\u3002",
-        initial: "\u5168\u5C40\u5F00\u5173\u9996\u6B21\u9ED8\u8BA4\u5173\u95ED\uFF1B\u4F1A\u8BDD\u53C2\u6570\u5355\u72EC\u4FDD\u5B58\u3002\u5EFA\u8BAE\u4EC5\u5728\u65B0\u7684\u5B8C\u6574\u95EE\u7B54\u7ED3\u675F\u540E\u751F\u6210\uFF0C\u9996\u6B21\u6253\u5F00\u3001\u542F\u7528\u6216\u91CD\u8FDE\u5747\u4E0D\u8FFD\u6EAF\u3002",
+        initial: "\u8BF7\u5148\u6838\u5BF9\u5E76\u4FDD\u5B58\u5168\u5C40\u8F85\u52A9\u53C2\u6570\u3002\u5EFA\u8BAE\u4EC5\u5728\u65B0\u7684\u5B8C\u6574\u95EE\u7B54\u7ED3\u675F\u540E\u751F\u6210\uFF0C\u9996\u6B21\u6253\u5F00\u3001\u4FDD\u5B58\u3001\u542F\u7528\u6216\u91CD\u8FDE\u5747\u4E0D\u8FFD\u6EAF\u3002",
         manual: "\u589E\u5F3A\u53EA\u5728\u70B9\u51FB\u540E\u8BF7\u6C42\uFF1B\u751F\u6210\u671F\u95F4\u4ECD\u53EF\u7F16\u8F91\uFF0C\u7F16\u8F91\u4F1A\u53D6\u6D88\u8FC7\u671F\u7ED3\u679C\u3002",
         busy: "\u4F1A\u8BDD\u4ECD\u5728\u8FD0\u884C\uFF0C\u7ED3\u675F\u540E\u518D\u8BD5\u3002",
         requestError: "\u8BF7\u6C42\u672A\u5B8C\u6210\uFF0C\u8349\u7A3F\u4FDD\u6301\u4E0D\u53D8\uFF1B\u8BF7\u68C0\u67E5\u914D\u7F6E\u540E\u91CD\u8BD5\u3002",
@@ -716,7 +729,18 @@ var init_messages = __esm({
         emptyResult: "\u6A21\u578B\u6CA1\u6709\u8FD4\u56DE\u53EF\u7528\u6587\u672C\uFF0C\u672A\u5E94\u7528\u7ED3\u679C\uFF1B\u8349\u7A3F\u4FDD\u6301\u4E0D\u53D8\u3002\u53EF\u91CD\u8BD5\uFF0C\u6216\u964D\u4F4E\u63A8\u7406\u6863\u540E\u91CD\u8BD5\u3002",
         enhanceUnchanged: "\u6A21\u578B\u8FD4\u56DE\u4E86\u76F8\u540C\u6587\u672C\uFF0C\u672A\u4EA7\u751F\u6709\u6548\u6539\u5199\uFF1B\u8349\u7A3F\u4FDD\u6301\u4E0D\u53D8\u3002\u8BF7\u5C1D\u8BD5\u5176\u4ED6\u6A21\u578B\u6216\u8C03\u6574\u8981\u6C42\u3002",
         cancelled: "\u672C\u6B21\u751F\u6210\u5DF2\u53D6\u6D88\uFF0C\u672A\u5E94\u7528\u7ED3\u679C\uFF1B\u8349\u7A3F\u4FDD\u6301\u4E0D\u53D8\u3002",
-        modelFailed: "\u6A21\u578B\u8BF7\u6C42\u5931\u8D25\uFF08\u4F9B\u5E94\u5546\u6216\u7F51\u7EDC\u539F\u56E0\uFF09\uFF0C\u672A\u5E94\u7528\u7ED3\u679C\uFF1B\u8349\u7A3F\u4FDD\u6301\u4E0D\u53D8\u3002\u8BF7\u7A0D\u540E\u91CD\u8BD5\uFF0C\u6216\u68C0\u67E5\u8BE5\u670D\u52A1\u5546\u914D\u7F6E\u3002",
+        modelFailed: "\u6A21\u578B\u8BF7\u6C42\u5931\u8D25\uFF0C\u4F46\u672A\u53D6\u5F97\u53EF\u8BC6\u522B\u7684\u5177\u4F53\u539F\u56E0\uFF1B\u8349\u7A3F\u4FDD\u6301\u4E0D\u53D8\uFF0C\u672A\u81EA\u52A8\u91CD\u8BD5\u3002\u8BF7\u6838\u5BF9\u8BE5\u6A21\u578B\u63A5\u5165\u70B9\u7684\u72B6\u6001\u3002",
+        providerRejected: "\u6A21\u578B\u670D\u52A1\u62D2\u7EDD\u4E86\u672C\u6B21\u8BF7\u6C42\uFF1B\u8BF7\u6838\u5BF9\u8BE5\u63A5\u5165\u70B9\u7684\u6A21\u578B\u53C2\u6570\u548C\u9650\u5236\u3002\u8349\u7A3F\u4FDD\u6301\u4E0D\u53D8\uFF0C\u672A\u81EA\u52A8\u91CD\u8BD5\u3002",
+        providerAccessDenied: "\u6A21\u578B\u670D\u52A1\u62D2\u7EDD\u8BBF\u95EE\uFF1B\u8BF7\u5728\u670D\u52A1\u5546\u914D\u7F6E\u4E2D\u68C0\u67E5\u8BA4\u8BC1\u3001\u6A21\u578B\u6743\u9650\u6216\u8D26\u6237\u72B6\u6001\u3002\u8349\u7A3F\u4FDD\u6301\u4E0D\u53D8\u3002",
+        providerRateLimited: "\u6A21\u578B\u670D\u52A1\u8FD4\u56DE\u9650\u6D41\u6216\u989D\u5EA6\u9650\u5236\uFF1B\u8BF7\u68C0\u67E5\u670D\u52A1\u5546\u72B6\u6001\uFF0C\u6216\u7A0D\u540E\u624B\u52A8\u91CD\u8BD5\u3002\u8349\u7A3F\u4FDD\u6301\u4E0D\u53D8\u3002",
+        providerQuota: "\u6A21\u578B\u670D\u52A1\u62A5\u544A\u8D26\u6237\u914D\u989D\u6216\u989D\u5EA6\u4E0D\u8DB3\uFF1B\u8BF7\u68C0\u67E5\u8BE5\u670D\u52A1\u5546\u8D26\u6237\u72B6\u6001\u3002\u672A\u81EA\u52A8\u91CD\u8BD5\uFF0C\u8349\u7A3F\u4FDD\u6301\u4E0D\u53D8\u3002",
+        providerTimeout: "\u6A21\u578B\u670D\u52A1\u6216\u7F51\u5173\u62A5\u544A\u7B49\u5F85\u8D85\u65F6\uFF1B\u8FD9\u4E0E\u8F85\u52A9\u8BF7\u6C42\u81EA\u8EAB\u7684\u7B49\u5F85\u622A\u6B62\u4E0D\u540C\u3002\u672A\u81EA\u52A8\u91CD\u8BD5\uFF0C\u8349\u7A3F\u4FDD\u6301\u4E0D\u53D8\u3002",
+        providerRequestTooLarge: "\u6A21\u578B\u63A5\u5165\u70B9\u62D2\u7EDD\u4E86\u8BF7\u6C42\u5927\u5C0F\uFF1B\u9700\u6838\u5BF9\u5B8C\u6574\u8BF7\u6C42\uFF08\u542B\u7CFB\u7EDF\u63D0\u793A\u548C\u6240\u9009 QA\uFF09\u7684\u9650\u5236\uFF0C\u800C\u4E0D\u53EA\u662F\u539F\u6587\u5B57\u6570\u3002\u8349\u7A3F\u4FDD\u6301\u4E0D\u53D8\u3002",
+        providerUnavailable: "\u6A21\u578B\u670D\u52A1\u6216\u7F51\u5173\u8FD4\u56DE\u670D\u52A1\u5F02\u5E38\uFF1B\u672A\u81EA\u52A8\u91CD\u8BD5\uFF0C\u8349\u7A3F\u4FDD\u6301\u4E0D\u53D8\u3002",
+        providerTransport: "\u8FDE\u63A5\u6A21\u578B\u670D\u52A1\u65F6\u53D1\u751F\u4F20\u8F93\u6545\u969C\uFF1B\u672A\u53D6\u5F97\u5B8C\u6574\u7ED3\u679C\uFF0C\u8349\u7A3F\u4FDD\u6301\u4E0D\u53D8\u3002",
+        providerStreamIncomplete: "\u6A21\u578B\u54CD\u5E94\u6D41\u672A\u6B63\u5E38\u7ED3\u675F\uFF1B\u672A\u5E94\u7528\u4E0D\u5B8C\u6574\u5185\u5BB9\uFF0C\u8349\u7A3F\u4FDD\u6301\u4E0D\u53D8\u3002",
+        providerResponseInvalid: "\u6A21\u578B\u63A5\u5165\u70B9\u8FD4\u56DE\u4E86\u4E0D\u517C\u5BB9\u6216\u65E0\u6548\u7684\u54CD\u5E94\uFF1B\u672A\u5E94\u7528\u7ED3\u679C\uFF0C\u8349\u7A3F\u4FDD\u6301\u4E0D\u53D8\u3002",
+        providerResponseError: "\u6A21\u578B\u9002\u914D\u5668\u62A5\u544A\u672A\u5206\u7C7B\u7684\u54CD\u5E94\u9519\u8BEF\uFF1B\u4E0D\u80FD\u636E\u6B64\u8BA4\u5B9A\u8D85\u65F6\u6216\u8D85\u9650\u3002\u8349\u7A3F\u4FDD\u6301\u4E0D\u53D8\uFF0C\u672A\u81EA\u52A8\u91CD\u8BD5\u3002",
         safeCodeLabel: "\u5B89\u5168\u9519\u8BEF\u7801",
         configError: "\u6A21\u578B\u3001\u63A8\u7406\u6863\u6216\u914D\u7F6E\u65E0\u6548\uFF0C\u8BF7\u91CD\u65B0\u9009\u62E9\u540E\u4FDD\u5B58\u3002",
         contextError: "\u9009\u5B9A\u5B8C\u6574\u95EE\u7B54\u4E0D\u53EF\u7528\u6216\u8D85\u51FA\u4E0A\u4E0B\u6587\u9650\u5236\uFF0C\u8BF7\u51CF\u5C11\u8F6E\u6570\u3002",
@@ -740,7 +764,7 @@ var init_messages = __esm({
         access: "\u5F53\u524D\u4F1A\u8BDD\u53EA\u8BFB\uFF0C\u4E0D\u80FD\u8BF7\u6C42\u6216\u5E94\u7528\u3002",
         load: "\u52A0\u8F7D\u8F85\u52A9\u914D\u7F6E\u2026",
         settingsChanged: "\u6709\u672A\u4FDD\u5B58\u914D\u7F6E\uFF1B\u4FDD\u5B58\u540E\u518D\u8BF7\u6C42\u3002",
-        budgetPolicy: "\u8F93\u5165\u4E0A\u4E0B\u6587\u548C\u8F93\u51FA\u9884\u7B97\u8DDF\u968F\u6240\u9009\u4F9B\u5E94\u5546\u6A21\u578B\u8BBE\u7F6E\uFF1B\u672A\u914D\u7F6E\u8F93\u51FA\u9884\u7B97\u65F6\u6CBF\u7528\u5BBF\u4E3B/\u4F9B\u5E94\u5546\u9ED8\u8BA4\u884C\u4E3A\u3002\u8F83\u5927\u9884\u7B97\u53EF\u80FD\u589E\u52A0\u8017\u65F6\u548C\u8D39\u7528\uFF1B\u7B49\u5F85\u4E0A\u9650\u4E3A 120 \u79D2\uFF0C\u6587\u4EF6\u8BFB\u53D6\u5B89\u5168\u9650\u5236\u72EC\u7ACB\u4FDD\u7559\u3002\u4E0D\u6539\u53D8\u4E3B\u4F1A\u8BDD\u53C2\u6570\u3002",
+        budgetPolicy: "\u8F93\u5165\u4E0A\u4E0B\u6587\u548C\u8F93\u51FA\u9884\u7B97\u8DDF\u968F\u6240\u9009\u4F9B\u5E94\u5546\u6A21\u578B\u8BBE\u7F6E\uFF1B\u672A\u914D\u7F6E\u8F93\u51FA\u9884\u7B97\u65F6\u6CBF\u7528\u5BBF\u4E3B/\u4F9B\u5E94\u5546\u9ED8\u8BA4\u884C\u4E3A\u3002\u8F83\u5927\u9884\u7B97\u53EF\u80FD\u589E\u52A0\u8017\u65F6\u548C\u8D39\u7528\uFF1B120 \u79D2\u8BF7\u6C42\u622A\u6B62\u4F1A\u53D1\u51FA\u53D6\u6D88\u4FE1\u53F7\uFF0C\u5B9E\u9645\u505C\u6B62\u53D6\u51B3\u4E8E\u9002\u914D\u5668\u54CD\u5E94\uFF1B\u6587\u4EF6\u8BFB\u53D6\u5B89\u5168\u9650\u5236\u72EC\u7ACB\u4FDD\u7559\u3002\u4E0D\u6539\u53D8\u4E3B\u4F1A\u8BDD\u53C2\u6570\u3002",
         contextUnknown: "\u65E0\u6CD5\u8BFB\u53D6\u6A21\u578B\u4E0A\u4E0B\u6587\u7A97\u53E3\u6216\u5BBF\u4E3B token \u8BA1\u91CF\u670D\u52A1\uFF0C\u672A\u53D1\u8D77\u751F\u6210\u8BF7\u6C42\u3002\u8BF7\u68C0\u67E5\u4F9B\u5E94\u5546\u6A21\u578B\u914D\u7F6E\u4E0E\u5BBF\u4E3B\u517C\u5BB9\u6027\u3002",
         requestTimeout: "\u8F85\u52A9\u8BF7\u6C42\u8FBE\u5230\u7B49\u5F85\u4E0A\u9650\uFF0C\u672A\u5E94\u7528\u7ED3\u679C\uFF1B\u539F\u6587\u4FDD\u6301\u4E0D\u53D8\uFF0C\u4E0D\u4F1A\u81EA\u52A8\u91CD\u8BD5\u3002\u8BF7\u68C0\u67E5\u6A21\u578B\u54CD\u5E94\u901F\u5EA6\u6216\u63A8\u7406\u8BBE\u7F6E\u3002",
         budget: "\u672C\u6B21\u8BF7\u6C42\u8F93\u51FA\u9884\u7B97 {{tokens}} token\uFF0C\u6700\u957F\u7B49\u5F85 {{seconds}} \u79D2\uFF1B\u63A8\u7406\u53EF\u80FD\u5360\u7528\u8F93\u51FA\u9884\u7B97\uFF0C\u4E0D\u81EA\u52A8\u91CD\u8BD5\u6216\u8C03\u6863\u3002",
@@ -749,27 +773,37 @@ var init_messages = __esm({
       },
       en: {
         "global.title": "Profile-wide feature switches",
-        "global.scope": "These two switches save immediately for every existing and new session in this profile. No selected session is required. Models, reasoning effort, auxiliary Fast and Q&A rounds remain session-specific.",
+        "global.scope": "Switches and each feature\u2019s independent model, effort, auxiliary Fast and Q&A rounds apply to every existing and new session in this profile. No selected session is required. Main-session Fast is unchanged.",
         "global.charge": "Enabling next-question suggestions can automatically call a model and incur charges after a new complete Q&A when a session is idle with an empty draft. Enhancement still requires a click. Turning a feature off invalidates its pending results.",
         "global.suggest": "Enable suggestions across this profile",
         "global.enhance": "Enable enhancement across this profile",
         "global.suggestHint": "Requests a next question automatically after a new complete Q&A, when the session is idle with an empty draft.",
         "global.enhanceHint": "Requests only when you click Enhance. Nothing runs automatically.",
-        "settings.subtitle": "Global switches, session parameters, Priority authorization and version updates are shown as separate sections; only the global switches and Priority authorization are profile-wide.",
+        "settings.subtitle": "Profile-wide switches, independent auxiliary models and rounds, Priority authorization and updates. No session selection is needed.",
+        "settings.profileSection": "Profile-wide auxiliary settings",
+        "settings.hostUpgrade": "The Host does not provide global model settings yet. Settings saves and auxiliary requests are disabled for safety. Update and restart the Host, then reload; old session settings are never used instead.",
+        "profileScope": "Each feature saves its own model, effort, auxiliary Fast and Q&A rounds for every session. Follow session is saved globally and resolves the calling session\u2019s model at runtime.",
+        "settings.profileEmpty": "Global settings have not loaded. Configure them here when connected; opening a session is not required.",
+        "settings.unconfigured": "This feature has no saved global settings. Old session settings are not migrated. Review and save once before its enabled switch can take effect.",
+        "settings.modelUnknown": "Model capabilities are unknown here: the calling session\u2019s model and effort resolve at runtime. You can still save global settings; auxiliary Fast applies only on supported routes.",
+        "settings.stale": "Another window changed global settings. Your draft and original revision are preserved; nothing remote was overwritten. Reload and review, or discard the draft and edit the latest settings.",
+        "settings.resetDraft": "Discard draft and use latest global settings",
+        "settings.unavailable": "Global settings are unavailable. Auxiliary requests and settings saves are paused. Reload status; saves are never resent automatically.",
+        "settings.globalOnly": "Edit profile-wide settings in Prompt assist in the sidebar. This surface no longer saves session parameters.",
         "settings.globalSection": "Global feature switches",
-        "settings.sessionSection": "Session parameters",
+        "settings.sessionSection": "Profile-wide auxiliary settings",
         "settings.prioritySection": "Priority provider authorization (advanced)",
         "settings.updatesSection": "Version and updates",
-        "settings.sessionEmpty": "No session selected. Global switches and Priority authorization work without one; open a session from the sidebar to edit model and other session parameters.",
+        "settings.sessionEmpty": "No session selection is needed. Configure global switches, model settings and Priority authorization here.",
         "settings.advanced": "Privacy and limits",
-        "global.migration": "Profile-wide switches start off. Old per-session enablement is not migrated automatically. Enable each feature here once for both existing and new sessions. Enabling or reconnecting never replays historical Q&A.",
+        "global.migration": "Existing global switches are retained, but no old session\u2019s settings are migrated. Review and save each feature\u2019s global settings once before its switch takes effect. Saving, enabling or reconnecting never replays historical Q&A.",
         "global.loading": "Reading global switches and connecting live updates\u2026",
         "global.disconnected": "Global sync is unavailable. The last confirmed values may remain visible, but auxiliary requests are temporarily disabled in sessions. Reconnection only reads status; it never resends a save.",
-        "global.saving": "Saving profile-wide switches\u2026",
+        "global.saving": "Saving global settings\u2026",
         "global.saved": "The Host confirmed that the profile-wide switch was saved.",
         "global.saveFailed": "The save was not confirmed. Do not assume the switch changed. Reload status before retrying manually; saves are never retried automatically.",
         "global.stale": "Another window changed the switches. This older operation is not reported as the current successful save. Reload and review before acting; no save is resent automatically.",
-        "global.reload": "Reload profile-wide switches",
+        "global.reload": "Reload global settings",
         "online.confirmationRejected": "The Host explicitly rejected this confirmation without starting an update job for it. Reload status, then prepare and confirm again. Nothing retries automatically. Error code:",
         "online.forgetWarning": "If the record cannot be recovered, first verify the installed version in plugin management and make sure no update job is still running. Clearing only removes this tab\u2019s local tracking marker. It does not mean success, and does not cancel, start, or retry any Host job. Reload status successfully with no active job before clearing.",
         "online.forgetAcknowledgement": "I have manually verified the installation and that no update job is still running. I understand that clearing the marker is not an update result.",
@@ -899,13 +933,13 @@ var init_messages = __esm({
         firstTokenLabel: "First token",
         totalTimeLabel: "Total time",
         warningsLabel: "Warnings",
-        chooseSession: "Global switches are available now. To edit session parameters, open the target conversation and return here.",
+        chooseSession: "Edit profile-wide auxiliary settings without selecting a session.",
         returnConversation: "Back to conversation",
-        sessionScope: "Model, effort, auxiliary Fast and round settings below apply only to the shown session, not the global switches. Open another conversation first to change the target.",
-        editingSession: "Conversation being configured",
+        sessionScope: "Model, effort, auxiliary Fast and rounds are saved per feature across this profile. Follow session resolves at runtime.",
+        editingSession: "Optional current session",
         loading: "Loading settings\u2026",
         generatingSuggest: "Suggesting\u2026",
-        enableSuggest: "Enable the profile-wide suggestions switch in Prompt assist first.",
+        enableSuggest: "Save global suggestion settings and enable the profile-wide suggestions switch in Prompt assist first.",
         suggestReset: "Input or settings changed; this automatic suggestion was cancelled. Generate manually to retry.",
         suggestRequested: "This Q&A already triggered a suggestion; no automatic duplicate. Retry manually if needed.",
         streaming: "Streaming \u2014 apply becomes available when complete",
@@ -914,7 +948,7 @@ var init_messages = __esm({
         draftOccupied: "Draft has text, references or attachments. Automatic suggestions are skipped; your draft stays unchanged.",
         waitingQA: "Waiting for the next completed Q&A. You can also generate from existing Q&A below.",
         enhancing: "Enhancing\u2026",
-        enableEnhance: "Enable the profile-wide enhancement switch first. Save session model parameters separately below.",
+        enableEnhance: "Save global enhancement settings and enable the profile-wide enhancement switch first.",
         transportError: "Assist connection failed at the transport layer, not model configuration. Reload the page and retry.",
         authError: "Assist access was denied. Check the current connection and session access.",
         parallel: "Two independent features. Both can be enabled at the same time; these are not alternative modes.",
@@ -954,7 +988,7 @@ var init_messages = __esm({
         dismiss: "Dismiss",
         unsupported: "Native Ghost and \u2192 acceptance are not supported. Use the Accept button. This feature does not register Ctrl+Alt+E.",
         structured: "Drafts with references or commands support preview/copy only. Structured apply is not supported; references and attachments stay unchanged.",
-        initial: "Profile-wide switches start off; session parameters save separately. Suggestions only follow a NEW complete Q&A. Opening, enabling or reconnecting never replays old Q&A.",
+        initial: "Review and save profile-wide auxiliary settings first. Suggestions only follow a NEW complete Q&A. Opening, saving, enabling or reconnecting never replays old Q&A.",
         manual: "Enhancement runs only on click. You can keep editing; edits cancel stale results.",
         busy: "The session is still running. Try again after it ends.",
         requestError: "The request did not finish. Your draft is unchanged. Check settings and retry.",
@@ -962,7 +996,18 @@ var init_messages = __esm({
         emptyResult: "The model returned no usable text, so nothing was applied. Your draft is unchanged. Retry, or lower the reasoning effort and retry.",
         enhanceUnchanged: "The model returned the same text with no effective rewrite. Your draft is unchanged. Try another model or adjust your requirements.",
         cancelled: "Generation was cancelled; nothing was applied. Your draft is unchanged.",
-        modelFailed: "The model request failed (provider or network), so nothing was applied. Your draft is unchanged. Retry later or check that provider configuration.",
+        modelFailed: "The model request failed without a recognized cause. Your draft is unchanged; nothing was retried automatically. Check the model endpoint status.",
+        providerRejected: "The model service rejected this request. Check its model parameters and limits. Your draft is unchanged; no automatic retry.",
+        providerAccessDenied: "The model service denied access. Check authentication, model permissions or account status in the provider configuration. Your draft is unchanged.",
+        providerRateLimited: "The model service reported a rate or quota limit. Check provider status or retry manually later. Your draft is unchanged.",
+        providerQuota: "The model service reported insufficient account quota or allowance. Check that provider account. No automatic retry; your draft is unchanged.",
+        providerTimeout: "The model service or gateway reported a timeout, distinct from the auxiliary request deadline. No automatic retry; your draft is unchanged.",
+        providerRequestTooLarge: "The model endpoint rejected the request size. Check the full request, including system instructions and selected QA, not only draft length. Your draft is unchanged.",
+        providerUnavailable: "The model service or gateway reported a service error. No automatic retry; your draft is unchanged.",
+        providerTransport: "Transport to the model service failed. No complete result was received; your draft is unchanged.",
+        providerStreamIncomplete: "The model response stream did not finish normally. No partial result was applied; your draft is unchanged.",
+        providerResponseInvalid: "The model endpoint returned an incompatible or invalid response. Nothing was applied; your draft is unchanged.",
+        providerResponseError: "The model adapter reported an unclassified response error. This does not establish a timeout or quota issue. Your draft is unchanged; no automatic retry.",
         safeCodeLabel: "Safe error code",
         configError: "The model, effort, or settings are invalid. Select again and save.",
         contextError: "Complete Q&A is unavailable, or input is estimated to exceed the model context window. Reduce input/rounds or check provider/model settings; input is not silently truncated.",
@@ -986,7 +1031,7 @@ var init_messages = __esm({
         access: "This session is read-only. Requests and apply are unavailable.",
         load: "Loading assist settings\u2026",
         settingsChanged: "Settings have unsaved changes. Save before requesting.",
-        budgetPolicy: "Input context and output budgets follow the selected provider/model settings. With no configured output cap, native/provider defaults apply. Larger budgets may increase time and cost. The 120-second wait and independent file-access safeguards remain. Main conversation controls are unchanged.",
+        budgetPolicy: "Input context and output budgets follow the selected provider/model settings. With no configured output cap, native/provider defaults apply. Larger budgets may increase time and cost. The 120-second request deadline sends a cancellation signal; actual termination depends on the adapter. Independent file-access safeguards remain. Main conversation controls are unchanged.",
         contextUnknown: "The model context window or Host token estimator is unavailable. No generation was dispatched. Check provider/model configuration and Host compatibility.",
         requestTimeout: "The auxiliary request reached its wait limit. Nothing was applied or retried automatically. Check model latency or reasoning settings.",
         budget: "Requested output budget: {{tokens}} tokens, wait limit: {{seconds}} s. Reasoning may share this budget; no automatic retry or effort change.",
@@ -1017,6 +1062,53 @@ function shouldShowPanel({ open, result, undo, input, sessionId }) {
 var init_panel_visibility = __esm({
   "assist/client/panel-visibility.js"() {
     init_editor();
+  }
+});
+
+// assist/provider-failure.js
+function providerHttpStatus(code2) {
+  return typeof code2 === "string" && /^provider-http-[45]\d{2}$/.test(code2) ? Number(code2.slice(-3)) : null;
+}
+function providerErrorKey(code2) {
+  if (typeof code2 === "string" && Object.hasOwn(KEYS, code2)) return KEYS[code2];
+  const status = providerHttpStatus(code2);
+  if (status === null) return null;
+  if (status === 401 || status === 403) return "providerAccessDenied";
+  if (status === 408 || status === 504) return "providerTimeout";
+  if (status === 413) return "providerRequestTooLarge";
+  if (status === 429) return "providerRateLimited";
+  return status >= 500 ? "providerUnavailable" : "providerRejected";
+}
+var NATIVE_CODES, KEYS;
+var init_provider_failure = __esm({
+  "assist/provider-failure.js"() {
+    NATIVE_CODES = Object.freeze({
+      CONTEXT_WINDOW_EXCEEDED: "context-overflow",
+      EMPTY_RESPONSE: "empty-result",
+      QUOTA: "provider-quota",
+      ACCOUNT_QUOTA: "provider-quota",
+      AUTH: "provider-access-denied",
+      RATE_LIMIT: "provider-rate-limited",
+      INVALID_REQUEST: "provider-rejected",
+      SERVER: "provider-unavailable",
+      TIMEOUT: "provider-timeout",
+      TRANSPORT: "provider-transport",
+      STREAM_CLOSED: "provider-stream-incomplete",
+      MALFORMED_RESPONSE: "provider-response-invalid",
+      PI_AI_ERROR: "provider-response-error"
+    });
+    KEYS = Object.freeze({
+      "provider-quota": "providerQuota",
+      "provider-access-denied": "providerAccessDenied",
+      "provider-rate-limited": "providerRateLimited",
+      "provider-rejected": "providerRejected",
+      "provider-unavailable": "providerUnavailable",
+      "provider-timeout": "providerTimeout",
+      "provider-transport": "providerTransport",
+      "provider-stream-incomplete": "providerStreamIncomplete",
+      "provider-response-invalid": "providerResponseInvalid",
+      "provider-response-error": "providerResponseError"
+    });
   }
 });
 
@@ -1051,6 +1143,11 @@ function referenceNames(occurrences = []) {
 function errorKey(error) {
   const raw = typeof error === "string" ? error : error?.code;
   const code2 = typeof raw === "string" ? raw.toLowerCase() : "request_failed";
+  const providerKey = providerErrorKey(code2);
+  if (providerKey) return providerKey;
+  if (code2 === "stale-global-settings") return "settings.stale";
+  if (code2 === "global-settings-unavailable" || code2 === "global-unavailable") return "settings.unavailable";
+  if (code2 === "global-save-failed") return "global.saveFailed";
   if (code2 === "fast-unsupported") return "fastUnsupported";
   if (code2 === "empty-result") return "emptyResult";
   if (code2 === "cancelled") return "cancelled";
@@ -1082,12 +1179,14 @@ function safeCode(error) {
 }
 function errorText(error, t) {
   const key = errorKey(error);
-  return t(key) + (key === "requestError" ? " " + t("safeCodeLabel") + " " + safeCode(error) : "");
+  const status = providerHttpStatus(typeof error === "string" ? error : error?.code);
+  return t(key) + (status === null ? "" : ` (HTTP ${status})`) + (key === "requestError" ? " " + t("safeCodeLabel") + " " + safeCode(error) : "");
 }
 var DEFAULT_SETTINGS, SESSION_FIELDS;
 var init_api = __esm({
   "assist/client/api.js"() {
     init_identity();
+    init_provider_failure();
     DEFAULT_SETTINGS = Object.freeze({
       enabled: false,
       followSession: true,
@@ -1310,15 +1409,27 @@ var init_controller = __esm({
 // assist/client/enablement-source.js
 function normalizeEnablement(value) {
   if (!value || value.scope !== "profile" || !Number.isSafeInteger(value.revision) || value.revision < 0 || !value.enabled || FEATURES.some((feature) => typeof value.enabled[feature] !== "boolean")) throw invalid();
-  return Object.freeze({ scope: "profile", revision: value.revision, enabled: Object.freeze({ suggest: value.enabled.suggest, enhance: value.enabled.enhance }) });
+  const hasSettings = value.settings !== void 0 || value.settingsRevision !== void 0 || value.configured !== void 0;
+  if (hasSettings && (!Number.isSafeInteger(value.settingsRevision) || value.settingsRevision < 0 || !value.settings || !value.configured || FEATURES.some((feature) => {
+    const config = value.settings[feature];
+    return typeof value.configured[feature] !== "boolean" || !config || typeof config.followSession !== "boolean" || typeof config.fast !== "boolean" || !Number.isInteger(config.rounds) || config.rounds < 1 || config.rounds > 20 || ["provider", "model", "reasoningEffort"].some((key) => typeof config[key] !== "string");
+  }))) throw invalid();
+  return Object.freeze({
+    scope: "profile",
+    revision: value.revision,
+    enabled: Object.freeze({ suggest: value.enabled.suggest, enhance: value.enabled.enhance }),
+    settingsRevision: hasSettings ? value.settingsRevision : null,
+    settings: Object.freeze(Object.fromEntries(FEATURES.map((feature) => [feature, Object.freeze(sessionSettings(hasSettings ? value.settings[feature] : void 0))]))),
+    configured: Object.freeze(Object.fromEntries(FEATURES.map((feature) => [feature, hasSettings && value.configured[feature]])))
+  });
 }
 function mergeGlobalSettings(settings, global) {
-  return Object.fromEntries(FEATURES.map((feature) => [feature, { ...sessionSettings(settings?.[feature]), enabled: global?.connected === true && global.data?.enabled[feature] === true }]));
+  return Object.fromEntries(FEATURES.map((feature) => [feature, { ...sessionSettings(global?.data?.settings?.[feature]), enabled: global?.connected === true && global.data?.configured?.[feature] === true && global.data?.enabled[feature] === true }]));
 }
 function createEnablementObserver(controller) {
   let previous;
   return (frame, global) => {
-    const identity = JSON.stringify([global?.connected === true, global?.data?.revision ?? null]);
+    const identity = JSON.stringify([global?.connected === true, global?.data?.revision ?? null, global?.data?.settingsRevision ?? null, global?.data?.configured ?? null]);
     if (previous !== void 0 && identity !== previous) {
       controller.configurationEdited();
       controller.mount();
@@ -1336,11 +1447,17 @@ function createEnablementSource({ send, fetcher = (...args) => globalThis.fetch(
     for (const listener of listeners2) listener();
   };
   const accept = (value) => {
-    const data = normalizeEnablement(value), old = state.data;
-    if (old && data.revision < old.revision) return false;
-    if (old && data.revision === old.revision) {
-      if (FEATURES.some((key) => data.enabled[key] !== old.enabled[key])) throw invalid();
-      return true;
+    let data = normalizeEnablement(value);
+    const old = state.data;
+    if (old?.settingsRevision != null && data.settingsRevision === null) throw invalid();
+    if (old && data.revision === old.revision && FEATURES.some((key) => data.enabled[key] !== old.enabled[key])) throw invalid();
+    if (old && data.settingsRevision === old.settingsRevision && (JSON.stringify(data.settings) !== JSON.stringify(old.settings) || JSON.stringify(data.configured) !== JSON.stringify(old.configured))) throw invalid();
+    if (old && data.revision === old.revision && data.settingsRevision === old.settingsRevision) return true;
+    if (old) {
+      if (data.revision <= old.revision && (data.settingsRevision ?? -1) <= (old.settingsRevision ?? -1)) return false;
+      if (data.revision < old.revision) data = { ...data, revision: old.revision, enabled: old.enabled };
+      if ((data.settingsRevision ?? -1) < (old.settingsRevision ?? -1)) data = { ...data, settingsRevision: old.settingsRevision, settings: old.settings, configured: old.configured };
+      data = Object.freeze(data);
     }
     publish({ data, saved: null });
     return true;
@@ -1361,7 +1478,19 @@ function createEnablementSource({ send, fetcher = (...args) => globalThis.fetch(
       accept(value);
       return true;
     } catch (error) {
-      if (!disposed && owner === epoch && revision === readEpoch) publish({ readError: error?.code === "transport-invalid-response" ? "transport-invalid-response" : "global-unavailable" });
+      if (!disposed && owner === epoch && revision === readEpoch) {
+        writeAbort?.abort();
+        writeAbort = null;
+        watchAbort?.abort();
+        void reader?.cancel().catch(() => {
+        });
+        publish({ connected: false, pending: null, saved: null, readError: ["transport-invalid-response", "global-settings-unavailable"].includes(error?.code) ? error.code : "global-unavailable" });
+        clearRetry();
+        timer = setTimer(() => {
+          timer = null;
+          void watch();
+        }, backoff);
+      }
       return false;
     } finally {
       if (!disposed && owner === epoch && revision === readEpoch) {
@@ -1421,7 +1550,9 @@ function createEnablementSource({ send, fetcher = (...args) => globalThis.fetch(
       }
     } catch (error) {
       if (!disposed && owner === epoch && !abort.signal.aborted) {
-        publish({ connected: false, loading: false, readError: error?.code === "transport-invalid-response" ? "transport-invalid-response" : "global-unavailable", saved: null });
+        writeAbort?.abort();
+        writeAbort = null;
+        publish({ pending: null, writeError: state.pending ? "global-unavailable" : state.writeError, connected: false, loading: false, readError: ["transport-invalid-response", "global-settings-unavailable"].includes(error?.code) ? error.code : "global-unavailable", saved: null });
         clearRetry();
         timer = setTimer(() => {
           timer = null;
@@ -1442,6 +1573,49 @@ function createEnablementSource({ send, fetcher = (...args) => globalThis.fetch(
       if (watchAbort === abort) watchAbort = null;
     }
   }
+  async function configure(feature, config, expectedRevision, signal) {
+    if (disposed || state.pending || !state.connected || !Number.isSafeInteger(state.data?.settingsRevision) || !FEATURES.includes(feature) || signal?.aborted) return false;
+    if (expectedRevision !== state.data.settingsRevision) {
+      publish({ writeError: "stale-global-settings", saved: null });
+      return false;
+    }
+    const owner = epoch, abort = new AbortController();
+    writeAbort = abort;
+    const cancel = () => {
+      abort.abort();
+      if (!disposed && owner === epoch && writeAbort === abort) {
+        writeAbort = null;
+        publish({ pending: null, saved: null });
+      }
+    };
+    signal?.addEventListener("abort", cancel, { once: true });
+    publish({ pending: feature, writeError: null, saved: null });
+    try {
+      const value = await send("save-global", void 0, { feature, config: sessionSettings(config), expectedRevision }, abort.signal);
+      if (disposed || owner !== epoch || abort.signal.aborted || !state.connected) return false;
+      accept(value);
+      if (!state.data.configured[feature] || JSON.stringify(state.data.settings[feature]) !== JSON.stringify(sessionSettings(config))) {
+        publish({ writeError: "stale-global-settings" });
+        await load();
+        return false;
+      }
+      publish({ saved: { feature, kind: "settings", settingsRevision: state.data.settingsRevision } });
+      return true;
+    } catch (error) {
+      if (!disposed && owner === epoch && !abort.signal.aborted) {
+        const code2 = error?.code;
+        publish({ writeError: ["stale-global-settings", "global-settings-unavailable", "global-unavailable", "forbidden"].includes(code2) ? code2 : "global-save-failed" });
+        if (code2 === "stale-global-settings") await load();
+      }
+      return false;
+    } finally {
+      signal?.removeEventListener("abort", cancel);
+      if (!disposed && owner === epoch && writeAbort === abort) {
+        writeAbort = null;
+        publish({ pending: null });
+      }
+    }
+  }
   async function setEnabled(feature, enabled) {
     if (disposed || state.pending || !state.connected || !state.data || !FEATURES.includes(feature) || typeof enabled !== "boolean") return false;
     const owner = epoch, expectedRevision = state.data.revision, abort = new AbortController();
@@ -1449,9 +1623,9 @@ function createEnablementSource({ send, fetcher = (...args) => globalThis.fetch(
     publish({ pending: feature, writeError: null, saved: null });
     try {
       const value = await send("set-enabled", void 0, { feature, enabled, expectedRevision }, abort.signal);
-      if (disposed || owner !== epoch || abort.signal.aborted) return false;
-      const accepted = accept(value);
-      if (!accepted || state.data.enabled[feature] !== enabled) {
+      if (disposed || owner !== epoch || abort.signal.aborted || !state.connected) return false;
+      accept(value);
+      if (state.data.enabled[feature] !== enabled) {
         publish({ writeError: "stale-enablement" });
         await load();
         return false;
@@ -1466,7 +1640,7 @@ function createEnablementSource({ send, fetcher = (...args) => globalThis.fetch(
       }
       return false;
     } finally {
-      if (!disposed && owner === epoch) {
+      if (!disposed && owner === epoch && writeAbort === abort) {
         writeAbort = null;
         publish({ pending: null });
       }
@@ -1488,6 +1662,7 @@ function createEnablementSource({ send, fetcher = (...args) => globalThis.fetch(
     },
     load,
     setEnabled,
+    configure,
     dispose() {
       disposed = true;
       epoch++;
@@ -1517,7 +1692,7 @@ var init_enablement_source = __esm({
     initial = () => ({ data: null, connected: false, loading: true, pending: null, readError: null, writeError: null, saved: null });
     empty = Object.freeze(initial());
     EMPTY_ENABLEMENT_SOURCE = Object.freeze({ getSnapshot: () => empty, subscribe: () => () => {
-    }, load: async () => false, setEnabled: async () => false });
+    }, load: async () => false, setEnabled: async () => false, configure: async () => false });
   }
 });
 
@@ -1532,10 +1707,6 @@ function useAssistRuntime(p) {
   const [host, setHost] = import_react3.default.useState(null);
   const [result, setResult] = import_react3.default.useState({ pending: null, preview: null, noSuggestion: null, error: null });
   const [notice, setNotice] = import_react3.default.useState(null);
-  const [saving, setSaving] = import_react3.default.useState(false);
-  const [dirtyFeatures, setDirtyFeatures] = import_react3.default.useState([]);
-  const editVersions = import_react3.default.useRef({ suggest: 0, enhance: 0 });
-  const saves = import_react3.default.useRef(/* @__PURE__ */ new Set());
   const current = import_react3.default.useRef({ input, actions: p.inputActions, sessionId: p.sessionId });
   current.current = { input, actions: p.inputActions, sessionId: p.sessionId };
   const alive = import_react3.default.useRef(false);
@@ -1548,26 +1719,20 @@ function useAssistRuntime(p) {
   const allowed = p.useAccess("commands/execute") && !session?.subagent && !session?.removed;
   const reconciled = reconcileState(hostValue, wire, session, allowed);
   const busy = reconciled.busy || !enablement.connected;
-  const sessionSettingsValue = reconciled.state?.settings ?? EMPTY;
-  const settings = import_react3.default.useMemo(() => mergeGlobalSettings(sessionSettingsValue, enablement), [sessionSettingsValue, enablement.connected, enablement.data]);
+  const settings = import_react3.default.useMemo(() => mergeGlobalSettings(null, enablement), [enablement.connected, enablement.data]);
   const state = reconciled.state ? { ...reconciled.state, settings } : null;
-  const dirty = dirtyFeatures.length > 0;
   const route = selection?.next ?? state?.current;
   const routeKey = JSON.stringify(route ?? null);
   import_react3.default.useEffect(() => {
     alive.current = true;
     controller.mount();
     setHost(null);
-    setDirtyFeatures([]);
     setNotice(null);
-    setSaving(false);
     setResult({ pending: null, preview: null, noSuggestion: null, error: null });
     p.refreshAssist().catch(() => {
     });
     return () => {
       alive.current = false;
-      for (const save2 of saves.current) save2.abort();
-      saves.current.clear();
       controller.dispose();
     };
   }, [p.sessionId, controller, send]);
@@ -1585,43 +1750,17 @@ function useAssistRuntime(p) {
     return () => abort.abort();
   }, [p.sessionId, send, wire?.qaId, wire?.busy, session?.running]);
   import_react3.default.useEffect(() => {
-    observeEnablement({ sessionId: p.sessionId, input, settings, qaId: state?.qaId, busy, paused: dirty, routeKey }, enablement);
-  }, [observeEnablement, p.sessionId, input, settings, state?.qaId, busy, dirty, routeKey, enablement.connected, enablement.data?.revision]);
-  async function save(feature, config) {
-    if (saving || !allowed) return;
-    controller.configurationEdited();
-    setSaving(true);
-    setNotice(null);
-    const version3 = editVersions.current[feature];
-    const owner = p.sessionId;
-    const abort = new AbortController();
-    saves.current.add(abort);
-    const valid = () => alive.current && !abort.signal.aborted && current.current.sessionId === owner;
-    try {
-      const value = await send("save", owner, { feature, config: sessionSettings(config) }, abort.signal);
-      if (!valid()) return;
-      setHost({ sessionId: owner, value });
-      await p.refreshAssist();
-      if (!valid()) return;
-      if (editVersions.current[feature] === version3) {
-        setDirtyFeatures((old) => old.filter((key) => key !== feature));
-        setNotice("saved");
-        return true;
-      }
-    } catch (error) {
-      if (valid()) setNotice(error);
-    } finally {
-      saves.current.delete(abort);
-      if (valid()) setSaving(false);
-    }
+    observeEnablement({ sessionId: p.sessionId, input, settings, qaId: state?.qaId, busy, paused: false, routeKey }, enablement);
+  }, [observeEnablement, p.sessionId, input, settings, state?.qaId, busy, routeKey, enablement.connected, enablement.data]);
+  async function save() {
+    setNotice("settings.globalOnly");
+    return false;
   }
-  function edited(feature) {
-    editVersions.current[feature] += 1;
-    setDirtyFeatures((old) => old.includes(feature) ? old : [...old, feature]);
-    setNotice(null);
+  function edited() {
+    setNotice("settings.globalOnly");
     controller.configurationEdited();
   }
-  return { sessionId: p.sessionId, input, session, state, currentModel: route, settings, result, controller, send, save, edited, dirty, dirtyFeatures, saving, notice, setNotice, allowed, busy, readInput: () => current.current.input };
+  return { sessionId: p.sessionId, input, session, state, currentModel: route, settings, result, controller, send, save, edited, dirty: false, dirtyFeatures: [], saving: false, notice, setNotice, allowed, busy, readInput: () => current.current.input };
 }
 function useModelOptions(runtime, feature, config, open) {
   const [catalog, setCatalog] = import_react3.default.useState({ providers: [], models: [] });
@@ -1631,6 +1770,7 @@ function useModelOptions(runtime, feature, config, open) {
   const provider = config.followSession ? current?.provider : config.provider;
   const model = config.followSession ? current?.model : config.model;
   import_react3.default.useEffect(() => {
+    setCatalog({ providers: [], models: [] });
     if (!open) return;
     const abort = new AbortController();
     setError(null);
@@ -1655,14 +1795,13 @@ function useModelOptions(runtime, feature, config, open) {
   }, [runtime.send, runtime.sessionId, open, provider, model, feature]);
   return { catalog, capabilities, error };
 }
-var import_react3, EMPTY;
+var import_react3;
 var init_runtime = __esm({
   "assist/client/runtime.js"() {
     import_react3 = __toESM(require("react"), 1);
     init_api();
     init_controller();
     init_enablement_source();
-    EMPTY = { suggest: DEFAULT_SETTINGS, enhance: DEFAULT_SETTINGS };
   }
 });
 
@@ -2525,6 +2664,9 @@ function Settings(p) {
   const check = (key, checked, change2, disabled = false) => h8("label", { className: "lpa-check" }, h8("input", { type: "checkbox", checked, disabled, onChange: (e) => change2(e.target.checked) }), t(key));
   const [custom, setCustom] = import_react9.default.useState(![1, 3, 5].includes(v.rounds));
   const [error, setError] = import_react9.default.useState(null);
+  import_react9.default.useEffect(() => {
+    setCustom(![1, 3, 5].includes(v.rounds));
+  }, [v.rounds]);
   const efforts = cap?.efforts ?? [];
   const invalidEffort = !v.followSession && cap && v.reasoningEffort && !efforts.some((e) => e.id === v.reasoningEffort);
   const invalidFast = cap && v.fast && !cap.fastEligible;
@@ -2540,6 +2682,7 @@ function Settings(p) {
     { onSubmit: submit },
     h8("div", { className: "lpa-row" }, check("follow", v.followSession, (followSession) => change({ followSession }))),
     h8("p", { className: "lpa-note" }, t("followHint")),
+    v.followSession && !cap ? h8("p", { className: "lpa-note", role: "status" }, t("settings.modelUnknown")) : null,
     h8("p", { className: "lpa-note" }, t("budgetPolicy")),
     !v.followSession ? h8(
       "div",
@@ -2549,7 +2692,7 @@ function Settings(p) {
       select("effort", v.reasoningEffort, [{ id: "", name: t("nativeDefault") }, ...invalidEffort ? [{ id: v.reasoningEffort, name: v.reasoningEffort }] : [], ...efforts], (reasoningEffort) => change({ reasoningEffort }))
     ) : null,
     invalidEffort ? h8("p", { className: "lpa-error", role: "alert" }, t("effortInvalid")) : null,
-    check("fast", v.fast, (fast2) => change({ fast: fast2 }), !v.fast && cap?.fastEligible !== true),
+    check("fast", v.fast, (fast2) => change({ fast: fast2 }), !v.fast && !v.followSession && cap?.fastEligible !== true),
     invalidFast ? h8("p", { className: "lpa-note", role: "status" }, t("fastSkipped")) : null,
     h8(
       "div",
@@ -2934,15 +3077,22 @@ var init_priority_panel = __esm({
 });
 
 // assist/client/settings-page-state.js
-function createSettingsDraft(config) {
-  return { config: sessionSettings(config), version: 0, dirty: false };
+function createSettingsDraft(config, settingsRevision = null) {
+  return { config: sessionSettings(config), version: 0, dirty: false, settingsRevision };
 }
 function editSettingsDraft(state, config) {
-  return { config: sessionSettings(config), version: state.version + 1, dirty: true };
+  return { ...state, config: sessionSettings(config), version: state.version + 1, dirty: true };
 }
-function acceptSettingsSave(state, version3, config) {
+function syncSettingsDraft(state, config, settingsRevision) {
+  return state.dirty ? state : { ...state, config: sessionSettings(config), settingsRevision };
+}
+function acceptSettingsSave(state, version3, config, settingsRevision = state.settingsRevision) {
   if (state.version !== version3) return state;
-  return { config: sessionSettings(config), version: version3, dirty: false };
+  return { config: sessionSettings(config), version: version3, dirty: false, settingsRevision };
+}
+function matchesSettingsSave(snapshot, feature, config) {
+  const { data, saved } = snapshot;
+  return snapshot.connected === true && saved?.kind === "settings" && saved.feature === feature && saved.settingsRevision === data?.settingsRevision && data?.configured?.[feature] === true && JSON.stringify(sessionSettings(data.settings[feature])) === JSON.stringify(sessionSettings(config));
 }
 function createSettingsRequests() {
   let closed = false;
@@ -2972,19 +3122,29 @@ var init_settings_page_state = __esm({
 });
 
 // assist/client/settings-page.js
-function FeatureSettings({ feature, host, sessionId, p, allowed, onSaved }) {
-  const [draft, setDraft] = import_react12.default.useState(() => createSettingsDraft(host.settings[feature]));
+function FeatureSettings({ feature, global, source, p }) {
+  const host = global.data;
+  const [draft, setDraft] = import_react12.default.useState(() => createSettingsDraft(host.settings[feature], host.settingsRevision));
   const current = import_react12.default.useRef(draft);
   current.current = draft;
   const [saving, setSaving] = import_react12.default.useState(false), [notice, setNotice] = import_react12.default.useState(null);
   const scope = import_react12.default.useRef(null), inFlight = import_react12.default.useRef(false);
   import_react12.default.useEffect(() => {
-    scope.current = createSettingsRequests();
+    const requests = createSettingsRequests();
+    scope.current = requests;
     inFlight.current = false;
-    return () => scope.current.close();
+    setSaving(false);
+    return () => requests.close();
   }, []);
-  const runtime = { sessionId, send: p.assistSend, currentModel: host.current };
+  import_react12.default.useEffect(() => {
+    const next = syncSettingsDraft(current.current, host.settings[feature], host.settingsRevision);
+    current.current = next;
+    setDraft(next);
+  }, [host.settingsRevision, host.settings[feature]]);
+  const runtime = { send: p.assistSend };
   const options = useModelOptions(runtime, feature, draft.config, true);
+  const allowed = global.connected && Number.isSafeInteger(host.settingsRevision) && !global.pending;
+  const stale = draft.dirty && draft.settingsRevision !== host.settingsRevision;
   const edit = (config) => {
     const next = editSettingsDraft(current.current, config);
     current.current = next;
@@ -2993,20 +3153,20 @@ function FeatureSettings({ feature, host, sessionId, p, allowed, onSaved }) {
   };
   async function save(config) {
     if (!allowed || inFlight.current || !scope.current) return;
-    const request = scope.current.begin(), version3 = current.current.version;
+    const request = scope.current.begin(), version3 = current.current.version, base = current.current.settingsRevision;
     inFlight.current = true;
     setSaving(true);
     setNotice(null);
     try {
-      const value = await p.assistSend("save", sessionId, { feature, config: sessionSettings(config) }, request.signal);
+      const saved = await source.configure(feature, config, base, request.signal);
       if (!request.valid()) return;
-      onSaved(feature, value);
-      const next = acceptSettingsSave(current.current, version3, value.settings[feature]);
-      current.current = next;
-      setDraft(next);
-      if (!next.dirty) setNotice("saved");
-      await p.refreshAssist(sessionId).catch(() => {
-      });
+      const snapshot = source.getSnapshot();
+      if (saved && matchesSettingsSave(snapshot, feature, config)) {
+        const next = acceptSettingsSave(current.current, version3, config, snapshot.saved.settingsRevision);
+        current.current = next;
+        setDraft(next);
+        if (!next.dirty) setNotice("saved");
+      } else setNotice({ code: saved ? "stale-global-settings" : snapshot.writeError ?? "global-unavailable" });
     } catch (error) {
       if (request.valid()) setNotice(error);
     } finally {
@@ -3017,48 +3177,34 @@ function FeatureSettings({ feature, host, sessionId, p, allowed, onSaved }) {
       }
     }
   }
+  function reset() {
+    const next = createSettingsDraft(host.settings[feature], host.settingsRevision);
+    current.current = next;
+    setDraft(next);
+    setNotice(null);
+  }
   const noticeValue = notice ?? options.error;
   return h11(
     "section",
     { className: "lpa-feature lpa-card", "aria-label": p.t(feature) },
     h11("h2", { className: "lpa-feature-title" }, p.t(feature)),
     h11("p", { className: "lpa-note" }, p.t(feature === "suggest" ? "suggestContext" : "enhanceOriginal")),
-    h11(Settings, { t: p.t, config: draft.config, catalog: options.catalog, capabilities: options.capabilities, allowed, saving, onChange: edit, save }),
+    !host.configured[feature] ? h11("p", { className: "lpa-note", role: "status" }, p.t("settings.unconfigured")) : null,
+    h11(Settings, { t: p.t, config: draft.config, catalog: options.catalog, capabilities: options.capabilities, allowed: allowed && !stale, saving, onChange: edit, save }),
     h11(
       "div",
       { className: "lpa-settings-feedback" },
       draft.dirty ? h11("p", { className: "lpa-note" }, p.t("settingsChanged")) : null,
-      noticeValue ? h11("p", { role: "status", className: noticeValue === "saved" ? "lpa-note" : "lpa-error" }, typeof noticeValue === "string" && noticeValue !== "requestError" ? p.t(noticeValue) : errorText(noticeValue, p.t)) : null
+      stale ? h11("p", { className: "lpa-error", role: "alert" }, p.t("settings.stale")) : null,
+      draft.dirty ? h11("button", { type: "button", className: "lpa-button", disabled: !global.connected || Boolean(global.pending), onClick: reset }, p.t("settings.resetDraft")) : null,
+      noticeValue ? h11("p", { role: "status", className: noticeValue === "saved" ? "lpa-note" : "lpa-error" }, noticeValue === "saved" ? p.t("saved") : errorText(noticeValue, p.t)) : null
     )
-  );
-}
-function SessionSettings({ sessionId, p }) {
-  const allowed = p.useSessionAccess(sessionId, "commands/execute");
-  const [host, setHost] = import_react12.default.useState(null), [error, setError] = import_react12.default.useState(null);
-  import_react12.default.useEffect(() => {
-    const abort = new AbortController();
-    setHost(null);
-    setError(null);
-    p.assistSend("state", sessionId, {}, abort.signal).then((value) => {
-      if (!abort.signal.aborted) setHost(value);
-    }).catch((error2) => {
-      if (!abort.signal.aborted) setError(error2);
-    });
-    return () => abort.abort();
-  }, [sessionId, p.assistSend]);
-  const onSaved = (feature, value) => setHost((old) => ({ ...old, settings: { ...old.settings, [feature]: value.settings[feature] } }));
-  return h11(
-    import_react12.default.Fragment,
-    null,
-    h11("p", { className: "lpa-note" }, p.t("editingSession"), ": ", h11("code", { className: "lpa-chip lpa-chip--readonly" }, sessionId)),
-    !allowed ? h11("p", { className: "lpa-note" }, p.t("access")) : null,
-    error ? h11("p", { className: "lpa-error", role: "alert" }, errorText(error, p.t)) : null,
-    !host && !error ? h11("p", { role: "status" }, p.t("loading")) : null,
-    host ? h11("div", { className: "lpa-settings-cards" }, ["suggest", "enhance"].map((feature) => h11(FeatureSettings, { key: feature, feature, host, sessionId, p, allowed, onSaved }))) : null
   );
 }
 function SettingsPage(p) {
   const target = import_react12.default.useSyncExternalStore(p.targetSource.subscribe, p.targetSource.getSnapshot, p.targetSource.getSnapshot);
+  const source = p.globalSource ?? EMPTY_ENABLEMENT_SOURCE;
+  const global = import_react12.default.useSyncExternalStore(source.subscribe, source.getSnapshot, source.getSnapshot);
   return h11(
     "section",
     { className: "lpa lpa-settings-page", "aria-label": p.t("title") },
@@ -3071,12 +3217,16 @@ function SettingsPage(p) {
     h11(
       "div",
       { className: "lpa-settings-sections" },
-      h11(EnablementPanel, { globalSource: p.globalSource, t: p.t }),
+      h11(EnablementPanel, { globalSource: source, t: p.t }),
       h11(
         "section",
-        { className: "lpa-session-panel lpa-card", "aria-label": p.t("settings.sessionSection") },
-        h11("header", { className: "lpa-card-header" }, h11("h2", { className: "lpa-card-title" }, p.t("settings.sessionSection")), h11("p", { className: "lpa-note" }, p.t("sessionScope"))),
-        target.sessionId ? h11(SessionSettings, { key: target.sessionId, sessionId: target.sessionId, p }) : h11("p", { className: "lpa-note lpa-empty-state", role: "status" }, p.t("settings.sessionEmpty"))
+        { className: "lpa-session-panel lpa-card", "aria-label": p.t("settings.profileSection") },
+        h11("header", { className: "lpa-card-header" }, h11("h2", { className: "lpa-card-title" }, p.t("settings.profileSection")), h11("p", { className: "lpa-note" }, p.t("profileScope"))),
+        global.loading ? h11("p", { role: "status" }, p.t("global.loading")) : null,
+        !global.connected ? h11("p", { className: "lpa-note", role: "status" }, p.t("global.disconnected")) : null,
+        global.readError ? h11("p", { className: "lpa-error", role: "alert" }, errorText(global.readError, p.t)) : null,
+        global.data && !Number.isSafeInteger(global.data.settingsRevision) ? h11("p", { className: "lpa-error", role: "alert" }, p.t("settings.hostUpgrade")) : null,
+        global.data ? h11("div", { className: "lpa-settings-cards" }, ["suggest", "enhance"].map((feature) => h11(FeatureSettings, { key: feature, feature, global, source, p }))) : h11("p", { className: "lpa-note lpa-empty-state" }, p.t("settings.profileEmpty"))
       ),
       p.connection ? h11(PriorityPanel, { connection: p.connection, t: p.t, onChanged: () => {
         if (target.sessionId) void p.refreshAssist(target.sessionId).catch(() => {
@@ -3095,6 +3245,7 @@ var init_settings_page = __esm({
     init_runtime();
     init_api();
     init_enablement_panel();
+    init_enablement_source();
     init_priority_panel();
     init_settings_page_state();
     h11 = import_react12.default.createElement;

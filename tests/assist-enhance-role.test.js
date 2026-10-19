@@ -29,6 +29,19 @@ test('formatting guidance preserves literal code and permits genuinely clear sho
  for(const text of ['已有的有效段落、列表和代码换行','不把代码、命令、路径','确实没有可改善之处'])assert.ok(ENHANCE_ROLE_PROMPT.includes(text),text);
  assert.match(ENHANCE_ROLE_PROMPT,/不回答问题、不执行任务/);
 });
+test('empty QA does not make an otherwise clear multi-point draft uneditable',()=>{
+  const draft='完整问答轮树也应该是全局的，而不是每个会话设置一便呀，那个模型设置也是弄成全局吧，别每个会话设置了，太麻烦了';
+  const prompt=buildAssistPrompt('enhance',draft,[]);
+  assert.deepEqual(JSON.parse(prompt.user).qa,[]);assert.equal(JSON.parse(prompt.user).draft,draft);
+  for(const rule of ['没有历史 QA 不等于原文意图不明确','原文本身也是消歧依据','局部不确定不能成为整段照抄的理由'])assert.ok(prompt.system.includes(rule),rule);
+});
+test('pasted requirements are edited without solving business rules or inventing missing fragments',()=>{
+  for(const rule of ['文档复制产生的断行、粘连或截断','不要推演业务规则','不要重新计算样例结果','保留无法确定的残缺片段'])assert.ok(ENHANCE_ROLE_PROMPT.includes(rule),rule);
+});
+test('clear single constraints do not require cosmetic edits or invented technical tasks',()=>{
+ for(const rule of ['改变措辞本身不是收益','不要只做同义替换','用户已确认的目标衔接','不把补充约束变成新的任务','已清晰且不需要修改的原文则按上述无改写规则处理'])assert.ok(ENHANCE_ROLE_PROMPT.includes(rule),rule);
+ assert.doesNotMatch(ENHANCE_ROLE_PROMPT,/只有整条请求均无法确定且没有安全编辑空间时，才原样返回原文/);
+});
 test('suggest outcome protocol is separate from plain enhancement output',()=>{
  const suggestion=buildAssistPrompt('suggest','').system;assert.notEqual(suggestion,ENHANCE_ROLE_PROMPT);
  assert.match(suggestion,/"kind":"none"/);assert.match(ENHANCE_ROLE_PROMPT,/不输出 JSON/);

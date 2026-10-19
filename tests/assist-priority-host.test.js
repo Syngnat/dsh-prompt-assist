@@ -58,7 +58,7 @@ test("only registered providers with OpenAI catalog models can be granted persis
   assert.deepEqual(again.snapshot(), value);
 });
 
-for (const model of ["grok-4.6", "grok-4.7", "grok-4.8"]) {
+for (const model of ["grok-4.6", "grok-4.7", "grok-4.8", "安和桥/grok-4.7"]) {
   test(`${model}: owner RPC lists, grants and revokes a Grok-only provider with explicit consent`, async t => {
     const f = fixture();
     f.providers.splice(0, f.providers.length, { id: "xai", name: "xAI only" });

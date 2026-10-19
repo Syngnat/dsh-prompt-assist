@@ -173,7 +173,7 @@ test("the Host provider allowlist stays explicit and case-sensitive", () => {
   assert.equal(policy.isOpenAISelection(selected, ["cpa"]), true);
 });
 
-for (const model of ["grok-4.6", "grok-4.7", "grok-4.8"]) {
+for (const model of ["grok-4.6", "grok-4.7", "grok-4.8", "安和桥/grok-4.7"]) {
   test(`${model}: Fast presentation supports explicit and default selections without implicit authorization`, () => {
     const bundle = pure(), selection = {provider: "xai", model};
     for (const enabled of [false, true]) {

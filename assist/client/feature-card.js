@@ -2,7 +2,6 @@ import { triggerStatusKey } from './trigger-status.js';
 import { canSuggest } from './editor.js';
 import React from "react";
 import {useModelOptions} from "./runtime.js";
-import {Settings} from "./settings.js";
 import {Preview} from "./preview.js";
 import {errorText} from "./api.js";
 import {ownsResult} from "./editor.js";
@@ -19,8 +18,7 @@ export function FeatureCard({feature,runtime:r,config,open,actions,t,onChange,on
   return h("section",{className:"lpa-feature","aria-label":t(feature),"data-assist-feature":feature},
     h("h3",{className:"lpa-feature-title"},t(feature)),
     open?h("p",{className:"lpa-note"},t(feature==="suggest"?"suggestContext":"enhanceOriginal")):null,
-    open&&r.state?h(Settings,{t,config,catalog:options.catalog,capabilities:options.capabilities,
-      allowed:r.allowed,saving:r.saving,onChange,save:onSave}):null,
+    open?h('p',{className:'lpa-note'},t('settings.globalOnly')):null,
     open&&options.error?h("p",{className:"lpa-error",role:"status"},errorText(options.error,t)):null,
     open?children:null,
     open&&feature==='suggest'?h('div',{className:'lpa-feature-actions'},

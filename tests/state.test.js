@@ -93,7 +93,7 @@ test('Grok selections follow live provider grants and revocations', () => {
 
 test('legacy, malformed and unrelated model ids never enter the Priority union', () => {
   for (const model of ['grok', 'grok-0', 'grok-1', 'grok-1.5', 'grok-2', 'grok-3', 'grok-3-mini',
-    'grok-3.99', 'grok-04.7', 'grok-4x', 'grokish-4.7', 'xai/grok-4.7', 'my-grok-4.8',
+    'grok-3.99', 'grok-04.7', 'grok-4x', 'grokish-4.7', 'xai/not-grok-4.7', 'my-grok-4.8',
     'deepseek-chat', 'claude-sonnet-4', '', null, undefined, true, 4.7, {}, []]) {
     assert.equal(isGrokModel(model), false, String(model));
     assert.equal(isPriorityModel(model), false, String(model));

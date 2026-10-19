@@ -2,6 +2,19 @@
 
 [English](<README.md>) | [简体中文](<README.zh-CN.md>)
 
+## 1.2.26 — 全局配置与增强离线评测 / Global controls and offline enhancement evaluation
+
+- Add a source-only offline enhancement evaluation workbench: intent-first four-way rubric, contrast references with explicit confirmation status, answer-free review export, evidence traceability checks and reference-label confusion/error reports. No runtime validation calls, semantic auto-approval, model benchmarks or profile changes are enabled by this tooling.
+- Preserve allowlisted native provider failure categories and safe HTTP statuses instead of flattening authentication, rejection, throttling, quota, upstream timeout and context failures into `model-failed`. Strip provider prose and request identifiers; no automatic retries, budget increases, effort changes or deadline extensions. This repairs diagnostic loss, not a claim that the reported Hualong/DeepSeek request was reproduced successfully.
+- Treat cosmetic synonym changes to an already-clear single constraint as unnecessary editing; integrate only user-confirmed goals from relevant QA. Resolve contradictory no-rewrite wording and add the reported domain-constraint example as a human evaluation reference. Exact-echo detection remains deliberately non-semantic, not a claim that all near-paraphrases can be blocked.
+- Clarify enhancement with empty QA: the draft itself can justify typo correction, deduplication and separate points. Local ambiguity does not justify echoing the entire draft. Pasted requirements retain rules/examples/exceptions without business-rule solving or invented fragments; regression data is synthetic or anonymized, not the user's business document.
+- Fix Grok Fast recognition for namespaced catalog IDs such as `安和桥/grok-4.7`: the bare-ID-only matcher hid the switch and excluded authorization candidates. Recognize the final model segment without rewriting request IDs or granting providers; cover visibility, explicit consent, revocation and main/auxiliary wire payloads offline.
+- Move auxiliary model, reasoning, Fast and complete-QA controls to one profile-wide configuration per feature. Existing and new conversations share it; the settings page no longer requires selecting a conversation.
+- Preserve the original enablement domain and create a separate, versioned controls domain. Historical session settings never override global choices. No session is silently selected for migration; each feature requires one explicit global save before generation.
+- Keep follow-session as a global policy resolved at invocation time. Share the QA count, never QA content, drafts or file permissions. Main model and main Fast preferences are unchanged.
+- Use independent flag/control revisions, captured-edit CAS and authenticated snapshot updates. Invalidate affected work across conversations; reject legacy session saves rather than silently making them global. No automatic replay of old QA.
+- Add native storage persistence/isolation/rollback checks and offline tests for cross-session generation, dynamic follow-session routing, confirmation, concurrency and failure handling. No paid model request or live-profile mutation is part of verification.
+
 ## 1.2.25 — 自然下一句与低干扰空结果 / Natural follow-ups and quiet abstention
 
 - Reframe suggestion generation as the user's natural next message, not generic task planning. Check grounded gaps and agreed next steps before abstaining; completion, multiple directions or awaiting authorization are not blanket none rules.

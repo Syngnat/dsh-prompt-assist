@@ -1,8 +1,8 @@
 {
   "name": "@local/dsh-openai-fast",
-  "version": "1.2.25",
+  "version": "1.2.26",
   "private": true,
-  "description": "Provides prompt enhancement, next-question suggestions, and Priority acceleration for authorized OpenAI and xAI routes, with per-session model and auxiliary Fast controls.",
+  "description": "Provides prompt enhancement, next-question suggestions, and Priority acceleration for authorized OpenAI and xAI routes, with profile-wide auxiliary model, reasoning, Fast and QA controls.",
   "type": "module",
   "license": "MIT",
   "engines": {
@@ -10,13 +10,13 @@
     "node": ">=22"
   },
   "exports": {
-    ".": "./host-v1.2.25.js",
+    ".": "./host-v1.2.26.js",
     "./client": "./client-runtime.js",
     "./locale/*.json": "./locale/*.json",
     "./icon": "./icon.svg"
   },
   "files": [
-    "host-v1.2.25.js",
+    "host-v1.2.26.js",
     "client-runtime.js",
     "client.js",
     "cordis.patch.yml",
@@ -28,12 +28,14 @@
     "SECURITY.md",
     "CHANGELOG.md",
     "RELEASING.md",
-    "docs/confirmed-online-update.md"
+    "docs/confirmed-online-update.md",
+    "docs/profile-global-settings.md"
   ],
   "scripts": {
     "test": "node --test tests/*.test.js",
     "build": "node build.mjs",
-    "release:stable": "node scripts/publish-stable.mjs"
+    "release:stable": "node scripts/publish-stable.mjs",
+    "eval:enhancement": "node evals/enhancement/cli.mjs"
   },
   "dsh": {
     "bundle": {

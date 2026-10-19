@@ -40,7 +40,7 @@ function fixture(t,qa,{raw,finish='stop',error}){
   },
  };
  const runtime=new AssistRuntime(ctx,{selection:()=>({provider:'openai',model:'offline-fixture'}),enabled:()=>false},
-  ['openai'],value=>({...value,role:'user'}),fixtureEnablement({suggest:true,enhance:false}));
+  ['openai'],value=>({...value,role:'user'}),fixtureEnablement({suggest:true,enhance:false},{suggest:{rounds:qa.length}}));
  let latest,writes=0;
  const frame={sessionId:'a',qaId:state.qaId,busy:false,paused:false,routeKey:'offline-fixture',settings:runtime.settingsOf(agent),
   input:{draft:'',draftRev:1,occurrences:[],attachmentIds:[],phase:'plain'}};

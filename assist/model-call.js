@@ -1,6 +1,7 @@
 import { parseSuggestionOutput } from './suggestion-result.js';
 import { runWithPriority } from './priority-scope.js';
 import { isOpenAISelection } from '../policy.js';
+import { providerFailureCode } from './provider-failure.js';
 
 export function failure(code) { return Object.assign(new Error(code), { code }); }
 
@@ -51,7 +52,8 @@ export async function callAssistModel(ctx, agent, route, prompt, feature, signal
         if (chunk.text && feature !== 'suggest') onText?.(text);
       }
       if (chunk.type === 'finish') {
-        if (chunk.reason.kind !== 'stop') throw failure(chunk.reason.kind === 'aborted' ? 'cancelled' : chunk.reason.kind === 'max-tokens' ? 'output-limit' : 'model-failed');
+        if (chunk.reason.kind !== 'stop') throw failure(chunk.reason.kind === 'aborted' ? 'cancelled' : chunk.reason.kind === 'max-tokens' ? 'output-limit'
+          : chunk.reason.kind === 'error' ? providerFailureCode(chunk.reason.failure) : 'model-failed');
         completed = true;
       }
     }

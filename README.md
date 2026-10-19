@@ -2,11 +2,11 @@
 
 # Prompt Assistance & Fast Acceleration
 
-Provides prompt enhancement, next-question suggestions, and OpenAI / xAI Priority acceleration, with per-session configuration of models, reasoning effort, and auxiliary Fast.
+Provides prompt enhancement, next-question suggestions, and OpenAI / xAI Priority acceleration, with profile-wide auxiliary model, reasoning effort, Fast and QA controls.
 
-A plugin bundle for the DeepSeek Harness (DSH) Web GUI. Enhancement and suggestions are independent features: enable either or both for the current DSH profile. Settings live on the sidebar page, not in a composer popup. Feature switches are profile-wide; model controls remain per-conversation.
+A plugin bundle for the DeepSeek Harness (DSH) Web GUI. Enhancement and suggestions are independent features: enable either or both for the current DSH profile. Settings live on the sidebar page, not in a composer popup. Feature switches and auxiliary controls are profile-wide; conversation content remains isolated.
 
-> **v1.2.25:** suggestions aim for the user's natural next message instead of generic task planning. Automatic empty outcomes end quietly; manual requests still report no suggestion, and real errors remain visible. Permissions, QA scope and model-call counts are unchanged. This is not a claim of measured live-model quality improvement.
+> **v1.2.26:** auxiliary models and complete-QA counts are profile-wide; namespaced Grok IDs are recognized; enhancement failures retain safe provider categories. Source-only offline evaluation adds no default validation call or automatic semantic near-paraphrase detector. **On first upgrade, save each enhancement/suggestion global configuration once before using that feature.**
 
 ## Compatibility policy
 
@@ -46,12 +46,16 @@ The package identifier remains `@local/dsh-openai-fast`, even though this reposi
 
 ## Use
 
-### Global switches and per-conversation controls
+### Profile-wide switches, models and QA controls
 
 1. Open **Prompt assist** in the left sidebar. The two global switches work without selecting a conversation and save immediately for the current profile. New and existing conversations use those choices; refreshing or restarting DSH preserves them. Other profiles remain independent.
 2. Enabling automatic suggestions authorizes eligible future new-Q&A requests across this profile. Enabling, reconnecting or reopening does not replay old Q&A. Global changes or lost live synchronization invalidate current auxiliary previews. A failed save is not shown as saved.
-3. To change provider/model, native reasoning effort, auxiliary Fast or Q&A count, select the intended conversation and check its identifier. These controls remain per-conversation, independently configured for enhancement and suggestions.
-4. Save each changed set of conversation controls, then choose **Back to conversation**. Saving conversation controls never changes the global switches.
+3. **Provider/model, native reasoning effort, auxiliary Fast and complete-QA count are profile-wide.** No conversation selection is needed. Enhancement and suggestions each retain their own global configuration, shared by existing and future conversations.
+4. Save the feature configuration; other pages and conversations synchronize it. Saving controls does not change the feature switches. A conflicting edit from another window keeps the local draft and reports a conflict rather than silently overwriting it.
+
+**On first upgrade to v1.2.26, save each feature's global configuration once before using it.** Existing conversations can disagree, so none is silently selected or merged into the global value. Existing global switches are retained, but an unconfirmed global model configuration cannot start automatic suggestions. Historical session settings remain for replay and rollback, not as effective overrides.
+
+Follow-session is a globally saved policy that resolves the model and effort of the conversation making each request; it does not bind to a conversation that happened to save it. QA count is shared, but **QA content still comes only from the calling conversation**. Drafts and selected files are not shared. Main conversation model selection and main Fast preferences are unchanged.
 
 Fresh global switches start disabled; legacy session flags are retained for replay compatibility but cannot override them. When upgrading from v1.2.11 or earlier, explicitly enable the new global switches once; later upgrades preserve those choices. Following the session follows only its model and reasoning effort; auxiliary Fast always remains an independent setting. Choose 1, 3, 5, or a custom **1–20 complete Q&A rounds**. Invalid values are rejected, not silently clamped. A model change that invalidates a saved effort requires an explicit new choice; the plugin does not silently lower the effort.
 
@@ -62,6 +66,8 @@ Write the original text in the composer and click the enhancement icon button. E
 Review the inline result, compare the original when needed, then copy or apply it. Pure-text application checks the original draft and revision, creates one undoable text edit, and leaves attachments unchanged. Editing the draft cancels obsolete work. Undo is offered only while the applied text and revision still match.
 
 Enhancement keeps the user speaking to the assistant. It uses relevant confirmed context without adding clarification steps; when core meaning cannot be established, it conservatively edits or retains the original rather than guessing.
+
+Version 1.2.26 explicitly distinguishes missing QA history from unclear draft intent: a new conversation still permits grounded typo correction, deduplication and separate points. Local ambiguity does not justify echoing the entire draft. Pasted requirements retain their rules, examples and exceptions; editing does not solve business rules, recalculate sample results or invent missing fragments. These are prompt contracts and offline regressions, not a live-model quality guarantee.
 
 Enhancement instructions require real line breaks, short paragraphs or lists for independent points, and a complete replacement draft rather than appended commentary. Clear short requests need not be expanded. A finalized exact echo (ignoring outer whitespace and line-ending encoding only) shows a no-rewrite notice and cannot be applied again. This is not a semantic quality score: light paraphrases are not automatically rejected. Lists and code line breaks are preserved; no punctuation-based autoformatter or automatic paid retry is added.
 
@@ -80,6 +86,8 @@ The role predicts the user's natural next message and style rather than planning
 ### Fast
 
 **Grok support (v1.2.24):** recognizes `grok-4.6`, `grok-4.7`, future `grok-4.8` and later major versions using the same naming convention. Recognition is not a guarantee of upstream Priority availability. Provider authorization and a supported API are still required. The request adds only `service_tier: "priority"`; it does not switch models, lower reasoning effort or automatically retry at the default tier. New models must first be configured or discovered in the provider catalog. xAI documents a 2× standard token rate for Priority; DSH estimates may not reflect that surcharge, so use the provider bill. No live paid xAI request or actual-tier display has been verified.
+
+**Namespaced Grok IDs (v1.2.26):** also recognizes catalog IDs such as `安和桥/grok-4.7` and `xai/grok-4.7`. Versions 1.2.24/1.2.25 recognized bare IDs only, hiding Fast for these names. Only the final segment determines the family; requests keep the complete ID. A namespace does not grant authorization: the actual provider ID must still be approved.
 
 > **From v1.2.13:** a recognized GPT/OpenAI model keeps its Fast control visible even when the provider is not authorized or the Host snapshot is unavailable. The control stays disabled and explains the condition; metadata retries are bounded and never submit a model request. Model-name matching ignores case, but provider route IDs are exact and an OpenAI-compatible protocol alone does not grant Priority support.
 
@@ -174,7 +182,7 @@ Use an isolated DSH Web profile and a fresh, unsent conversation, with a disposa
 | macOS and Linux | Builds/offline suite are required CI gates; DSH runtime not tested |
 | Independent security audit | Not performed/claimed |
 
-v1.2.14 passes 601 offline tests locally. [GitHub Actions](https://github.com/Syngnat/dsh-prompt-assist/actions) covers Windows, macOS and Linux builds/tests plus real DSH adapter-contract checks; stable publication requires successful exact-commit CI. Earlier update-page, layout and global-switch checks do not constitute full v1.2.14 visual or live-model acceptance. Isolated Fast-control installation/browser evidence is recorded in the release notes. The separately reported machine was not available; this release does not claim its root cause was confirmed. No live model semantic or output-protocol adherence evaluation was performed for this release.
+v1.2.26 passes 948 offline tests locally, including 17 evaluation-tool regressions. The 24-reference corpus passes structure, quotation and declared-consistency checks, not semantic or model-quality verification. [GitHub Actions](https://github.com/Syngnat/dsh-prompt-assist/actions) gates stable publication on five exact-commit jobs: Windows/macOS/Linux builds/tests and DSH rc.1/rc.2 contracts. Historical update-page, layout and global-switch checks do not constitute full GUI acceptance of this version; full browser visual and live-model quality checks were not performed for it. The specific Hualong/DeepSeek failure remains unconfirmed, and no automatic semantic near-paraphrase blocker was added. Maintainer publication does not upgrade the current profile.
 
 ## License
 

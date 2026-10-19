@@ -1,0 +1,741 @@
+{
+  "version": 1,
+  "rubricVersion": "1",
+  "cases": [
+    {
+      "id": "E001",
+      "group": "G01",
+      "source": "user-example",
+      "referenceStatus": "user-confirmed",
+      "draft": "QA轮数改成全局模型设置也改成全局别每个会话重新设置。",
+      "qa": [],
+      "candidate": "请将以下两项设置改为全局共用，避免每个会话重复配置：\n\n1. 完整 QA 轮数。\n2. 模型设置。",
+      "reference": {
+        "label": "effective",
+        "intent": "preserved",
+        "benefit": "specific",
+        "problem": "两项独立设置及共同的全局作用域挤在连续句中，不便逐项核对。",
+        "change": "分别列出 QA 轮数和模型设置，并把全局共用及避免逐会话配置作为共同要求。",
+        "rationale": "这是用户明确裁定有效的原例：结构调整让两项要求及共同作用域可独立核对，即使没有新增信息也有具体收益。",
+        "evidence": [
+          {
+            "source": "draft",
+            "quote": "QA轮数改成全局模型设置也改成全局"
+          },
+          {
+            "source": "draft",
+            "quote": "别每个会话重新设置"
+          },
+          {
+            "source": "candidate",
+            "quote": "以下两项设置改为全局共用"
+          },
+          {
+            "source": "candidate",
+            "quote": "1. 完整 QA 轮数。\n2. 模型设置。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "E002",
+      "group": "G02",
+      "source": "user-example",
+      "referenceStatus": "user-confirmed",
+      "draft": "仅允许管理员删除普通用户不能删除。",
+      "qa": [],
+      "candidate": "仅允许管理员删除；普通用户不能删除。",
+      "reference": {
+        "label": "uncertain",
+        "intent": "uncertain",
+        "benefit": "uncertain",
+        "problem": "原稿中普通用户可能是删除操作的执行者，也可能是删除对象，缺少确认其角色的上下文。",
+        "change": "分号把普通用户固定为后半句不能删除的执行者。",
+        "rationale": "这是用户明确裁定信息不足的原例。候选断句更清楚，但无 QA 时不能证明它选择的角色符合原意，因此不能判为有效，也不能断言实际原意已被改变。",
+        "evidence": [
+          {
+            "source": "draft",
+            "quote": "仅允许管理员删除普通用户不能删除。"
+          },
+          {
+            "source": "candidate",
+            "quote": "仅允许管理员删除；普通用户不能删除。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "E003",
+      "group": "G02",
+      "source": "synthetic",
+      "referenceStatus": "proposed",
+      "draft": "仅允许管理员删除普通用户不能删除。",
+      "qa": [
+        {
+          "question": "普通用户是执行者，意思是普通用户不能执行删除操作；只有管理员能删除。",
+          "answer": "明白。"
+        }
+      ],
+      "candidate": "仅允许管理员删除；普通用户不能删除。",
+      "reference": {
+        "label": "effective",
+        "intent": "preserved",
+        "benefit": "specific",
+        "problem": "原稿缺少边界，执行者与删除对象容易混读；合成 QA 已确认普通用户是执行者。",
+        "change": "用分号明确管理员可删除与普通用户不可删除两项权限。",
+        "rationale": "在本合成场景中，用户消息支持候选断句。小幅标点调整因此消除了已确认的角色歧义；该标签仍是助手拟定、待人工复核的提案。",
+        "evidence": [
+          {
+            "source": "draft",
+            "quote": "仅允许管理员删除普通用户不能删除。"
+          },
+          {
+            "source": "qa-question",
+            "qaIndex": 0,
+            "quote": "普通用户是执行者"
+          },
+          {
+            "source": "candidate",
+            "quote": "仅允许管理员删除；普通用户不能删除。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "E004",
+      "group": "G02",
+      "source": "synthetic",
+      "referenceStatus": "proposed",
+      "draft": "仅允许管理员删除普通用户不能删除。",
+      "qa": [
+        {
+          "question": "删除对象是普通用户；我没有表达普通用户是否能执行删除操作。",
+          "answer": "明白。"
+        }
+      ],
+      "candidate": "仅允许管理员删除；普通用户不能删除。",
+      "reference": {
+        "label": "drift",
+        "intent": "changed",
+        "benefit": "none",
+        "problem": "合成 QA 已确认普通用户是删除对象，候选需要保留该对象角色。",
+        "change": "候选把普通用户改为不能执行删除的主体，丢失了已确认的对象关系。",
+        "rationale": "这里存在明确的用户消息，足以判定角色发生偏移；分号带来的可读性不能抵消权限含义的变化。",
+        "evidence": [
+          {
+            "source": "draft",
+            "quote": "仅允许管理员删除普通用户不能删除。"
+          },
+          {
+            "source": "qa-question",
+            "qaIndex": 0,
+            "quote": "删除对象是普通用户"
+          },
+          {
+            "source": "candidate",
+            "quote": "普通用户不能删除。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "E005",
+      "group": "G03",
+      "source": "user-example",
+      "referenceStatus": "proposed",
+      "draft": "主要是，我发布到微信小程序，体验版必须要域名",
+      "qa": [],
+      "candidate": "主要是:我发布到微信小程序时，体验版必须使用域名。",
+      "reference": {
+        "label": "cosmetic",
+        "intent": "preserved",
+        "benefit": "cosmetic",
+        "problem": "原稿口语化，但发布场景和体验版域名要求已能读懂；实际 QA 未被记录。",
+        "change": "调整标点，把发布关系写为时间状语，并将必须要换成必须使用。",
+        "rationale": "本例是用户提供的近似转述，表面润色标签由助手提出。qa 为空仅设定无可用 QA 的评估条件，不声称真实对话没有 QA，也不声称真实回放；改动未显示具体理解或执行收益，不核验外部平台规则。",
+        "evidence": [
+          {
+            "source": "draft",
+            "quote": "我发布到微信小程序，体验版必须要域名"
+          },
+          {
+            "source": "candidate",
+            "quote": "我发布到微信小程序时，体验版必须使用域名。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "E006",
+      "group": "G03",
+      "source": "synthetic",
+      "referenceStatus": "proposed",
+      "draft": "完整问答轮树应全局共用。",
+      "qa": [],
+      "candidate": "完整问答轮数应全局共用。",
+      "reference": {
+        "label": "effective",
+        "intent": "preserved",
+        "benefit": "specific",
+        "problem": "完整问答轮树中的树是普通表达中可由局部语境确定的错字，不是被要求逐字保留的名称。",
+        "change": "仅把轮树改为轮数。",
+        "rationale": "原文的完整问答与全局设置语境支持轮数这一含义；修正一个字即改善错误表达，没有新增要求。此标签仍为待复核提案。",
+        "evidence": [
+          {
+            "source": "draft",
+            "quote": "完整问答轮树"
+          },
+          {
+            "source": "candidate",
+            "quote": "完整问答轮数"
+          }
+        ]
+      }
+    },
+    {
+      "id": "E007",
+      "group": "G03",
+      "source": "synthetic",
+      "referenceStatus": "proposed",
+      "draft": "导出按钮的文案应为“导出”，用于把表格保存为 CSV。",
+      "qa": [],
+      "candidate": "请将导出按钮的文案设为“导出”，用于把表格保存为 CSV。",
+      "reference": {
+        "label": "cosmetic",
+        "intent": "preserved",
+        "benefit": "cosmetic",
+        "problem": "原稿已明确按钮文案和用途，没有可定位的理解或执行障碍。",
+        "change": "把应为改成请将其设为，调整请求语气。",
+        "rationale": "精确文案、对象和用途均未改变，也未修复缺陷；礼貌语气及同义表达本身不构成有效增强。",
+        "evidence": [
+          {
+            "source": "draft",
+            "quote": "导出按钮的文案应为“导出”"
+          },
+          {
+            "source": "candidate",
+            "quote": "请将导出按钮的文案设为“导出”"
+          }
+        ]
+      }
+    },
+    {
+      "id": "E008",
+      "group": "G04",
+      "source": "synthetic",
+      "referenceStatus": "proposed",
+      "draft": "未登录用户不能下载附件。",
+      "qa": [],
+      "candidate": "未登录用户可以下载附件。",
+      "reference": {
+        "label": "drift",
+        "intent": "changed",
+        "benefit": "none",
+        "problem": "原稿明确禁止未登录用户下载，没有待消解的权限歧义。",
+        "change": "把不能改为可以，反转下载权限。",
+        "rationale": "仅两个字的替换也能改变核心意图；候选与明确的否定要求相反。",
+        "evidence": [
+          {
+            "source": "draft",
+            "quote": "未登录用户不能下载附件。"
+          },
+          {
+            "source": "candidate",
+            "quote": "未登录用户可以下载附件。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "E009",
+      "group": "G04",
+      "source": "synthetic",
+      "referenceStatus": "proposed",
+      "draft": "未登录用户不能下载附件。",
+      "qa": [],
+      "candidate": "禁止未登录用户下载附件。",
+      "reference": {
+        "label": "cosmetic",
+        "intent": "preserved",
+        "benefit": "cosmetic",
+        "problem": "原稿已明确主体、动作和禁止条件。",
+        "change": "把不能下载换成禁止下载。",
+        "rationale": "候选保留否定权限，但只是同义改写，没有消除原稿中的具体障碍。",
+        "evidence": [
+          {
+            "source": "draft",
+            "quote": "未登录用户不能下载附件。"
+          },
+          {
+            "source": "candidate",
+            "quote": "禁止未登录用户下载附件。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "E010",
+      "group": "G05",
+      "source": "synthetic",
+      "referenceStatus": "proposed",
+      "draft": "列表每页显示 20 条记录。",
+      "qa": [],
+      "candidate": "列表每页显示 50 条记录。",
+      "reference": {
+        "label": "drift",
+        "intent": "changed",
+        "benefit": "none",
+        "problem": "原稿已给出精确分页数量，没有要求调整该值。",
+        "change": "把每页 20 条改为每页 50 条。",
+        "rationale": "候选更改了可直接验收的数量约束，不能用展示更多记录的主观偏好解释为增强。",
+        "evidence": [
+          {
+            "source": "draft",
+            "quote": "每页显示 20 条记录"
+          },
+          {
+            "source": "candidate",
+            "quote": "每页显示 50 条记录"
+          }
+        ]
+      }
+    },
+    {
+      "id": "E011",
+      "group": "G05",
+      "source": "synthetic",
+      "referenceStatus": "proposed",
+      "draft": "列表每页显示 20 条记录。",
+      "qa": [],
+      "candidate": "请让列表每页显示 20 条记录。",
+      "reference": {
+        "label": "cosmetic",
+        "intent": "preserved",
+        "benefit": "cosmetic",
+        "problem": "原稿已经清楚给出分页要求。",
+        "change": "在句首增加请让，数量及范围不变。",
+        "rationale": "增加请求语气不改变验收条件，也没有提供具体理解或执行收益。",
+        "evidence": [
+          {
+            "source": "draft",
+            "quote": "列表每页显示 20 条记录。"
+          },
+          {
+            "source": "candidate",
+            "quote": "请让列表每页显示 20 条记录。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "E012",
+      "group": "G06",
+      "source": "synthetic",
+      "referenceStatus": "proposed",
+      "draft": "默认禁止导出，但审计员可以导出自己的记录。",
+      "qa": [],
+      "candidate": "禁止所有人导出。",
+      "reference": {
+        "label": "drift",
+        "intent": "changed",
+        "benefit": "none",
+        "problem": "原稿含有明确的审计员例外及仅限自己记录的范围。",
+        "change": "删除审计员例外，将默认规则改为对所有人的绝对禁止。",
+        "rationale": "缩短文字丢失了已明确的例外，改变允许的行为范围。",
+        "evidence": [
+          {
+            "source": "draft",
+            "quote": "审计员可以导出自己的记录"
+          },
+          {
+            "source": "candidate",
+            "quote": "禁止所有人导出。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "E013",
+      "group": "G06",
+      "source": "synthetic",
+      "referenceStatus": "proposed",
+      "draft": "默认禁止导出，但审计员可以导出自己的记录。",
+      "qa": [],
+      "candidate": "默认不允许导出；审计员仍可导出自己的记录。",
+      "reference": {
+        "label": "cosmetic",
+        "intent": "preserved",
+        "benefit": "cosmetic",
+        "problem": "原稿通过但字已清楚表达默认规则和例外。",
+        "change": "同义替换禁止和可以，并以分号连接例外。",
+        "rationale": "例外及其范围均被保留，但原稿不存在需要该分号解决的边界歧义，不能仅凭标点变化认定有效。",
+        "evidence": [
+          {
+            "source": "draft",
+            "quote": "默认禁止导出，但审计员可以导出自己的记录。"
+          },
+          {
+            "source": "candidate",
+            "quote": "默认不允许导出；审计员仍可导出自己的记录。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "E014",
+      "group": "G07",
+      "source": "synthetic",
+      "referenceStatus": "proposed",
+      "draft": "搜索框需要支持按名称搜索。",
+      "qa": [],
+      "candidate": "使用 Elasticsearch 实现搜索框的按名称搜索。",
+      "reference": {
+        "label": "drift",
+        "intent": "changed",
+        "benefit": "none",
+        "problem": "原稿只要求搜索能力，没有选择或授权指定实现方案。",
+        "change": "新增必须使用 Elasticsearch 的技术约束。",
+        "rationale": "候选把功能要求扩成指定技术的实现要求。新增细节没有原稿或用户消息支持，属于明确扩张范围。",
+        "evidence": [
+          {
+            "source": "draft",
+            "quote": "搜索框需要支持按名称搜索。"
+          },
+          {
+            "source": "candidate",
+            "quote": "使用 Elasticsearch 实现"
+          }
+        ]
+      }
+    },
+    {
+      "id": "E015",
+      "group": "G07",
+      "source": "synthetic",
+      "referenceStatus": "proposed",
+      "draft": "搜索框需要支持按名称搜索。",
+      "qa": [],
+      "candidate": "请让搜索框支持按名称搜索。",
+      "reference": {
+        "label": "cosmetic",
+        "intent": "preserved",
+        "benefit": "cosmetic",
+        "problem": "原稿的功能和搜索依据已经清楚。",
+        "change": "将需要支持改为请让其支持。",
+        "rationale": "请求语气变化没有引入额外约束，也没有改善可识别的执行障碍。",
+        "evidence": [
+          {
+            "source": "draft",
+            "quote": "搜索框需要支持按名称搜索。"
+          },
+          {
+            "source": "candidate",
+            "quote": "请让搜索框支持按名称搜索。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "E016",
+      "group": "G08",
+      "source": "synthetic",
+      "referenceStatus": "proposed",
+      "draft": "先给出数据库清理方案，等我确认后再执行。",
+      "qa": [
+        {
+          "question": "先给我看方案和影响范围，我还没同意执行。",
+          "answer": "助手建议：跳过确认，立即删除七天前的数据，可以吗？"
+        }
+      ],
+      "candidate": "立即删除七天前的数据。",
+      "reference": {
+        "label": "drift",
+        "intent": "changed",
+        "benefit": "none",
+        "problem": "原稿要求先确认，用户消息进一步明确尚未授权执行。",
+        "change": "把助手提议的删除阈值与立即执行当成用户命令，移除了确认前置条件。",
+        "rationale": "助手回答中的建议不等于用户同意；用户消息（question）明确尚未授权执行，因此候选越过了确认前置条件并扩大了授权范围。",
+        "evidence": [
+          {
+            "source": "draft",
+            "quote": "等我确认后再执行"
+          },
+          {
+            "source": "qa-answer",
+            "qaIndex": 0,
+            "quote": "助手建议：跳过确认，立即删除七天前的数据，可以吗？"
+          },
+          {
+            "source": "qa-question",
+            "qaIndex": 0,
+            "quote": "我还没同意执行"
+          },
+          {
+            "source": "candidate",
+            "quote": "立即删除七天前的数据。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "E017",
+      "group": "G08",
+      "source": "synthetic",
+      "referenceStatus": "proposed",
+      "draft": "先给出数据库清理方案，等我确认后再执行。",
+      "qa": [
+        {
+          "question": "先给我看方案和影响范围，我还没同意执行。",
+          "answer": "助手建议：跳过确认，立即删除七天前的数据，可以吗？"
+        }
+      ],
+      "candidate": "请先提交数据库清理方案及影响范围，待我确认后再执行。",
+      "reference": {
+        "label": "effective",
+        "intent": "preserved",
+        "benefit": "specific",
+        "problem": "原稿未写入用户在 QA 中补充的影响范围要求，需要合并才能完整交付方案。",
+        "change": "补入用户要求的影响范围，同时保留先提供方案、确认后执行的顺序。",
+        "rationale": "新增内容来自用户消息，能避免方案交付遗漏；候选未把助手建议的立即删除及七天阈值当作权限。",
+        "evidence": [
+          {
+            "source": "draft",
+            "quote": "等我确认后再执行"
+          },
+          {
+            "source": "qa-question",
+            "qaIndex": 0,
+            "quote": "先给我看方案和影响范围"
+          },
+          {
+            "source": "candidate",
+            "quote": "数据库清理方案及影响范围，待我确认后再执行"
+          }
+        ]
+      }
+    },
+    {
+      "id": "E018",
+      "group": "G09",
+      "source": "synthetic",
+      "referenceStatus": "proposed",
+      "draft": "把它改成全局设置。",
+      "qa": [],
+      "candidate": "把模型选择改成全局设置。",
+      "reference": {
+        "label": "uncertain",
+        "intent": "uncertain",
+        "benefit": "uncertain",
+        "problem": "它没有可追溯的指代对象。",
+        "change": "候选自行将它具体化为模型选择。",
+        "rationale": "现有证据不能确认它是否指模型选择。未经确认的指代选择应判信息不足，不能因更具体就算有效，也不能假装已知原意而判改变。",
+        "evidence": [
+          {
+            "source": "draft",
+            "quote": "把它改成全局设置。"
+          },
+          {
+            "source": "candidate",
+            "quote": "把模型选择改成全局设置。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "E019",
+      "group": "G09",
+      "source": "synthetic",
+      "referenceStatus": "proposed",
+      "draft": "把它改成全局设置。",
+      "qa": [
+        {
+          "question": "它指完整 QA 轮数，不是模型选择。",
+          "answer": "明白。"
+        }
+      ],
+      "candidate": "把模型选择改成全局设置。",
+      "reference": {
+        "label": "drift",
+        "intent": "changed",
+        "benefit": "none",
+        "problem": "用户消息已明确它指完整 QA 轮数，并排除了模型选择。",
+        "change": "候选选择了被用户明确排除的设置项。",
+        "rationale": "此时指代已有确定证据，候选与其冲突，属于对象偏移而非仍然无法判断。",
+        "evidence": [
+          {
+            "source": "draft",
+            "quote": "把它改成全局设置。"
+          },
+          {
+            "source": "qa-question",
+            "qaIndex": 0,
+            "quote": "它指完整 QA 轮数，不是模型选择。"
+          },
+          {
+            "source": "candidate",
+            "quote": "把模型选择改成全局设置。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "E020",
+      "group": "G09",
+      "source": "synthetic",
+      "referenceStatus": "proposed",
+      "draft": "把它改成全局设置。",
+      "qa": [
+        {
+          "question": "它指完整 QA 轮数，不是模型选择。",
+          "answer": "明白。"
+        }
+      ],
+      "candidate": "把完整 QA 轮数改成全局设置。",
+      "reference": {
+        "label": "effective",
+        "intent": "preserved",
+        "benefit": "specific",
+        "problem": "原稿的它不能独立定位待修改设置，QA 已给出明确对象。",
+        "change": "用用户确认的完整 QA 轮数替换指代词。",
+        "rationale": "候选落实用户消息，使执行者能直接定位设置项，并保持全局作用域。",
+        "evidence": [
+          {
+            "source": "draft",
+            "quote": "把它改成全局设置。"
+          },
+          {
+            "source": "qa-question",
+            "qaIndex": 0,
+            "quote": "它指完整 QA 轮数"
+          },
+          {
+            "source": "candidate",
+            "quote": "把完整 QA 轮数改成全局设置。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "E021",
+      "group": "G10",
+      "source": "synthetic",
+      "referenceStatus": "proposed",
+      "draft": "保存失败保留输入重试成功清空表单。",
+      "qa": [],
+      "candidate": "保存失败时保留输入；重试成功后清空表单。",
+      "reference": {
+        "label": "uncertain",
+        "intent": "uncertain",
+        "benefit": "uncertain",
+        "problem": "原稿缺少条件边界，重试可能是失败后要执行的动作，也可能属于重试成功这个条件。",
+        "change": "候选将重试归入成功条件，并以分号划分失败和成功分支。",
+        "rationale": "断句带来可读性，但无 QA 时无法确认是否遗漏了失败后重试的动作要求；不能用偏好的流程替用户消歧。",
+        "evidence": [
+          {
+            "source": "draft",
+            "quote": "保存失败保留输入重试成功清空表单。"
+          },
+          {
+            "source": "candidate",
+            "quote": "保存失败时保留输入；重试成功后清空表单。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "E022",
+      "group": "G10",
+      "source": "synthetic",
+      "referenceStatus": "proposed",
+      "draft": "保存失败保留输入重试成功清空表单。",
+      "qa": [
+        {
+          "question": "这里是“重试成功”的条件；失败时仅保留输入，不要求自动重试。",
+          "answer": "明白。"
+        }
+      ],
+      "candidate": "保存失败时保留输入；重试成功后清空表单。",
+      "reference": {
+        "label": "effective",
+        "intent": "preserved",
+        "benefit": "specific",
+        "problem": "原稿将失败处理和重试成功处理连在一起；QA 已确认两条条件的边界。",
+        "change": "补出时和后两个条件标记，用分号分别表达失败保留输入、重试成功清空表单。",
+        "rationale": "原文与用户消息共同支持断句，结构调整让两种状态的行为可独立核对，无需新增流程就能产生具体收益。",
+        "evidence": [
+          {
+            "source": "draft",
+            "quote": "保存失败保留输入重试成功清空表单。"
+          },
+          {
+            "source": "qa-question",
+            "qaIndex": 0,
+            "quote": "这里是“重试成功”的条件"
+          },
+          {
+            "source": "candidate",
+            "quote": "保存失败时保留输入；重试成功后清空表单。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "E023",
+      "group": "G01",
+      "source": "synthetic",
+      "referenceStatus": "proposed",
+      "draft": "请将完整 QA 轮数和模型设置改为全局共用，避免每个会话重复配置。",
+      "qa": [],
+      "candidate": "请将以下两项设置改为全局共用，避免每个会话重复配置：\n\n1. 完整 QA 轮数。\n2. 模型设置。",
+      "reference": {
+        "label": "cosmetic",
+        "intent": "preserved",
+        "benefit": "cosmetic",
+        "problem": "原稿已通过和字连接两项设置，共同作用域与目的清楚，没有混杂的独立要求待分离。",
+        "change": "把已经清楚的单句改成引导句和编号列表。",
+        "rationale": "与同组混杂原稿相比，本例没有边界或核对障碍需要修复；列出相同项目只改变展示形式，不能单凭新增列表判有效。",
+        "evidence": [
+          {
+            "source": "draft",
+            "quote": "完整 QA 轮数和模型设置改为全局共用"
+          },
+          {
+            "source": "candidate",
+            "quote": "以下两项设置改为全局共用"
+          },
+          {
+            "source": "candidate",
+            "quote": "1. 完整 QA 轮数。\n2. 模型设置。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "E024",
+      "group": "G01",
+      "source": "synthetic",
+      "referenceStatus": "proposed",
+      "draft": "请将完整 QA 轮数和模型设置改为全局共用，避免每个会话重复配置。",
+      "qa": [],
+      "candidate": "请将完整 QA 轮数和模型设置改为全局共用，避免每个会话重复配置。",
+      "reference": {
+        "label": "cosmetic",
+        "intent": "preserved",
+        "benefit": "none",
+        "problem": "原稿本身已清楚，没有需要修复的具体问题。",
+        "change": "候选与原稿完全相同。",
+        "rationale": "保持原意但没有变化或新增收益，依标签规则归入表面润色；这不代表原稿需要被强行改写。",
+        "evidence": [
+          {
+            "source": "draft",
+            "quote": "请将完整 QA 轮数和模型设置改为全局共用，避免每个会话重复配置。"
+          },
+          {
+            "source": "candidate",
+            "quote": "请将完整 QA 轮数和模型设置改为全局共用，避免每个会话重复配置。"
+          }
+        ]
+      }
+    }
+  ]
+}

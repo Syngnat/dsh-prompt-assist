@@ -63,7 +63,8 @@ function fixture(t) {
   const runtime = new AssistRuntime(ctx, fastService, ["openai", "alternate"], value => ({ ...value, role: "user", id: "fixture-message" }),enablement); t.after(() => runtime.dispose());
   const input = (id = "a", changes = {}) => ({ action: "generate", sessionId: id, feature: "enhance", requestId: "r1", draft: "draft", draftRev: 1, qaId: states.get(id).qaId, ...changes });
   const generate = (id = "a", changes = {}, options = {}) => runtime.dispatch(input(id, changes), { fromUI: true, ...options });
-  return { ctx, runtime, enablement, agents, states, selections, goals, prepares, streams, fileReads, hooks, commandLog, input, generate };
+  const configure = config => enablement.configure('enhance',normalizeConfig(config),{expectedRevision:enablement.getSnapshot().settingsRevision});
+  return { ctx, runtime, enablement, configure, agents, states, selections, goals, prepares, streams, fileReads, hooks, commandLog, input, generate };
 }
 
 test("state is content-free and disabled means zero requests; enhancement can use an empty completed-QA snapshot", async t => {
@@ -88,9 +89,9 @@ test("automatic suggestion admission rejects busy, changed draft or stale QA bef
   }
   f.goals.set("a", { phase: "active" });
   await assert.rejects(f.generate("a", { feature: "suggest", draft: "" }), { code: "stale-context" });
-  f.goals.clear(); f.states.get("a").settings.enhance = normalizeConfig({ enabled: true, followSession: false, provider: "openai", model: "gpt-test", reasoningEffort: "unsupported" });
+  f.goals.clear(); await f.configure({ enabled: true, followSession: false, provider: "openai", model: "gpt-test", reasoningEffort: "unsupported" });
   await assert.rejects(f.generate(), { code: "unsupported-effort" });
-  f.states.get("a").settings.enhance = normalizeConfig({ enabled: true, followSession: false, provider: "deepseek", model: "deepseek-chat", fast: true });
+  await f.configure({ enabled: true, followSession: false, provider: "deepseek", model: "deepseek-chat", fast: true });
   const skipped = await f.generate();
   assert.equal(skipped.route.fast, false); assert.equal(skipped.fastSkipped, true); assert.equal(f.prepares.length, 1);
 });
@@ -133,15 +134,15 @@ test("replacing one feature cancels only that slot, not another session or featu
   otherRelease.resolve(); assert.equal((await other).route.provider, "openai");
 });
 
-test("successful paired save cancels its feature and leaves independent feature cache intact", { timeout: 3000 }, async t => {
+test("successful global save cancels its feature and leaves independent feature cache intact", { timeout: 3000 }, async t => {
   const f = fixture(t), started = deferred();
   await f.generate("a", { feature: "suggest", draft: "" });
   f.hooks.stream = async (_options, data) => { if (data.feature === "enhance") { started.resolve(); await waitAbort(_options.signal); } };
   const old = f.generate().catch(error => error); await started.promise;
-  const saved = await f.runtime.dispatch({ action: "save", sessionId: "a", feature: "enhance", config: normalizeConfig({ enabled: false }) });
-  assert.equal(saved.settings.enhance.enabled, true); assert.equal(f.runtime.errorCode(await old), "cancelled");
-  assert.ok(f.runtime.cache.has("a:suggest")); assert.equal(f.commandLog.length, 1);
-  assert.match(f.commandLog[0].line, /^\/prompt-assist-config-v2 /); assert.deepEqual(f.commandLog[0].attachments, []);
+  const saved = await f.runtime.dispatch({ action: "save-global", feature: "enhance", expectedRevision:0, config: normalizeConfig({ enabled: false, rounds:2 }) });
+  assert.equal(saved.enabled.enhance, true); assert.equal(f.runtime.errorCode(await old), "cancelled");
+  assert.ok(f.runtime.cache.has("a:suggest")); assert.equal(f.commandLog.length, 0);
+  assert.equal(f.runtime.state(f.agents.get('b')).settings.enhance.rounds,2);
 });
 
 test("release and dispose cancel owned jobs without crossing session boundary", { timeout: 3000 }, async t => {
@@ -271,18 +272,18 @@ function priorityWire(t, f, mainFast) {
 
 test("follow-session DeepSeek with saved auxiliary Fast generates normally without Priority", async t => {
   const f = fixture(t), packets = priorityWire(t, f, true);
-  f.states.get("a").settings.enhance = normalizeConfig({ enabled: true, fast: true });
+  await f.configure({ enabled: true, fast: true });
   f.selections.set("a", { provider: "deepseek", model: "deepseek-chat", reasoningEffort: "high" });
   const value = await f.generate();
   assert.equal(value.fastSkipped, true); assert.equal(value.route.fast, false); assert.equal(f.prepares.length, 1);
-  assert.equal(f.prepares[0].provider, "deepseek"); assert.equal(f.states.get("a").settings.enhance.fast, true);
+  assert.equal(f.prepares[0].provider, "deepseek"); assert.equal(f.enablement.getSnapshot().settings.enhance.fast, true);
   assert.equal(packets[0].override, false); assert.equal(Object.hasOwn(packets[0].body, "service_tier"), false);
   assert.equal(priorityOverride("a"), undefined);
 });
 
 test("explicit DeepSeek auxiliary Fast skips without changing the saved route or reasoning", async t => {
   const f = fixture(t), packets = priorityWire(t, f, true);
-  f.states.get("a").settings.enhance = normalizeConfig({ enabled: true, followSession: false, provider: "deepseek", model: "deepseek-chat", reasoningEffort: "xhigh", fast: true });
+  await f.configure({ enabled: true, followSession: false, provider: "deepseek", model: "deepseek-chat", reasoningEffort: "xhigh", fast: true });
   const value = await f.generate();
   assert.equal(value.fastSkipped, true); assert.equal(value.route.fast, false); assert.equal(value.route.reasoningEffort, "xhigh");
   assert.equal(f.prepares.length, 1); assert.equal(f.prepares[0].model, "deepseek-chat");
@@ -291,7 +292,7 @@ test("explicit DeepSeek auxiliary Fast skips without changing the saved route or
 
 test("OpenAI auxiliary Fast still adds only Priority and preserves native reasoning", async t => {
   const f = fixture(t), packets = priorityWire(t, f, false);
-  f.states.get("a").settings.enhance = normalizeConfig({ enabled: true, fast: true });
+  await f.configure({ enabled: true, fast: true });
   const value = await f.generate();
   assert.equal(value.route.fast, true); assert.equal(value.fastSkipped, false); assert.equal(packets[0].override, true);
   assert.deepEqual(packets[0].body, { ...packets[0].original, service_tier: "priority" });
@@ -306,13 +307,13 @@ test("saved Fast off never inherits main Fast and is not reported as skipped", a
 
 test("cached skip diagnostics remain specific to the selected route and saved Fast preference", async t => {
   const f = fixture(t);
-  f.states.get("a").settings.enhance = normalizeConfig({ enabled: true, fast: true });
+  await f.configure({ enabled: true, fast: true });
   f.selections.set("a", { provider: "deepseek", model: "deepseek-chat", reasoningEffort: "high" });
   const skipped = await f.generate(); assert.equal(skipped.fastSkipped, true);
   const hit = await f.generate(); assert.equal(hit.cached, true); assert.equal(hit.fastSkipped, true);
-  f.states.get("a").settings.enhance = normalizeConfig({ enabled: true, fast: false });
+  await f.configure({ enabled: true, fast: false });
   const normal = await f.generate(); assert.notEqual(normal.cached, true); assert.equal(normal.fastSkipped, false); assert.equal(normal.route.fast, false);
-  f.states.get("a").settings.enhance = normalizeConfig({ enabled: true, fast: true });
+  await f.configure({ enabled: true, fast: true });
   f.selections.set("a", { provider: "openai", model: "gpt-test", reasoningEffort: "high" });
   const priority = await f.generate(); assert.notEqual(priority.cached, true); assert.equal(priority.route.fast, true); assert.equal(priority.fastSkipped, false);
   assert.equal(f.prepares.length, 3);

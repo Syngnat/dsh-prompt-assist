@@ -1,7 +1,7 @@
 {
   "meta": {
     "title": "提示词辅助与 Fast 加速",
-    "description": "提供提示词增强、下一问建议和 Priority 加速（OpenAI / xAI），支持按会话独立配置模型、推理档位及辅助 Fast。"
+    "description": "提供提示词增强、下一问建议和 Priority 加速（OpenAI / xAI），增强与建议各自的模型、推理档位、辅助 Fast 和 QA 轮数在当前 profile 全局共用。"
   },
   "fast.label": "Fast",
   "fast.off": "Fast 已关闭。开启后，本会话及继承设置的已授权模型（OpenAI gpt/o 系列、xAI Grok 4 及以上）请求使用 Priority 优先处理；需服务商支持，费用按其实际档位计收。",
@@ -13,6 +13,6 @@
   "fast.unsupported": "Fast 仅支持明确允许、且属于受支持加速家族的模型路由（OpenAI gpt/o 系列、xAI Grok 4 及以上）。",
   "fast.enabled": "已开启本会话及继承设置的 Fast；Priority 费用由服务商按其实际档位计收。",
   "fast.disabled": "已关闭本会话及继承设置的子智能体的 Fast，后续请求恢复服务商默认处理方式。",
-  "assist.command": "保存当前会话的模型、推理、Fast 和 QA 参数，不改变全局开关。",
+  "assist.command": "旧会话配置入口已停用；请在提示词辅助全局设置中配置模型和 QA 轮数。",
   "assist.retired": "旧版辅助配置入口已停用，请使用提示词辅助面板。"
 }

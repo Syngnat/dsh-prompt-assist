@@ -1,4 +1,5 @@
 import { ASSIST_PATH } from '../identity.js';
+import { providerErrorKey, providerHttpStatus } from '../provider-failure.js';
 export class AssistError extends Error {
   constructor(code = 'request_failed') { super(code); this.code = code; }
 }
@@ -59,6 +60,11 @@ export function referenceNames(occurrences = []) {
 export function errorKey(error) {
   const raw = typeof error === 'string' ? error : error?.code;
   const code = typeof raw === 'string' ? raw.toLowerCase() : 'request_failed';
+  const providerKey=providerErrorKey(code);
+  if(providerKey)return providerKey;
+  if (code === 'stale-global-settings') return 'settings.stale';
+  if (code === 'global-settings-unavailable' || code === 'global-unavailable') return 'settings.unavailable';
+  if (code === 'global-save-failed') return 'global.saveFailed';
   if (code === 'fast-unsupported') return 'fastUnsupported';
   if (code === 'empty-result') return 'emptyResult';
   if (code === 'cancelled') return 'cancelled';
@@ -102,5 +108,6 @@ export function safeCode(error) {
 /** Keep generic diagnostics identical in composer, settings page, and feature cards. */
 export function errorText(error, t) {
   const key = errorKey(error);
-  return t(key) + (key === "requestError" ? " " + t("safeCodeLabel") + " " + safeCode(error) : "");
+  const status=providerHttpStatus(typeof error==='string'?error:error?.code);
+  return t(key) + (status===null?'':` (HTTP ${status})`) + (key === "requestError" ? " " + t("safeCodeLabel") + " " + safeCode(error) : "");
 }

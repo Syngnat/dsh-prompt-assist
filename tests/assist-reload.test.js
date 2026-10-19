@@ -23,7 +23,7 @@ test('retired handler sees only disabled tombstone; its config command is reject
  ctx.sessionProjections={register(unit){ctx.effect(()=>{units.set(unit.key,unit);return()=>units.delete(unit.key);});}};
  ctx.commands={register(command){ctx.effect(()=>{commands.set(command.name,command);return()=>commands.delete(command.name);});}};
  let streams=0;ctx.llm={prepareCall(){streams++;throw Error('must not dispatch');}};
- const chain={int(){return this;},min(){return this;},max(){return this;},nullable(){return this;},strict(){return this;},parse(value){return value;}};
+ const chain={int(){return this;},min(){return this;},max(){return this;},nullable(){return this;},strict(){return this;},refine(){return this;},parse(value){return value;}};
  const z={any:()=>chain,object:()=>chain,string:()=>chain,boolean:()=>chain,number:()=>chain};
  const fast={selection:()=>({provider:'openai',model:'gpt-test'}),enabled:()=>true};
  const service=await installAssistHost(ctx,{z,fastService:fast,providers:['openai'],createUserMessage:value=>value});
@@ -31,7 +31,7 @@ test('retired handler sees only disabled tombstone; its config command is reject
  const locked=units.get(LEGACY_KEY).init();assert.equal(locked.settings.enhance.enabled,false);assert.equal(locked.busy,true);assert.equal(locked.rounds.length,0);
  assert.equal(units.get(LEGACY_KEY).apply(locked,{type:'anything'}),locked);
  const legacy=new AssistRuntime(ctx,fast,['openai'],value=>value);legacy.projection=()=>locked;
- await assert.rejects(legacy.generate({id:'a'},{feature:'enhance',draft:'text',draftRev:1},{}),{code:'disabled'});
+ await assert.rejects(legacy.generate({id:'a'},{feature:'enhance',draft:'text',draftRev:1},{}),{code:'global-settings-unavailable'});
  assert.equal(commands.get(LEGACY_COMMAND).handler().kind,'error');assert.ok(commands.has(ASSIST_COMMAND));assert.ok(units.has(ASSIST_KEY));assert.equal(streams,0);
  let replay=units.get(ASSIST_KEY).init({},0);const config=normalizeConfig({rounds:3});
  replay=foldContextState(replay,{type:'command/run',seq:1,data:{name:LEGACY_COMMAND,commandId:'old',args:JSON.stringify({feature:'enhance',config})}});
@@ -40,5 +40,16 @@ test('retired handler sees only disabled tombstone; its config command is reject
  assert.deepEqual(replay.pending,{});
  assert.ok(registeredTool.parameters.properties.action.enum.includes('set-enabled'));assert.equal(registeredTool.parameters.properties.config.properties.enabled,undefined);assert.equal(registeredTool.parameters.properties.enabled.type,'boolean');
  const changed=await registeredTool.execute({action:'set-enabled',feature:'enhance',enabled:true},{agent:{session:{header:{}}},signal:new AbortController().signal});assert.equal(changed.enabled.enhance,true);assert.equal((await service.dispatch({action:'enablement'})).revision,changed.revision);
- assert.equal(routes.size,4);ctx.dispose();assert.equal(routes.size,1);assert.equal(units.size,0);assert.equal(commands.size,0);
+ assert.equal(changed.configured.enhance,false,'legacy enabled flag does not confirm any old session model');
+  const before=service.globalEnablement();
+  assert.deepEqual(commands.get(ASSIST_COMMAND).handler(),{kind:'error',text:'global-config-required'});
+  assert.equal(commands.get(ASSIST_COMMAND).recordInput,false);
+  assert.strictEqual(service.globalEnablement(),before,'retired command cannot write profile settings');
+  const configGlobal={followSession:true,provider:'',model:'',reasoningEffort:'',fast:false,rounds:3};
+  const saved=await registeredTool.execute({action:'configure',feature:'enhance',config:configGlobal},{agent:{session:{header:{}}},signal:new AbortController().signal});
+  assert.deepEqual(saved.settings.enhance,configGlobal);assert.equal(saved.settingsRevision,1);assert.equal(saved.configured.enhance,true);
+  assert.equal(saved.revision,before.revision);assert.deepEqual(saved.enabled,before.enabled);assert.equal(streams,0);
+  await assert.rejects(registeredTool.execute({action:'configure',feature:'suggest',config:configGlobal},{agent:{session:{header:{origin:'subagent'}}},signal:new AbortController().signal}),{code:'forbidden'});
+  assert.match(registeredTool.description,/profile-wide/);assert.match(registeredTool.parameters.properties.config.description,/existing and future conversations/);
+  assert.equal(routes.size,4);ctx.dispose();assert.equal(routes.size,1);assert.equal(units.size,0);assert.equal(commands.size,0);
 });

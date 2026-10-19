@@ -19,6 +19,8 @@ for (const [name, original, text] of [
   ['added punctuation', 'Review this', 'Review this.'],
   ['changed punctuation', 'Review this.', 'Review this!'],
   ['a slight paraphrase', 'Review code and report risks.', 'Inspect code and report risks.'],
+  ['reported domain paraphrase (not a quality judgment)', '主要是，我发布到微信小程序，体验版必须要域名', '主要是:我发布到微信小程序时，体验版必须使用域名。'],
+  ['small but meaningful negation change', '需要域名', '不需要域名'],
   ['case change', 'Review code.', 'review code.'],
   ['new requirement lines', 'Review code. Report risks.', 'Review code.\nReport risks.'],
   ['new paragraph', 'Review code.\nReport risks.', 'Review code.\n\nReport risks.'],

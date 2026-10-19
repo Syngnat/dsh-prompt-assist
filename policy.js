@@ -15,7 +15,13 @@ export function isOpenAIModel(model) {
  * not a guarantee of upstream Priority availability. Legacy grok-1/2/3 are out of scope.
  */
 export function isGrokModel(model) {
-  return typeof model === 'string' && /^grok-(?:[4-9]|[1-9]\d+)(?:[.-]|$)/i.test(model);
+  if (typeof model !== 'string' || /[\s\\?#\u0000-\u001f\u007f]/u.test(model)) return false;
+  const segments = model.split('/');
+  // Proxy catalogs can namespace IDs (e.g. 安和桥/grok-4.7). Only inspect the final
+  // model segment; never rewrite the actual ID or infer authorization from its prefix.
+  if (segments.some(part => !part || part === '.' || part === '..')
+    || segments.slice(0, -1).some(part => !/^[\p{L}\p{M}\p{N}_.-]+$/u.test(part))) return false;
+  return /^grok-(?:[4-9]|[1-9]\d+)(?:[.-]|$)/i.test(segments.at(-1));
 }
 
 /** Every family whose provider exposes a request-level Priority service tier. */

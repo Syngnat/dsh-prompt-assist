@@ -11,7 +11,7 @@ test('session drafts and acknowledgements strip historical enabled without losin
 });
 
 const tick=()=>new Promise(resolve=>setImmediate(resolve));
-const snapshot=(revision=0,suggest=false,enhance=false)=>({scope:'profile',revision,enabled:{suggest,enhance}});
+const snapshot=(revision=0,suggest=false,enhance=false,settingsRevision=0)=>({scope:'profile',revision,enabled:{suggest,enhance},settingsRevision,settings:{suggest:sessionSettings(),enhance:sessionSettings()},configured:{suggest:true,enhance:true}});
 const deferred=()=>{let resolve,reject;const promise=new Promise((yes,no)=>{resolve=yes;reject=no;});return {promise,resolve,reject};};
 function watchFixture(){let sink,cancelled=false;const body=new ReadableStream({start(controller){sink=controller;},cancel(){cancelled=true;}});return {response:{ok:true,body},send(value){sink.enqueue(new TextEncoder().encode(JSON.stringify(value)+'\n'));},close(){sink.close();},get cancelled(){return cancelled;}};}
 test('shared source starts read-only and ignores late older RPC after a newer watch snapshot',async()=>{
@@ -28,7 +28,7 @@ test('settings shows two profile switches even with no selected session',async()
  const React=await import('react');const {renderToStaticMarkup}=await import('react-dom/server');const {SettingsPage}=await import('../assist/client/settings-page.js');
  const target={sessionId:null},global={data:snapshot(1,true,false),connected:true,loading:false,pending:null,readError:null,writeError:null,saved:null};
  const html=renderToStaticMarkup(React.createElement(SettingsPage,{t:key=>key,targetSource:{getSnapshot:()=>target,subscribe:()=>()=>{}},globalSource:{getSnapshot:()=>global,subscribe:()=>()=>{},setEnabled(){}},returnToConversation(){}}));
- assert.ok(html.includes('global.title'));assert.equal((html.match(/type="checkbox"/g)||[]).length,2);assert.ok(html.includes('settings.sessionEmpty'));
+ assert.ok(html.includes('global.title'));assert.equal((html.match(/type="checkbox"/g)||[]).length,6);assert.ok(html.includes('settings.profileSection'));assert.ok(!html.includes('settings.sessionEmpty'));
 });
 
 import {createEnablementSource,normalizeEnablement,mergeGlobalSettings,createEnablementObserver} from '../assist/client/enablement-source.js';
@@ -115,9 +115,9 @@ test('reconnect with advanced QA is a fresh baseline, not a billable replay',()=
 test('even a batched off/on revision invalidates pending work with equal final enabled values',()=>{
  const f=sessionController('session',globalView(snapshot(1,true,true)));f.update();f.update(undefined,'3:4');assert.equal(f.calls.length,1);f.update(globalView(snapshot(3,true,true)));assert.equal(f.calls[0].signal.aborted,true);assert.equal(f.calls.length,1);f.controller.dispose();
 });
-test('unknown or disconnected globals override legacy wire/session enabled but preserve model parameters',()=>{
+test('unknown or disconnected globals never inherit legacy wire/session controls',()=>{
  const params={...DEFAULT_SETTINGS,enabled:true,provider:'custom',model:'m',rounds:9};for(const global of [undefined,globalView(snapshot(4,true,true),false),globalView(snapshot(5,false,false))]){
-  const merged=mergeGlobalSettings({suggest:params,enhance:params},global);assert.equal(merged.suggest.enabled,false);assert.equal(merged.suggest.model,'m');assert.equal(merged.suggest.rounds,9);
+  const merged=mergeGlobalSettings({suggest:params,enhance:params},global);assert.equal(merged.suggest.enabled,false);assert.equal(merged.suggest.model,'');assert.equal(merged.suggest.rounds,1);
  }
  assert.deepEqual(Object.keys(sessionSettings(params)),['followSession','provider','model','reasoningEffort','fast','rounds']);
 });

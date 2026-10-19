@@ -10,7 +10,8 @@ import {OnlineUpdatePanelContent} from "../assist/client/online-update-panel.js"
 import {css} from "../assist/client/style.js";
 const h = React.createElement;
 const render = (Component, props, children) => renderToStaticMarkup(h(Component, {t: key => key, ...props}, children));
-const live = {data: {revision: 3, enabled: {suggest: true, enhance: false}}, connected: true, loading: false, pending: null, readError: null, writeError: null, saved: null};
+import {normalizeEnablement} from '../assist/client/enablement-source.js';
+const live = {data: normalizeEnablement({scope:'profile',revision: 3, enabled: {suggest: true, enhance: false}}), connected: true, loading: false, pending: null, readError: null, writeError: null, saved: null};
 function page(sessionId = null) {
   const target = {sessionId};
   return render(SettingsPage, {targetSource: {getSnapshot: () => target, subscribe: () => () => {}},
@@ -21,11 +22,12 @@ function page(sessionId = null) {
 
 test("settings page exposes four ordered card sections and a useful empty-session state", () => {
   const html = page();
-  assert.equal((html.match(/<section[^>]*class="[^"]*\blpa-card(?=[\s"])/g) ?? []).length, 4);
+  assert.equal((html.match(/<section[^>]*class="[^"]*\blpa-card(?=[\s"])/g) ?? []).length, 6);
   const titles = [...html.matchAll(/<h2[^>]*>(settings\.[^<]+)<\/h2>/g)].map(match => match[1]);
-  assert.deepEqual(titles, ["settings.globalSection", "settings.sessionSection", "settings.prioritySection", "settings.updatesSection"]);
+  assert.deepEqual(titles, ["settings.globalSection", "settings.profileSection", "settings.prioritySection", "settings.updatesSection"]);
   assert.match(html, /settings.subtitle/);
-  assert.match(html, /class="[^"]*lpa-empty-state[^"]*"[^>]*role="status">settings.sessionEmpty/);
+  assert.match(html, /settings.unconfigured/);
+  assert.match(html, /settings.modelUnknown/);
 });
 
 test("global switches remain real checked/disabled checkboxes with labeled switch rows", () => {
@@ -41,11 +43,9 @@ test("global switches remain real checked/disabled checkboxes with labeled switc
   assert.equal((blocked.match(/<input[^>]*disabled=""/g) ?? []).length, 2);
 });
 
-test("session identity stays visible inside a readonly chip", () => {
-  const html = page("session-1");
-  assert.match(html, /<code class="lpa-chip lpa-chip--readonly">session-1<\/code>/);
-  assert.doesNotMatch(html, /settings.sessionEmpty/);
-  assert.match(html, /role="status">loading/);
+test("session selection does not gate or retarget global settings", () => {
+  assert.equal(page('session-1'),page(null));
+  assert.doesNotMatch(page('session-1'),/session-1|settings.sessionEmpty/);
 });
 
 test("Priority chips keep read-only and revocable authorization separate", () => {

@@ -77,7 +77,7 @@ test("settings page includes the global updates section with no selected session
   const target = {sessionId: null};
   const html = renderToStaticMarkup(React.createElement(SettingsPage, {t: tFor("en"),
     targetSource: {getSnapshot: () => target, subscribe: () => () => {}}, returnToConversation() {}}));
-  const empty = dictionaries.en["settings.sessionEmpty"];
+  const empty = dictionaries.en["settings.profileEmpty"];
   assert.ok(html.includes(empty));
   assert.ok(html.includes(dictionaries.en["updates.title"]));
   const updateSection = html.search(/<section[^>]*class="[^"]*\blpa-update-panel\b/);
