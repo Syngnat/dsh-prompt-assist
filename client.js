@@ -2763,12 +2763,13 @@ function createFast(require2) {
   const css2 = `
       .local-openai-fast{display:inline-flex;align-items:center;position:relative;flex:none}
       .local-openai-fast__button{display:inline-flex;align-items:center;justify-content:center;gap:4px;height:28px;padding:0 7px;border:1px solid transparent;border-radius:7px;background:transparent;color:var(--dsw-alias-label-secondary);font:inherit;font-size:12px;line-height:20px;white-space:nowrap;cursor:pointer}
-      .local-openai-fast__button:hover:not(:disabled){background:var(--dsw-alias-bg-layer-2);border-color:var(--dsw-alias-border-l1)}
+      .local-openai-fast__button:hover:not(:disabled):not([aria-disabled=true]){background:var(--dsw-alias-bg-layer-2);border-color:var(--dsw-alias-border-l1)}
       .local-openai-fast__button[aria-checked=true]{color:var(--dsw-alias-brand-primary);background:var(--dsw-alias-bg-layer-2);border-color:var(--dsw-alias-brand-primary)}
       .local-openai-fast__button:focus-visible{outline:2px solid var(--dsw-alias-brand-primary);outline-offset:2px}
-      .local-openai-fast__button:disabled{opacity:.5;cursor:default}
+      .local-openai-fast__button:disabled,.local-openai-fast__button[aria-disabled=true]{opacity:.5;cursor:not-allowed}
       .local-openai-fast__button svg{display:block;flex:none}
       .local-openai-fast__error{position:absolute;bottom:34px;right:0;max-width:240px;width:max-content;padding:8px 10px;border:1px solid var(--dsw-alias-border-l2);border-radius:7px;background:var(--dsw-alias-bg-overlay);color:var(--dsw-alias-state-error-primary);font-size:12px;line-height:18px;z-index:20}
+      .local-openai-fast__notice{position:absolute;bottom:34px;right:0;max-width:280px;width:max-content;padding:8px 10px;border:1px solid var(--dsw-alias-border-l2);border-radius:7px;background:var(--dsw-alias-bg-overlay);color:var(--dsw-alias-label-primary);font-size:12px;line-height:18px;z-index:20}
     `;
   function useDefaultSelection(remote) {
     const [selection, setSelection] = React13.useState(null);
@@ -2807,6 +2808,7 @@ function createFast(require2) {
     }, [props.hydrationKey, props.sessionId, ready]);
     const [interaction, setInteraction] = React13.useState({ enabled: null, pending: false });
     const [error, setError] = React13.useState("");
+    const [notice, setNotice] = React13.useState("");
     const alive = React13.useRef(true);
     React13.useEffect(() => {
       alive.current = true;
@@ -2838,18 +2840,25 @@ function createFast(require2) {
     }), [props.remote, props.sessionId]);
     React13.useEffect(() => controller.sync(enabled), [controller, enabled]);
     const checked = eligible && (interaction.enabled ?? enabled);
+    const provider = (selected ?? defaultSelection)?.provider ?? "";
+    const blocked = reason === "loading" ? props.t(loadFailed ? "loadError" : "loading") : reason === "unsupported-provider" ? props.t("unsupportedProvider") + ": " + provider : !allowed ? props.t("access") : null;
+    React13.useEffect(() => {
+      if (!blocked) setNotice("");
+    }, [blocked]);
     if (!visible || unavailable) return null;
     function toggle() {
-      if (!eligible || !allowed) return;
+      if (!eligible || !allowed) {
+        if (blocked) setNotice(blocked);
+        return;
+      }
       setError("");
+      setNotice("");
       controller.toggle().catch(() => {
       });
     }
-    const provider = (selected ?? defaultSelection)?.provider ?? "";
-    const blocked = reason === "loading" ? props.t(loadFailed ? "loadError" : "loading") : reason === "unsupported-provider" ? props.t("unsupportedProvider") + ": " + provider : !allowed ? props.t("access") : null;
     return h12(
       "span",
-      { className: "local-openai-fast" },
+      { className: "local-openai-fast", title: blocked ?? props.t(checked ? "on" : "off") },
       h12("style", null, css2),
       h12("button", {
         type: "button",
@@ -2858,8 +2867,7 @@ function createFast(require2) {
         "aria-label": props.t("label"),
         "aria-checked": checked,
         "aria-busy": interaction.pending || reason === "loading" && !loadFailed,
-        disabled: !allowed || !eligible,
-        title: interaction.pending ? props.t("saving") : blocked ?? props.t(checked ? "on" : "off"),
+        "aria-disabled": !allowed || !eligible,
         onClick: toggle
       }, h12(
         "svg",
@@ -2872,6 +2880,7 @@ function createFast(require2) {
           fill: checked ? "currentColor" : "none"
         })
       ), props.t("label")),
+      notice ? h12("span", { role: "status", className: "local-openai-fast__notice" }, notice) : null,
       error ? h12("span", { role: "alert", className: "local-openai-fast__error" }, error) : null
     );
   }

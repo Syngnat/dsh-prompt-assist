@@ -2,6 +2,15 @@
 
 [English](<README.md>) | [简体中文](<README.zh-CN.md>)
 
+## 1.2.15 — Fast 禁用原因可见 / Visible Fast availability reasons
+
+- The Fast control no longer uses a native `disabled` button. It keeps `aria-disabled` semantics, stays focusable and hoverable, and clicking it explains why the toggle is unavailable — including the exact provider ID when that provider is not authorized for Priority.
+- Move the hover explanation to the wrapping element, because Chromium does not show `title` on disabled buttons. The reason also appears in a visible popover after a blocked click.
+- Add regressions for the `aria-disabled` semantics, the absence of a native `disabled` attribute, the wrapper carrying the reason, and the still-usable approved route.
+- Unchanged: no Priority payload is sent to an unauthorized route, saved preferences are untouched, and the reason text never claims that Priority billing stopped.
+
+中文：Fast 按钮不再使用原生 disabled，而是 aria-disabled：仍可聚焦和悬停，点击会就地说明不可用原因，未授权供应商时明确显示实际供应商 ID。悬停提示移到包装元素，避开 Chromium 不对禁用按钮显示 title 的限制。未授权路由仍不会注入 Priority。
+
 ## 1.2.14 — Assist error clarity and update-page hierarchy
 
 - Stop failing an enhancement or suggestion only because the saved auxiliary Fast setting cannot apply to the followed model. The request now runs without Priority and reports that Fast was skipped; the saved setting is untouched, so switching back to an eligible route restores it. No Priority payload is ever added for an ineligible route.

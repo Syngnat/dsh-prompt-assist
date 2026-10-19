@@ -154,12 +154,13 @@ export function createFast(require) {
     const css = `
       .local-openai-fast{display:inline-flex;align-items:center;position:relative;flex:none}
       .local-openai-fast__button{display:inline-flex;align-items:center;justify-content:center;gap:4px;height:28px;padding:0 7px;border:1px solid transparent;border-radius:7px;background:transparent;color:var(--dsw-alias-label-secondary);font:inherit;font-size:12px;line-height:20px;white-space:nowrap;cursor:pointer}
-      .local-openai-fast__button:hover:not(:disabled){background:var(--dsw-alias-bg-layer-2);border-color:var(--dsw-alias-border-l1)}
+      .local-openai-fast__button:hover:not(:disabled):not([aria-disabled=true]){background:var(--dsw-alias-bg-layer-2);border-color:var(--dsw-alias-border-l1)}
       .local-openai-fast__button[aria-checked=true]{color:var(--dsw-alias-brand-primary);background:var(--dsw-alias-bg-layer-2);border-color:var(--dsw-alias-brand-primary)}
       .local-openai-fast__button:focus-visible{outline:2px solid var(--dsw-alias-brand-primary);outline-offset:2px}
-      .local-openai-fast__button:disabled{opacity:.5;cursor:default}
+      .local-openai-fast__button:disabled,.local-openai-fast__button[aria-disabled=true]{opacity:.5;cursor:not-allowed}
       .local-openai-fast__button svg{display:block;flex:none}
       .local-openai-fast__error{position:absolute;bottom:34px;right:0;max-width:240px;width:max-content;padding:8px 10px;border:1px solid var(--dsw-alias-border-l2);border-radius:7px;background:var(--dsw-alias-bg-overlay);color:var(--dsw-alias-state-error-primary);font-size:12px;line-height:18px;z-index:20}
+      .local-openai-fast__notice{position:absolute;bottom:34px;right:0;max-width:280px;width:max-content;padding:8px 10px;border:1px solid var(--dsw-alias-border-l2);border-radius:7px;background:var(--dsw-alias-bg-overlay);color:var(--dsw-alias-label-primary);font-size:12px;line-height:18px;z-index:20}
     `;
 
     function useDefaultSelection(remote) {
@@ -197,6 +198,7 @@ export function createFast(require) {
        }, [props.hydrationKey, props.sessionId, ready]);
       const [interaction, setInteraction] = React.useState({ enabled: null, pending: false });
       const [error, setError] = React.useState('');
+      const [notice, setNotice] = React.useState('');
       const alive = React.useRef(true);
       React.useEffect(() => {
         alive.current = true;
@@ -220,27 +222,32 @@ export function createFast(require) {
       }), [props.remote, props.sessionId]);
       React.useEffect(() => controller.sync(enabled), [controller, enabled]);
       const checked = eligible && (interaction.enabled ?? enabled);
+      const provider = (selected ?? defaultSelection)?.provider ?? '';
+      const blocked = reason === 'loading' ? props.t(loadFailed ? 'loadError' : 'loading')
+        : reason === 'unsupported-provider' ? props.t('unsupportedProvider') + ': ' + provider
+        : !allowed ? props.t('access') : null;
+      // A disabled <button> is not hoverable and shows no title in Chromium, so the control stays
+      // focusable and clickable: a blocked click explains itself and never sends a command.
+      React.useEffect(() => { if (!blocked) setNotice(''); }, [blocked]);
       if (!visible || unavailable) return null;
       function toggle() {
-        if (!eligible || !allowed) return;
+        if (!eligible || !allowed) { if (blocked) setNotice(blocked); return; }
         setError('');
+        setNotice('');
         controller.toggle().catch(() => {});
       }
-      const provider = (selected ?? defaultSelection)?.provider ?? '';
-       const blocked = reason === 'loading' ? props.t(loadFailed ? 'loadError' : 'loading')
-         : reason === 'unsupported-provider' ? props.t('unsupportedProvider') + ': ' + provider
-         : !allowed ? props.t('access') : null;
-       return h('span', { className: 'local-openai-fast' },
+      return h('span', { className: 'local-openai-fast', title: blocked ?? props.t(checked ? 'on' : 'off') },
         h('style', null, css),
         h('button', {
           type: 'button', role: 'switch', className: 'local-openai-fast__button',
           'aria-label': props.t('label'), 'aria-checked': checked,
-          'aria-busy': interaction.pending || (reason === 'loading' && !loadFailed), disabled: !allowed || !eligible,
-          title: interaction.pending ? props.t('saving') : blocked ?? props.t(checked ? 'on' : 'off'), onClick: toggle,
+          'aria-busy': interaction.pending || (reason === 'loading' && !loadFailed), 'aria-disabled': !allowed || !eligible,
+          onClick: toggle,
         }, h('svg', { viewBox: '0 0 20 20', width: 14, height: 14, fill: 'none', 'aria-hidden': true },
           h('path', { d: 'M11.5 2 4 11h5l-.5 7L16 8h-5l.5-6Z',
             stroke: 'currentColor', strokeWidth: 1.5, strokeLinejoin: 'round',
             fill: checked ? 'currentColor' : 'none' })), props.t('label')),
+        notice ? h('span', { role: 'status', className: 'local-openai-fast__notice' }, notice) : null,
         error ? h('span', { role: 'alert', className: 'local-openai-fast__error' }, error) : null);
     }
 

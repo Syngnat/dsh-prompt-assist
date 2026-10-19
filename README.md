@@ -6,7 +6,7 @@ Provides prompt enhancement, next-question suggestions, and OpenAI Fast accelera
 
 A plugin bundle for the DeepSeek Harness (DSH) Web GUI. Enhancement and suggestions are independent features: enable either or both for the current DSH profile. Settings live on the sidebar page, not in a composer popup. Feature switches are profile-wide; model controls remain per-conversation.
 
-> **v1.2.14:** enhancement and suggestions no longer fail when the saved auxiliary Fast setting cannot apply to the followed model. The request runs without Priority and says so, and the saved setting is kept for an eligible route. Auxiliary failures now name their cause (cancelled, empty result, provider failure, incompatible Fast) and unknown codes expose a sanitized safe code. The online update page gains an availability banner, filled primary actions, a risk-accented confirmation card and an emphasized latest version. Prior Fast visibility, global feature switches and per-conversation model controls are preserved.
+> **v1.2.15:** the Fast control keeps `aria-disabled` semantics instead of a native disabled button, so hovering and clicking both explain why it is unavailable — including the exact provider ID when that provider is not authorized for Priority. The 1.2.14 improvements (assist error clarity, update-page hierarchy) remain unchanged.
 
 ## Compatibility policy
 

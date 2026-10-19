@@ -36,14 +36,22 @@ test("SSR keeps an unapproved GPT route visible as a disabled Fast switch", () =
   const fixture = toggleFixture({enabled: true, providers: ["openai"]});
   const html = fixture.render();
   assert.match(html, /<button[^>]*role="switch"/);
-  assert.match(html, /<button[^>]*disabled=""/);
+  assert.match(html, /<button[^>]*aria-disabled="true"/);
+  assert.doesNotMatch(html, /<button[^>]*\sdisabled/);
   assert.match(html, /aria-checked="false"/);
   assert.equal(fixture.writes, 0);
   assert.equal(fixture.catalogReads, 0, "SSR must not run the model catalog effect");
 });
 
-const pure = () => createFast(() => {throw new Error("Pure helpers must not require React");});
-const deferred = () => {let resolve, reject; const promise = new Promise((yes, no) => {resolve = yes; reject = no;}); return {promise, resolve, reject};};
+test("a blocked Fast control explains itself without relying on a disabled tooltip", () => {
+  const fixture = toggleFixture({enabled: true, providers: ["openai"]});
+  const html = fixture.render();
+  // Chromium suppresses title on disabled buttons: the reason lives on the wrapper instead.
+  assert.match(html, /<span class="local-openai-fast" title="[^"]*Provider ID: cpa/);
+  assert.doesNotMatch(html, /<button[^>]*\stitle=/);
+});
+
+const pure = () => createFast(() => {throw new Error("Pure helpers must not require React");});const deferred = () => {let resolve, reject; const promise = new Promise((yes, no) => {resolve = yes; reject = no;}); return {promise, resolve, reject};};
 const settle = async operation => {await Promise.allSettled([operation]);};
 
 for (const [name, wire] of [["missing", undefined], ["null", null], ["legacy true", true], ["legacy false", false]]) {
@@ -51,7 +59,8 @@ for (const [name, wire] of [["missing", undefined], ["null", null], ["legacy tru
     const fixture = toggleFixture(wire);
     const html = fixture.render();
     assert.match(html, /<button[^>]*role="switch"/);
-    assert.match(html, /<button[^>]*disabled=""/);
+    assert.match(html, /<button[^>]*aria-disabled="true"/);
+    assert.doesNotMatch(html, /<button[^>]*\sdisabled/);
     assert.match(html, /aria-checked="false"/);
     assert.equal(fixture.writes, 0);
     assert.equal(fixture.catalogReads, 0);
@@ -64,14 +73,14 @@ test("SSR approved GPT route stays usable and reflects the real wire boolean", (
     const html = fixture.render();
     assert.match(html, /<button[^>]*role="switch"/);
     assert.ok(html.includes("aria-checked=\"" + String(enabled) + "\""));
-    assert.doesNotMatch(html, /<button[^>]*disabled/);
+    assert.doesNotMatch(html, /<button[^>]*aria-disabled="true"/);
     assert.equal(fixture.writes, 0);
   }
 });
 
 test("SSR denied command permission remains visible but cannot write", () => {
   const fixture = toggleFixture({enabled: false, providers: ["cpa"]}, selected, {allowed: false});
-  assert.match(fixture.render(), /<button[^>]*role="switch"[^>]*disabled=""/);
+  assert.match(fixture.render(), /<button[^>]*role="switch"[^>]*aria-disabled="true"/);
   assert.equal(fixture.writes, 0);
 });
 
