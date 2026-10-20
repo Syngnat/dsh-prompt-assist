@@ -1,59 +1,54 @@
-# 输入框模型选择器（1.2.28 候选）
+# 输入框模型选择器（1.2.28）
 
-## 做了什么
+## 本轮界面
 
-输入框里的模型控件换成插件自己的菜单，位置不变，仍然是原来那一个控件：
+只替换输入框原来的模型选择器，不增加并列按钮：
 
-- 触发按钮显示当前模型名和推理档；点击展开菜单。
-- 一级列表：当前模型（带勾选），以及每个服务商一行；鼠标移入或点击服务商行，在旁边展开该服务商的模型列表。
-- 模型行下方可显示一行说明，例如「长上下文，适合整份文档」。说明由用户自己写，不来自服务商，也不参与模型请求。
-- 菜单底部是当前模型的推理档列表，可直接切换；只有一个档位时不显示这一段。
-- 菜单向上弹出、右对齐并限制在视口内；滚动或缩放时重新定位；Esc 或点击外部关闭。
-- 选择模型或推理档调用宿主 `modelDirectories` 的会话目录；`locked`、只读会话、加载中、提交中、失败状态都按宿主语义处理。
+- 菜单按供应商分组。每个供应商标题下直接显示其模型，不再先点供应商打开第二层菜单。
+- 模型名下显示内置说明；没有自定义说明编辑器，不向 profile 增加说明存储、快照字段或保存接口。
+- 菜单底部使用 Claude Style 原版滑块外形与动效：26px 轨道、16×30px 圆角滑块、200ms 吸附过渡、拖拽时 1.1 倍缩放、档位文字进出动画，以及最高档的紫色像素矩阵效果。不是上一版的圆形蓝色滑块。
+- 只使用宿主为该模型提供的档位，绝不把所有模型都硬编码为 Low/Medium/High。没有推理参数就不显示滑块；只有一个档位则不可拖动。
+- 拖动时连续跟手，按原版磁吸曲线靠近档位；松手吸附并只提交一次。等待宿主确认时保持目标落点，失败才回退。键盘同样在释放按键时提交；取消、切换模型或更新目录会使旧手势失效。系统设置减少动态效果时关闭非必要动画，保留交互。
+- 点击已经选中的模型只关闭菜单，不重置推理档。选择新模型使用新模型的默认档位，不继承旧模型的档位。
 
-## 为什么不是「隐藏原生控件再塞一个按钮」
+## 原生挂载与生命周期
 
-早先的实现是给原生控件打标记、在整篇文档里找插槽再注入自己的按钮。这套做法依赖别的插件的 DOM 结构：主题一改、原生一重绘就会失效，也可能在同一个位置留下两个控件。
+使用 `conversation.input.model` 的 single/session 插槽。原生 entry 的优先级为 0，本插件以 -1 注册，卸载后由原生 entry 继续渲染。仅依赖可用的 `slots`、`sessions`、`modelDirectories` 服务，不声明或接管原生 `.label` 子插槽，也不扫描、隐藏或移动别的插件的 DOM。
 
-现在的做法用的是宿主自己的插槽契约：
+每个渲染实例从所属 sessionId 取得共享目录；目录、当前选择与模型提交仍归宿主管理。`locked` 时不能切换；addressed subagent 不显示控件。组件卸载或切换会话后，旧请求回调不能重新打开菜单或抢夺焦点。
 
-- 原生选择器注册在 `conversation.input.model`（single / session 作用域），优先级为默认的 `0`。
-- 插件用同一插槽名、优先级 `-1` 注册，因此在原生之前渲染；原生那条注册记录仍然留在账本里，插件卸载或停用后立刻恢复渲染原生控件。
-- 作用域、`locked` 权限、会话目录和 `available` 判断都来自宿主注入，本插件不新建目录，也不自己判断权限。
-- 缺少 `modelDirectories` 服务时不注册任何替代控件，原生控件照常工作。
+组件自带样式，因此不必先打开插件设置页。弹层在视口内定位；分组模型区独立滚动，滑块固定在底部。模型行支持方向键、Home/End、Enter；Tab 可进入滑块，滑块使用原生 range 的键盘语义；Esc 或点击外部关闭。
 
-依据：`docs/model-picker-contract/EVIDENCE.md`（对 `app.asar` 与公开 SDK 声明的离线核验，15 项契约全部通过）。
+## 滑块来源与动效
 
-## 与其他插件共存
+滑块视觉取自同一固定版本 Claude Style 0.16.3 的 `control.ts`、`matrix.ts`、`effort-picker.css`、动效样式及 token。保留原始参考文件与 MIT 许可，[滑块来源记录](<../third-party/claude-style/SLIDER-PROVENANCE.json>)记录提交及文件哈希。测试直接执行参考源码中的纯函数作为对照，并核对原 CSS 声明、关键帧和时间参数；选择请求与会话权限仍使用本插件的原生目录接入。
 
-插件只占用这一个插槽。Claude Style 自带一个模型菜单，它通过给原生控件加 `data-dsh-claude-model-host` 标记并注入自己的按钮实现；两者同时启用时，同一个位置会出现两个控件。
-
-想使用本插件的菜单，请先在 Claude Style 设置里关闭「重绘模型选择器」，然后刷新页面。
-
-## 说明数据
-
-- 存储在独立的 profile 域 `local_prompt_assist_model_notes_<profile 哈希>`，与开关域、模型参数域分开，各自独立版本与 revision。
-- 身份是 `provider` 与 `model` 两个原样字符串，键为 `JSON.stringify([provider, model])`；命名空间 ID（如 `安和桥/grok-4.7`）不会被拆错，两组不同的 ID 也不会撞键。
-- 保存使用带 revision 的 CAS：过期写入被拒绝，界面按最新 revision 重试一次，仍失败则提示重试而不是静默覆盖。
-- 单条说明最多 120 字，最多 500 条；空白说明表示删除该条。说明会合并连续空白并去掉首尾空格；超过长度上限会被拒绝，不会被悄悄截断。
-- 修改服务商或模型 ID 后，旧说明不再匹配，但不会被自动删除。
-- **说明域不可用时（例如存储异常），插件降级为「说明不可用」，增强、建议和模型选择都不受影响；此时保存会被明确拒绝，不会假装已经持久化。**
-
-## 填写位置
-
-在「提示词辅助」设置页的「模型说明」卡片中填写。卡片按服务商列出当前可用的模型；填写后失焦或按 Enter 保存。这里只写注释，不改变任何模型参数。
-
-## 验证
-
-- `tests/assist-model-picker.test.js`：插槽名与优先级、分组、当前项、推理档选项、触发文案、菜单定位翻转与视口限制、子菜单位置、注册方式（断言使用插槽注册而非 DOM 手术）。
-- `tests/assist-model-notes.test.js`：键的构造与命名空间 ID、长度上限不截断、精确查找、快照格式校验、旧宿主缺字段时按不可用处理。
-- `tests/assist-profile-store.test.js`：说明域独立 revision、CAS 拒绝过期写入、空值删除、重新打开后持久、说明域损坏时降级且拒绝写入。
-- `tests/assist-model-notes-runtime.test.js`：真实 zod 契约下的说明域初始化、保存、冲突与损坏记录。
-- `scripts/test-model-picker-layout.mjs` + `scripts/run-model-picker-browser.mjs`：真实 Chromium 合成页面，8 项检查——触发按钮、菜单在按钮上方且不出视口、portal 到 body、服务商行与子菜单、说明行、推理档分组、选择模型、Esc 关闭、`locked` 禁用、不可用会话不渲染、选择被拒时菜单保留并说明原因。该页面不含真实会话、草稿或模型请求。
+可通过下面命令查看实际 Chromium 动效回归和录制动态演示，都是模拟目录，不是当前 GUI 的安装结果：
 
 ```powershell
-node scripts/test-model-picker-layout.mjs
-node scripts/run-model-picker-browser.mjs
+node scripts/test-model-picker-motion.mjs
+node scripts/record-model-picker-motion.mjs
 ```
 
-**验证限制：** 以上是离线测试与合成页面。尚未在已登录的现有 GUI 中完成完整视觉验收，也未在真实 profile 中安装本候选；与其他主题的组合未逐一验证。
+## 说明来源与范围
+
+内置说明原样取自 [Claude Style 0.16.3](https://github.com/Nwflower/dsh-claude-style/tree/33fc20b63d4cbd31cfec98d7952e3c53ec11c832)，固定提交 `33fc20b63d4cbd31cfec98d7952e3c53ec11c832`。数据文件 SHA-256 为 `d815694fb9540e60bc336939d5dc3f87121cc2ce102b14512f5c0492ea1cdd4b`；63 条模型家族规则、4 条档次规则及语言回退逻辑随客户端打包。完整 [MIT 许可](<../third-party/claude-style/LICENSE>)和[来源记录](<../third-party/claude-style/PROVENANCE.json>)随包分发。
+
+运行时不依赖 Claude Style 的安装、网络或 profile 数据。规则未匹配时使用宿主模型 metadata 中的 description；仍无说明则留空，不凭空生成。文案属于上游描述，不是本插件对模型能力的独立评测。没有复制额度、计费倍率或图标数据，也不会伪造这些状态。匹配仅影响显示，不进入请求提示词，不调用模型。
+
+供应商个别目录加载失败时，成功目录仍然可选，失败项同时显示，并提供重新加载。提交失败会留在菜单内说明原因。
+
+## 组合兼容性与验证边界
+
+若另一个主题也接管同一模型选择器，应只保留一种替换功能。当前没有对所有第三方主题组合做实机验证，不保证它们同时启用的结果。
+
+开发验证覆盖真实 React 组件和真实 Chromium 指针、键盘事件。合成页面使用模拟模型目录；截图不是已登录 GUI 截图，也不能证明当前 profile 已升级。测试不会调用真实模型。
+
+```powershell
+node --test tests/*.test.js
+node scripts/test-model-picker-layout.mjs
+node scripts/run-model-picker-browser.mjs
+node scripts/screenshot-model-picker.mjs
+```
+
+维护者发布与用户升级是独立操作；未经明确授权不安装或升级当前 profile。

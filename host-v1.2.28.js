@@ -2676,7 +2676,10 @@ var package_default = {
     "docs/confirmed-online-update.md",
     "docs/profile-global-settings.md",
     "docs/result-anchor-layout.md",
-    "docs/model-picker.md"
+    "docs/model-picker.md",
+    "third-party/claude-style/LICENSE",
+    "third-party/claude-style/PROVENANCE.json",
+    "third-party/claude-style/SLIDER-PROVENANCE.json"
   ],
   scripts: {
     test: "node --test tests/*.test.js",
@@ -3354,12 +3357,8 @@ function initialSettings() {
 // assist/profile-store.js
 var FEATURES = ["suggest", "enhance"];
 var FIELDS = ["followSession", "provider", "model", "reasoningEffort", "fast", "rounds"];
-var NOTE_ID_MAX = 200;
-var NOTE_MAX = 120;
-var NOTES_MAX = 500;
 var failure3 = (code) => Object.assign(new Error(code), { code });
 var unavailable2 = () => failure3("global-settings-unavailable");
-var notesUnavailable = () => failure3("model-notes-unavailable");
 var optional2 = (ctx, name) => typeof ctx?.get === "function" ? ctx.get(name) : ctx?.[name];
 function configOf(input, complete = true) {
   if (complete && (!input || FIELDS.some((key) => !Object.hasOwn(input, key)))) throw failure3("invalid-config");
@@ -3393,43 +3392,8 @@ function domainName(dir) {
   const absolute = resolve2(dir), canonical = process.platform === "win32" ? absolute.toLowerCase() : absolute;
   return "local_prompt_assist_controls_" + createHash2("sha256").update(canonical, "utf8").digest("hex");
 }
-function notesDomainName(dir) {
-  if (typeof dir !== "string" || !isAbsolute3(dir) || dir.includes("\0")) throw unavailable2();
-  const absolute = resolve2(dir), canonical = process.platform === "win32" ? absolute.toLowerCase() : absolute;
-  return "local_prompt_assist_model_notes_" + createHash2("sha256").update(canonical, "utf8").digest("hex");
-}
-var validNoteId = (value) => typeof value === "string" && value.length > 0 && value.length <= NOTE_ID_MAX;
-var oneLine = (value) => value.replace(/[\s\u0085]+/gu, " ").trim();
-function noteKey(provider, model) {
-  if (!validNoteId(provider) || !validNoteId(model)) throw failure3("invalid-note-key");
-  return JSON.stringify([provider, model]);
-}
-function validNoteKey(key) {
-  try {
-    const ids = JSON.parse(key);
-    return Array.isArray(ids) && ids.length === 2 && ids.every(validNoteId) && JSON.stringify(ids) === key;
-  } catch {
-    return false;
-  }
-}
-function normalizeNote(value) {
-  if (typeof value !== "string") throw failure3("invalid-note");
-  const text = oneLine(value);
-  if (text.length > NOTE_MAX) throw failure3("invalid-note");
-  return text;
-}
-function freezeNotes(record) {
-  return Object.freeze({ revision: record.revision, notes: Object.freeze({ ...record.notes }) });
-}
-function notesSchemaOf(z) {
-  const notes = z.unknown().refine((value) => value !== null && typeof value === "object" && !Array.isArray(value) && (Object.getPrototypeOf(value) === Object.prototype || Object.getPrototypeOf(value) === null) && Object.keys(value).length <= NOTES_MAX && Object.keys(value).every(validNoteKey)).pipe(z.record(z.string(), z.string().refine((text) => text.length > 0 && text.length <= NOTE_MAX && oneLine(text) === text)));
-  return z.object({ revision: z.number().int().min(0).max(Number.MAX_SAFE_INTEGER), notes }).strict();
-}
-function emptyNotes() {
-  return freezeNotes({ revision: 0, notes: {} });
-}
 async function openProfileStore(ctx, z) {
-  let flags, domain, controls, notes;
+  let flags, domain, controls;
   try {
     flags = await openEnablement(ctx, z);
     const facility = optional2(ctx, "storageDomain"), schema = schemaOf2(z);
@@ -3437,110 +3401,11 @@ async function openProfileStore(ctx, z) {
     domain = await facility.open({ name: domainName(optional2(ctx, "profileContext")?.dir), version: 1, global: { schema, initial }, tables: {} });
     if (typeof domain?.global?.get !== "function" || typeof domain?.global?.set !== "function" || typeof domain?.close !== "function") throw unavailable2();
     controls = controlsStore(domain, freezeRecord2(schema.parse(domain.global.get())));
-    notes = await openNotes(ctx, z);
-    return combine(flags, controls, notes);
+    return combine(flags, controls);
   } catch {
-    await Promise.allSettled([Promise.resolve().then(() => flags?.close()), Promise.resolve().then(() => controls ? controls.close() : domain?.close()), Promise.resolve().then(() => notes?.close())]);
+    await Promise.allSettled([Promise.resolve().then(() => flags?.close()), Promise.resolve().then(() => controls ? controls.close() : domain?.close())]);
     throw unavailable2();
   }
-}
-async function openNotes(ctx, z) {
-  let domain;
-  try {
-    const facility = optional2(ctx, "storageDomain");
-    if (typeof facility?.open !== "function") throw notesUnavailable();
-    const schema = notesSchemaOf(z);
-    domain = await facility.open({ name: notesDomainName(optional2(ctx, "profileContext")?.dir), version: 1, global: { schema, initial: emptyNotes() }, tables: {} });
-    if (typeof domain?.global?.get !== "function" || typeof domain?.global?.set !== "function" || typeof domain?.close !== "function") throw notesUnavailable();
-    return notesStore(domain, freezeNotes(schema.parse(domain.global.get())));
-  } catch {
-    try {
-      await domain?.close();
-    } catch {
-    }
-    return notesStore(null, emptyNotes());
-  }
-}
-function notesStore(domain, loaded) {
-  let snapshot = Object.freeze({ ...loaded, available: !!domain }), tail = Promise.resolve(), closing = false, disposal;
-  const listeners = /* @__PURE__ */ new Set();
-  function notify() {
-    for (const listener of [...listeners]) if (listeners.has(listener)) {
-      try {
-        void Promise.resolve(listener(snapshot)).catch(() => {
-        });
-      } catch {
-      }
-    }
-  }
-  function disable() {
-    snapshot = Object.freeze({ ...snapshot, available: false });
-    notify();
-    return notesUnavailable();
-  }
-  return Object.freeze({
-    getSnapshot: () => snapshot,
-    save(provider, model, text, options) {
-      if (closing || !snapshot.available) return Promise.reject(notesUnavailable());
-      let key, value, signal, expectedRevision;
-      try {
-        if (!options || typeof options !== "object" || Array.isArray(options) || !Object.hasOwn(options, "expectedRevision") || Object.keys(options).some((name) => !["expectedRevision", "signal"].includes(name))) throw failure3("invalid-request");
-        ({ signal, expectedRevision } = options);
-        if (!Number.isSafeInteger(expectedRevision) || expectedRevision < 0) throw failure3("invalid-request");
-        if (signal !== void 0 && (typeof signal?.throwIfAborted !== "function" || typeof signal.aborted !== "boolean")) throw failure3("invalid-request");
-        key = noteKey(provider, model);
-        signal?.throwIfAborted();
-        value = normalizeNote(text);
-      } catch (error) {
-        return Promise.reject(error);
-      }
-      const operation = tail.then(async () => {
-        signal?.throwIfAborted();
-        if (!snapshot.available) throw notesUnavailable();
-        if (expectedRevision !== snapshot.revision) throw failure3("stale-model-notes");
-        if ((snapshot.notes[key] ?? "") === value) return snapshot;
-        if (snapshot.revision === Number.MAX_SAFE_INTEGER) throw disable();
-        const notes = { ...snapshot.notes };
-        if (value === "") delete notes[key];
-        else {
-          if (!Object.hasOwn(notes, key) && Object.keys(notes).length >= NOTES_MAX) throw failure3("too-many-model-notes");
-          notes[key] = value;
-        }
-        const record = freezeNotes({ revision: snapshot.revision + 1, notes });
-        try {
-          await domain.global.set(record);
-        } catch {
-          throw disable();
-        }
-        snapshot = Object.freeze({ ...record, available: true });
-        notify();
-        return snapshot;
-      });
-      tail = operation.then(() => {
-      }, () => {
-      });
-      return operation;
-    },
-    subscribe(listener) {
-      if (closing) throw notesUnavailable();
-      if (typeof listener !== "function") throw failure3("invalid-request");
-      listeners.add(listener);
-      return () => listeners.delete(listener);
-    },
-    close() {
-      closing = true;
-      disposal ??= tail.then(async () => {
-        try {
-          await domain?.close();
-        } catch {
-          throw notesUnavailable();
-        } finally {
-          listeners.clear();
-        }
-      });
-      return disposal;
-    }
-  });
 }
 function controlsStore(domain, loaded) {
   let snapshot = loaded, tail = Promise.resolve(), closing = false, disposal;
@@ -3608,22 +3473,12 @@ function controlsStore(domain, loaded) {
     }
   });
 }
-function combine(flags, controls, notes) {
+function combine(flags, controls) {
   const listeners = /* @__PURE__ */ new Set();
   let snapshot, closing = false, disposal;
   function refresh() {
-    const flag = flags.getSnapshot(), control = controls.getSnapshot(), note = notes.getSnapshot();
-    snapshot = Object.freeze({
-      scope: "profile",
-      revision: flag.revision,
-      enabled: flag.enabled,
-      settingsRevision: control.revision,
-      settings: control.settings,
-      configured: control.configured,
-      notesRevision: note.revision,
-      notes: note.notes,
-      notesAvailable: note.available
-    });
+    const flag = flags.getSnapshot(), control = controls.getSnapshot();
+    snapshot = Object.freeze({ scope: "profile", revision: flag.revision, enabled: flag.enabled, settingsRevision: control.revision, settings: control.settings, configured: control.configured });
     for (const listener of [...listeners]) if (listeners.has(listener)) {
       try {
         void Promise.resolve(listener(snapshot)).catch(() => {
@@ -3634,18 +3489,11 @@ function combine(flags, controls, notes) {
   }
   refresh();
   const stopFlags = flags.subscribe(refresh);
-  let stopControls, stopNotes;
+  let stopControls;
   try {
     stopControls = controls.subscribe(refresh);
   } catch (error) {
     stopFlags();
-    throw error;
-  }
-  try {
-    stopNotes = notes.subscribe(refresh);
-  } catch (error) {
-    stopFlags();
-    stopControls();
     throw error;
   }
   return Object.freeze({
@@ -3656,10 +3504,6 @@ function combine(flags, controls, notes) {
       await controls.configure(feature, config, options);
       return snapshot;
     },
-    async saveNote(provider, model, text, options) {
-      await notes.save(provider, model, text, options);
-      return snapshot;
-    },
     subscribe(listener) {
       if (closing) throw unavailable2();
       if (typeof listener !== "function") throw failure3("invalid-request");
@@ -3668,13 +3512,11 @@ function combine(flags, controls, notes) {
     },
     close() {
       closing = true;
-      disposal ??= Promise.allSettled([flags.close(), controls.close(), notes.close()]).then((results) => {
+      disposal ??= Promise.allSettled([flags.close(), controls.close()]).then((results) => {
         stopFlags();
         stopControls();
-        stopNotes();
         listeners.clear();
-        if (results.slice(0, 2).some((result) => result.status === "rejected")) throw unavailable2();
-        if (results[2].status === "rejected") throw notesUnavailable();
+        if (results.some((result) => result.status === "rejected")) throw unavailable2();
       });
       return disposal;
     }
@@ -4316,73 +4158,9 @@ var CLOSED_ENABLEMENT = Object.freeze({
   enabled: Object.freeze({ suggest: false, enhance: false }),
   settingsRevision: 0,
   settings: Object.freeze({ suggest: CLOSED_CONFIG, enhance: CLOSED_CONFIG }),
-  configured: Object.freeze({ suggest: false, enhance: false }),
-  notesRevision: 0,
-  notes: Object.freeze({}),
-  notesAvailable: false
+  configured: Object.freeze({ suggest: false, enhance: false })
 });
-var CODES = /* @__PURE__ */ new Set([
-  "invalid-config",
-  "invalid-enabled",
-  "invalid-follow-session",
-  "invalid-fast",
-  "invalid-provider",
-  "invalid-model",
-  "invalid-effort",
-  "model-required",
-  "invalid-reference",
-  "invalid-context",
-  "invalid-feature",
-  "invalid-draft",
-  "empty-draft",
-  "invalid-file-entry",
-  "invalid-file-path",
-  "invalid-file-bytes",
-  "file-reader-unavailable",
-  "file-read-failed",
-  "invalid-rounds",
-  "invalid-request",
-  "not-configured",
-  "disabled",
-  "unsupported-effort",
-  "fast-unsupported",
-  "no-context",
-  "context-overflow",
-  "context-unknown",
-  "file-type-unsupported",
-  "unsupported-file",
-  "file-too-large",
-  "total-too-large",
-  "files-too-large",
-  "sensitive-file",
-  "binary-file",
-  "invalid-file",
-  "model-failed",
-  "invalid-suggestion",
-  "empty-result",
-  "cancelled",
-  "stale-context",
-  "busy",
-  "forbidden",
-  "invalid-receipt",
-  "request-too-large",
-  "output-too-large",
-  "output-limit",
-  "timeout",
-  "save-failed",
-  "not-a-file",
-  "unknown-action",
-  "file-consent-required",
-  "global-settings-unavailable",
-  "stale-enablement",
-  "stale-global-settings",
-  "global-config-required",
-  "invalid-note-key",
-  "invalid-note",
-  "stale-model-notes",
-  "too-many-model-notes",
-  "model-notes-unavailable"
-]);
+var CODES = /* @__PURE__ */ new Set(["invalid-config", "invalid-enabled", "invalid-follow-session", "invalid-fast", "invalid-provider", "invalid-model", "invalid-effort", "model-required", "invalid-reference", "invalid-context", "invalid-feature", "invalid-draft", "empty-draft", "invalid-file-entry", "invalid-file-path", "invalid-file-bytes", "file-reader-unavailable", "file-read-failed", "invalid-rounds", "invalid-request", "not-configured", "disabled", "unsupported-effort", "fast-unsupported", "no-context", "context-overflow", "context-unknown", "file-type-unsupported", "unsupported-file", "file-too-large", "total-too-large", "files-too-large", "sensitive-file", "binary-file", "invalid-file", "model-failed", "invalid-suggestion", "empty-result", "cancelled", "stale-context", "busy", "forbidden", "invalid-receipt", "request-too-large", "output-too-large", "output-limit", "timeout", "save-failed", "not-a-file", "unknown-action", "file-consent-required", "global-settings-unavailable", "stale-enablement", "stale-global-settings", "global-config-required"]);
 var AssistRuntime = class {
   constructor(ctx, fastService, providers, createUserMessage, enablement) {
     this.createUserMessage = createUserMessage;
@@ -4491,16 +4269,6 @@ var AssistRuntime = class {
     const config = await this.validateConfig(void 0, input.config, options.signal);
     return this.enablement.configure(input.feature, config, { expectedRevision: input.expectedRevision, signal: options.signal });
   }
-  async saveNote(input, options = {}) {
-    if (options.fromUI !== true || options.agent?.session?.header?.origin === "subagent") throw failure7("forbidden");
-    if (!input || typeof input !== "object" || Array.isArray(input) || ["provider", "model", "text", "expectedRevision"].some((key) => !Object.hasOwn(input, key)) || Object.keys(input).some((key) => !["provider", "model", "text", "expectedRevision", "action", "sessionId"].includes(key)) || input.action !== void 0 && input.action !== "save-note" || input.sessionId !== void 0 && (typeof input.sessionId !== "string" || input.sessionId.length > 180)) throw failure7("invalid-request");
-    if ([input.provider, input.model].some((value) => typeof value !== "string" || value.length === 0 || value.length > 200)) throw failure7("invalid-note-key");
-    if (typeof input.text !== "string") throw failure7("invalid-note");
-    if (!Number.isSafeInteger(input.expectedRevision) || input.expectedRevision < 0) throw failure7("invalid-request");
-    if (typeof this.enablement?.saveNote !== "function" || this.globalEnablement().notesAvailable !== true) throw failure7("model-notes-unavailable");
-    if (input.expectedRevision !== this.globalEnablement().notesRevision) throw failure7("stale-model-notes");
-    return this.enablement.saveNote(input.provider, input.model, input.text, { expectedRevision: input.expectedRevision, signal: options.signal });
-  }
   async catalog(provider) {
     const providers = this.ctx.llm.listProviders();
     if (!provider) return { providers, models: [] };
@@ -4524,7 +4292,6 @@ var AssistRuntime = class {
     if (input.action === "save-global") return this.saveGlobal(input, options);
     if (input.action === "save") throw failure7("global-config-required");
     if (input.action === "catalog") return this.catalog(input.provider);
-    if (input.action === "save-note") return this.saveNote(input, options);
     if (input.action === "model") return this.model(input.provider, input.model, options.signal);
     const agent = options.agent ?? await this.agent(input.sessionId);
     switch (input.action) {

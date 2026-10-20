@@ -11,7 +11,6 @@ import {css} from './style.js';
 import {createSettingsTarget} from './settings-target.js';
 import {createEnablementSource} from './enablement-source.js';
 import {ModelPicker, MODEL_SLOT, MODEL_PICKER_PRIORITY} from './model-picker.js';
-import {EMPTY_NOTES} from './model-notes.js';
 const h=React.createElement;
 function AssistIcon({size=20}){return h('svg',{width:size,height:size,viewBox:'0 0 24 24',fill:'none',stroke:'currentColor',strokeWidth:1.7,'aria-hidden':true},h('path',{d:'M4 5h10M4 10h7M4 15h6M14 4v4m-2-2h4M17 10l3 3-7 7H10v-3Z'}));}
 function SettingsSurface(p){return h(React.Fragment,null,h('style',null,css),h(SettingsPage,p));}
@@ -41,9 +40,9 @@ export function installAssist(ctx){
     return {
      available,
      directory:directory.store,
-     load:()=>{if(available)directory.load().catch(()=>{});},
+     load:()=>available?directory.load():Promise.resolve(undefined),
+     getLocale:()=>ctx.locale.getLocale().active,
      select:selection=>available?directory.select(selection):Promise.resolve(undefined),
-     notesSource:{subscribe:listener=>globalSource.subscribe(listener),getSnapshot:()=>globalSource.getSnapshot()?.data?.notes??EMPTY_NOTES},
     };
    },
   },ModelPicker));

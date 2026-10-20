@@ -1,0 +1,65 @@
+{
+  "package": "dsh-claude-style",
+  "version": "0.16.3",
+  "repository": "https://github.com/Nwflower/dsh-claude-style",
+  "tag": "v0.16.3",
+  "commit": "33fc20b63d4cbd31cfec98d7952e3c53ec11c832",
+  "retrievedOn": "2026-10-20",
+  "copyright": "Copyright (c) 2026 Nwflower",
+  "license": "MIT",
+  "licenseFile": "third-party/claude-style/LICENSE",
+  "data": {
+    "sourcePath": "packages/client/data/model-descriptions.json",
+    "sourceUrl": "https://raw.githubusercontent.com/Nwflower/dsh-claude-style/33fc20b63d4cbd31cfec98d7952e3c53ec11c832/packages/client/data/model-descriptions.json",
+    "gitBlobSha1": "bed100024971bf16c88e4c288c8b257c7c378ac5",
+    "sha256": "d815694fb9540e60bc336939d5dc3f87121cc2ce102b14512f5c0492ea1cdd4b",
+    "bytes": 27532,
+    "vendoredPath": "assist/client/model-descriptions-data.json",
+    "modifications": "None. The pinned source file is copied byte for byte, including unused brand metadata.",
+    "families": 63,
+    "tiers": 4
+  },
+  "upstreamLicense": {
+    "sourceUrl": "https://raw.githubusercontent.com/Nwflower/dsh-claude-style/33fc20b63d4cbd31cfec98d7952e3c53ec11c832/LICENSE",
+    "gitBlobSha1": "0365a83f0924873754d729575986fc501c5609b8",
+    "sha256": "15747d9e2ce37fd5670c4351572b10435f03f79d2b333a50be9c84e771f0af7f",
+    "bytes": 2497,
+    "modifications": "None. The complete upstream LICENSE is retained, including its notices for assets not copied here."
+  },
+  "resolver": {
+    "path": "assist/client/model-descriptions.js",
+    "adaptedFrom": [
+      "https://raw.githubusercontent.com/Nwflower/dsh-claude-style/33fc20b63d4cbd31cfec98d7952e3c53ec11c832/packages/client/src/features/model/copy-lookup.ts",
+      "https://raw.githubusercontent.com/Nwflower/dsh-claude-style/33fc20b63d4cbd31cfec98d7952e3c53ec11c832/packages/client/src/features/model/model-copy.ts",
+      "https://raw.githubusercontent.com/Nwflower/dsh-claude-style/33fc20b63d4cbd31cfec98d7952e3c53ec11c832/packages/client/src/core/i18n.ts"
+    ],
+    "modifications": [
+      "Statically import the local JSON instead of fetching the Claude Style host resource.",
+      "Accept provider, SDK model and a locale string defaulting to zh instead of a host context.",
+      "Return an empty string or the SDK description for absent or unusable model IDs.",
+      "Keep the original model-ID-first family order, then provider/model families, then model-ID-only tiers and locale fallback."
+    ]
+  },
+  "npm": {
+    "metadataUrl": "https://registry.npmjs.org/dsh-claude-style/0.16.3",
+    "tarballUrl": "https://registry.npmjs.org/dsh-claude-style/-/dsh-claude-style-0.16.3.tgz",
+    "integrity": "sha512-yJrDfUqYjkpIejc8LYm5ZsY1+FmRX0Y89hmBGDgq1+Fha/bHkOve4XkXyrcaZLerEvTv+EWBkkYf0Vd9f4uQAw==",
+    "sha1": "86e41c76cc2d5f0c2ba67ba2390d73e41b85fabf",
+    "dataPath": "package/lib/model-descriptions.json",
+    "dataSha256": "92506932cf8898865ab5c219d083a8bbfacb3cd738a6a852a4289a4fddfd9560",
+    "comparison": "Tarball SHA-512 and SHA-1 match npm metadata. Published JSON is deeply equal to the pinned source JSON; formatting differs. LICENSE and package.json are byte-identical to the pinned source."
+  },
+  "releaseProvenance": {
+    "sourceUrl": "https://registry.npmjs.org/-/npm/v1/attestations/dsh-claude-style@0.16.3",
+    "predicateType": "https://slsa.dev/provenance/v1",
+    "workflowRef": "refs/tags/v0.16.3",
+    "commit": "33fc20b63d4cbd31cfec98d7952e3c53ec11c832",
+    "evidence": "Source commit read from the npm SLSA attestation payload; its signature was not independently verified."
+  },
+  "scope": [
+    "Only the model description JSON and lookup/localization logic are reused.",
+    "No fonts, logos, artwork or other upstream assets are copied.",
+    "The upstream THIRD_PARTY_NOTICES.md was reviewed and lists no attribution for the copied data or lookup/localization files.",
+    "The resolver returns display text only and performs no network requests, model calls, profile reads or writes."
+  ]
+}

@@ -52,7 +52,5 @@ test('observation is coalesced and all listeners, observers and queued work are 
 });
 test('only the result owns a local anchor; native menus stay above it',()=>{
  assert.match(css,/\.lpa-result-anchor\{position:absolute;inset-inline:0;bottom:8px;z-index:90/);
- assert.match(css,/var\(--lpa-result-height,320px\)/);
- assert.deepEqual([...css.matchAll(/([^{}]+)\{[^}]*position:fixed/g)].map(m=>m[1].trim()),['.lpa-model-menu']);
- assert.doesNotMatch(css,/data-dsh-claude|data-composer-card/);
+ assert.match(css,/var\(--lpa-result-height,320px\)/);assert.doesNotMatch(css,/position:fixed|data-dsh-claude|data-composer-card/);
 });

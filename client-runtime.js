@@ -260,37 +260,6 @@ var init_style = __esm({
   "assist/client/style.js"() {
     css = `
 .lpa.lpa-inline--undo{width:fit-content;max-width:calc(100% - 32px);padding:3px 6px;border-color:transparent;background:transparent}
-/* Composer model seat: the plugin shadows the shipped picker inside the same slot. */
-.lpa-model-root{position:relative;display:inline-flex;min-width:0}
-.lpa-model-trigger{display:inline-flex;align-items:center;gap:5px;box-sizing:border-box;max-width:min(320px,52cqw);height:28px;min-width:0;padding:0 6px 0 8px;border:1px solid transparent;border-radius:7px;background:transparent;color:var(--dsw-alias-label-secondary);font:inherit;font-size:13px;font-weight:500;line-height:20px;cursor:pointer}
-.lpa-model-trigger:hover:not(:disabled){background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-label-primary)}
-.lpa-model-trigger:disabled{opacity:.5;cursor:default}
-.lpa-model-trigger-icon{flex:none;font-size:11px;line-height:1;color:var(--dsw-alias-label-caption)}
-.lpa-model-trigger-label{display:var(--dsh-composer-model-text-display,block);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.lpa-model-trigger-effort{flex:none;font-size:11px;line-height:16px;color:var(--dsw-alias-label-tertiary)}
-.lpa-model-chevron{flex:none;font-size:10px;line-height:1;color:var(--dsw-alias-label-caption)}
-.lpa-model-menu{position:fixed;z-index:1200;display:flex;flex-direction:column;gap:2px;width:max-content;min-width:min(248px,calc(100vw - 24px));max-width:min(360px,calc(100vw - 24px));max-height:min(420px,calc(100vh - 96px));box-sizing:border-box;padding:6px;border:1px solid var(--dsw-alias-border-l1);border-radius:12px;background:var(--dsw-alias-bg-layer-1);box-shadow:0 8px 24px rgba(20,20,19,.12),0 2px 6px rgba(20,20,19,.08);overflow-y:auto;overscroll-behavior:contain}
-.lpa-model-submenu{max-height:min(320px,calc(100vh - 96px))}
-.lpa-model-option{display:flex;align-items:center;gap:8px;box-sizing:border-box;width:100%;min-height:32px;padding:3px 8px;border:0;border-radius:6px;background:transparent;color:var(--dsw-alias-label-primary);font:inherit;font-size:13px;text-align:left;cursor:pointer}
-.lpa-model-option:hover,.lpa-model-option:focus-visible{background:var(--dsw-alias-interactive-bg-hover)}
-.lpa-model-option:disabled{opacity:.5;cursor:default}
-.lpa-model-option--current{background:var(--dsw-alias-bg-layer-2)}
-.lpa-model-copy{display:flex;flex-direction:column;gap:1px;flex:1;min-width:0}
-.lpa-model-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px;font-weight:500;line-height:16px}
-.lpa-model-desc{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11px;line-height:14px;font-weight:400;color:var(--dsw-alias-label-tertiary)}
-.lpa-model-check{flex:none;font-size:12px;line-height:1;color:var(--dsw-alias-brand-primary)}
-.lpa-model-cell{display:flex;align-items:center;gap:8px;box-sizing:border-box;width:100%;min-height:32px;padding:3px 8px;border:0;border-radius:6px;background:transparent;color:var(--dsw-alias-label-primary);font:inherit;font-size:13px;text-align:left;cursor:pointer}
-.lpa-model-cell:hover,.lpa-model-cell--open{background:var(--dsw-alias-interactive-bg-hover)}
-.lpa-model-cell-label{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:500}
-.lpa-model-cell-chevron{flex:none;font-size:14px;line-height:1;color:var(--dsw-alias-label-caption)}
-.lpa-model-section{display:flex;flex-direction:column;gap:1px;margin-top:4px;padding-top:4px;border-top:1px solid var(--dsw-alias-border-l1)}
-.lpa-model-section-title{padding:2px 8px;font-size:11px;line-height:14px;font-weight:600;letter-spacing:.02em;color:var(--dsw-alias-label-caption)}
-.lpa-model-status{padding:8px;font-size:12px;line-height:18px;color:var(--dsw-alias-label-tertiary)}
-.lpa-model-status--error{color:var(--dsw-alias-label-danger,var(--dsw-alias-label-primary))}
-.lpa-note-grid{display:grid;gap:10px;min-width:0}.lpa-note-row{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.4fr);align-items:center;gap:10px;min-width:0}
-.lpa-note-row>code{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px;color:var(--dsw-alias-label-secondary)}
-.lpa-note-row input{box-sizing:border-box;width:100%;min-width:0;min-height:30px;padding:4px 8px;border:1px solid var(--dsw-alias-border-l1);border-radius:6px;background:var(--dsw-alias-bg-layer-2);color:var(--dsw-alias-label-primary);font:inherit;font-size:12px}
-@media(max-width:720px){.lpa-note-row{grid-template-columns:minmax(0,1fr)}}
 .lpa-undo-actions{display:flex;justify-content:center;align-items:center}
 .lpa-undo-actions>.lpa-button{width:auto;flex:none}
 
@@ -735,28 +704,31 @@ var init_messages = __esm({
         effort: "\u63A8\u7406\u6863",
         nativeDefault: "\u6A21\u578B\u9ED8\u8BA4",
         fast: "\u8F85\u52A9 Fast\uFF08\u72EC\u7ACB\uFF0C\u53EF\u80FD\u989D\u5916\u8BA1\u8D39\uFF09",
-        modelPick: "\u9009\u62E9\u6A21\u578B",
-        modelPickCurrent: "\u9009\u62E9\u6A21\u578B\uFF0C\u5F53\u524D {model}",
-        modelLoading: "\u6B63\u5728\u52A0\u8F7D\u6A21\u578B\u2026",
-        modelEmpty: "\u6CA1\u6709\u53EF\u7528\u7684\u6A21\u578B\u3002",
-        modelCatalogFailed: "\u8BFB\u53D6\u6A21\u578B\u76EE\u5F55\u5931\u8D25\uFF0C\u4ECD\u53EF\u91CD\u8BD5\u3002",
-        modelEffort: "\u63A8\u7406\u6863",
         "picker.fallback": "\u9009\u62E9\u6A21\u578B",
         "picker.loading": "\u6B63\u5728\u52A0\u8F7D\u6A21\u578B\u2026",
         "picker.empty": "\u6CA1\u6709\u53EF\u7528\u7684\u6A21\u578B\u3002",
         "picker.failed": "\u6A21\u578B\u64CD\u4F5C\u5931\u8D25\uFF0C\u8BF7\u91CD\u8BD5\u3002",
         "picker.sessionInUse": "\u8BE5\u4F1A\u8BDD\u6B63\u5728\u88AB\u5176\u4ED6 DSH \u5B9E\u4F8B\u4F7F\u7528\uFF0C\u8BF7\u5173\u95ED\u5176\u4ED6\u5B9E\u4F8B\u540E\u91CD\u8BD5\u3002",
-        "picker.effort": "\u63A8\u7406\u6863",
+        "picker.effort": "\u63A8\u7406\u5F3A\u5EA6",
         "picker.providerDefault": "\u670D\u52A1\u5546\u9ED8\u8BA4",
         "picker.aria": "\u6A21\u578B\u9009\u62E9\u5668",
         "picker.ariaCurrent": "\u9009\u62E9\u6A21\u578B\uFF0C\u5F53\u524D {model}",
-        modelNotesTitle: "\u6A21\u578B\u8BF4\u660E",
-        modelNotesHint: "\u4E3A\u6A21\u578B\u5199\u4E00\u884C\u8BF4\u660E\uFF0C\u663E\u793A\u5728\u8F93\u5165\u6846\u7684\u6A21\u578B\u83DC\u5355\u91CC\uFF0C\u4F8B\u5982\u5B83\u7684\u7279\u70B9\u6216\u9002\u7528\u573A\u666F\u3002\u8BF4\u660E\u53EA\u4FDD\u5B58\u5728\u5F53\u524D profile\uFF0C\u4E0D\u5F71\u54CD\u6A21\u578B\u884C\u4E3A\uFF0C\u4E5F\u4E0D\u6539\u53D8\u4EFB\u4F55\u8BBE\u7F6E\u3002",
-        modelNotesLoading: "\u6B63\u5728\u8BFB\u53D6\u6A21\u578B\u5217\u8868\u2026",
-        modelNotesError: "\u6A21\u578B\u8BF4\u660E\u4FDD\u5B58\u5931\u8D25\uFF0C\u8BF7\u91CD\u8BD5\u3002",
-        modelNotesEmpty: "\u6682\u65E0\u53EF\u586B\u5199\u7684\u6A21\u578B\u3002",
-        modelNotesUnavailable: "\u5F53\u524D profile \u65E0\u6CD5\u4FDD\u5B58\u6A21\u578B\u8BF4\u660E\uFF0C\u5176\u4ED6\u529F\u80FD\u4E0D\u53D7\u5F71\u54CD\u3002",
-        modelNotePlaceholder: "\u4E00\u884C\u8BF4\u660E\uFF08\u7559\u7A7A\u5219\u5220\u9664\uFF09",
+        "picker.models": "\u6309\u4F9B\u5E94\u5546\u5206\u7EC4\u7684\u6A21\u578B",
+        "picker.account": "DeepSeek \u8D26\u6237",
+        "picker.saving": "\u6B63\u5728\u5207\u6362\u2026",
+        "picker.groupFailed": "{name} \u7684\u6A21\u578B\u76EE\u5F55\u52A0\u8F7D\u5931\u8D25\uFF1A{message}",
+        "picker.loadFailed": "\u6A21\u578B\u76EE\u5F55\u52A0\u8F7D\u5931\u8D25\uFF1A{message}",
+        "picker.retry": "\u91CD\u65B0\u52A0\u8F7D",
+        "picker.effortUnavailable": "\u5F53\u524D\u6863\u4F4D\u4E0D\u5728\u53EF\u9009\u5217\u8868\u4E2D",
+        "picker.level.none": "\u5173\u95ED",
+        "picker.level.minimal": "\u6700\u4F4E",
+        "picker.level.low": "\u4F4E",
+        "picker.level.medium": "\u4E2D",
+        "picker.level.high": "\u9AD8",
+        "picker.level.xhigh": "\u8D85\u9AD8",
+        "picker.level.max": "\u6700\u9AD8",
+        "picker.faster": "\u66F4\u5FEB",
+        "picker.smarter": "\u66F4\u5F3A",
         rounds: "\u5B8C\u6574\u95EE\u7B54\u8F6E\u6570",
         custom: "\u81EA\u5B9A\u4E49",
         save: "\u4FDD\u5B58\u914D\u7F6E",
@@ -1024,12 +996,6 @@ var init_messages = __esm({
         effort: "Reasoning effort",
         nativeDefault: "Model default",
         fast: "Assist Fast (independent; extra charges may apply)",
-        modelPick: "Select model",
-        modelPickCurrent: "Select model, currently {model}",
-        modelLoading: "Loading models\u2026",
-        modelEmpty: "No models available.",
-        modelCatalogFailed: "Could not read the model catalog. You can try again.",
-        modelEffort: "Reasoning effort",
         "picker.fallback": "Select model",
         "picker.loading": "Loading models\u2026",
         "picker.empty": "No models available.",
@@ -1039,13 +1005,22 @@ var init_messages = __esm({
         "picker.providerDefault": "Provider default",
         "picker.aria": "Model picker",
         "picker.ariaCurrent": "Select model, currently {model}",
-        modelNotesTitle: "Model descriptions",
-        modelNotesHint: "Write one line per model; it appears under the model name in the composer menu, for example what it is good at. Descriptions stay in this profile, never change model behaviour and are not settings.",
-        modelNotesLoading: "Reading the model list\u2026",
-        modelNotesError: "Could not save the model description. Try again.",
-        modelNotesEmpty: "No models to describe yet.",
-        modelNotesUnavailable: "This profile cannot store model descriptions. Everything else still works.",
-        modelNotePlaceholder: "One line (empty removes it)",
+        "picker.models": "Models grouped by provider",
+        "picker.account": "DeepSeek Account",
+        "picker.saving": "Switching\u2026",
+        "picker.groupFailed": "Could not load {name}: {message}",
+        "picker.loadFailed": "Could not load the model catalog: {message}",
+        "picker.retry": "Reload",
+        "picker.effortUnavailable": "Current effort is not in the available list",
+        "picker.level.none": "Off",
+        "picker.level.minimal": "Minimal",
+        "picker.level.low": "Low",
+        "picker.level.medium": "Medium",
+        "picker.level.high": "High",
+        "picker.level.xhigh": "Extra high",
+        "picker.level.max": "Max",
+        "picker.faster": "Faster",
+        "picker.smarter": "Smarter",
         rounds: "Complete Q&A rounds",
         custom: "Custom",
         save: "Save settings",
@@ -1557,43 +1532,6 @@ var init_controller = __esm({
   }
 });
 
-// assist/client/model-notes.js
-function noteKey(provider, model) {
-  const valid = (id2) => typeof id2 === "string" && id2.length > 0 && id2.length <= 512 && !/[\u0000-\u001f\u007f]/.test(id2);
-  return valid(provider) && valid(model) ? JSON.stringify([provider, model]) : "";
-}
-function normalizeNoteText(value) {
-  return typeof value === "string" ? value.replace(/\s+/g, " ").trim() : "";
-}
-function noteFor(notes, provider, model) {
-  const key = noteKey(provider, model);
-  return key && notes && Object.hasOwn(notes, key) && typeof notes[key] === "string" ? notes[key] : "";
-}
-function normalizeNotes(value) {
-  const missing = value.notes === void 0 && value.notesRevision === void 0 && value.notesAvailable === void 0;
-  if (missing) return { notes: EMPTY_NOTES, notesRevision: 0, notesAvailable: false };
-  if (typeof value.notesAvailable !== "boolean" || !Number.isSafeInteger(value.notesRevision) || value.notesRevision < 0 || !value.notes || typeof value.notes !== "object" || Array.isArray(value.notes)) throw Error("invalid-model-notes");
-  const entries = Object.entries(value.notes);
-  if (entries.length > 500) throw Error("invalid-model-notes");
-  for (const [key, text] of entries) {
-    let pair;
-    try {
-      pair = JSON.parse(key);
-    } catch {
-      throw Error("invalid-model-notes");
-    }
-    if (!Array.isArray(pair) || pair.length !== 2 || noteKey(...pair) !== key || typeof text !== "string" || text.length > NOTE_MAX || normalizeNoteText(text) !== text) throw Error("invalid-model-notes");
-  }
-  return { notes: Object.freeze(Object.fromEntries(entries)), notesRevision: value.notesRevision, notesAvailable: value.notesAvailable };
-}
-var NOTE_MAX, EMPTY_NOTES;
-var init_model_notes = __esm({
-  "assist/client/model-notes.js"() {
-    NOTE_MAX = 120;
-    EMPTY_NOTES = Object.freeze({});
-  }
-});
-
 // assist/client/enablement-source.js
 function normalizeEnablement(value) {
   if (!value || value.scope !== "profile" || !Number.isSafeInteger(value.revision) || value.revision < 0 || !value.enabled || FEATURES.some((feature) => typeof value.enabled[feature] !== "boolean")) throw invalid();
@@ -1608,8 +1546,7 @@ function normalizeEnablement(value) {
     enabled: Object.freeze({ suggest: value.enabled.suggest, enhance: value.enabled.enhance }),
     settingsRevision: hasSettings ? value.settingsRevision : null,
     settings: Object.freeze(Object.fromEntries(FEATURES.map((feature) => [feature, Object.freeze(sessionSettings(hasSettings ? value.settings[feature] : void 0))]))),
-    configured: Object.freeze(Object.fromEntries(FEATURES.map((feature) => [feature, hasSettings && value.configured[feature]]))),
-    ...normalizeNotes(value)
+    configured: Object.freeze(Object.fromEntries(FEATURES.map((feature) => [feature, hasSettings && value.configured[feature]])))
   });
 }
 function mergeGlobalSettings(settings, global) {
@@ -1641,13 +1578,11 @@ function createEnablementSource({ send, fetcher = (...args) => globalThis.fetch(
     if (old?.settingsRevision != null && data.settingsRevision === null) throw invalid();
     if (old && data.revision === old.revision && FEATURES.some((key) => data.enabled[key] !== old.enabled[key])) throw invalid();
     if (old && data.settingsRevision === old.settingsRevision && (JSON.stringify(data.settings) !== JSON.stringify(old.settings) || JSON.stringify(data.configured) !== JSON.stringify(old.configured))) throw invalid();
-    if (old && data.notesRevision === old.notesRevision && JSON.stringify(data.notes) !== JSON.stringify(old.notes)) throw invalid();
-    if (old && data.revision === old.revision && data.settingsRevision === old.settingsRevision && data.notesRevision === old.notesRevision) return true;
+    if (old && data.revision === old.revision && data.settingsRevision === old.settingsRevision) return true;
     if (old) {
-      if (data.revision <= old.revision && (data.settingsRevision ?? -1) <= (old.settingsRevision ?? -1) && (data.notesRevision ?? -1) <= (old.notesRevision ?? -1)) return false;
+      if (data.revision <= old.revision && (data.settingsRevision ?? -1) <= (old.settingsRevision ?? -1)) return false;
       if (data.revision < old.revision) data = { ...data, revision: old.revision, enabled: old.enabled };
       if ((data.settingsRevision ?? -1) < (old.settingsRevision ?? -1)) data = { ...data, settingsRevision: old.settingsRevision, settings: old.settings, configured: old.configured };
-      if ((data.notesRevision ?? -1) < (old.notesRevision ?? -1)) data = { ...data, notesRevision: old.notesRevision, notes: old.notes };
       data = Object.freeze(data);
     }
     publish({ data, saved: null });
@@ -1877,7 +1812,6 @@ var init_enablement_source = __esm({
   "assist/client/enablement-source.js"() {
     init_api();
     init_identity();
-    init_model_notes();
     ENABLEMENT_PATH2 = ENABLEMENT_PATH.slice(1);
     FEATURES = ["suggest", "enhance"];
     invalid = () => Object.assign(new Error("transport-invalid-response"), { code: "transport-invalid-response" });
@@ -3269,144 +3203,6 @@ var init_priority_panel = __esm({
   }
 });
 
-// assist/client/model-notes-card.js
-function ModelNotesCard({ send, globalSource, t }) {
-  const global = import_react13.default.useSyncExternalStore(globalSource.subscribe, globalSource.getSnapshot, globalSource.getSnapshot);
-  const notes = global.data?.notes ?? {};
-  const revision = global.data?.notesRevision;
-  const available = global.data?.notesAvailable === true;
-  const editable = available && Number.isSafeInteger(revision);
-  const [catalog, setCatalog] = import_react13.default.useState({ status: "idle", models: [] });
-  const [error, setError] = import_react13.default.useState(null);
-  const [saving, setSaving] = import_react13.default.useState("");
-  const [drafts, setDrafts] = import_react13.default.useState({});
-  import_react13.default.useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      setCatalog({ status: "loading", models: [] });
-      try {
-        const first = await send("catalog", "", {});
-        const providers = (first?.providers ?? []).filter((provider) => typeof provider?.id === "string" && provider.id);
-        const models = [];
-        for (const provider of providers) {
-          let page;
-          try {
-            page = await send("catalog", "", { provider: provider.id });
-          } catch {
-            continue;
-          }
-          for (const model of page?.models ?? []) {
-            if (typeof model?.id !== "string" || !model.id) continue;
-            models.push({ provider: provider.id, providerName: provider.name ?? provider.id, id: model.id, name: model.name ?? model.id });
-          }
-        }
-        if (!cancelled) setCatalog({ status: "ready", models });
-      } catch (caught) {
-        if (!cancelled) {
-          setCatalog({ status: "error", models: [] });
-          setError(caught);
-        }
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [send]);
-  const commit = async (model, raw) => {
-    const value = normalizeNoteText(raw);
-    const key = noteKey(model.provider, model.id);
-    if (!key) return;
-    if ((notes[key] ?? "") === value) {
-      setDrafts((old) => {
-        const next = { ...old };
-        delete next[key];
-        return next;
-      });
-      return;
-    }
-    setSaving(key);
-    setError(null);
-    const attempt = async (currentRevision) => send("save-note", "", {
-      provider: model.provider,
-      model: model.id,
-      text: value,
-      expectedRevision: currentRevision
-    });
-    try {
-      await attempt(revision);
-    } catch (caught) {
-      if (caught?.code === "stale-model-notes") {
-        const fresh = globalSource.getSnapshot()?.data?.notesRevision;
-        try {
-          await attempt(fresh);
-        } catch (next) {
-          setError(next);
-        }
-      } else setError(caught);
-    } finally {
-      setSaving("");
-      setDrafts((old) => {
-        const next = { ...old };
-        delete next[key];
-        return next;
-      });
-    }
-  };
-  const rows = catalog.models.map((model) => {
-    const key = noteKey(model.provider, model.id);
-    const saved = key ? notes[key] ?? "" : "";
-    const value = key && Object.hasOwn(drafts, key) ? drafts[key] : saved;
-    const label = model.name === model.id ? key : `${model.name} \xB7 ${key}`;
-    return h12(
-      "div",
-      { className: "lpa-note-row", key },
-      h12("code", { title: label }, label),
-      h12("input", {
-        type: "text",
-        value,
-        maxLength: 120,
-        disabled: !editable || saving === key,
-        placeholder: t("modelNotePlaceholder"),
-        "aria-label": label,
-        onChange: (event) => setDrafts((old) => ({ ...old, [key]: event.target.value })),
-        onBlur: (event) => {
-          void commit(model, event.target.value);
-        },
-        onKeyDown: (event) => {
-          if (event.key === "Enter") {
-            event.preventDefault();
-            void commit(model, event.currentTarget.value);
-          }
-        }
-      })
-    );
-  });
-  return h12(
-    "section",
-    { className: "lpa-card", "aria-label": t("modelNotesTitle") },
-    h12(
-      "header",
-      { className: "lpa-card-header" },
-      h12("h2", { className: "lpa-card-title" }, t("modelNotesTitle")),
-      h12("p", { className: "lpa-note" }, t("modelNotesHint"))
-    ),
-    !available ? h12("p", { className: "lpa-note", role: "status" }, t("modelNotesUnavailable")) : null,
-    available && !Number.isSafeInteger(revision) ? h12("p", { className: "lpa-note", role: "status" }, t("settings.hostUpgrade")) : null,
-    catalog.status === "loading" ? h12("p", { className: "lpa-note", role: "status" }, t("modelNotesLoading")) : null,
-    catalog.status === "ready" && rows.length === 0 ? h12("p", { className: "lpa-note lpa-empty-state" }, t("modelNotesEmpty")) : null,
-    rows.length ? h12("div", { className: "lpa-note-grid" }, rows) : null,
-    error ? h12("p", { className: "lpa-error", role: "alert" }, t("modelNotesError")) : null
-  );
-}
-var import_react13, h12;
-var init_model_notes_card = __esm({
-  "assist/client/model-notes-card.js"() {
-    import_react13 = __toESM(require("react"), 1);
-    init_model_notes();
-    h12 = import_react13.default.createElement;
-  }
-});
-
 // assist/client/settings-page-state.js
 function createSettingsDraft(config, settingsRevision = null) {
   return { config: sessionSettings(config), version: 0, dirty: false, settingsRevision };
@@ -3455,19 +3251,19 @@ var init_settings_page_state = __esm({
 // assist/client/settings-page.js
 function FeatureSettings({ feature, global, source, p }) {
   const host = global.data;
-  const [draft, setDraft] = import_react14.default.useState(() => createSettingsDraft(host.settings[feature], host.settingsRevision));
-  const current = import_react14.default.useRef(draft);
+  const [draft, setDraft] = import_react13.default.useState(() => createSettingsDraft(host.settings[feature], host.settingsRevision));
+  const current = import_react13.default.useRef(draft);
   current.current = draft;
-  const [saving, setSaving] = import_react14.default.useState(false), [notice, setNotice] = import_react14.default.useState(null);
-  const scope = import_react14.default.useRef(null), inFlight = import_react14.default.useRef(false);
-  import_react14.default.useEffect(() => {
+  const [saving, setSaving] = import_react13.default.useState(false), [notice, setNotice] = import_react13.default.useState(null);
+  const scope = import_react13.default.useRef(null), inFlight = import_react13.default.useRef(false);
+  import_react13.default.useEffect(() => {
     const requests = createSettingsRequests();
     scope.current = requests;
     inFlight.current = false;
     setSaving(false);
     return () => requests.close();
   }, []);
-  import_react14.default.useEffect(() => {
+  import_react13.default.useEffect(() => {
     const next = syncSettingsDraft(current.current, host.settings[feature], host.settingsRevision);
     current.current = next;
     setDraft(next);
@@ -3515,73 +3311,71 @@ function FeatureSettings({ feature, global, source, p }) {
     setNotice(null);
   }
   const noticeValue = notice ?? options.error;
-  return h13(
+  return h12(
     "section",
     { className: "lpa-feature lpa-card", "aria-label": p.t(feature) },
-    h13("h2", { className: "lpa-feature-title" }, p.t(feature)),
-    h13("p", { className: "lpa-note" }, p.t(feature === "suggest" ? "suggestContext" : "enhanceOriginal")),
-    !host.configured[feature] ? h13("p", { className: "lpa-note", role: "status" }, p.t("settings.unconfigured")) : null,
-    h13(Settings, { t: p.t, config: draft.config, catalog: options.catalog, capabilities: options.capabilities, allowed: allowed && !stale, saving, onChange: edit, save }),
-    h13(
+    h12("h2", { className: "lpa-feature-title" }, p.t(feature)),
+    h12("p", { className: "lpa-note" }, p.t(feature === "suggest" ? "suggestContext" : "enhanceOriginal")),
+    !host.configured[feature] ? h12("p", { className: "lpa-note", role: "status" }, p.t("settings.unconfigured")) : null,
+    h12(Settings, { t: p.t, config: draft.config, catalog: options.catalog, capabilities: options.capabilities, allowed: allowed && !stale, saving, onChange: edit, save }),
+    h12(
       "div",
       { className: "lpa-settings-feedback" },
-      draft.dirty ? h13("p", { className: "lpa-note" }, p.t("settingsChanged")) : null,
-      stale ? h13("p", { className: "lpa-error", role: "alert" }, p.t("settings.stale")) : null,
-      draft.dirty ? h13("button", { type: "button", className: "lpa-button", disabled: !global.connected || Boolean(global.pending), onClick: reset }, p.t("settings.resetDraft")) : null,
-      noticeValue ? h13("p", { role: "status", className: noticeValue === "saved" ? "lpa-note" : "lpa-error" }, noticeValue === "saved" ? p.t("saved") : errorText(noticeValue, p.t)) : null
+      draft.dirty ? h12("p", { className: "lpa-note" }, p.t("settingsChanged")) : null,
+      stale ? h12("p", { className: "lpa-error", role: "alert" }, p.t("settings.stale")) : null,
+      draft.dirty ? h12("button", { type: "button", className: "lpa-button", disabled: !global.connected || Boolean(global.pending), onClick: reset }, p.t("settings.resetDraft")) : null,
+      noticeValue ? h12("p", { role: "status", className: noticeValue === "saved" ? "lpa-note" : "lpa-error" }, noticeValue === "saved" ? p.t("saved") : errorText(noticeValue, p.t)) : null
     )
   );
 }
 function SettingsPage(p) {
-  const target = import_react14.default.useSyncExternalStore(p.targetSource.subscribe, p.targetSource.getSnapshot, p.targetSource.getSnapshot);
+  const target = import_react13.default.useSyncExternalStore(p.targetSource.subscribe, p.targetSource.getSnapshot, p.targetSource.getSnapshot);
   const source = p.globalSource ?? EMPTY_ENABLEMENT_SOURCE;
-  const global = import_react14.default.useSyncExternalStore(source.subscribe, source.getSnapshot, source.getSnapshot);
-  return h13(
+  const global = import_react13.default.useSyncExternalStore(source.subscribe, source.getSnapshot, source.getSnapshot);
+  return h12(
     "section",
     { className: "lpa lpa-settings-page", "aria-label": p.t("title") },
-    h13(
+    h12(
       "header",
       { className: "lpa-settings-header" },
-      h13("div", { className: "lpa-settings-heading" }, h13("h1", null, p.t("title")), h13("p", { className: "lpa-note lpa-settings-subtitle" }, p.t("settings.subtitle"))),
-      h13("button", { type: "button", className: "lpa-button", onClick: p.returnToConversation }, p.t("returnConversation"))
+      h12("div", { className: "lpa-settings-heading" }, h12("h1", null, p.t("title")), h12("p", { className: "lpa-note lpa-settings-subtitle" }, p.t("settings.subtitle"))),
+      h12("button", { type: "button", className: "lpa-button", onClick: p.returnToConversation }, p.t("returnConversation"))
     ),
-    h13(
+    h12(
       "div",
       { className: "lpa-settings-sections" },
-      h13(EnablementPanel, { globalSource: source, t: p.t }),
-      h13(
+      h12(EnablementPanel, { globalSource: source, t: p.t }),
+      h12(
         "section",
         { className: "lpa-session-panel lpa-card", "aria-label": p.t("settings.profileSection") },
-        h13("header", { className: "lpa-card-header" }, h13("h2", { className: "lpa-card-title" }, p.t("settings.profileSection")), h13("p", { className: "lpa-note" }, p.t("profileScope"))),
-        global.loading ? h13("p", { role: "status" }, p.t("global.loading")) : null,
-        !global.connected ? h13("p", { className: "lpa-note", role: "status" }, p.t("global.disconnected")) : null,
-        global.readError ? h13("p", { className: "lpa-error", role: "alert" }, errorText(global.readError, p.t)) : null,
-        global.data && !Number.isSafeInteger(global.data.settingsRevision) ? h13("p", { className: "lpa-error", role: "alert" }, p.t("settings.hostUpgrade")) : null,
-        global.data ? h13("div", { className: "lpa-settings-cards" }, ["suggest", "enhance"].map((feature) => h13(FeatureSettings, { key: feature, feature, global, source, p }))) : h13("p", { className: "lpa-note lpa-empty-state" }, p.t("settings.profileEmpty"))
+        h12("header", { className: "lpa-card-header" }, h12("h2", { className: "lpa-card-title" }, p.t("settings.profileSection")), h12("p", { className: "lpa-note" }, p.t("profileScope"))),
+        global.loading ? h12("p", { role: "status" }, p.t("global.loading")) : null,
+        !global.connected ? h12("p", { className: "lpa-note", role: "status" }, p.t("global.disconnected")) : null,
+        global.readError ? h12("p", { className: "lpa-error", role: "alert" }, errorText(global.readError, p.t)) : null,
+        global.data && !Number.isSafeInteger(global.data.settingsRevision) ? h12("p", { className: "lpa-error", role: "alert" }, p.t("settings.hostUpgrade")) : null,
+        global.data ? h12("div", { className: "lpa-settings-cards" }, ["suggest", "enhance"].map((feature) => h12(FeatureSettings, { key: feature, feature, global, source, p }))) : h12("p", { className: "lpa-note lpa-empty-state" }, p.t("settings.profileEmpty"))
       ),
-      p.connection ? h13(PriorityPanel, { connection: p.connection, t: p.t, onChanged: () => {
+      p.connection ? h12(PriorityPanel, { connection: p.connection, t: p.t, onChanged: () => {
         if (target.sessionId) void p.refreshAssist(target.sessionId).catch(() => {
         });
       } }) : null,
-      p.assistSend ? h13(ModelNotesCard, { send: p.assistSend, globalSource: source, t: p.t }) : null,
-      h13(UpdatePanel, { t: p.t })
+      h12(UpdatePanel, { t: p.t })
     )
   );
 }
-var import_react14, h13;
+var import_react13, h12;
 var init_settings_page = __esm({
   "assist/client/settings-page.js"() {
     init_update_panel();
-    import_react14 = __toESM(require("react"), 1);
+    import_react13 = __toESM(require("react"), 1);
     init_settings();
     init_runtime();
     init_api();
     init_enablement_panel();
     init_enablement_source();
     init_priority_panel();
-    init_model_notes_card();
     init_settings_page_state();
-    h13 = import_react14.default.createElement;
+    h12 = import_react13.default.createElement;
   }
 });
 
@@ -3603,323 +3397,1773 @@ var init_settings_target = __esm({
   }
 });
 
-// assist/client/model-picker.js
-function orderModelProviders(groups) {
-  const rank = (id2) => id2 === "deepseek-account" ? 0 : id2 === "deepseek-official" ? 1 : 2;
-  return [...groups].sort((left, right) => rank(left.id) - rank(right.id));
-}
-function sectionsOf(snapshot) {
-  const groups = Array.isArray(snapshot?.groups) ? snapshot.groups : [];
-  return orderModelProviders(groups.filter((group) => group && typeof group.id === "string" && Array.isArray(group.models) && group.models.length > 0));
-}
-function currentEntry(snapshot) {
-  const current = snapshot?.current;
-  if (!current || typeof current.provider !== "string" || typeof current.model !== "string") return null;
-  for (const group of sectionsOf(snapshot)) {
-    if (group.id !== current.provider) continue;
-    for (const model of group.models) if (model && model.id === current.model) return { group, model };
+// assist/client/model-descriptions-data.json
+var model_descriptions_data_default;
+var init_model_descriptions_data = __esm({
+  "assist/client/model-descriptions-data.json"() {
+    model_descriptions_data_default = {
+      version: 1,
+      fallback: "en",
+      brands: {
+        note: "Which brand mark a row shows. Every id names a vendored lockup in packages/assets/src/icons/combine/; scripts/build.mjs fails the build on an id that is not there. This is presentation data, kept out of the bundle like the rest of this document, and it is separate from the copy rules above: a vendor's mark and a vendor's description line change for different reasons. `providers` is deliberately empty: a model no rule claims draws **no** lockup rather than its provider's, because the reseller's own lockup on a model it did not make reads as a wrong answer rather than a missing one. `models` is an ordered, anchored rule list resolved against the model id, exactly like `families` and with the same discipline: first match wins, so a broad rule must sit below the narrow ones and every rule must name its vendor (`step` cannot match `step-3.7-flash` by accident only if no earlier rule already claimed it). A brand with no lockup renders the label without a mark.",
+        providers: {},
+        models: [
+          { match: "deepseek", brand: "deepseek" },
+          {
+            match: "claude",
+            brand: "claude",
+            note: "Claude rows draw Claude's own lockup, not the parent Anthropic one: the label names the model line, and a wordmark has to match the word it stands in for \u2014 the same reason Grok rows draw Grok's rather than xAI's. Anthropic stays the fallback for the `anthropic` route."
+          },
+          { match: "gpt|(^|[^a-z0-9])o[1-9](-|$)", brand: "openai" },
+          {
+            match: "nano-?banana",
+            brand: "nanobanana",
+            note: "Nano Banana is a Gemini image model with its own identity in the catalog, so it draws its own lockup rather than the Gemini one."
+          },
+          {
+            match: "gemma",
+            brand: "gemma",
+            note: "Gemma is Google's open model line, so it draws its own lockup rather than the parent Google one \u2014 the same reason Claude and Grok do."
+          },
+          {
+            match: "gemini",
+            brand: "gemini",
+            note: "A Gemini row shows the model line's mark; the provider group header above it shows Google's, because providers resolve from `providers` and never from here."
+          },
+          { match: "glm", brand: "zai" },
+          {
+            match: "kimi|(^|[^a-z0-9])k3($|-)",
+            brand: "kimi",
+            note: "The id can carry the serving provider's namespace (`cn:k3`, `moonshot/k3`), so the segment start accepts any character outside a letter or a digit. Requiring `k3` to start a segment is what leaves `mk3` unclaimed."
+          },
+          { match: "qwen", brand: "qwen" },
+          { match: "step", brand: "stepfun" },
+          {
+            match: "minimax|(^|[^a-z0-9])m[23]($|-)",
+            brand: "minimax",
+            note: "The id can carry the serving provider's namespace (`cn:m3`), so the segment start accepts any character outside a letter or a digit. Requiring `m2` or `m3` to start a segment is what leaves `pm2` unclaimed."
+          },
+          { match: "muse-spark|llama", brand: "meta" },
+          { match: "celeris", brand: "celestoai" },
+          { match: "mercury|inception", brand: "inception" },
+          {
+            match: "grok",
+            brand: "grok",
+            note: "Grok is the model line, xAI the company: a Grok row shows Grok's own mark, while the provider group header above it still shows xAI's, because providers resolve from `providers` and never from here."
+          },
+          { match: "doubao|seed|volc", brand: "bytedance" },
+          { match: "ernie", brand: "baidu" },
+          {
+            match: "hunyuan|(^|[^a-z0-9])hy(\\d|-?mt)",
+            brand: "tencent",
+            note: "The id can carry the serving provider's namespace (`cn:hy3`, `openrouter/hy3`), so the segment start accepts any character outside a letter or a digit. Requiring `hy` to start a segment is what leaves `shy-mt2` unclaimed."
+          },
+          { match: "mistral|magistral|codestral", brand: "mistral" },
+          { match: "north|command-?[ar]|cohere", brand: "cohere" },
+          { match: "phi-?\\d", brand: "microsoft" },
+          {
+            match: "(^|[^a-z0-9])nova(-|$)",
+            brand: "nova",
+            note: "The vendor name has to start a segment and end one: unanchored, this rule claims `sensenova-6.8-flash-lite` for Amazon and lands that lockup in the middle of the name."
+          },
+          { match: "mimo", brand: "xiaomimimo" },
+          { match: "longcat", brand: "longcat" },
+          { match: "sonar|perplexity", brand: "perplexity" },
+          {
+            match: "beam",
+            brand: "reflection",
+            note: "Beam is Reflection's own line, so its rows draw the vendor's lockup \u2014 whose word is the vendor's, and the catalog's own name never spells it (`Beam Free \xB7 OpenCode Go`), so the label leads with the lockup instead of replacing a word in it."
+          }
+        ],
+        lockups: {
+          note: "Per-brand overrides for the vendored lockup, applied by scripts/fetch-lobe-combines.py. `word` is the word the lockup stands in for inside a model name (it must match how the catalog spells it, which is not always Lobe's TITLE), `mark` and `text` name the Lobe icons the two halves are taken from (so a model line can wear its own mark with its parent's wordmark), `keep` crops a wordmark to a fraction of its ink width (GLM-V's \"-V\" is not part of the name), and `tint` is the brand colour a hand-provided mark wears on the ivory canvas, where a fetched mark carries Lobe's own.",
+          meta: { word: "Meta", lockup: true },
+          openai: { word: "GPT", local: "openai.svg", textFrom: 0.529 },
+          tencent: { word: "Hunyuan", mark: "hunyuan", text: "tencent" },
+          stepfun: { word: "Step", mark: "stepfun", text: "stepfun" },
+          xiaomimimo: { word: "MiMo", mark: "xiaomimimo", text: "xiaomimimo" },
+          nanobanana: { word: "Nano Banana" },
+          zai: { word: "GLM", mark: "zai", text: "glmv", keep: 0.62 },
+          reflection: { word: "Reflection", tint: "#1e3207" }
+        }
+      },
+      families: [
+        {
+          match: "deepseek.*flash",
+          text: {
+            zh: "\u975E\u5BF9\u79F0\u6A21\u578B\u7ED3\u6784\uFF0C\u5C0F\u6210\u672C\u5927\u667A\u80FD\u3002",
+            en: "Asymmetric architecture: more intelligence, less cost."
+          },
+          note: "Every DeepSeek Flash reads the same line: the copy describes the line, not a version, so a retired Flash and a future one say the same thing. Anchored on `deepseek` on purpose: an unanchored /flash$/ would hand this copy to glm-5.3-flash, step-3.7-flash and every other vendor's flash tier."
+        },
+        {
+          match: "deepseek.*pro",
+          note: "The Pro line's own official heading on the V4 preview page. No rule pins it to a version: a Pro is a Pro whatever its version.",
+          text: {
+            zh: "\u6027\u80FD\u6BD4\u80A9\u9876\u7EA7\u95ED\u6E90\u6A21\u578B\u3002",
+            en: "Performance rivaling the world's top closed-source models."
+          }
+        },
+        {
+          match: "deepseek",
+          note: "Everything else in the line \u2014 V3.2, R1, and whatever comes next \u2014 shares the V4.1 release title.",
+          text: {
+            zh: "\u66F4\u5F3A\u3001\u66F4\u5FEB\u3001\u66F4\u666E\u60E0\u3002",
+            en: "Smarter, faster, more affordable."
+          }
+        },
+        {
+          match: "claude.*fable",
+          note: "Fable is a model line of its own (Mythos / Fable / Opus / Sonnet / Haiku), so it must not fall through to the generic Claude rule. Its copy is the line tagline from anthropic.com/claude/fable, and it carries no tier prefix of ours.",
+          text: {
+            zh: "\u65B0\u4E00\u4EE3\u667A\u80FD\uFF0C\u4E13\u4E3A\u89E3\u51B3\u6700\u8270\u6DF1\u7684\u77E5\u8BC6\u5DE5\u4F5C\u548C\u7F16\u7A0B\u96BE\u9898\u3002",
+            en: "Next generation of intelligence for the hardest knowledge work and coding problems."
+          }
+        },
+        {
+          match: "claude.*mythos",
+          note: "Mythos is Fable's unrestricted sibling \u2014 Anthropic's own words: Fable is the same underlying model with cybersecurity and biology safeguards added. Access to Mythos is limited to vetted organizations, so its copy leads with the audience rather than the capability.",
+          text: {
+            zh: "\u9762\u5411\u7F51\u7EDC\u5B89\u5168\u4E0E\u751F\u7269\u5B66\u7814\u7A76\u7684\u53EF\u9760\u6A21\u578B\u3002",
+            en: "Built for cybersecurity and biology research, with access limited to vetted organizations."
+          }
+        },
+        {
+          match: "claude.*opus",
+          note: "Family copy stays version-agnostic, so it carries no superlatives: 'strongest' is only true of the current generation and would mislabel an older Opus. Superlatives belong in a rule anchored to the version. It also carries no tier prefix of ours \u2014 '\u65D7\u8230\u6863\uFF1A' is our positioning, not the model's own line.",
+          text: {
+            zh: "\u9762\u5411\u590D\u6742\u7F16\u7A0B\u4E0E AI \u667A\u80FD\u4F53\u7684\u6DF7\u5408\u63A8\u7406\u6A21\u578B\u3002",
+            en: "A hybrid reasoning model built for serious coding and AI agents."
+          }
+        },
+        {
+          match: "claude.*sonnet",
+          text: {
+            zh: "\u9762\u5411\u5B9E\u65F6\u667A\u80FD\u4F53\u4E0E\u9AD8\u541E\u5410\u7684\u6DF7\u5408\u63A8\u7406\u6A21\u578B\u3002",
+            en: "Hybrid reasoning for real-time agents and high-volume work."
+          }
+        },
+        {
+          match: "claude.*haiku",
+          text: {
+            zh: "\u9762\u5411\u901F\u5EA6\u654F\u611F\u7684\u9AD8\u541E\u5410\u573A\u666F\uFF0C\u54CD\u5E94\u5FEB\u3001\u6210\u672C\u4F4E\u3002",
+            en: "For speed-sensitive, high-volume workloads at low cost."
+          }
+        },
+        {
+          match: "claude",
+          text: { zh: "Anthropic Claude \u6A21\u578B\u3002", en: "Anthropic Claude model." }
+        },
+        {
+          match: "codex",
+          text: {
+            zh: "\u4E3A Codex \u667A\u80FD\u4F53\u7F16\u7A0B\u4F18\u5316\uFF0C\u53EF\u5E76\u884C\u5904\u7406\u591A\u9879\u8F6F\u4EF6\u5DE5\u7A0B\u4EFB\u52A1\u3002",
+            en: "Optimized for agentic coding in Codex, handling several software tasks in parallel."
+          }
+        },
+        {
+          match: "gpt[._-]?5[._-]?4(?!\\d)",
+          note: "Anchored to the 5.4 generation: the context size and the computer use are that model's, so a later GPT-5 reads the rule below.",
+          text: {
+            zh: "\u9762\u5411\u7F16\u7A0B\u4E0E\u4E13\u4E1A\u5DE5\u4F5C\u7684\u957F\u4E0A\u4E0B\u6587\u6A21\u578B\u3002",
+            en: "For coding and professional work, with a 1.05M-token context and native computer use."
+          }
+        },
+        {
+          match: "gpt-?5",
+          text: {
+            zh: "\u5185\u7F6E\u601D\u8003\u3001\u53EF\u914D\u7F6E\u63A8\u7406\u5F3A\u5EA6\uFF0C\u9762\u5411\u7F16\u7A0B\u4E0E\u667A\u80FD\u4F53\u4EFB\u52A1\u3002",
+            en: "Thinking built in with configurable reasoning effort, for coding and agentic tasks."
+          }
+        },
+        {
+          match: "(^|[/-])o[1-9](-|$)",
+          text: {
+            zh: "\u4F5C\u7B54\u524D\u6DF1\u5165\u601D\u8003\uFF0C\u4ECE o1 \u5230 o3 \u4E0E o4-mini\u3002",
+            en: "Trained to think more deeply before responding, from o1 through o3 and o4-mini."
+          }
+        },
+        {
+          match: "gpt-oss|oss-\\d",
+          text: {
+            zh: "OpenAI \u5F00\u53D1\u7684\u5F00\u653E\u6743\u91CD\u63A8\u7406\u6A21\u578B\u3002",
+            en: "Open-weight reasoning models, Apache 2.0, in 120B and 20B sizes, customizable and self-hostable."
+          }
+        },
+        { match: "gpt", text: { zh: "\u652F\u6301\u6587\u672C\u4E0E\u56FE\u50CF\u8F93\u5165\u3001\u591A\u8BED\u8A00\u3002", en: "Text and image input, multilingual." } },
+        {
+          match: "gemini.*(pro|ultra|Argon)",
+          text: {
+            zh: "\u9762\u5411\u590D\u6742\u4EFB\u52A1\u3001\u6DF1\u5EA6\u63A8\u7406\u4E0E\u591A\u6A21\u6001\u7406\u89E3\u3002",
+            en: "For complex tasks, deep reasoning and multimodal understanding."
+          }
+        },
+        {
+          match: "gemini.*flash",
+          text: {
+            zh: "\u901F\u5EA6\u4E0E\u6210\u672C\u4F18\u5148\uFF0C\u9762\u5411\u89C4\u6A21\u5316\u667A\u80FD\u4F53\u4EFB\u52A1\u4E0E\u9AD8\u9891\u4F4E\u5EF6\u8FDF\u573A\u666F\u3002",
+            en: "Speed and cost first, for high-volume low-latency work and agentic tasks at scale."
+          }
+        },
+        { match: "gemini", text: { zh: "\u539F\u751F\u7406\u89E3\u6587\u672C\u3001\u56FE\u50CF\u3001\u89C6\u9891\u4E0E\u97F3\u9891\u3002", en: "Native text, image, video and audio understanding." } },
+        {
+          match: "gemma",
+          note: "Gemma is Google's open line, not a Gemini tier, so it must not inherit the Gemini rule's copy. Its place below the generic Gemini rule is only for readability: the two patterns cannot overlap.",
+          text: {
+            zh: "\u6E90\u81EA Gemini \u7814\u7A76\uFF0C\u4ECE\u4E91\u7AEF\u670D\u52A1\u5668\u5230\u624B\u673A\u90FD\u80FD\u8FD0\u884C\u3002",
+            en: "Built from the same research as Gemini, running from cloud servers to phones."
+          }
+        },
+        {
+          match: "nano-?banana",
+          note: "Nano Banana is Gemini's image model with its own catalog identity, so it gets image copy instead of the Gemini text-model line.",
+          text: {
+            zh: "Gemini \u56FE\u50CF\u751F\u6210\u4E0E\u7F16\u8F91\u6A21\u578B\uFF0C\u652F\u6301\u81EA\u7136\u8BED\u8A00\u5BF9\u8BDD\u5F0F\u521B\u5EFA\u4E0E\u4FEE\u6539\u3002",
+            en: "Gemini's image generation and editing model, with conversational creation and refinement."
+          }
+        },
+        {
+          match: "glm[._-]?5[._-]?3.*flashx",
+          note: "Anchored to the 5.3 generation: the throughput figure is that tier's, so a later GLM Flash X reads the generic Flash rule below.",
+          text: {
+            zh: "GLM 5.3 flash\u7684\u9AD8\u541E\u5410\u7248\u672C\u3002",
+            en: "A high-throughput variant running at 200 tokens/s."
+          }
+        },
+        {
+          match: "glm[._-]?5[._-]?3.*flash",
+          note: "Anchored to the 5.3 generation's Flash tier; a later GLM Flash reads the generic Flash rule below.",
+          text: {
+            zh: "GLM-5\u7CFB\u5217\u7684\u9996\u4E2A\u539F\u751F\u591A\u6A21\u6001\u6A21\u578B\u3002",
+            en: "Natively multimodal, with 320B/18B MoE, 1M context and MIT licensing at $0.045 per task."
+          }
+        },
+        {
+          match: "glm[._-]?5[._-]?3(?!\\d)",
+          note: "Anchored to the 5.3 generation: the superlative is true of it alone, and the line's own rule below carries none.",
+          text: {
+            zh: "\u6700\u5F3A\u5F00\u653E\u6743\u91CD\u7F16\u7A0B\u6A21\u578B\u4E4B\u4E00\uFF0C\u62D3\u5C55\u667A\u80FD\u4E0A\u754C\u7684\u53EF\u53CA\u8FB9\u754C\u3002",
+            en: "For coding and long-horizon autonomy: 1M context, 128K output, and post-training alone makes it the most capable open-weight coding model."
+          }
+        },
+        {
+          match: "glm.*flash",
+          text: {
+            zh: "\u66F4\u5FEB\u66F4\u7701\u7684\u591A\u6A21\u6001\u63A8\u7406\uFF0C\u517C\u987E\u957F\u4E0A\u4E0B\u6587\u4E0E\u65E5\u5E38\u7F16\u7A0B\u3002",
+            en: "Fast, low-cost multimodal inference with long context and everyday coding."
+          }
+        },
+        {
+          match: "glm",
+          text: {
+            zh: "\u8986\u76D6\u5BF9\u8BDD\u3001\u7F16\u7A0B\u4E0E\u667A\u80FD\u4F53\uFF0C\u652F\u6301\u601D\u8003\u6A21\u5F0F\u4E0E\u51FD\u6570\u8C03\u7528\u3002",
+            en: "Covers chat, coding and agents, with thinking mode and function calling."
+          }
+        },
+        {
+          match: "kimi.*(k3|k-?3)|(^|[^a-z0-9])k-?3",
+          note: "Anchored to the K3 line: the 2.8T size belongs to it, and the catalog's `k3` and `k3-256k` spellings are the same line. The K3 mentions carry the same segment start as the lockup rule, so an id spelled `cn:k3` reads this line.",
+          text: {
+            zh: "\u9762\u5411\u7F16\u7A0B\u4E0E\u77E5\u8BC6\u5DE5\u4F5C\u7684 2.8T \u5F00\u653E\u6743\u91CD\u6A21\u578B\u3002",
+            en: "An open-weight 2.8T model for coding and knowledge work."
+          }
+        },
+        {
+          match: "kimi.*(cod(e|ing)|k2[._-]?7).*highspeed",
+          note: "The coding line's high-speed tier, above the coding rule because its own id contains `coding`.",
+          text: {
+            zh: "\u9762\u5411\u957F\u7A0B\u7F16\u7A0B\u7684\u5F00\u653E\u6743\u91CD\u667A\u80FD\u4F53\u6A21\u578B\u9AD8\u901F\u7248\u3002",
+            en: "A high-speed variant at about 180 tokens/s, 5\u20136x the regular tier, for 2x the price."
+          }
+        },
+        {
+          match: "kimi.*(cod(e|ing)|k2[._-]?7)",
+          note: "The coding line whatever the suffix spells: `kimi-for-coding` and `kimi-k2.7-code` both read it, and the high-speed tier above is claimed first.",
+          text: {
+            zh: "\u9762\u5411\u957F\u7A0B\u7F16\u7A0B\u7684\u5F00\u653E\u6743\u91CD\u667A\u80FD\u4F53\u6A21\u578B\u3002",
+            en: "An open-weight agentic coding model for long-horizon work, 1T/32B with 256K context."
+          }
+        },
+        {
+          match: "kimi",
+          text: {
+            zh: "\u539F\u751F\u652F\u6301\u6587\u672C\u3001\u56FE\u50CF\u4E0E\u89C6\u9891\u8F93\u5165\uFF0C\u542B\u601D\u8003\u6A21\u5F0F\u4E0E\u5DE5\u5177\u8C03\u7528\u3002",
+            en: "Native text, image and video input, with thinking mode and tool calling."
+          }
+        },
+        {
+          match: "qwen[._-]?3[._-]?8.*max",
+          note: "Anchored to the 3.8 generation: the parameter count and the context are that model's, so a later Qwen Max falls to the line rule below.",
+          text: {
+            zh: "\u9762\u5411\u7F16\u7A0B\u4E0E\u529E\u516C\uFF0C2.4 \u4E07\u4EBF\u53C2\u6570 MoE\uFF0C1M \u4E0A\u4E0B\u6587\u3001\u601D\u8003\u6A21\u5F0F\u4E0E\u5185\u7F6E\u5DE5\u5177\u3002",
+            en: "A 2.4T-parameter MoE for coding and office work, with 1M context, thinking mode and built-in tools."
+          }
+        },
+        {
+          match: "qwen.*(coder|code)",
+          text: {
+            zh: "\u5F00\u653E\u6743\u91CD MoE\uFF0C\u9762\u5411\u8865\u5168\u3001\u751F\u6210\u4E0E\u4ED3\u5E93\u7EA7\u4FEE\u6539\u3002",
+            en: "Open-weight MoE for completion, generation and repo-level edits."
+          }
+        },
+        {
+          match: "qwen.*(flash|turbo)",
+          text: {
+            zh: "\u54CD\u5E94\u5FEB\u3001\u6210\u672C\u4F4E\uFF0C\u5DE5\u5177\u8C03\u7528\u4E0E\u957F\u4E0A\u4E0B\u6587\u652F\u6301\u5B8C\u6574\u3002",
+            en: "Fast and cheap, with full tool calling and long-context support."
+          }
+        },
+        {
+          match: "qwen.*plus",
+          text: {
+            zh: "\u80FD\u529B\u4E0E\u6210\u672C\u5747\u8861\uFF0C\u5B8C\u6574\u5DE5\u5177\u8C03\u7528\u652F\u6301\u3002",
+            en: "Balanced cost and capability with full tool calling."
+          }
+        },
+        {
+          match: "qwen.*a\\d+b",
+          note: "MoE ids spell out total and active parameters (`2.4t-a95b`, `235b-a22b`); the active count must win over the size rule below, which would otherwise read the trailing `95b` as a small dense model.",
+          text: {
+            zh: "\u603B\u53C2\u5927\u3001\u6FC0\u6D3B\u53C2\u6570\u5C11\uFF0C\u5355\u4F4D\u6210\u672C\u4F4E\u4E8E\u540C\u89C4\u6A21\u7A20\u5BC6\u6A21\u578B\u3002",
+            en: "Many total parameters but few active, so it costs less than a dense model of the same size."
+          }
+        },
+        {
+          match: "qwen.*[-_]\\d+b($|[^a-z])",
+          note: "Anchored to a separator so the digits start a segment: an unanchored \\d+b matches the `95b` inside `a95b` and calls a 2.4T MoE a small dense model.",
+          text: {
+            zh: "\u53EF\u672C\u5730\u6216\u4F4E\u6210\u672C\u90E8\u7F72\u3002",
+            en: "Cheap to serve, or run locally."
+          }
+        },
+        {
+          match: "qwen",
+          text: { zh: "\u5F00\u653E\u6743\u91CD\u4E0E\u4E91\u7AEF API \u5E76\u884C\uFF0C\u8986\u76D6\u6587\u672C\u3001\u56FE\u50CF\u3001\u97F3\u9891\u4E0E\u89C6\u9891\u3002", en: "Open weights and cloud APIs across text, image, audio and video." }
+        },
+        {
+          match: "step[._-]?5(?!\\d)",
+          note: "Anchored to the 5 line: the input modes and the context are its own, and the trailing-digit guard keeps a size suffix (`95b`) from reading it.",
+          text: {
+            zh: "\u9762\u5411\u7F16\u7A0B\u4E0E\u4E13\u4E1A\u77E5\u8BC6\u5DE5\u4F5C\uFF0C\u539F\u751F\u56FE\u6587\u89C6\u9891\u8F93\u5165\uFF0C1M \u4E0A\u4E0B\u6587\u3002",
+            en: "For programming and professional knowledge work, with native text, image and video input and a 1M-token context."
+          }
+        },
+        {
+          match: "step[._-]?3[._-]?7.*flash",
+          note: "Anchored to 3.7: the parameter counts and the token rate are that tier's, so another Step Flash falls to the line rule below.",
+          text: {
+            zh: "\u9762\u5411\u667A\u80FD\u4F53\u4E0E\u4EE3\u7801\u4EFB\u52A1\uFF0C198B/11B \u7A00\u758F MoE\uFF0C\u56FE\u50CF\u4E0E\u89C6\u9891\u7406\u89E3\uFF0C256K \u4E0A\u4E0B\u6587\uFF0C\u6700\u9AD8 400 tokens/s\u3002",
+            en: "For agentic and coding tasks: 198B/11B sparse MoE with image and video understanding, 256K context, up to 400 tokens/s."
+          }
+        },
+        { match: "step", text: { zh: "\u8986\u76D6\u6587\u672C\u63A8\u7406\u3001\u591A\u6A21\u6001\u4E0E\u8BED\u97F3\uFF0C\u7ECF\u5B98\u65B9\u5F00\u653E\u5E73\u53F0\u63D0\u4F9B\u3002", en: "Reasoning, multimodal understanding and voice, served through the official open platform." } },
+        {
+          match: "minimax.*m3|(^|[^a-z0-9])m3($|-)",
+          note: "The M3 line's own claims; the catalog's `minimax-m3-1m` is the same line at a longer context.",
+          text: {
+            zh: "\u9996\u4E2A\u96C6\u524D\u6CBF\u7F16\u7A0B\u30011M \u4E0A\u4E0B\u6587\u4E0E\u539F\u751F\u591A\u6A21\u6001\u4E8E\u4E00\u8EAB\u7684\u5F00\u653E\u6743\u91CD\u6A21\u578B\u3002",
+            en: "The first open-weight model combining frontier coding, 1M context and native multimodality."
+          }
+        },
+        {
+          match: "minimax|(^|[^a-z0-9])m2[-.]?\\d",
+          text: {
+            zh: "\u4E3B\u6253\u667A\u80FD\u4F53\u63A8\u7406\u3001\u5DE5\u5177\u8C03\u7528\u3001\u7F16\u7A0B\u4E0E\u591A\u6A21\u6001\u8F93\u5165\uFF0C\u9762\u5411\u957F\u4E0A\u4E0B\u6587\u4EFB\u52A1\u3002",
+            en: "Agentic reasoning, tool use, coding and multimodal input for long-context work."
+          }
+        },
+        {
+          match: "muse-spark",
+          note: "Meta Superintelligence Labs' Muse line, separate from the Llama open-weight line \u2014 it must not inherit the Llama rule's copy.",
+          text: {
+            zh: "\u5C0F\u800C\u5FEB\u3001\u539F\u751F\u591A\u6A21\u6001\u63A8\u7406\uFF0C\u9A71\u52A8 Meta AI\u3002",
+            en: "Small and fast by design, natively multimodal, powering Meta AI."
+          }
+        },
+        {
+          match: "celeris[._-]?1(-|$)",
+          note: "Anchored to Celeris-1: the numbers are that model's, so a future Celeris reads the line rule below.",
+          text: {
+            zh: "\u751F\u6210\u901F\u5EA6 1,664 tokens/s\uFF0C\u8D85\u8FC7 Mercury 2 \u7684 5 \u500D\uFF0CMMLU-Pro 75.9%\u3002",
+            en: "Generates 1,664 tokens/s, over 5x Mercury 2, at 75.9% MMLU-Pro."
+          }
+        },
+        {
+          match: "celeris",
+          note: "Diffusion LLM, so the copy leads with latency rather than the usual capability framing.",
+          text: {
+            zh: "\u6269\u6563\u67B6\u6784\u5927\u8BED\u8A00\u6A21\u578B\uFF0C\u4E3B\u6253\u8D85\u4F4E\u5EF6\u8FDF\u751F\u6210\u3002",
+            en: "Diffusion-architecture LLMs built for ultra-low-latency generation."
+          }
+        },
+        {
+          match: "mercury-?\\d|inception",
+          text: {
+            zh: "\u9762\u5411\u4EE3\u7801\u751F\u6210\uFF0CH100 \u4E0A\u8D85 1,000 tokens/s\uFF0C\u901F\u5EA6\u6700\u9AD8\u4E3A\u540C\u7C7B\u6A21\u578B\u7684 10 \u500D\u3002",
+            en: "Built for code, over 1,000 tokens/s on H100, up to 10x faster than speed-optimized LLMs."
+          }
+        },
+        {
+          match: "apodex",
+          text: {
+            zh: "\u9762\u5411\u590D\u6742\u4E13\u4E1A\u5DE5\u4F5C\u3001\u91D1\u878D\u4E0E\u79D1\u7814\uFF0C1.1 mini \u4E3A 35B\u3001\u53EF\u672C\u5730\u90E8\u7F72\u3002",
+            en: "For complex professional work, finance and science; the 35B 1.1 mini runs locally."
+          }
+        },
+        {
+          match: "motif",
+          text: {
+            zh: "MIT \u8BB8\u53EF\uFF0C314B \u603B\u53C2 / 13.2B \u6FC0\u6D3B\uFF0C256K \u4E0A\u4E0B\u6587\u3002",
+            en: "MIT-licensed, 314B total / 13.2B active, 256K context."
+          }
+        },
+        {
+          match: "grok[._-]?4(?!\\d)",
+          note: "Anchored to the Grok 4 line, so every 4.x build reads the same sentence and another line falls to the rule below.",
+          text: {
+            zh: "\u5168\u7403\u6700\u667A\u80FD\u7684\u6A21\u578B\u4E4B\u4E00\uFF0C\u652F\u6301\u539F\u751F\u5DE5\u5177\u4F7F\u7528\u4EE5\u53CA\u5B9E\u65F6\u641C\u7D22\u529F\u80FD\u3002",
+            en: "One of the most intelligent models in the world, with native tool use and real-time search."
+          }
+        },
+        {
+          match: "grok",
+          text: {
+            zh: "\u8986\u76D6\u7F16\u7A0B\u3001\u667A\u80FD\u4F53\u4E0E\u77E5\u8BC6\u5DE5\u4F5C\uFF0CAPI \u652F\u6301\u591A\u6A21\u6001\u8F93\u5165\u3002",
+            en: "Coding, agentic tasks and knowledge work, with multimodal API input."
+          }
+        },
+        {
+          match: "doubao.*2[._-]?1(?!\\d)|seed[._-]?2[._-]?1(?!\\d)",
+          note: "Anchored to Seed 2.1: the tiers it names are that generation's, so another Seed reads the vendor rule below.",
+          text: {
+            zh: "\u5206 Pro \u4E0E Turbo \u4E24\u6863\u7684\u65B0\u4E00\u4EE3\u751F\u4EA7\u529B\u667A\u80FD\u4F53\uFF0C\u4EE5\u901A\u7528\u4EFB\u52A1\u4E0E\u4EE3\u7801\u89C1\u957F\u3002",
+            en: "Pro and Turbo tiers of a next-generation productivity agent, strong at general agentic and coding tasks."
+          }
+        },
+        {
+          match: "doubao|seed-?\\d|volc",
+          text: {
+            zh: "\u7ECF 50+ \u5185\u90E8\u4E1A\u52A1\u573A\u666F\u9A8C\u8BC1\uFF0C\u6BCF\u65E5\u5343\u4EBF\u7EA7 token \u7528\u91CF\u6253\u78E8\uFF0C\u652F\u6301\u591A\u6A21\u6001\u3002",
+            en: "Validated across 50+ internal scenarios and hundreds of billions of daily tokens, with multimodal support."
+          }
+        },
+        {
+          match: "ernie[._-]?5([._-]?0)?(-|$)",
+          note: "Anchored to the 5.0 generation: the parameter count is its own, and the catalog's `ernie-5` is the same line.",
+          text: {
+            zh: "2.4 \u4E07\u4EBF\u53C2\u6570\u7684\u539F\u751F\u5168\u6A21\u6001\u5927\u6A21\u578B\u3002",
+            en: "A native omni-modal model with 2.4 trillion parameters."
+          }
+        },
+        {
+          match: "ernie",
+          text: {
+            zh: "\u4EA7\u4E1A\u7EA7\u77E5\u8BC6\u589E\u5F3A\uFF0C\u652F\u6301\u4E2D\u6587\u7406\u89E3\u4E0E\u591A\u6A21\u6001\u751F\u6210\u3002",
+            en: "Industry-grade knowledge enhancement, with Chinese understanding and multimodal generation."
+          }
+        },
+        {
+          match: "hunyuan|(^|[^a-z0-9])hy\\d",
+          text: {
+            zh: "\u4E2D\u6587\u7406\u89E3\u4E0E\u667A\u80FD\u4F53\u573A\u666F\u8868\u73B0\u5747\u8861\u3002",
+            en: "Balanced for Chinese language and agentic scenarios."
+          },
+          note: "The brand rule for this line reads the same segment start: `cn:hy3` is the same line as `hy3`."
+        },
+        {
+          match: "codestral",
+          text: { zh: "\u9762\u5411\u8865\u5168\u3001FIM \u4E0E\u751F\u6210\uFF0C128K \u4E0A\u4E0B\u6587\u3002", en: "Built for completion, FIM and generation, with 128K context." }
+        },
+        {
+          match: "mistral.*large[._-]?3(?!\\d)",
+          note: "Anchored to Large 3: the licence and the parameter counts are that model's, so another Mistral reads the line rule below.",
+          text: {
+            zh: "Apache 2.0 \u5F00\u653E\u6743\u91CD\u591A\u6A21\u6001\u6A21\u578B\uFF0C\u7EC6\u7C92\u5EA6 MoE\uFF0C675B \u603B\u53C2 / 41B \u6FC0\u6D3B\uFF0C256K \u4E0A\u4E0B\u6587\u3002",
+            en: "Apache-2.0 open-weight multimodal MoE with 675B total / 41B active parameters and 256K context."
+          }
+        },
+        {
+          match: "mistral|magistral",
+          text: {
+            zh: "\u4ECE\u4E91\u7AEF\u5230\u8FB9\u7F18\u7684\u524D\u6CBF\u6A21\u578B\uFF0C\u5F00\u653E\u6743\u91CD\u4E0E\u5546\u7528\u5E76\u884C\uFF0C\u53EF API \u8C03\u7528\u6216\u81EA\u6258\u7BA1\u3002",
+            en: "Frontier models from cloud to edge, open-weight and commercial, via API or self-hosting."
+          }
+        },
+        { match: "llama", text: { zh: "\u53EF\u81EA\u7531\u5FAE\u8C03\u3001\u84B8\u998F\u5E76\u90E8\u7F72\u5230\u4EFB\u4F55\u73AF\u5883\u3002", en: "Fine-tune, distill and deploy it anywhere." } },
+        {
+          match: "north",
+          text: {
+            zh: "\u6574\u5408\u5927\u6A21\u578B\u3001\u641C\u7D22\u4E0E\u81EA\u52A8\u5316\u6210\u4E00\u4E2A\u4F01\u4E1A\u7EA7\u5B89\u5168\u5DE5\u4F5C\u7A7A\u95F4\u3002",
+            en: "LLMs, search and automation combined into one secure enterprise workspace."
+          }
+        },
+        {
+          match: "command-?[ar]|cohere",
+          text: {
+            zh: "\u9762\u5411\u5DE5\u5177\u8C03\u7528\u3001RAG \u4E0E\u591A\u8BED\u8A00\uFF0CCommand A \u4E3A 111B/256K\u3002",
+            en: "For tool use, RAG and multilingual work; Command A is 111B with 256K context."
+          }
+        },
+        {
+          match: "phi-?\\d",
+          text: { zh: "\u9762\u5411\u8FB9\u7F18\u4E0E\u672C\u5730\u90E8\u7F72\uFF0CPhi-4 \u4EE5 14B \u4E13\u6CE8\u63A8\u7406\u3001\u6570\u5B66\u4E0E\u4EE3\u7801\u3002", en: "For edge and local use; Phi-4 (14B) targets reasoning, math and code." }
+        },
+        {
+          match: "(^|[^a-z0-9])nova(-|$)",
+          note: "Every mention of the line reads the same boundary as the lockup rule: unanchored, this rule gives `sensenova-6.8-flash-lite` Amazon Nova's description.",
+          text: { zh: "Micro/Lite/Pro/Premier \u56DB\u6863\uFF0C\u652F\u6301\u6587\u672C\u3001\u56FE\u50CF\u4E0E\u89C6\u9891\u8F93\u5165\u3002", en: "Micro, Lite, Pro and Premier tiers taking text, image and video." }
+        },
+        {
+          match: "sonar|perplexity",
+          text: { zh: "\u7ED3\u5408\u5B9E\u65F6\u7F51\u7EDC\u4FE1\u606F\u4E0E\u5F15\u7528\u7684\u641C\u7D22 API\uFF0C\u4ECE\u8F7B\u91CF Sonar \u5230\u591A\u6B65\u6DF1\u7814 Sonar Pro\u3002", en: "Search APIs answering with fresh web data and citations, from light Sonar to deep-research Sonar Pro." }
+        }
+      ],
+      tiers: [
+        {
+          match: "flash|mini|lite|nano|turbo|air|small|swift|highspeed|fast|instant",
+          text: {
+            zh: "\u54CD\u5E94\u5FEB\u3001\u6210\u672C\u4F4E\uFF0C\u9002\u5408\u7B80\u5355\u6216\u9AD8\u9891\u4EFB\u52A1\u3002",
+            en: "Fast and cheap, for simple or high-frequency tasks."
+          }
+        },
+        {
+          match: "pro|max|ultra|opus|thinking|reasoner|plus|large|advanced|heavy|frontier",
+          text: {
+            zh: "\u9002\u5408\u590D\u6742\u6216\u8D28\u91CF\u4F18\u5148\u7684\u4EFB\u52A1\uFF0C\u6210\u672C\u66F4\u9AD8\u3002",
+            en: "For complex, quality-first work at higher cost."
+          }
+        },
+        {
+          match: "a\\d+b",
+          note: "MoE active-parameter suffix (`a95b`, `a23b`); tried before the dense rule so the active count is not mistaken for a total.",
+          text: {
+            zh: "\u603B\u53C2\u5927\u3001\u6FC0\u6D3B\u53C2\u6570\u5C11\uFF0C\u5355\u4F4D\u6210\u672C\u4F4E\u4E8E\u540C\u89C4\u6A21\u7A20\u5BC6\u6A21\u578B\u3002",
+            en: "Many total parameters but few active, so it costs less than a dense model of the same size."
+          }
+        },
+        {
+          match: "(^|[-_])\\d+b($|[^a-z])",
+          note: "Anchored so the digits start a segment: unanchored, `a95b` and `a23b` read as small dense models.",
+          text: {
+            zh: "\u53EF\u672C\u5730\u6216\u4F4E\u6210\u672C\u90E8\u7F72\u3002",
+            en: "Cheap to serve, or run locally."
+          }
+        }
+      ]
+    };
+  }
+});
+
+// assist/client/model-descriptions.js
+function familyCopy(provider, id2) {
+  for (const candidate of [id2, `${String(provider ?? "").toLowerCase()}/${id2}`]) {
+    for (const rule of families) if (rule.re.test(candidate)) return rule.text;
   }
   return null;
 }
-function effectiveEffort(entry, current) {
-  const reasoning = entry?.model?.reasoning;
-  if (!reasoning) return "";
-  const id2 = current?.reasoningEffort !== void 0 ? current.reasoningEffort : reasoning.defaultEffort;
-  return typeof id2 === "string" ? id2 : "";
+function localized(pair, locale) {
+  if (!pair) return "";
+  const language = typeof locale === "string" && locale ? locale : "en";
+  const prefix = language.includes("-") ? language.split("-")[0] : language.includes("_") ? language.split("_")[0] : "";
+  const fallbackPrefix = fallbackLocale.includes("-") ? fallbackLocale.split("-")[0] : "";
+  for (const key of [language, prefix, fallbackLocale, fallbackPrefix]) {
+    if (key && typeof pair[key] === "string" && pair[key]) return pair[key];
+  }
+  return "";
 }
-function effortRows(entry, current, providerDefaultLabel) {
+function modelDescription(provider, model, locale = "zh") {
+  const metadata = typeof model?.description === "string" ? model.description : "";
+  const id2 = typeof model?.id === "string" ? model.id.toLowerCase() : "";
+  if (!id2) return metadata;
+  const pair = familyCopy(provider, id2) || tiers.find((rule) => rule.re.test(id2))?.text;
+  return localized(pair, locale) || metadata;
+}
+var MODEL_DESCRIPTION_PROVENANCE, compile, families, tiers, fallbackLocale;
+var init_model_descriptions = __esm({
+  "assist/client/model-descriptions.js"() {
+    init_model_descriptions_data();
+    MODEL_DESCRIPTION_PROVENANCE = Object.freeze({
+      package: "dsh-claude-style",
+      version: "0.16.3",
+      commit: "33fc20b63d4cbd31cfec98d7952e3c53ec11c832",
+      sourceUrl: "https://raw.githubusercontent.com/Nwflower/dsh-claude-style/33fc20b63d4cbd31cfec98d7952e3c53ec11c832/packages/client/data/model-descriptions.json",
+      license: "MIT"
+    });
+    compile = (rules) => rules.map((rule) => ({ re: new RegExp(rule.match, "i"), text: rule.text }));
+    families = compile(model_descriptions_data_default.families);
+    tiers = compile(model_descriptions_data_default.tiers);
+    fallbackLocale = model_descriptions_data_default.fallback || "en";
+  }
+});
+
+// assist/client/model-picker-style.js
+var pickerCss;
+var init_model_picker_style = __esm({
+  "assist/client/model-picker-style.js"() {
+    pickerCss = `
+.lpa-model-root{display:inline-flex;min-width:0}
+.lpa-model-trigger{display:inline-flex;align-items:center;gap:5px;height:28px;max-width:min(320px,52cqw);min-width:0;padding:0 7px;border:0;border-radius:7px;background:transparent;color:var(--dsw-alias-label-secondary);font:inherit;font-size:13px;cursor:pointer}
+.lpa-model-trigger:hover:not(:disabled){background:var(--dsw-alias-interactive-bg-hover,var(--dsw-alias-bg-layer-2))}
+.lpa-model-trigger:disabled{opacity:.5;cursor:default}
+.lpa-model-trigger-label{display:var(--dsh-composer-model-text-display,block);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lpa-model-trigger-icon{display:var(--dsh-composer-model-icon-display,none)}
+.lpa-model-trigger-effort{display:var(--dsh-composer-model-text-display,inline);font-size:11px;color:var(--dsw-alias-label-tertiary,var(--dsw-alias-label-secondary))}
+.lpa-model-chevron{font-size:12px;flex:none}
+.lpa-model-menu{position:fixed;z-index:1200;display:flex;flex-direction:column;box-sizing:border-box;width:344px;max-width:calc(100vw - 16px);max-height:min(660px,calc(100vh - 16px));padding:6px;border:1px solid var(--dsw-alias-border-l1);border-radius:12px;background:var(--dsw-alias-bg-overlay,var(--dsw-alias-bg-layer-1));color:var(--dsw-alias-label-primary);box-shadow:0 8px 24px color-mix(in srgb,var(--dsw-alias-label-primary) 10%,transparent);font:13px/1.4 system-ui,-apple-system,"Segoe UI",sans-serif;text-align:start;overflow:hidden}
+.lpa-model-scroll{min-height:40px;overflow-y:auto;overscroll-behavior:contain;scroll-padding-block:26px;flex:1 1 auto}
+.lpa-model-group{padding:0 0 4px}
+.lpa-model-group-name{position:sticky;top:0;z-index:1;display:flex;align-items:center;gap:8px;min-height:22px;box-sizing:border-box;padding:4px 7px 3px;background:var(--dsw-alias-bg-overlay,var(--dsw-alias-bg-layer-1));font-size:10px;letter-spacing:.035em;font-weight:400;line-height:15px;color:var(--dsw-alias-label-tertiary,var(--dsw-alias-label-secondary))}
+.lpa-model-group-name span{max-width:78%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lpa-model-group-name::after{content:"";height:1px;flex:1;background:var(--dsw-alias-border-l1)}
+.lpa-model-option{display:flex;align-items:center;gap:8px;width:100%;min-height:32px;box-sizing:border-box;padding:5px 7px;border:0;border-radius:6px;background:transparent;color:inherit;font:inherit;text-align:inherit;cursor:pointer}
+.lpa-model-option:hover:not(:disabled){background:var(--dsw-alias-interactive-bg-hover,var(--dsw-alias-bg-layer-2))}
+.lpa-model-option:focus-visible,.lpa-model-trigger:focus-visible,.lpa-model-retry:focus-visible{outline:2px solid var(--dsw-alias-brand-primary);outline-offset:-2px}
+.lpa-model-option:disabled{opacity:.45;cursor:default}
+.lpa-model-copy{display:flex;flex:1;flex-direction:column;gap:1px;min-width:0}
+.lpa-model-name{font-size:13px;font-weight:500;line-height:17px;overflow-wrap:anywhere}
+.lpa-model-desc{font-size:11px;font-weight:400;line-height:15px;white-space:normal;overflow-wrap:anywhere;color:var(--dsw-alias-label-tertiary,var(--dsw-alias-label-secondary))}
+.lpa-model-check{flex:none;align-self:flex-start;margin-top:2px;font-size:13px;color:var(--dsw-alias-brand-primary)}
+.lpa-model-status,.lpa-model-error{margin:0;padding:6px 8px;font-size:11px;line-height:16px;overflow-wrap:anywhere}
+.lpa-model-status{color:var(--dsw-alias-label-secondary)}
+.lpa-model-error{color:var(--dsw-alias-state-error-primary)}
+.lpa-model-failures{flex:0 1 auto;max-height:100px;overflow:auto;border-top:1px solid var(--dsw-alias-border-l1)}
+.lpa-model-retry{margin:2px 8px 6px;padding:3px 8px;border:1px solid var(--dsw-alias-border-l1);border-radius:5px;background:transparent;color:var(--dsw-alias-label-primary);font:inherit;cursor:pointer}
+.lpa-effort-frame{flex:none;padding:10px 8px;border-top:1px solid var(--dsw-alias-border-l1)}
+`;
+  }
+});
+
+// assist/client/claude-effort-style.js
+var claudeEffortCss;
+var init_claude_effort_style = __esm({
+  "assist/client/claude-effort-style.js"() {
+    claudeEffortCss = `
+.lpa-effort.lpa-ce {
+  --lpa-ce-duration-feedback: 120ms;
+  --lpa-ce-duration-surface: 150ms;
+  --lpa-ce-duration-swap: 150ms;
+  --lpa-ce-duration-move: 200ms;
+  --lpa-ce-duration-fade: 300ms;
+  --lpa-ce-period-flash: 1450ms;
+  --lpa-ce-ease-standard: ease;
+  --lpa-ce-ease-in-out: ease-in-out;
+  --lpa-ce-ease-glide: cubic-bezier(0.22, 0.61, 0.36, 1);
+  --lpa-ce-distance-nudge: 4px;
+  --lpa-ce-blur-soft: 2px;
+  --lpa-ce-apex: #8b7ad0;
+  --lpa-ce-apex-flash: #d9d2f5;
+  --lpa-ce-apex-ink: #5f51b5;
+  --lpa-ce-timing-feedback: var(--lpa-ce-duration-feedback) var(--lpa-ce-ease-standard);
+  --lpa-ce-swap-blur: var(--lpa-ce-blur-soft);
+  --lpa-ce-swap-ease: var(--lpa-ce-ease-in-out);
+  --lpa-ce-swap-distance: var(--lpa-ce-distance-nudge);
+  box-sizing: border-box;
+  flex: none;
+  margin: 0;
+  border: 0;
+  font-weight: 400;
+}
+[data-ds-dark-theme] .lpa-effort.lpa-ce {
+  --lpa-ce-apex: #9d8ce0;
+  --lpa-ce-apex-flash: #e6e0fb;
+  --lpa-ce-apex-ink: #b9adf0;
+}
+.lpa-effort.lpa-ce {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 3px 7px 4px 7px;
+  min-width: 0;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.lpa-ce .lpa-ce-head {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  min-width: 0;
+
+  position: relative;
+}
+
+.lpa-ce .lpa-ce-label {
+  flex: none;
+  font-size: 13px;
+  line-height: 16px;
+  color: var(--dsw-alias-label-secondary, #6e6a60);
+}
+
+.lpa-ce .lpa-ce-value {
+  flex: 0 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 13px;
+  line-height: 16px;
+  color: var(--dsw-alias-label-primary, #141413);
+  transition: color var(--lpa-ce-timing-feedback);
+  animation: lpa-ce-swap-in var(--lpa-ce-duration-swap) var(--lpa-ce-swap-ease);
+}
+
+.lpa-ce .lpa-ce-value,
+.lpa-ce .lpa-ce-value-ghost {
+  --lpa-ce-swap-distance: var(--lpa-ce-distance-nudge);
+}
+.lpa-ce .lpa-ce-value-ghost {
+  position: absolute;
+  left: 0;
+  top: 0;
+  white-space: nowrap;
+  pointer-events: none;
+  font-size: 13px;
+  line-height: 16px;
+  color: var(--dsw-alias-label-primary, #141413);
+  opacity: 0;
+  animation: lpa-ce-swap-out var(--lpa-ce-duration-swap) var(--lpa-ce-swap-ease) forwards;
+}
+
+.lpa-ce .lpa-ce-ends {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 11px;
+  line-height: 14px;
+  color: var(--dsw-alias-label-caption, #a6a094);
+}
+.lpa-ce .lpa-ce-track {
+  position: relative;
+
+  height: 30px;
+  margin-top: 1px;
+  cursor: pointer;
+  touch-action: none;
+}
+.lpa-ce .lpa-ce-track::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+
+  height: 26px;
+  margin-top: -13px;
+
+  border-radius: 8px;
+
+  corner-shape: round;
+  background: var(--dsw-alias-interactive-bg-hover, rgba(0, 0, 0, 0.08));
+}
+
+.lpa-ce .lpa-ce-fill {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  height: 26px;
+  margin-top: -13px;
+
+  border-radius: 8px 0 0 8px;
+  corner-shape: round;
+  background: color-mix(in srgb, var(--dsw-alias-label-primary, #141413) 26%, transparent);
+  transition: width var(--lpa-ce-duration-move) var(--lpa-ce-ease-glide), opacity var(--lpa-ce-duration-move) var(--lpa-ce-ease-standard);
+  pointer-events: none;
+}
+
+.lpa-ce .lpa-ce-ticks {
+  position: absolute;
+  inset: 0;
+  transition: opacity var(--lpa-ce-duration-move) var(--lpa-ce-ease-standard);
+  pointer-events: none;
+}
+.lpa-ce .lpa-ce-tick {
+  position: absolute;
+  top: 50%;
+  width: 4px;
+  height: 4px;
+  margin-top: -2px;
+  transform: translateX(-50%);
+  border-radius: 50%;
+  corner-shape: round;
+  background: color-mix(in srgb, var(--dsw-alias-label-primary, #141413) 26%, transparent);
+}
+
+.lpa-ce .lpa-ce-matrix {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 26px;
+  margin-top: -13px;
+  border-radius: 8px;
+  corner-shape: round;
+  overflow: hidden;
+  box-sizing: border-box;
+
+  display: none;
+  pointer-events: none;
+}
+.lpa-effort.lpa-ce[data-apex] .lpa-ce-matrix {
+  display: grid !important;
+  grid-auto-flow: row !important;
+}
+
+.lpa-ce .lpa-ce-matrix-cell {
+  animation: lpa-ce-fade-in var(--lpa-ce-duration-surface) var(--lpa-ce-ease-standard) both !important;
+}
+.lpa-ce .lpa-ce-matrix-sq {
+  width: 100% !important;
+  height: 100% !important;
+  border-radius: 1px !important;
+
+  background-color: var(--lpa-ce-apex, #8b7ad0);
+
+  --lpa-ce-flash-light: var(--lpa-ce-apex-flash, #d9d2f5);
+
+  animation: lpa-ce-flash var(--lpa-ce-period-flash) infinite var(--lpa-ce-ease-in-out) !important;
+}
+.lpa-ce .lpa-ce-matrix-sq[data-tone="0"] {
+  --lpa-ce-flash-light: color-mix(in srgb, var(--lpa-ce-apex, #8b7ad0) 62%, var(--lpa-ce-apex-flash, #d9d2f5));
+}
+.lpa-ce .lpa-ce-matrix-sq[data-tone="1"] {
+  --lpa-ce-flash-light: color-mix(in srgb, var(--lpa-ce-apex, #8b7ad0) 54%, var(--lpa-ce-apex-flash, #d9d2f5));
+}
+.lpa-ce .lpa-ce-matrix-sq[data-tone="2"] {
+  --lpa-ce-flash-light: color-mix(in srgb, var(--lpa-ce-apex, #8b7ad0) 46%, var(--lpa-ce-apex-flash, #d9d2f5));
+}
+.lpa-ce .lpa-ce-matrix-sq[data-tone="3"] {
+  --lpa-ce-flash-light: color-mix(in srgb, var(--lpa-ce-apex, #8b7ad0) 38%, var(--lpa-ce-apex-flash, #d9d2f5));
+}
+.lpa-ce .lpa-ce-matrix-sq[data-tone="4"] {
+  --lpa-ce-flash-light: color-mix(in srgb, var(--lpa-ce-apex, #8b7ad0) 30%, var(--lpa-ce-apex-flash, #d9d2f5));
+}
+.lpa-ce .lpa-ce-matrix-sq[data-tone="5"] {
+  --lpa-ce-flash-light: color-mix(in srgb, var(--lpa-ce-apex, #8b7ad0) 22%, var(--lpa-ce-apex-flash, #d9d2f5));
+}
+.lpa-ce .lpa-ce-matrix-sq[data-tone="6"] {
+  --lpa-ce-flash-light: color-mix(in srgb, var(--lpa-ce-apex, #8b7ad0) 14%, var(--lpa-ce-apex-flash, #d9d2f5));
+}
+.lpa-ce .lpa-ce-matrix-sq[data-tone="7"] {
+  --lpa-ce-flash-light: color-mix(in srgb, var(--lpa-ce-apex, #8b7ad0) 6%, var(--lpa-ce-apex-flash, #d9d2f5));
+}
+@keyframes lpa-ce-flash {
+  0%, 17.24% { background-color: var(--lpa-ce-apex, #8b7ad0); }
+  17.25%, 50.34% { background-color: var(--lpa-ce-flash-light, #d9d2f5); }
+  100% { background-color: var(--lpa-ce-apex, #8b7ad0); }
+}
+
+.lpa-effort.lpa-ce[data-apex] .lpa-ce-fill {
+  opacity: 0 !important;
+}
+.lpa-effort.lpa-ce[data-apex] .lpa-ce-ticks {
+  opacity: 0 !important;
+}
+.lpa-effort.lpa-ce[data-apex] .lpa-ce-knob {
+  background: color-mix(in srgb, var(--lpa-ce-apex, #8b7ad0) 22%, var(--dsw-static-neutral-bluish-00, #ffffff)) !important;
+  box-shadow: 0 0 10px color-mix(in srgb, var(--lpa-ce-apex, #8b7ad0) 80%, transparent), 0 0 0 1px color-mix(in srgb, var(--lpa-ce-apex, #8b7ad0) 35%, transparent) !important;
+}
+.lpa-effort.lpa-ce[data-apex] .lpa-ce-value {
+  color: var(--lpa-ce-apex-ink, #5f51b5) !important;
+}
+
+.lpa-ce .lpa-ce-knob {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  width: 16px;
+  height: 30px;
+  margin-top: -15px;
+
+  border-radius: 5px;
+  corner-shape: round;
+
+  background: var(--dsw-static-neutral-bluish-00, #ffffff);
+  box-shadow: 0 1px 3px rgba(20, 20, 19, 0.28), 0 0 0 1px rgba(20, 20, 19, 0.06);
+
+  scale: 1;
+  transition: translate var(--lpa-ce-duration-move) var(--lpa-ce-ease-glide), scale var(--lpa-ce-timing-feedback), background-color var(--lpa-ce-duration-fade) var(--lpa-ce-ease-standard), box-shadow var(--lpa-ce-duration-fade) var(--lpa-ce-ease-standard);
+  will-change: translate, scale;
+}
+[data-ds-dark-theme] .lpa-ce .lpa-ce-knob {
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(0, 0, 0, 0.4);
+}
+[data-ds-dark-theme] .lpa-effort.lpa-ce[data-apex] .lpa-ce-knob {
+  box-shadow: 0 0 10px color-mix(in srgb, var(--lpa-ce-apex, #9d8ce0) 80%, transparent), 0 0 0 1px color-mix(in srgb, var(--lpa-ce-apex, #9d8ce0) 35%, transparent) !important;
+}
+
+.lpa-effort.lpa-ce[data-dragging] .lpa-ce-knob {
+  scale: 1.1 !important;
+
+  transition: scale var(--lpa-ce-timing-feedback), background-color var(--lpa-ce-duration-fade) var(--lpa-ce-ease-standard), box-shadow var(--lpa-ce-duration-fade) var(--lpa-ce-ease-standard) !important;
+}
+.lpa-effort.lpa-ce[data-dragging] .lpa-ce-fill {
+  transition: none !important;
+}
+.lpa-ce .lpa-ce-track:has(> .lpa-ce-input:focus-visible) {
+  outline: 2px solid var(--dsw-alias-brand-primary, #d97757) !important;
+  outline-offset: 1px !important;
+  border-radius: 10px !important;
+}
+
+.lpa-effort.lpa-ce[data-empty] .lpa-ce-track::before {
+  opacity: 0.55 !important;
+}
+.lpa-effort.lpa-ce[data-empty] .lpa-ce-value {
+  color: var(--dsw-alias-label-caption, #a6a094) !important;
+}
+@keyframes lpa-ce-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes lpa-ce-swap-out {
+  from { opacity: 1; filter: blur(0); transform: translateY(0); }
+  to { opacity: 0; filter: blur(var(--lpa-ce-swap-blur)); transform: translateY(calc(-1 * var(--lpa-ce-swap-distance))); }
+}
+@keyframes lpa-ce-swap-in {
+  from { opacity: 0; filter: blur(var(--lpa-ce-swap-blur)); transform: translateY(var(--lpa-ce-swap-distance)); }
+  to { opacity: 1; filter: blur(0); transform: translateY(0); }
+}
+/* The live region survives every animated text swap. */
+.lpa-ce .lpa-ce-live {
+  flex: 0 1 auto;
+  min-width: 0;
+}
+.lpa-ce .lpa-ce-value { display: block; }
+.lpa-ce .lpa-ce-label,
+.lpa-ce .lpa-ce-value,
+.lpa-ce .lpa-ce-value-ghost { font-weight: 400; }
+/* Clear the older slider's generic margins without changing upstream metrics. */
+.lpa-ce .lpa-ce-track { margin: 1px 0 0; min-height: 30px; padding: 0; border: 0; }
+.lpa-ce .lpa-ce-knob { pointer-events: none; }
+.lpa-effort.lpa-ce[data-disabled] { opacity: .55; }
+.lpa-effort.lpa-ce[data-disabled] .lpa-ce-track { cursor: default; }
+/* Variables retain upstream !important delay/duration precedence while allowing
+   the reduced-motion media rule to turn the entire animation off. */
+.lpa-ce .lpa-ce-matrix-cell { animation-delay: var(--lpa-ce-cell-delay, 0s) !important; }
+.lpa-ce .lpa-ce-matrix-sq {
+  animation-delay: var(--lpa-ce-particle-delay, 0s) !important;
+  animation-duration: var(--lpa-ce-particle-duration, var(--lpa-ce-period-flash)) !important;
+}
+/* The caller's range owns all interaction, covering only this track. Its 16px
+   thumb gives the same centre endpoints (8px, width - 8px) as the visual knob. */
+.lpa-ce .lpa-ce-track > .lpa-ce-input {
+  appearance: none;
+  -webkit-appearance: none;
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  display: block;
+  box-sizing: border-box;
+  width: 100%;
+  height: 30px;
+  min-width: 0;
+  max-width: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  opacity: 0;
+  background: transparent;
+  color: transparent;
+  box-shadow: none;
+  outline: none;
+  cursor: pointer;
+  touch-action: none;
+  direction: ltr;
+}
+.lpa-ce .lpa-ce-track > .lpa-ce-input:disabled { opacity: 0; cursor: default; }
+.lpa-ce .lpa-ce-track > .lpa-ce-input:focus-visible { outline: none; }
+.lpa-ce .lpa-ce-track > .lpa-ce-input::-webkit-slider-runnable-track {
+  height: 30px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+.lpa-ce .lpa-ce-track > .lpa-ce-input::-webkit-slider-thumb {
+  appearance: none;
+  -webkit-appearance: none;
+  box-sizing: border-box;
+  width: 16px;
+  height: 30px;
+  margin: 0;
+  border: 0;
+  border-radius: 5px;
+  background: transparent;
+  box-shadow: none;
+}
+.lpa-ce .lpa-ce-track > .lpa-ce-input::-moz-range-track,
+.lpa-ce .lpa-ce-track > .lpa-ce-input::-moz-range-progress {
+  height: 30px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+.lpa-ce .lpa-ce-track > .lpa-ce-input::-moz-range-thumb {
+  box-sizing: border-box;
+  width: 16px;
+  height: 30px;
+  margin: 0;
+  border: 0;
+  border-radius: 5px;
+  background: transparent;
+  box-shadow: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .lpa-effort.lpa-ce .lpa-ce-value,
+  .lpa-effort.lpa-ce .lpa-ce-value-ghost,
+  .lpa-effort.lpa-ce .lpa-ce-fill,
+  .lpa-effort.lpa-ce .lpa-ce-ticks,
+  .lpa-effort.lpa-ce .lpa-ce-knob,
+  .lpa-effort.lpa-ce[data-dragging] .lpa-ce-knob,
+  .lpa-effort.lpa-ce .lpa-ce-matrix-cell,
+  .lpa-effort.lpa-ce .lpa-ce-matrix-sq {
+    animation: none !important;
+    transition: none !important;
+  }
+  .lpa-effort.lpa-ce .lpa-ce-value-ghost { visibility: hidden; }
+  .lpa-effort.lpa-ce[data-dragging] .lpa-ce-knob { scale: 1 !important; }
+}
+@media (forced-colors: active) {
+  .lpa-ce .lpa-ce-track::before,
+  .lpa-ce .lpa-ce-fill,
+  .lpa-ce .lpa-ce-ticks,
+  .lpa-ce .lpa-ce-matrix,
+  .lpa-effort.lpa-ce[data-apex] .lpa-ce-matrix,
+  .lpa-ce .lpa-ce-knob { display: none !important; }
+  .lpa-ce .lpa-ce-track > .lpa-ce-input,
+  .lpa-ce .lpa-ce-track > .lpa-ce-input:disabled {
+    appearance: auto;
+    -webkit-appearance: auto;
+    opacity: 1;
+    color: CanvasText;
+    forced-color-adjust: auto;
+  }
+  .lpa-ce .lpa-ce-track > .lpa-ce-input::-webkit-slider-runnable-track {
+    all: revert;
+  }
+  .lpa-ce .lpa-ce-track > .lpa-ce-input::-webkit-slider-thumb {
+    all: revert;
+    width: 16px;
+    height: 30px;
+  }
+  .lpa-ce .lpa-ce-track > .lpa-ce-input::-moz-range-track,
+  .lpa-ce .lpa-ce-track > .lpa-ce-input::-moz-range-progress {
+    all: revert;
+  }
+  .lpa-ce .lpa-ce-track > .lpa-ce-input::-moz-range-thumb {
+    all: revert;
+    width: 16px;
+    height: 30px;
+  }
+  .lpa-ce .lpa-ce-track:has(> .lpa-ce-input:focus-visible) { outline-color: Highlight !important; }
+}
+`;
+  }
+});
+
+// assist/client/claude-effort-visual.js
+function magneticRatio(rawRatio, levelCount) {
+  const ratio = Number.isFinite(rawRatio) ? Math.max(0, Math.min(1, rawRatio)) : 0;
+  if (levelCount < 2) return ratio;
+  const segments = levelCount - 1;
+  const segment = Math.floor(ratio * segments);
+  if (segment >= segments) return ratio;
+  const t = ratio * segments - segment;
+  return (segment + t - 0.8 * Math.sin(2 * Math.PI * t) / (2 * Math.PI)) / segments;
+}
+function matrixGeometry(width, devicePixelRatio) {
+  if (!Number.isFinite(width) || width <= 0) return null;
+  const dpr = Number.isFinite(devicePixelRatio) && devicePixelRatio > 0 ? devicePixelRatio : 1;
+  const wDev = Math.round(width * dpr);
+  const rows = 5;
+  const gap = Math.max(1, Math.round(1 * dpr));
+  const margin = Math.max(1, Math.round(0.5 * dpr));
+  const hDev = Math.round(26 * dpr);
+  const block = Math.max(3, Math.floor((hDev - 2 * margin - (rows - 1) * gap) / rows));
+  const cols = Math.max(1, Math.floor((wDev + gap) / (block + gap)));
+  const restX = wDev - (cols * block + (cols - 1) * gap);
+  const restY = hDev - (rows * block + (rows - 1) * gap);
+  return {
+    cols,
+    rows,
+    sq: block / dpr,
+    gap: gap / dpr,
+    padTop: Math.floor(restY / 2) / dpr,
+    padBottom: (restY - Math.floor(restY / 2)) / dpr,
+    padLeft: Math.floor(restX / 2) / dpr,
+    padRight: (restX - Math.floor(restX / 2)) / dpr
+  };
+}
+function cellUnit(r, c, seed) {
+  let hash = Math.imul(r + 1, 2654435761) ^ Math.imul(c + 1, 2246822507) ^ Math.imul(seed + 1, 668265263);
+  hash = Math.imul(hash ^ hash >>> 15, 625341585);
+  hash ^= hash >>> 13;
+  return (hash >>> 0) / 4294967296;
+}
+function cellFade(fx) {
+  if (fx <= 0.05) return 0;
+  if (fx >= 0.75) return 1;
+  const t = (fx - 0.05) / 0.7;
+  return t * t * (3 - 2 * t);
+}
+function matrixParticle(row, column, columnCount) {
+  const fx = columnCount > 1 ? column / (columnCount - 1) : 1;
+  return {
+    tone: Math.floor(cellUnit(row, column, 1) * 8) % 8,
+    opacity: cellFade(fx).toFixed(3),
+    entranceDelay: ((1 - fx) * FLASH_SECONDS * 0.31 + cellUnit(row, column, 4) * FLASH_SECONDS * 0.055).toFixed(3) + "s",
+    delay: (cellUnit(row, column, 2) * FLASH_SECONDS * 0.95 + FLASH_SECONDS * 0.21).toFixed(3) + "s",
+    duration: (FLASH_SECONDS * (0.92 + cellUnit(row, column, 3) * 0.16)).toFixed(3) + "s"
+  };
+}
+function useTrackBox(track) {
+  const [box, setBox] = import_react14.default.useState({ width: 0, dpr: 1 });
+  useLayout(() => {
+    const node = track.current;
+    if (!node) return;
+    const view = node.ownerDocument.defaultView;
+    const measure = () => {
+      const width = node.clientWidth;
+      const dpr = view?.devicePixelRatio > 0 ? view.devicePixelRatio : 1;
+      setBox((previous) => previous.width === width && previous.dpr === dpr ? previous : { width, dpr });
+    };
+    measure();
+    const Resize = view?.ResizeObserver ?? globalThis.ResizeObserver;
+    const observer = typeof Resize === "function" ? new Resize(measure) : null;
+    observer?.observe(node);
+    view?.addEventListener("resize", measure);
+    return () => {
+      observer?.disconnect();
+      view?.removeEventListener("resize", measure);
+    };
+  }, [track]);
+  return box;
+}
+function ClaudeEffortVisual({
+  rows = [],
+  index = 0,
+  position = null,
+  dragging = false,
+  disabled = false,
+  unknown = false,
+  label = "",
+  t,
+  children
+}) {
+  const track = import_react14.default.useRef(null), knob = import_react14.default.useRef(null), fill = import_react14.default.useRef(null), value = import_react14.default.useRef(null);
+  const box = useTrackBox(track);
+  const count = rows.length;
+  const at = Math.max(0, Math.min(Math.max(0, count - 1), Number.isInteger(index) ? index : 0));
+  const ratio = position === null ? count < 2 ? 1 : at / (count - 1) : magneticRatio(position, count);
+  const pixels = Math.round(ratio * Math.max(0, box.width - 16));
+  const geometry = import_react14.default.useMemo(() => matrixGeometry(box.width, box.dpr), [box.width, box.dpr]);
+  const wantsApex = count > 1 && at === count - 1 && !unknown;
+  const [matrixBuilt, setMatrixBuilt] = import_react14.default.useState(false);
+  const layout = wantsApex || matrixBuilt ? geometry : null;
+  const apex = wantsApex && layout !== null;
+  const signature = Math.round(box.width * box.dpr) + "@" + box.dpr;
+  useLayout(() => {
+    if (apex) setMatrixBuilt(true);
+  }, [apex]);
+  useLayout(() => {
+    if (!knob.current || !fill.current) return;
+    knob.current.style.transition = "none";
+    fill.current.style.transition = "none";
+    void knob.current.offsetWidth;
+    knob.current.style.transition = "";
+    fill.current.style.transition = "";
+  }, [box.width]);
+  const [swap, setSwap] = import_react14.default.useState({ text: label, previous: "", serial: 0, left: 0 });
+  useLayout(() => {
+    if (swap.text === label) return;
+    const left = value.current?.offsetLeft ?? 0;
+    setSwap((previous) => ({ text: label, previous: previous.text, serial: previous.serial + 1, left }));
+  }, [label, swap.text]);
+  const cells = import_react14.default.useMemo(() => {
+    if (!layout) return null;
+    return Array.from({ length: layout.rows * layout.cols }, (_, i) => {
+      const row = Math.floor(i / layout.cols), column = i % layout.cols;
+      const particle = matrixParticle(row, column, layout.cols);
+      return h13(
+        "div",
+        {
+          key: signature + ":" + i,
+          className: "lpa-ce-matrix-cell",
+          style: { "--lpa-ce-cell-delay": particle.entranceDelay }
+        },
+        h13("div", {
+          className: "lpa-ce-matrix-sq",
+          "data-tone": particle.tone,
+          style: {
+            opacity: particle.opacity,
+            "--lpa-ce-particle-delay": particle.delay,
+            "--lpa-ce-particle-duration": particle.duration
+          }
+        })
+      );
+    });
+  }, [layout, signature]);
+  const copy = (key) => typeof t === "function" ? t(key) : {
+    "picker.effort": "Reasoning effort",
+    "picker.faster": "Faster",
+    "picker.smarter": "Smarter"
+  }[key];
+  return h13(
+    import_react14.default.Fragment,
+    null,
+    h13("style", { "data-lpa-ce-style": "" }, claudeEffortCss),
+    h13(
+      "section",
+      {
+        className: "lpa-effort lpa-ce",
+        "aria-label": copy("picker.effort"),
+        "data-apex": apex ? "" : void 0,
+        "data-empty": count === 0 ? "" : void 0,
+        "data-dragging": dragging && !disabled ? "" : void 0,
+        "data-disabled": disabled ? "" : void 0,
+        "data-unknown": unknown ? "true" : void 0
+      },
+      h13(
+        "div",
+        { className: "lpa-ce-head" },
+        h13("span", { className: "lpa-ce-label" }, copy("picker.effort")),
+        h13(
+          "span",
+          { className: "lpa-ce-live", "aria-live": "polite", "aria-atomic": true },
+          h13("span", { key: swap.serial, ref: value, className: "lpa-ce-value" }, swap.text)
+        ),
+        h13("span", {
+          key: swap.serial,
+          className: "lpa-ce-value-ghost",
+          "aria-hidden": true,
+          style: { left: swap.left + "px" }
+        }, swap.previous)
+      ),
+      h13(
+        "div",
+        { className: "lpa-ce-ends", "aria-hidden": true },
+        h13("span", { className: "lpa-ce-end" }, copy("picker.faster")),
+        h13("span", { className: "lpa-ce-end" }, copy("picker.smarter"))
+      ),
+      h13(
+        "div",
+        { ref: track, className: "lpa-effort-slider lpa-ce-track" },
+        h13("div", { ref: fill, className: "lpa-ce-fill", "aria-hidden": true, style: { width: (count ? pixels + 8 : 0) + "px" } }),
+        h13("div", { className: "lpa-ce-ticks", "aria-hidden": true }, rows.map((row, i) => h13("span", {
+          key: row.id,
+          className: "lpa-ce-tick",
+          style: { left: Math.round((count < 2 ? 1 : i / (count - 1)) * Math.max(0, box.width - 16) + 8) + "px" }
+        }))),
+        h13("div", { className: "lpa-ce-matrix", "aria-hidden": true, style: layout ? {
+          gap: layout.gap + "px",
+          padding: `${layout.padTop}px ${layout.padRight}px ${layout.padBottom}px ${layout.padLeft}px`,
+          gridTemplateColumns: `repeat(${layout.cols}, ${layout.sq}px)`,
+          gridAutoRows: layout.sq + "px"
+        } : void 0 }, cells),
+        h13("div", { ref: knob, className: "lpa-ce-knob", "aria-hidden": true, style: { translate: pixels + "px" } }),
+        children
+      )
+    )
+  );
+}
+var import_react14, h13, useLayout, FLASH_SECONDS;
+var init_claude_effort_visual = __esm({
+  "assist/client/claude-effort-visual.js"() {
+    import_react14 = __toESM(require("react"), 1);
+    init_claude_effort_style();
+    init_claude_effort_style();
+    h13 = import_react14.default.createElement;
+    useLayout = typeof window === "undefined" ? import_react14.default.useEffect : import_react14.default.useLayoutEffect;
+    FLASH_SECONDS = 1.45;
+  }
+});
+
+// assist/client/model-picker.js
+function orderModelProviders(groups) {
+  const rank = (id2) => id2 === "deepseek-account" ? 0 : id2 === "deepseek-official" ? 1 : 2;
+  return [...groups].sort((a, b) => rank(a.id) - rank(b.id));
+}
+function modelsOf(group) {
+  return (group?.models ?? []).filter((m) => m && typeof m.id === "string").slice().sort((a, b) => a.id < b.id ? -1 : a.id > b.id ? 1 : 0);
+}
+function sectionsOf(state) {
+  return orderModelProviders((state?.groups ?? []).filter((g) => g && typeof g.id === "string" && modelsOf(g).length));
+}
+function isCurrentModel(current, selection) {
+  return !!current && current.provider === selection?.provider && current.model === selection?.model;
+}
+function currentEntry(state) {
+  for (const group of sectionsOf(state)) for (const model of modelsOf(group)) if (isCurrentModel(state.current, { provider: group.id, model: model.id })) return { group, model };
+  return null;
+}
+function busyState(state) {
+  return state?.pending != null;
+}
+function loadingState(state) {
+  return state?.status === "loading" || state?.status === "idle";
+}
+function effectiveEffort(entry, current) {
+  return current?.reasoningEffort ?? entry?.model?.reasoning?.defaultEffort;
+}
+function effortRows(entry, current, defaultLabel, t) {
   const reasoning = entry?.model?.reasoning;
   if (!reasoning) return [];
-  const active = effectiveEffort(entry, current);
-  const rows = [];
-  if (reasoning.defaultEffort === void 0) {
-    rows.push({ id: "effort:provider-default", effort: void 0, label: providerDefaultLabel, active: active === "" });
-  }
-  for (const effort of Array.isArray(reasoning.efforts) ? reasoning.efforts : []) {
-    if (!effort || typeof effort.id !== "string") continue;
-    rows.push({ id: "effort:" + effort.id, effort: effort.id, label: typeof effort.name === "string" && effort.name ? effort.name : effort.id, active: effort.id === active });
-  }
-  return rows.length > 1 ? rows : [];
-}
-function triggerEffortLabel(snapshot, entry, effortOptions) {
-  const active = effortOptions.find((row) => row.active);
-  if (active) return active.label;
-  if (entry) return "";
-  return typeof snapshot?.retainedEffort === "string" ? snapshot.retainedEffort : "";
-}
-function busyState(snapshot) {
-  return snapshot?.pending !== null && snapshot?.pending !== void 0;
-}
-function loadingState(snapshot) {
-  return snapshot?.status === "loading" || snapshot?.status === "idle";
-}
-function levelOneRows(snapshot) {
-  const entry = currentEntry(snapshot);
-  const rows = [];
-  if (entry) rows.push({ kind: "current", id: "current", group: entry.group, model: entry.model });
-  for (const group of sectionsOf(snapshot)) rows.push({ kind: "provider", id: "provider:" + group.id, group });
+  const active = effectiveEffort(entry, current), rows = [];
+  if (reasoning.defaultEffort === void 0) rows.push({ id: "default", effort: void 0, label: defaultLabel, active: active === void 0 });
+  for (const item of reasoning.efforts ?? []) if (typeof item?.id === "string" && !rows.some((r) => r.effort === item.id)) rows.push({ id: JSON.stringify(item.id), effort: item.id, label: t && ["none", "minimal", "low", "medium", "high", "xhigh", "max"].includes(item.id) ? t("picker.level." + item.id) : item.name || item.id, active: item.id === active });
   return rows;
 }
+function triggerEffortLabel(state, entry, rows) {
+  return rows.find((r) => r.active)?.label ?? state?.retainedEffort ?? state?.current?.reasoningEffort ?? "";
+}
+function effortSelection(current, rows, index) {
+  if (!current || !Number.isInteger(index) || index < 0 || index >= rows.length) return null;
+  return { provider: current.provider, model: current.model, ...rows[index].effort === void 0 ? {} : { reasoningEffort: rows[index].effort } };
+}
+function failureRows(state) {
+  const rows = [];
+  if (state?.error) rows.push({ id: "load", key: "picker.loadFailed", params: { message: state.error } });
+  else if (state?.status === "error") rows.push({ id: "load", key: "picker.failed" });
+  for (const f of state?.failures ?? []) rows.push({ id: "provider:" + f.id, key: "picker.groupFailed", params: { name: f.name || f.id, message: f.message || "" } });
+  return rows;
+}
+function focusOrder(state) {
+  return busyState(state) ? [] : sectionsOf(state).flatMap((g) => modelsOf(g).map((m) => modelRowId(g, m)));
+}
 function menuGeometry(trigger, size, viewport) {
-  const width = viewport.width, height = viewport.height;
-  const left = Math.max(MARGIN, Math.min(trigger.right - size.width, width - size.width - MARGIN));
-  const above = trigger.top - GAP - size.height;
-  const top = above >= MARGIN ? above : Math.min(trigger.bottom + GAP, height - size.height - MARGIN);
-  return { left: Math.round(left), top: Math.round(Math.max(MARGIN, top)) };
+  const margin = 8, gap = 6;
+  return {
+    left: Math.max(margin, Math.min(trigger.right - size.width, viewport.width - size.width - margin)),
+    top: Math.max(margin, trigger.top - gap - size.height >= margin ? trigger.top - gap - size.height : Math.min(trigger.bottom + gap, viewport.height - size.height - margin))
+  };
 }
-function submenuGeometry(anchor, size, viewport) {
-  const width = viewport.width, height = viewport.height;
-  const left = anchor.right + GAP <= width - size.width - MARGIN ? anchor.right + GAP : Math.max(MARGIN, anchor.left - GAP - size.width);
-  const top = Math.max(MARGIN, Math.min(anchor.top, height - size.height - MARGIN));
-  return { left: Math.round(left), top: Math.round(top) };
-}
-function useAnchored(triggerRef, panelRef, open, measure) {
+function usePlacement(trigger, panel, open) {
   const [position, setPosition] = import_react15.default.useState(null);
-  const last = import_react15.default.useRef(null);
   import_react15.default.useLayoutEffect(() => {
     if (!open) {
-      last.current = null;
       setPosition(null);
       return;
     }
     const place = () => {
-      const trigger = triggerRef.current, panel2 = panelRef.current;
-      if (!trigger || !panel2) return;
-      const size = { width: panel2.offsetWidth, height: panel2.offsetHeight };
-      if (!size.width || !size.height) return;
-      const next = measure(trigger.getBoundingClientRect(), size, { width: globalThis.innerWidth, height: globalThis.innerHeight });
-      if (last.current && last.current.left === next.left && last.current.top === next.top) return;
-      last.current = next;
-      setPosition(next);
-    };
-    place();
-    globalThis.addEventListener("resize", place);
-    globalThis.addEventListener("scroll", place, true);
-    const panel = panelRef.current;
-    const observer = typeof globalThis.ResizeObserver === "function" && panel ? new globalThis.ResizeObserver(place) : null;
-    if (panel) observer?.observe(panel);
-    return () => {
-      observer?.disconnect();
-      globalThis.removeEventListener("resize", place);
-      globalThis.removeEventListener("scroll", place, true);
-    };
-  }, [open, measure]);
-  return position;
-}
-function ModelPicker({ locked, available, directory, load, select, t, notesSource }) {
-  const state = import_react15.default.useSyncExternalStore(
-    import_react15.default.useCallback((listener) => directory.subscribe(listener), [directory]),
-    () => directory.getSnapshot(),
-    () => directory.getSnapshot()
-  );
-  const notesRef = import_react15.default.useRef(notesSource);
-  notesRef.current = notesSource;
-  const subscribeNotes = import_react15.default.useCallback((listener) => notesRef.current.subscribe(listener), []);
-  const readNotes = import_react15.default.useCallback(() => notesRef.current.getSnapshot(), []);
-  const notes = import_react15.default.useSyncExternalStore(subscribeNotes, readNotes, readNotes);
-  const [open, setOpen] = import_react15.default.useState(false);
-  const [submenu, setSubmenu] = import_react15.default.useState(null);
-  const [error, setError] = import_react15.default.useState(null);
-  const triggerRef = import_react15.default.useRef(null), panelRef = import_react15.default.useRef(null), submenuRef = import_react15.default.useRef(null);
-  const entry = currentEntry(state);
-  const busy = busyState(state);
-  const loading = loadingState(state) && sectionsOf(state).length === 0;
-  const effortOptions = effortRows(entry, state?.current, t("picker.providerDefault"));
-  const position = useAnchored(triggerRef, panelRef, open, menuGeometry);
-  const submenuPosition = useAnchored(panelRef, submenuRef, Boolean(submenu), submenuGeometry);
-  import_react15.default.useEffect(() => {
-    if (!open) {
-      setSubmenu(null);
-      setError(null);
-      return;
-    }
-    const onPointer = (event) => {
-      if (triggerRef.current?.contains(event.target)) return;
-      if (panelRef.current?.contains(event.target)) return;
-      if (submenuRef.current?.contains(event.target)) return;
-      setOpen(false);
-    };
-    const onKey = (event) => {
-      if (event.key !== "Escape") return;
-      event.stopPropagation();
-      setOpen(false);
-      setSubmenu(null);
-      triggerRef.current?.focus?.();
-    };
-    globalThis.document.addEventListener("pointerdown", onPointer, true);
-    globalThis.document.addEventListener("keydown", onKey, true);
-    return () => {
-      globalThis.document.removeEventListener("pointerdown", onPointer, true);
-      globalThis.document.removeEventListener("keydown", onKey, true);
-    };
-  }, [open]);
-  if (!available) return null;
-  const show = () => {
-    setOpen(true);
-    setSubmenu(null);
-    setError(null);
-    try {
-      const pending = load?.();
-      if (pending && typeof pending.catch === "function") pending.catch(() => {
-      });
-    } catch {
-    }
-  };
-  const close = () => {
-    setOpen(false);
-    setSubmenu(null);
-    triggerRef.current?.focus?.();
-  };
-  const submit = (selection) => {
-    Promise.resolve().then(() => select?.(selection)).then((result) => {
-      if (result && result.ok === false) {
-        setError(result.error?.code ?? "model-failed");
+      const anchor = trigger.current, node = panel.current;
+      if (!anchor || !node) return;
+      const rect = anchor.getBoundingClientRect();
+      if (!rect.width || !rect.height) {
+        setPosition(null);
         return;
       }
-      close();
-    }).catch(() => setError("model-failed"));
+      const next = menuGeometry(rect, { width: node.offsetWidth, height: node.offsetHeight }, { width: innerWidth, height: innerHeight });
+      setPosition((old) => old?.left === next.left && old?.top === next.top ? old : next);
+    };
+    place();
+    const observer = typeof ResizeObserver === "function" ? new ResizeObserver(place) : null;
+    if (panel.current) observer?.observe(panel.current);
+    if (trigger.current) observer?.observe(trigger.current);
+    window.addEventListener("resize", place);
+    window.addEventListener("scroll", place, true);
+    return () => {
+      observer?.disconnect();
+      window.removeEventListener("resize", place);
+      window.removeEventListener("scroll", place, true);
+    };
+  }, [open, trigger, panel]);
+  return position;
+}
+function EffortSlider({ state, entry, disabled, t, submit, sliderRef }) {
+  const rows = effortRows(entry, state.current, t("picker.providerDefault"), t);
+  const active = rows.findIndex((r) => r.active);
+  const token = JSON.stringify([state.current, rows.map((r) => r.effort)]);
+  const tokenRef = import_react15.default.useRef(token);
+  tokenRef.current = token;
+  const gesture = import_react15.default.useRef(null), interaction = import_react15.default.useRef({ mode: null, token: null, cancelled: false });
+  const [draft, setDraft] = import_react15.default.useState(null), [pointerPosition, setPointerPosition] = import_react15.default.useState(null), [landing, setLanding] = import_react15.default.useState(null);
+  const alive = import_react15.default.useRef(true);
+  import_react15.default.useEffect(() => {
+    alive.current = true;
+    return () => {
+      alive.current = false;
+    };
+  }, []);
+  import_react15.default.useEffect(() => {
+    if (interaction.current.mode) interaction.current.cancelled = true;
+    gesture.current = null;
+    setDraft(null);
+    setPointerPosition(null);
+  }, [token, disabled]);
+  import_react15.default.useEffect(() => {
+    setLanding(null);
+  }, [token]);
+  const clear = () => {
+    gesture.current = null;
+    interaction.current = { mode: null, token: null, cancelled: true };
+    setDraft(null);
+    setPointerPosition(null);
   };
-  const pickModel = (group, model) => submit({ provider: group.id, model: model.id });
-  const pickEffort = (row) => {
-    if (!entry) return;
-    submit({ provider: entry.group.id, model: entry.model.id, ...row.effort === void 0 ? {} : { reasoningEffort: row.effort } });
+  const commit = () => {
+    const g = gesture.current, cancelled = interaction.current.cancelled;
+    clear();
+    if (disabled || cancelled || !g || g.token !== tokenRef.current || g.index === active) return;
+    const selection = effortSelection(state.current, rows, g.index);
+    if (!selection) return;
+    const pending = { index: g.index, token };
+    setLanding(pending);
+    const settled = () => {
+      if (alive.current) setLanding((old) => old === pending ? null : old);
+    };
+    try {
+      Promise.resolve(submit(selection, false)).then(settled, settled);
+    } catch {
+      settled();
+    }
   };
-  const modelOption = (group, model, selected) => {
-    const note = noteFor(notes, group.id, model.id);
-    const name = typeof model.name === "string" && model.name ? model.name : model.id;
-    return h14(
-      "button",
-      {
-        key: group.id + "/" + model.id,
-        type: "button",
-        role: "menuitemradio",
-        tabIndex: -1,
-        "aria-checked": selected ? "true" : "false",
-        className: "lpa-model-option" + (selected ? " lpa-model-option--current" : ""),
-        disabled: busy,
-        onClick: () => pickModel(group, model)
-      },
-      h14(
-        "span",
-        { className: "lpa-model-copy" },
-        h14("span", { className: "lpa-model-name" }, name),
-        note ? h14("span", { className: "lpa-model-desc" }, note) : null
-      ),
-      selected ? h14("span", { className: "lpa-model-check", "aria-hidden": "true" }, "\u2713") : null
-    );
+  const pointerRatio = (e) => {
+    const node = e.currentTarget, rect = node.getBoundingClientRect(), scale = rect.width / Math.max(1, node.clientWidth);
+    return Math.max(0, Math.min(1, (e.clientX - rect.left - 8 * scale) / Math.max(1, rect.width - 16 * scale)));
   };
-  const providerCell = (group) => {
-    const isOpen = submenu === group.id;
-    return h14(
-      "button",
-      {
-        key: group.id,
-        type: "button",
-        role: "menuitem",
-        tabIndex: -1,
-        className: "lpa-model-cell" + (isOpen ? " lpa-model-cell--open" : ""),
-        "aria-haspopup": "menu",
-        "aria-expanded": isOpen ? "true" : "false",
-        onClick: () => setSubmenu(isOpen ? null : group.id),
-        onMouseEnter: () => setSubmenu(group.id)
-      },
-      h14("span", { className: "lpa-model-cell-label" }, typeof group.name === "string" && group.name ? group.name : group.id),
-      h14("span", { className: "lpa-model-cell-chevron", "aria-hidden": "true" }, "\u203A")
-    );
-  };
-  const currentModel = entry ? entry.model : null;
-  const triggerText = loading ? t("picker.loading") : currentModel ? currentModel.name ?? currentModel.id : t("picker.fallback");
-  const effortLabel = triggerEffortLabel(state, entry, effortOptions);
-  const list = h14(
-    "div",
-    {
-      ref: panelRef,
-      className: "lpa-model-menu",
-      role: "menu",
-      "aria-label": t("picker.aria"),
-      style: position ?? { left: 0, top: 0, visibility: "hidden" },
-      "aria-busy": loading || busy ? "true" : "false"
-    },
-    loading ? h14("div", { className: "lpa-model-status", role: "status" }, t("picker.loading")) : sectionsOf(state).length === 0 ? h14("div", { className: "lpa-model-status" }, state?.status === "error" ? t("picker.failed") : t("picker.empty")) : levelOneRows(state).map((row) => row.kind === "current" ? modelOption(row.group, row.model, true) : providerCell(row.group)),
-    effortOptions.length ? h14(
-      "div",
-      { className: "lpa-model-section" },
-      h14("div", { className: "lpa-model-section-title" }, t("picker.effort")),
-      effortOptions.map((row) => h14(
-        "button",
-        {
-          key: row.id,
-          type: "button",
-          role: "menuitemradio",
-          tabIndex: -1,
-          "aria-checked": row.active ? "true" : "false",
-          className: "lpa-model-option" + (row.active ? " lpa-model-option--current" : ""),
-          disabled: busy,
-          onClick: () => pickEffort(row)
-        },
-        h14("span", { className: "lpa-model-copy" }, h14("span", { className: "lpa-model-name" }, row.label)),
-        row.active ? h14("span", { className: "lpa-model-check", "aria-hidden": "true" }, "\u2713") : null
-      ))
-    ) : null,
-    error ? h14(
-      "div",
-      { className: "lpa-model-status lpa-model-status--error", role: "alert" },
-      error === "session/writer-held" ? t("picker.sessionInUse") : t("picker.failed")
-    ) : null
-  );
-  const submenuPanel = submenu ? h14(
-    "div",
-    {
-      ref: submenuRef,
-      className: "lpa-model-menu lpa-model-submenu",
-      role: "menu",
-      "aria-label": t("picker.aria"),
-      style: submenuPosition ?? { left: 0, top: 0, visibility: "hidden" }
-    },
-    (sectionsOf(state).find((group) => group.id === submenu)?.models ?? []).map((model) => modelOption(
-      sectionsOf(state).find((group) => group.id === submenu),
-      model,
-      Boolean(entry && entry.group.id === submenu && entry.model.id === model.id)
-    ))
-  ) : null;
+  if (!rows.length) return null;
+  const preview = landing?.token === token ? landing.index : gesture.current?.token === token ? draft : null;
+  const index = preview ?? Math.max(0, active), max = Math.max(0, rows.length - 1);
+  const position = interaction.current.token === token && !interaction.current.cancelled ? pointerPosition : null;
+  const label = preview !== null ? rows[index]?.label : active < 0 ? t("picker.effortUnavailable") : rows[active].label;
   return h14(
-    "div",
-    { className: "lpa-model-root" },
-    h14(
-      "button",
-      {
-        ref: triggerRef,
-        type: "button",
-        className: "lpa-model-trigger",
-        "aria-haspopup": "menu",
-        "aria-expanded": open ? "true" : "false",
-        "aria-label": t("picker.ariaCurrent", { model: triggerText }),
-        title: effortLabel ? triggerText + " \xB7 " + effortLabel : triggerText,
-        disabled: Boolean(locked),
-        onClick: () => {
-          if (open) close();
-          else show();
-        }
+    ClaudeEffortVisual,
+    { rows, index, position, dragging: position !== null, disabled: disabled || rows.length < 2, unknown: active < 0 && preview === null, label, t },
+    h14("input", {
+      ref: sliderRef,
+      type: "range",
+      className: "lpa-ce-input",
+      min: 0,
+      max,
+      step: 1,
+      value: index,
+      disabled: disabled || rows.length < 2,
+      "aria-label": t("picker.effort"),
+      "aria-valuetext": label,
+      onChange: (e) => {
+        const current = interaction.current;
+        if (disabled || current.cancelled || current.mode && current.token !== token) return;
+        const next = Number(e.currentTarget.value);
+        gesture.current = { token, index: next };
+        setDraft(next);
       },
-      h14("span", { className: "lpa-model-trigger-icon", "aria-hidden": "true" }, "\u25C8"),
-      h14("span", { className: "lpa-model-trigger-label" }, triggerText),
-      effortLabel ? h14("span", { className: "lpa-model-trigger-effort" }, effortLabel) : null,
-      h14("span", { className: "lpa-model-chevron", "aria-hidden": "true" }, "\u25BE")
-    ),
-    open ? (0, import_react_dom.createPortal)(h14(import_react15.default.Fragment, null, list, submenuPanel), globalThis.document.body) : null
+      onPointerDown: (e) => {
+        if (disabled || e.button !== 0) return;
+        interaction.current = { mode: "pointer", token, cancelled: false };
+        gesture.current = { token, index: Number(e.currentTarget.value) };
+        setPointerPosition(pointerRatio(e));
+        e.currentTarget.setPointerCapture?.(e.pointerId);
+      },
+      onPointerMove: (e) => {
+        const current = interaction.current;
+        if (!disabled && current.mode === "pointer" && !current.cancelled && current.token === token) setPointerPosition(pointerRatio(e));
+      },
+      onPointerUp: commit,
+      onPointerCancel: clear,
+      onBlur: clear,
+      onKeyDown: (e) => {
+        if (gestureKeys.includes(e.key)) {
+          e.stopPropagation();
+          if (!interaction.current.mode) interaction.current = { mode: "key", token, cancelled: false };
+        }
+        if (e.key === "Escape") clear();
+      },
+      onKeyUp: (e) => {
+        if (gestureKeys.includes(e.key)) {
+          e.stopPropagation();
+          commit();
+        }
+      }
+    })
   );
 }
-var import_react15, import_react_dom, h14, MODEL_SLOT, MODEL_PICKER_PRIORITY, MARGIN, GAP;
+function ModelPicker({ locked, available, directory, load, select, t, getLocale = () => "en" }) {
+  const state = import_react15.default.useSyncExternalStore(import_react15.default.useCallback((fn) => directory.subscribe(fn), [directory]), () => directory.getSnapshot(), () => directory.getSnapshot());
+  const [open, setOpen] = import_react15.default.useState(false), [error, setError] = import_react15.default.useState(null), [submitting, setSubmitting] = import_react15.default.useState(false);
+  const trigger = import_react15.default.useRef(null), panel = import_react15.default.useRef(null), slider = import_react15.default.useRef(null), rowRefs = import_react15.default.useRef(/* @__PURE__ */ new Map());
+  const lifecycle = import_react15.default.useRef({ alive: true, source: directory, epoch: 0, open: false, operation: 0, inflight: false });
+  const focusRequest = import_react15.default.useRef(null), focusRecovery = import_react15.default.useRef(null), modelFocus = import_react15.default.useRef(null), id2 = import_react15.default.useId();
+  const life = lifecycle.current;
+  life.source = directory;
+  const visible = open && available && !locked, entry = currentEntry(state), groups = sectionsOf(state), failures = failureRows(state);
+  const busy = busyState(state) || submitting, position = usePlacement(trigger, panel, visible);
+  import_react15.default.useEffect(() => {
+    life.alive = true;
+    setOpen(false);
+    setError(null);
+    setSubmitting(false);
+    life.inflight = false;
+    life.epoch++;
+    return () => {
+      life.alive = false;
+      life.epoch++;
+    };
+  }, [directory, life]);
+  import_react15.default.useEffect(() => {
+    if (!available || locked) {
+      life.open = false;
+      life.epoch++;
+      setOpen(false);
+    }
+  }, [available, locked, life]);
+  const hide = (restore = false) => {
+    life.open = false;
+    life.epoch++;
+    setOpen(false);
+    focusRequest.current = null;
+    if (restore) trigger.current?.focus();
+  };
+  const focusRow = (key) => {
+    const node = rowRefs.current.get(key);
+    if (node && !node.disabled) {
+      modelFocus.current = key;
+      node.focus({ preventScroll: true });
+      node.scrollIntoView({ block: "nearest" });
+      return true;
+    }
+    return false;
+  };
+  import_react15.default.useLayoutEffect(() => {
+    const saved = focusRecovery.current;
+    if (!saved || busy) return;
+    focusRecovery.current = null;
+    if (!visible || saved.source !== directory || saved.epoch !== life.epoch || !life.open) return;
+    if (document.activeElement !== document.body && document.activeElement !== document.documentElement) return;
+    if (saved.node?.isConnected && !saved.node.disabled) saved.node.focus({ preventScroll: true });
+    else if (!focusRow(modelFocus.current)) panel.current?.querySelector("button:not(:disabled),input:not(:disabled)")?.focus();
+  }, [busy, visible, directory, life]);
+  import_react15.default.useLayoutEffect(() => {
+    if (!visible || !position || !focusRequest.current) return;
+    const order = focusOrder(state), wanted = focusRequest.current === "last" ? order.at(-1) : order[0];
+    if (focusRow(wanted)) {
+      focusRequest.current = null;
+      return;
+    }
+    if (!loadingState(state)) {
+      panel.current?.querySelector("button:not(:disabled),input:not(:disabled)")?.focus();
+      focusRequest.current = null;
+    }
+  }, [visible, position, state]);
+  import_react15.default.useEffect(() => {
+    if (!visible) return;
+    const outside = (e) => {
+      if (!trigger.current?.contains(e.target) && !panel.current?.contains(e.target)) hide();
+    };
+    document.addEventListener("pointerdown", outside, true);
+    document.addEventListener("focusin", outside);
+    return () => {
+      document.removeEventListener("pointerdown", outside, true);
+      document.removeEventListener("focusin", outside);
+    };
+  }, [visible]);
+  const reload = () => {
+    const source = directory, epoch = life.epoch;
+    const failed = () => {
+      if (life.alive && life.source === source && life.epoch === epoch && life.open) setError("model-failed");
+    };
+    setError(null);
+    try {
+      Promise.resolve(load()).catch(failed);
+    } catch {
+      failed();
+    }
+  };
+  const show = (focus = "first") => {
+    if (locked || !available) return;
+    life.epoch++;
+    life.open = true;
+    focusRequest.current = focus;
+    setOpen(true);
+    reload();
+  };
+  const submit = (selection, closeOnSuccess = true) => {
+    if (locked || !available || life.inflight || busyState(directory.getSnapshot())) return;
+    life.inflight = true;
+    setSubmitting(true);
+    setError(null);
+    const epoch = life.epoch, source = directory, operation = ++life.operation;
+    focusRecovery.current = panel.current?.contains(document.activeElement) ? { source, epoch, node: document.activeElement } : null;
+    return Promise.resolve().then(() => select(selection)).then((result) => {
+      if (!life.alive || life.source !== source || life.operation !== operation) return;
+      if (life.open && life.epoch === epoch) {
+        if (result?.ok !== true) setError(result?.error?.code ?? "model-failed");
+        else if (closeOnSuccess) hide(true);
+      }
+    }, () => {
+      if (life.alive && life.source === source && life.open && life.epoch === epoch) setError("model-failed");
+    }).finally(() => {
+      if (life.alive && life.source === source && life.operation === operation) {
+        life.inflight = false;
+        setSubmitting(false);
+      }
+    });
+  };
+  const pick = (group, model) => {
+    if (locked || busy || life.inflight) return;
+    const current = directory.getSnapshot().current;
+    if (isCurrentModel(current, { provider: group.id, model: model.id })) {
+      hide(true);
+      return;
+    }
+    submit({ provider: group.id, model: model.id, ...model.reasoning?.defaultEffort === void 0 ? {} : { reasoningEffort: model.reasoning.defaultEffort } });
+  };
+  const onKeyDown = (e) => {
+    if (e.nativeEvent.isComposing) return;
+    if (e.key === "Escape") {
+      e.preventDefault();
+      e.stopPropagation();
+      hide(true);
+      return;
+    }
+    if (e.key === "Tab") {
+      const retry = panel.current?.querySelector(".lpa-model-retry:not(:disabled)");
+      const extras = [retry, slider.current && !slider.current.disabled ? slider.current : null].filter(Boolean);
+      const at = extras.indexOf(e.target);
+      if (!e.shiftKey && at + 1 < extras.length) {
+        e.preventDefault();
+        extras[at + 1].focus();
+        return;
+      }
+      if (e.shiftKey && at > 0) {
+        e.preventDefault();
+        extras[at - 1].focus();
+        return;
+      }
+      if (e.shiftKey && at === 0 && focusOrder(state).length) {
+        e.preventDefault();
+        if (!focusRow(modelFocus.current)) focusRow(focusOrder(state)[0]);
+        return;
+      }
+      hide(true);
+      return;
+    }
+    if (e.target === slider.current) return;
+    if (["ArrowDown", "ArrowUp", "Home", "End"].includes(e.key)) {
+      e.preventDefault();
+      e.stopPropagation();
+      const order = focusOrder(state);
+      if (busy || !order.length) return;
+      const key = document.activeElement?.getAttribute("data-picker-row"), at = order.indexOf(key);
+      const next = e.key === "Home" ? 0 : e.key === "End" ? order.length - 1 : at < 0 ? e.key === "ArrowUp" ? order.length - 1 : 0 : (at + (e.key === "ArrowDown" ? 1 : -1) + order.length) % order.length;
+      focusRow(order[next]);
+    }
+  };
+  if (!available) return null;
+  const rows = effortRows(entry, state.current, t("picker.providerDefault"), t);
+  const effort = triggerEffortLabel(state, entry, rows);
+  const caption = entry?.model.name || entry?.model.id || state.current?.model || (loadingState(state) ? t("picker.loading") : t("picker.fallback"));
+  const menu = visible ? h14(
+    "div",
+    {
+      ref: panel,
+      id: id2 + "-panel",
+      className: "lpa-model-menu",
+      role: "dialog",
+      "aria-label": t("picker.aria"),
+      "aria-busy": busy || loadingState(state),
+      style: position ?? { left: 0, top: 0, visibility: "hidden" },
+      onKeyDown
+    },
+    h14(
+      "div",
+      { className: "lpa-model-scroll", role: "menu", "aria-label": t("picker.models") },
+      groups.map((group) => h14(
+        "section",
+        { key: group.id, className: "lpa-model-group", role: "group", "aria-label": group.name || group.id },
+        h14("div", { className: "lpa-model-group-name", title: group.id }, h14("span", null, group.id === "deepseek-account" ? t("picker.account") : group.name || group.id)),
+        modelsOf(group).map((model) => {
+          const key = modelRowId(group, model), checked = isCurrentModel(state.current, { provider: group.id, model: model.id });
+          const description = modelDescription(group.id, model, getLocale());
+          return h14(
+            "button",
+            {
+              key,
+              type: "button",
+              role: "menuitemradio",
+              "aria-checked": checked,
+              tabIndex: -1,
+              disabled: busy || locked,
+              "data-picker-row": key,
+              "data-provider-id": group.id,
+              "data-model-id": model.id,
+              ref: (node) => {
+                if (node) rowRefs.current.set(key, node);
+                else rowRefs.current.delete(key);
+              },
+              className: "lpa-model-option" + (checked ? " lpa-model-option--current" : ""),
+              onFocus: () => {
+                modelFocus.current = key;
+              },
+              onClick: () => pick(group, model)
+            },
+            h14("span", { className: "lpa-model-copy" }, h14("span", { className: "lpa-model-name" }, model.name || model.id), description ? h14("span", { className: "lpa-model-desc" }, description) : null),
+            checked ? h14("span", { className: "lpa-model-check", "aria-hidden": true }, "\u2713") : null
+          );
+        })
+      )),
+      !groups.length ? h14("p", { className: "lpa-model-status", role: "status" }, loadingState(state) ? t("picker.loading") : t("picker.empty")) : null
+    ),
+    failures.length ? h14(
+      "div",
+      { className: "lpa-model-failures" },
+      failures.map((f) => h14("p", { key: f.id, className: "lpa-model-status", role: "status" }, t(f.key, f.params))),
+      h14("button", { type: "button", className: "lpa-model-retry", onClick: reload, disabled: busy || loadingState(state) }, t("picker.retry"))
+    ) : null,
+    rows.length ? h14("div", { className: "lpa-effort-frame" }, h14(EffortSlider, { key: JSON.stringify([state.current?.provider, state.current?.model]), state, entry, disabled: busy || locked, t, submit, sliderRef: slider })) : null,
+    error ? h14("p", { className: "lpa-model-error", role: "alert" }, t(error === "session/writer-held" ? "picker.sessionInUse" : "picker.failed")) : null,
+    busy ? h14("span", { className: "lpa-model-status", role: "status" }, t("picker.saving")) : null
+  ) : null;
+  return h14(
+    import_react15.default.Fragment,
+    null,
+    h14("style", null, pickerCss),
+    h14("div", { className: "lpa-model-root" }, h14(
+      "button",
+      {
+        ref: trigger,
+        type: "button",
+        className: "lpa-model-trigger",
+        disabled: !!locked,
+        "aria-haspopup": "dialog",
+        "aria-expanded": visible,
+        "aria-controls": visible ? id2 + "-panel" : void 0,
+        "aria-busy": busy,
+        "aria-label": t("picker.ariaCurrent", { model: caption }),
+        title: [caption, effort].filter(Boolean).join(" \xB7 "),
+        onClick: () => visible ? hide(true) : show(),
+        onKeyDown: (e) => {
+          if (visible) {
+            onKeyDown(e);
+            return;
+          }
+          if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+            e.preventDefault();
+            show(e.key === "ArrowUp" ? "last" : "first");
+          }
+        }
+      },
+      h14("span", { className: "lpa-model-trigger-icon", "aria-hidden": true }, "\u25C7"),
+      h14("span", { className: "lpa-model-trigger-label" }, caption),
+      effort ? h14("span", { className: "lpa-model-trigger-effort" }, effort) : null,
+      h14("span", { className: "lpa-model-chevron", "aria-hidden": true }, "\u2304")
+    )),
+    menu ? (0, import_react_dom.createPortal)(menu, document.body) : null
+  );
+}
+var import_react15, import_react_dom, h14, MODEL_SLOT, MODEL_PICKER_PRIORITY, modelRowId, gestureKeys;
 var init_model_picker = __esm({
   "assist/client/model-picker.js"() {
     import_react15 = __toESM(require("react"), 1);
     import_react_dom = require("react-dom");
-    init_model_notes();
+    init_model_descriptions();
+    init_model_picker_style();
+    init_claude_effort_visual();
     h14 = import_react15.default.createElement;
     MODEL_SLOT = "conversation.input.model";
     MODEL_PICKER_PRIORITY = -1;
-    MARGIN = 12;
-    GAP = 8;
+    modelRowId = (group, model) => JSON.stringify([group.id, model.id]);
+    gestureKeys = ["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "Home", "End", "PageUp", "PageDown"];
   }
 });
 
@@ -3975,12 +5219,9 @@ function installAssist(ctx) {
         return {
           available,
           directory: directory.store,
-          load: () => {
-            if (available) directory.load().catch(() => {
-            });
-          },
-          select: (selection) => available ? directory.select(selection) : Promise.resolve(void 0),
-          notesSource: { subscribe: (listener) => globalSource.subscribe(listener), getSnapshot: () => globalSource.getSnapshot()?.data?.notes ?? EMPTY_NOTES }
+          load: () => available ? directory.load() : Promise.resolve(void 0),
+          getLocale: () => ctx.locale.getLocale().active,
+          select: (selection) => available ? directory.select(selection) : Promise.resolve(void 0)
         };
       }
     }, ModelPicker));
@@ -4007,7 +5248,6 @@ var init_client = __esm({
     init_settings_target();
     init_enablement_source();
     init_model_picker();
-    init_model_notes();
     h15 = import_react16.default.createElement;
   }
 });
@@ -4409,4 +5649,31 @@ async function apply(ctx) {
   const { installAssist: installAssist2 } = await Promise.resolve().then(() => (init_client(), client_exports));
   return installAssist2(ctx);
 }
+/*!
+ * Model descriptions and lookup adapted from dsh-claude-style 0.16.3.
+ * Source commit: 33fc20b63d4cbd31cfec98d7952e3c53ec11c832
+ * Provenance: third-party/claude-style/PROVENANCE.json
+ *
+ * MIT License
+ *
+ * Copyright (c) 2026 Nwflower
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
 return module.exports;}});

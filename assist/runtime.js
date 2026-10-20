@@ -12,10 +12,8 @@ import { isProviderFailureCode, providerFailureCode } from './provider-failure.j
 const FEATURES = ['suggest', 'enhance'];
 const CLOSED_CONFIG = Object.freeze({followSession:true,provider:'',model:'',reasoningEffort:'',fast:false,rounds:1});
 const CLOSED_ENABLEMENT = Object.freeze({scope:'profile',revision:0,enabled:Object.freeze({suggest:false,enhance:false}),settingsRevision:0,
-  settings:Object.freeze({suggest:CLOSED_CONFIG,enhance:CLOSED_CONFIG}),configured:Object.freeze({suggest:false,enhance:false}),
-  notesRevision:0,notes:Object.freeze({}),notesAvailable:false});
-const CODES = new Set(['invalid-config','invalid-enabled','invalid-follow-session','invalid-fast','invalid-provider','invalid-model','invalid-effort','model-required','invalid-reference','invalid-context','invalid-feature','invalid-draft','empty-draft','invalid-file-entry','invalid-file-path','invalid-file-bytes','file-reader-unavailable','file-read-failed','invalid-rounds','invalid-request','not-configured','disabled','unsupported-effort','fast-unsupported','no-context','context-overflow','context-unknown','file-type-unsupported','unsupported-file','file-too-large','total-too-large','files-too-large','sensitive-file','binary-file','invalid-file','model-failed','invalid-suggestion','empty-result','cancelled','stale-context','busy','forbidden','invalid-receipt','request-too-large','output-too-large','output-limit','timeout','save-failed','not-a-file','unknown-action','file-consent-required','global-settings-unavailable','stale-enablement','stale-global-settings','global-config-required',
-  'invalid-note-key','invalid-note','stale-model-notes','too-many-model-notes','model-notes-unavailable']);
+  settings:Object.freeze({suggest:CLOSED_CONFIG,enhance:CLOSED_CONFIG}),configured:Object.freeze({suggest:false,enhance:false})});
+const CODES = new Set(['invalid-config','invalid-enabled','invalid-follow-session','invalid-fast','invalid-provider','invalid-model','invalid-effort','model-required','invalid-reference','invalid-context','invalid-feature','invalid-draft','empty-draft','invalid-file-entry','invalid-file-path','invalid-file-bytes','file-reader-unavailable','file-read-failed','invalid-rounds','invalid-request','not-configured','disabled','unsupported-effort','fast-unsupported','no-context','context-overflow','context-unknown','file-type-unsupported','unsupported-file','file-too-large','total-too-large','files-too-large','sensitive-file','binary-file','invalid-file','model-failed','invalid-suggestion','empty-result','cancelled','stale-context','busy','forbidden','invalid-receipt','request-too-large','output-too-large','output-limit','timeout','save-failed','not-a-file','unknown-action','file-consent-required','global-settings-unavailable','stale-enablement','stale-global-settings','global-config-required']);
 
 export class AssistRuntime {
   constructor(ctx, fastService, providers, createUserMessage, enablement) {
@@ -129,22 +127,6 @@ export class AssistRuntime {
     return this.enablement.configure(input.feature,config,{expectedRevision:input.expectedRevision,signal:options.signal});
   }
 
-  async saveNote(input, options = {}) {
-    if (options.fromUI !== true || options.agent?.session?.header?.origin === 'subagent') throw failure('forbidden');
-    if (!input || typeof input !== 'object' || Array.isArray(input)
-      || ['provider','model','text','expectedRevision'].some(key=>!Object.hasOwn(input,key))
-      || Object.keys(input).some(key=>!['provider','model','text','expectedRevision','action','sessionId'].includes(key))
-      || (input.action !== undefined && input.action !== 'save-note')
-      || (input.sessionId !== undefined && (typeof input.sessionId !== 'string' || input.sessionId.length > 180))) throw failure('invalid-request');
-    if ([input.provider,input.model].some(value=>typeof value !== 'string' || value.length === 0 || value.length > 200)) throw failure('invalid-note-key');
-    if (typeof input.text !== 'string') throw failure('invalid-note');
-    if (!Number.isSafeInteger(input.expectedRevision) || input.expectedRevision < 0) throw failure('invalid-request');
-    if (typeof this.enablement?.saveNote !== 'function' || this.globalEnablement().notesAvailable !== true) throw failure('model-notes-unavailable');
-    if (input.expectedRevision !== this.globalEnablement().notesRevision) throw failure('stale-model-notes');
-    // Model descriptions are visible to every session of this profile, never a session-scoped secret.
-    return this.enablement.saveNote(input.provider,input.model,input.text,{expectedRevision:input.expectedRevision,signal:options.signal});
-  }
-
   async catalog(provider) {
     const providers = this.ctx.llm.listProviders();
     if (!provider) return { providers, models: [] };
@@ -167,7 +149,6 @@ export class AssistRuntime {
     if (input.action === 'save-global') return this.saveGlobal(input, options);
     if (input.action === 'save') throw failure('global-config-required');
     if (input.action === 'catalog') return this.catalog(input.provider);
-    if (input.action === 'save-note') return this.saveNote(input, options);
     if (input.action === 'model') return this.model(input.provider, input.model, options.signal);
     const agent = options.agent ?? await this.agent(input.sessionId);
     switch (input.action) {

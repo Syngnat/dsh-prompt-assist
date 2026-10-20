@@ -1,0 +1,225 @@
+/* ---------- The shared motion presets, and the motion tokens they read ---------- */
+/* The effects more than one feature needs, in one place (D9). Every value is a
+   token from packages/client/src/theme/tokens.json, generated into the token sheet; a
+   feature that wants a different distance sets the preset's own custom property
+   where it uses it, and keeps its own keyframes only when the effect is its own.
+   The reduced-animation choice is answered once, for every skin animation, in
+   theme/chrome.css (D40, D9); the presets end where the element rests, so a
+   duration of one instant leaves no half state behind. */
+
+body[data-dsh-claude-style] {
+  /* The wording swap's own values: shared/swapping-text.css lays the box out
+     with the distance, and both swap presets below travel it. */
+  --dsh-claude-swap-distance: var(--dsh-claude-distance-travel);
+  --dsh-claude-swap-blur: var(--dsh-claude-blur-soft);
+  --dsh-claude-swap-duration: var(--dsh-claude-duration-swap);
+  --dsh-claude-swap-gap: var(--dsh-claude-duration-swap-gap);
+  --dsh-claude-swap-ease: var(--dsh-claude-ease-in-out);
+
+  /* The two paints the waiting line's words can wear (D40, D9): the highlight
+     band the host's own rows sweep, and the colour wash transitions.dev's "Pro
+     gradient text" (MIT) moves through the letters — seven radial washes over a
+     grey ramp, blown up and orbited around the glyph box. The wash's colours are
+     the recipe's own, the same under every palette; the band is the host's
+     TextShimmer mask, and its words wear the host's shimmer tint, so it follows
+     the host's rows. */
+  --dsh-claude-band-mask: linear-gradient(105deg, transparent 0%, #000 40% 60%, transparent 100%);
+  --dsh-claude-wash-layers:
+    url("data:image/svg+xml;utf8,<svg viewBox='0 0 67 42' xmlns='http://www.w3.org/2000/svg' preserveAspectRatio='none'><rect x='0' y='0' height='100%' width='100%' fill='url(%23grad)' opacity='0.88'/><defs><radialGradient id='grad' gradientUnits='userSpaceOnUse' cx='0' cy='0' r='10' gradientTransform='matrix(0.34726 -1.3118e-7 8.6482e-7 0.89585 33.5 21)'><stop stop-color='rgba(0,110,245,1)' offset='0'/><stop stop-color='rgba(0,110,245,0)' offset='1'/></radialGradient></defs></svg>"),
+    url("data:image/svg+xml;utf8,<svg viewBox='0 0 67 42' xmlns='http://www.w3.org/2000/svg' preserveAspectRatio='none'><rect x='0' y='0' height='100%' width='100%' fill='url(%23grad)' opacity='0.5'/><defs><radialGradient id='grad' gradientUnits='userSpaceOnUse' cx='0' cy='0' r='10' gradientTransform='matrix(-1.3 0.25 -1.2633 -2.7471 33.5 21)'><stop stop-color='rgba(0,110,245,1)' offset='0'/><stop stop-color='rgba(0,110,245,0)' offset='1'/></radialGradient></defs></svg>"),
+    url("data:image/svg+xml;utf8,<svg viewBox='0 0 67 42' xmlns='http://www.w3.org/2000/svg' preserveAspectRatio='none'><rect x='0' y='0' height='100%' width='100%' fill='url(%23grad)' opacity='0.4'/><defs><radialGradient id='grad' gradientUnits='userSpaceOnUse' cx='0' cy='0' r='10' gradientTransform='matrix(1.05 -0.8 0.46018 3.6184 33.5 21)'><stop stop-color='rgba(204,0,167,1)' offset='0'/><stop stop-color='rgba(170,0,204,0)' offset='0.71709'/></radialGradient></defs></svg>"),
+    url("data:image/svg+xml;utf8,<svg viewBox='0 0 67 42' xmlns='http://www.w3.org/2000/svg' preserveAspectRatio='none'><rect x='0' y='0' height='100%' width='100%' fill='url(%23grad)'/><defs><radialGradient id='grad' gradientUnits='userSpaceOnUse' cx='0' cy='0' r='10' gradientTransform='matrix(-0.51067 -3.3275e-16 -4.3352e-14 -1.1396 33.5 21)'><stop stop-color='rgba(204,0,167,1)' offset='0'/><stop stop-color='rgba(170,0,204,0)' offset='1'/></radialGradient></defs></svg>"),
+    url("data:image/svg+xml;utf8,<svg viewBox='0 0 67 42' xmlns='http://www.w3.org/2000/svg' preserveAspectRatio='none'><rect x='0' y='0' height='100%' width='100%' fill='url(%23grad)'/><defs><radialGradient id='grad' gradientUnits='userSpaceOnUse' cx='0' cy='0' r='10' gradientTransform='matrix(-0.45 -0.75 1.9052 -0.7091 33.5 21)'><stop stop-color='rgba(255,173,85,1)' offset='0'/><stop stop-color='rgba(255,173,85,0)' offset='1'/></radialGradient></defs></svg>"),
+    url("data:image/svg+xml;utf8,<svg viewBox='0 0 67 42' xmlns='http://www.w3.org/2000/svg' preserveAspectRatio='none'><rect x='0' y='0' height='100%' width='100%' fill='url(%23grad)'/><defs><radialGradient id='grad' gradientUnits='userSpaceOnUse' cx='0' cy='0' r='10' gradientTransform='matrix(1.25 -0.35 -0.4013 3.5959 33.5 21)'><stop stop-color='rgba(0,204,68,1)' offset='0'/><stop stop-color='rgba(0,196,102,0.75)' offset='0.25'/><stop stop-color='rgba(0,187,136,0.5)' offset='0.5'/><stop stop-color='rgba(0,170,204,0)' offset='1'/></radialGradient></defs></svg>"),
+    url("data:image/svg+xml;utf8,<svg viewBox='0 0 67 42' xmlns='http://www.w3.org/2000/svg' preserveAspectRatio='none'><rect x='0' y='0' height='100%' width='100%' fill='url(%23grad)'/><defs><radialGradient id='grad' gradientUnits='userSpaceOnUse' cx='0' cy='0' r='10' gradientTransform='matrix(-0.87391 0.73043 -4.1482 -1.9503 33.5 21)'><stop stop-color='rgba(0,170,204,1)' offset='0'/><stop stop-color='rgba(0,170,204,0)' offset='1'/></radialGradient></defs></svg>"),
+    linear-gradient(rgb(108, 108, 108) 0%, rgb(216, 216, 216) 100%);
+  --dsh-claude-wash-sizes:
+    180% 180%, 180% 180%, 180% 180%, 180% 180%, 180% 180%, 180% 180%, 180% 180%, 100% 100%;
+}
+
+/* A surface arriving and leaving: it rises into place from
+   --dsh-claude-surface-from (a negative value is a surface that drops in) while
+   it grows from --dsh-claude-surface-scale. Menus, popovers, panels, dialogs and
+   toasts all wear it, so every surface the skin opens arrives the same way. */
+@keyframes dsh-claude-surface-in {
+  from { opacity: 0; transform: translateY(var(--dsh-claude-surface-from, var(--dsh-claude-distance-nudge))) scale(var(--dsh-claude-surface-scale, var(--dsh-claude-scale-surface))); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes dsh-claude-surface-out {
+  from { opacity: 1; transform: none; }
+  to { opacity: 0; transform: translateY(var(--dsh-claude-surface-to, calc(-1 * var(--dsh-claude-distance-nudge)))) scale(var(--dsh-claude-surface-scale, var(--dsh-claude-scale-surface))); }
+}
+
+/* A menu growing out of its trigger: it scales up from
+   --dsh-claude-scale-dropdown about the corner its own sheet names as its
+   transform-origin, and travels nowhere (transitions.dev's "Menu dropdown",
+   MIT). The skin's own cards play the same motion as a transition on their
+   open state (shared/popover.css); a menu the host mounts plays it as this
+   entrance. */
+@keyframes dsh-claude-dropdown-in {
+  from { opacity: 0; transform: scale(var(--dsh-claude-scale-dropdown)); }
+  to { opacity: 1; transform: none; }
+}
+
+/* A plain fade, where nothing travels. */
+@keyframes dsh-claude-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes dsh-claude-fade-out {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+/* A message the reader sends growing into its row: the bubble from nothing,
+   about the bottom-right corner its own sheet names as the transform-origin,
+   while the row itself stays where it lands. The whole of it is a scale, so
+   nothing beside the message moves (features/chat-send/send-flight.css, and
+   the Motion tab's card in settings-cards.css). */
+@keyframes dsh-claude-enter-grow {
+  from { transform: scale(0); }
+  to { transform: scale(1); }
+}
+
+/* One half of a wording swap, for a swap driven by mounting rather than by
+   shared/swapping-text.ts: the old words leave upward through the blur, the new
+   ones rise from below, both over the same distance. */
+@keyframes dsh-claude-swap-out {
+  from { opacity: 1; filter: blur(0); transform: translateY(0); }
+  to { opacity: 0; filter: blur(var(--dsh-claude-swap-blur)); transform: translateY(calc(-1 * var(--dsh-claude-swap-distance))); }
+}
+@keyframes dsh-claude-swap-in {
+  from { opacity: 0; filter: blur(var(--dsh-claude-swap-blur)); transform: translateY(var(--dsh-claude-swap-distance)); }
+  to { opacity: 1; filter: blur(0); transform: translateY(0); }
+}
+
+/* A placeholder breathing while its content is computed. */
+@keyframes dsh-claude-pulse {
+  0%, 100% { opacity: 0.55; }
+  50% { opacity: 1; }
+}
+
+/* The highlight band, the host's own TextShimmer: a window carrying the band's
+   mask crosses the words while the tinted copy inside it crosses back by the
+   same distance, so the copy's glyphs stand exactly over the words and only the
+   mask moves. Both halves are transforms, which the compositor plays without
+   repainting a frame; the band rests over the last third of each pass, at the
+   host's period, steps and delay. */
+@keyframes dsh-claude-sweep-window {
+  0% { transform: translateX(-100%); }
+  66.6667%, 100% { transform: translateX(100%); }
+}
+
+@keyframes dsh-claude-sweep-glyphs {
+  0% { transform: translateX(100%); }
+  66.6667%, 100% { transform: translateX(-100%); }
+}
+
+/* The colour wash, transitions.dev's "Pro gradient text" (MIT,
+   THIRD_PARTY_NOTICES.md): the washes orbit the glyph box while the hue turns a
+   full circle through them, so the letters pass through every colour and no two
+   moments of the loop look alike. */
+@keyframes dsh-claude-wash-hue {
+  from { filter: hue-rotate(0deg) saturate(1.3); }
+  to { filter: hue-rotate(-360deg) saturate(1.3); }
+}
+
+@keyframes dsh-claude-wash-drift {
+  0%, 100% { background-position: 100% 0%, 0% 50%, 100% 50%, 0% 100%, 0% 0%, 50% 0%, 50% 100%, 0 0; }
+  25% { background-position: 100% 100%, 50% 0%, 50% 100%, 0% 0%, 100% 0%, 100% 50%, 0% 50%, 0 0; }
+  50% { background-position: 0% 100%, 100% 50%, 0% 50%, 100% 0%, 100% 100%, 50% 100%, 50% 0%, 0 0; }
+  75% { background-position: 0% 0%, 50% 100%, 50% 0%, 100% 100%, 0% 100%, 0% 50%, 100% 50%, 0 0; }
+}
+
+/* The two paints as shared looks. The words stand in the element; the band is
+   a child the owner builds — `.dsh-claude-sweep-band` holding one
+   `.dsh-claude-sweep-glyphs` — laid over the box, so the words keep their own
+   colour and the band crosses them in the host's tint (shared/swapping-text.ts
+   builds it on the waiting line's copies, settings-tab-motion.ts on the preview
+   cards, features/chat-fold/process-summary.ts on a running group's summary).
+   The wash repeats the words in `data-text` and paints them again on the
+   pseudo-element, clipped to the glyphs. */
+body[data-dsh-claude-style] :is(.dsh-claude-sweep, .dsh-claude-wash) {
+  position: relative;
+}
+
+/* The band's window clips the moving mask to the box it lies over, so the
+   travel never widens any scrolling ancestor; the copy inside it is laid out the
+   way a one-line owner lays out its words, and an owner whose words are laid
+   out otherwise says so in its own sheet. */
+body[data-dsh-claude-style] .dsh-claude-sweep-band {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  user-select: none;
+  color: var(--dsw-alias-label-shimmer, var(--dsw-alias-label-primary));
+  mask-image: var(--dsh-claude-band-mask);
+  transform: translateX(-100%);
+  animation: dsh-claude-sweep-window var(--dsh-claude-period-host-sweep) var(--dsh-claude-ease-host-sweep) var(--dsh-claude-duration-host-sweep-delay) infinite;
+}
+
+body[data-dsh-claude-style] .dsh-claude-sweep-glyphs {
+  display: block;
+  height: 100%;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  transform: translateX(100%);
+  animation: dsh-claude-sweep-glyphs var(--dsh-claude-period-host-sweep) var(--dsh-claude-ease-host-sweep) var(--dsh-claude-duration-host-sweep-delay) infinite;
+}
+
+/* A one-line owner's copy is generated from `data-text`, so the words are
+   written once in the document and the owner's own text stays its only text. */
+body[data-dsh-claude-style] .dsh-claude-sweep-glyphs[data-text]::after {
+  content: attr(data-text);
+}
+
+/* The waiting line builds the band on every copy carrying words, and the paint
+   the reader picked decides whether it is drawn: the band stands out of the
+   page unless the sweep is the paint and the animation choice lets it move, so
+   under the wash or the reduced choice its motion stops with it. */
+body[data-dsh-claude-style] .dsh-claude-chat-wait .dsh-claude-sweep-band {
+  display: none;
+}
+
+body[data-dsh-claude-style][data-dsh-claude-status-motion="sweep"]:not([data-dsh-claude-motion="reduced"]) .dsh-claude-chat-wait .dsh-claude-sweep-band {
+  display: block;
+}
+
+/* The wash, for both things that wear it: an element carrying the look class
+   (the settings page's preview card) and the waiting line's copies under the
+   reader's pick. The copy is the box the wash has to be read off — never the
+   label, which stands taller by the swap's travel — so the line's selector
+   reaches the swap's shimmer copy alone. */
+body[data-dsh-claude-style] .dsh-claude-wash::before,
+body[data-dsh-claude-style][data-dsh-claude-status-motion="wash"] .dsh-claude-chat-wait .dsh-claude-swap-shimmer::before {
+  content: attr(data-text);
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: var(--dsh-claude-wash-layers);
+  background-repeat: no-repeat;
+  background-size: var(--dsh-claude-wash-sizes);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  animation: dsh-claude-wash-hue var(--dsh-claude-period-wash-hue) linear infinite, dsh-claude-wash-drift var(--dsh-claude-period-wash-drift) var(--dsh-claude-ease-in-out) infinite;
+}
+
+/* The reader's animation choice (D40): the band is left out and the wash holds
+   its still frame. The band has nothing to show once it stops; the reduced net
+   in theme/chrome.css would only run it once and leave it off the words, so it
+   is taken out of the page here. A pseudo-element is no element for that net to
+   reach, so the wash answers the choice itself, and its own first frame is the
+   pose it rests in: holding it there is a pause rather than a rewrite. */
+body[data-dsh-claude-style][data-dsh-claude-motion="reduced"] .dsh-claude-sweep-band {
+  display: none;
+}
+
+body[data-dsh-claude-style][data-dsh-claude-motion="reduced"] .dsh-claude-wash::before,
+body[data-dsh-claude-style][data-dsh-claude-motion="reduced"][data-dsh-claude-status-motion="wash"] .dsh-claude-chat-wait .dsh-claude-swap-shimmer::before {
+  animation-play-state: paused;
+}
+

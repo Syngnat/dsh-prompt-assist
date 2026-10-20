@@ -31,7 +31,10 @@
     "docs/confirmed-online-update.md",
     "docs/profile-global-settings.md",
     "docs/result-anchor-layout.md",
-    "docs/model-picker.md"
+    "docs/model-picker.md",
+    "third-party/claude-style/LICENSE",
+    "third-party/claude-style/PROVENANCE.json",
+    "third-party/claude-style/SLIDER-PROVENANCE.json"
   ],
   "scripts": {
     "test": "node --test tests/*.test.js",
