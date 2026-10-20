@@ -246,7 +246,7 @@ export function ModelPicker({locked,available,directory,load,select,t,getLocale=
   h('span',null,group.id==='deepseek-account'?t('picker.account'):group.name||group.id),
   h('button',{type:'button',className:'lpa-model-pin',title:pins.includes(group.id)?t('picker.unpin'):t('picker.pin'),'aria-pressed':pins.includes(group.id),
    'aria-label':pins.includes(group.id)?t('picker.unpin'):t('picker.pin'),onClick:()=>togglePin(group.id)},
-   h('span',{'aria-hidden':true},pins.includes(group.id)?'◎':'○')));
+   h('span',{'aria-hidden':true},pins.includes(group.id)?t('picker.pinnedMark'):t('picker.pinMark'))));
  const backRow=h('button',{key:'back',type:'button',role:'menuitem','data-picker-row':'back','aria-label':t('picker.allProviders'),tabIndex:-1,
   ref:node=>{if(node)rowRefs.current.set('back',node);else rowRefs.current.delete('back');},
   className:'lpa-model-back-row',onClick:exitProvider,disabled:busy||locked},
