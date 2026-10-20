@@ -5,6 +5,32 @@ import { providerFailureCode } from './provider-failure.js';
 
 export function failure(code) { return Object.assign(new Error(code), { code }); }
 
+/** Cancellation keeps the standard AbortError/TimeoutError reason; the runtime maps
+    it to its cancelled/timeout protocol codes without inventing a new shape. */
+function abortFailure(signal) {
+  if (signal?.reason) return signal.reason;
+  return Object.assign(new Error('AbortError'), { name: 'AbortError' });
+}
+
+/** Resolve with the stream step, or reject the moment this call is aborted. Without
+    this race a provider that accepts the request and then never yields would sit
+    inside its own for-await forever: the deadline signal above cannot interrupt a
+    generator that is not producing values. */
+function raceAbort(promise, signal) {
+  if (!signal) return promise;
+  return new Promise((resolve, reject) => {
+    const onAbort = () => reject(abortFailure(signal));
+    signal.addEventListener('abort', onAbort, { once: true });
+    // The handler is attached before the aborted check on purpose: an already
+    // settled cancellation must not leave this step's rejection unobserved.
+    promise.then(
+      value => { signal.removeEventListener('abort', onAbort); resolve(value); },
+      error => { signal.removeEventListener('abort', onAbort); reject(error); },
+    );
+    if (signal.aborted) onAbort();
+  });
+}
+
 export async function resolveAssistRoute(ctx, agent, settings, fastService, providers, signal) {
   const selected = settings.followSession ? fastService.selection(agent) : settings;
   if (!selected?.provider || !selected?.model) throw failure('not-configured');
@@ -37,28 +63,40 @@ export async function callAssistModel(ctx, agent, route, prompt, feature, signal
   const inputTokensEstimate = counts[0] + counts[1];
   // Use the Host's heuristic, not UTF-8 bytes. The provider remains the final token authority.
   if (inputTokensEstimate > available) throw failure('context-overflow');
-  signal?.throwIfAborted();
+  if (signal?.aborted) throw abortFailure(signal);
   onPrepared?.({ outputBudget: outputBudget ?? null,
     contextWindow: available, effort: prepared.config.reasoningEffort ?? '' });
   const started = performance.now();
   return runWithPriority(agent.id, route.fast, async () => {
     let text = '', ttftMs = null, completed = false;
     const options = { ...prepared.config, sessionId: agent.id, signal, system: prompt.system, messages: [message] };
-    for await (const chunk of prepared.stream(options)) {
-      signal?.throwIfAborted();
-      if (chunk.type === 'text-delta') {
-        if (ttftMs === null && chunk.text) ttftMs = performance.now() - started;
-        text += chunk.text;
-        if (chunk.text && feature !== 'suggest') onText?.(text);
+    // A cancel or deadline that arrived while preparing must not reach the provider.
+    if (signal?.aborted) throw abortFailure(signal);
+    const iterator = prepared.stream(options)[Symbol.asyncIterator]();
+    try {
+      while (true) {
+        const step = await raceAbort(iterator.next(), signal);
+        if (step.done) break;
+        const chunk = step.value;
+        if (signal?.aborted) throw abortFailure(signal);
+        if (chunk.type === 'text-delta') {
+          if (ttftMs === null && chunk.text) ttftMs = performance.now() - started;
+          text += chunk.text;
+          if (chunk.text && feature !== 'suggest') onText?.(text);
+        }
+        if (chunk.type === 'finish') {
+          if (chunk.reason.kind !== 'stop') throw failure(chunk.reason.kind === 'aborted' ? 'cancelled' : chunk.reason.kind === 'max-tokens' ? 'output-limit'
+            : chunk.reason.kind === 'error' ? providerFailureCode(chunk.reason.failure) : 'model-failed');
+          completed = true;
+        }
       }
-      if (chunk.type === 'finish') {
-        if (chunk.reason.kind !== 'stop') throw failure(chunk.reason.kind === 'aborted' ? 'cancelled' : chunk.reason.kind === 'max-tokens' ? 'output-limit'
-          : chunk.reason.kind === 'error' ? providerFailureCode(chunk.reason.failure) : 'model-failed');
-        completed = true;
-      }
+    } finally {
+      // The abort above already decided the outcome; releasing the provider stream
+      // is best-effort and must not replace that decision.
+      try { await iterator.return?.(); } catch { /* ignore provider teardown errors */ }
     }
     if (!completed || !text.trim()) throw failure('empty-result');
-    signal?.throwIfAborted();
+    if (signal?.aborted) throw abortFailure(signal);
     const result = feature === 'suggest' ? parseSuggestionOutput(text) : { text: text.trim() };
     return { ...result, outputBudgetTokens: outputBudget ?? null, contextWindowTokens: available, inputTokensEstimate,
       resolvedReasoningEffort: prepared.config.reasoningEffort ?? '', timing: { ttftMs, totalMs: performance.now() - started } };

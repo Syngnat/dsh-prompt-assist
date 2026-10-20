@@ -231,6 +231,13 @@ test('transparent range keeps 16px endpoint geometry, wrapper focus, static redu
   assert.ok(reduced.includes('transition-duration: var(--lpa-ce-duration-reduced) !important;'), 'compressed transition durations');
   assert.ok(reduced.includes('.lpa-effort.lpa-ce .lpa-ce-matrix-cell { animation-delay: 0s !important; }'), 'cleared entrance delay');
   assert.ok(reduced.includes('.lpa-effort.lpa-ce .lpa-ce-matrix-sq { animation-delay: 0s !important; }'), 'cleared flash delay');
+  // Deliberate departure from the original net: compressing the apex flash to
+  // 0.01ms strobes it and repaints every square on every frame, so the reduced
+  // choice stops the per-square flash and breathes the whole matrix once.
+  assert.ok(css.includes('--lpa-ce-period-flash-reduced: 2400ms;'), 'calm reduced flash period token');
+  assert.ok(reduced.includes('.lpa-effort.lpa-ce .lpa-ce-matrix-sq { animation: none !important; }'), 'per-square flash stopped under reduced motion');
+  assert.ok(reduced.includes('animation: lpa-ce-breathe var(--lpa-ce-period-flash-reduced, 2400ms) var(--lpa-ce-ease-in-out) infinite !important;'), 'whole-matrix breath under reduced motion');
+  assert.ok(css.includes('@keyframes lpa-ce-breathe'), 'breath keyframes present');
   assert.ok(reduced.includes('.lpa-effort.lpa-ce[data-dragging] .lpa-ce-knob'));
   const forced = css.slice(css.indexOf('@media (forced-colors: active)'));
   assert.match(forced, /\.lpa-effort\.lpa-ce\[data-apex\] \.lpa-ce-matrix/);

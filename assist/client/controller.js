@@ -98,6 +98,14 @@ export function createAssistController(deps) {
     const abort = new AbortController();
     flight = abort;
     publish({ pending: feature, error: null, preview: null });
+    // The Host owns its own deadline. This ceiling only guarantees that a stuck
+    // transport can never leave the composer pending forever.
+    const ceiling = setTimeout(() => {
+      if (revision === epoch && !abort.signal.aborted) {
+        abort.abort();
+        publish({ error: 'timeout', pending: null, preview: null });
+      }
+    }, 135000);
     try {
       const result = await deps.send('generate', sessionId, {
         feature, requestId: deps.requestId(), draft: snapshot.original,
@@ -129,6 +137,7 @@ export function createAssistController(deps) {
       if (!disposed && !abort.signal.aborted && revision === epoch) publish({ error, preview: null });
       return false;
     } finally {
+      clearTimeout(ceiling);
       if (!disposed && revision === epoch) { flight = null; publish({ pending: null }); }
     }
   }

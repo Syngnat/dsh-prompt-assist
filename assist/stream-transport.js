@@ -9,13 +9,20 @@ export function installAssistStream(ctx, service) {
   if(input?.action!=='generate')return new Response(null,{status:400});
   const stop=new AbortController();const signal=AbortSignal.any([request.signal,stop.signal]);
   const encoder=new TextEncoder();let ended=false,latest='',sent='',last=0;
+  // Advance the watermark before writing: a pull scheduled by this enqueue must
+  // never observe the previous watermark and resend the same slice.
+  const flush=()=>{const delta=latest.slice(sent.length);sent=latest;last=performance.now();return delta;};
   const body=new ReadableStream({
    start(stream){
     const emit=value=>{if(!ended&&!signal.aborted)stream.enqueue(encoder.encode(JSON.stringify(value)+'\n'));};
-    const onText=text=>{latest=text;if(stream.desiredSize>0&&(performance.now()-last>=Math.min(250,40+text.length/4096)||!sent)){emit({type:'delta',text:text.slice(sent.length)});sent=text;last=performance.now();}};
-    void service.dispatch(input,{signal,fromUI:true,onText}).then(value=>emit({type:'result',value})).catch(error=>emit({type:'error',code:service.errorCode(error)})).finally(()=>{if(!ended){ended=true;stream.close();}});
+    const onText=text=>{latest=text;if(stream.desiredSize>0&&(performance.now()-last>=Math.min(250,40+text.length/4096)||!sent))emit({type:'delta',text:flush()});};
+    void service.dispatch(input,{signal,fromUI:true,onText}).then(value=>{
+      // A tail delta still owed to the reader must precede the result frame.
+      if(!ended&&!signal.aborted&&latest!==sent)emit({type:'delta',text:flush()});
+      emit({type:'result',value});
+    }).catch(error=>emit({type:'error',code:service.errorCode(error)})).finally(()=>{if(!ended){ended=true;stream.close();}});
    },
-   pull(stream){if(!ended&&!signal.aborted&&latest!==sent){stream.enqueue(encoder.encode(JSON.stringify({type:'delta',text:latest.slice(sent.length)})+'\n'));sent=latest;last=performance.now();}},
+   pull(stream){if(!ended&&!signal.aborted&&latest!==sent)stream.enqueue(encoder.encode(JSON.stringify({type:'delta',text:flush()})+'\n'));},
    cancel(){ended=true;stop.abort();},
   });
   return new Response(body,{headers:{'Content-Type':'application/x-ndjson; charset=utf-8','Cache-Control':'no-store','X-Accel-Buffering':'no'}});

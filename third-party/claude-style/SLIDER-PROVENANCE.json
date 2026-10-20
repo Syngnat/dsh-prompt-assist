@@ -85,7 +85,7 @@
     },
     {
       "path": "assist/client/claude-effort-style.js",
-      "sha256": "10235c90ddb5fc39966f51cd625a51baac0061a9494656e5bc8815242c328aa7"
+      "sha256": "3b29e06287bc9e14d877bab4261b6dad7017699859803f2cea7cc5b3ca39713b"
     }
   ],
   "adaptation": [
@@ -95,9 +95,9 @@
     "Preserve the original five-row device-pixel matrix solver, integer hash, eight tone buckets, smoothstep plume mask and all three original per-cell timing formulas using the 1450ms flash token.",
     "Scope copied selectors, custom properties and keyframe names to lpa-ce. Copy only required token values locally; inherit the same standard dsw host aliases with the same upstream color fallbacks. Read only a standard data-ds-dark-theme ancestor for the original dark apex palette and knob shadows.",
     "Preserve the incoming and outgoing 150ms ease-in-out wording swap with 4px travel and 2px blur. Add a persistent polite live wrapper and hide the outgoing ghost from assistive technology.",
-    "Carry generated particle delay and duration through private CSS custom properties so the existing important animation precedence is preserved. The reduced choice mirrors the original theme/chrome.css net (D40): durations collapse to the 0.01ms reduced token, the flash shorthand keeps its important infinite so the apex twinkle keeps breathing, and matrix delays are cleared.",
+    "Carry generated particle delay and duration through private CSS custom properties so the existing important animation precedence is preserved. The reduced choice mirrors the original theme/chrome.css net (D40) for durations and delays: they collapse to the 0.01ms reduced token, the flash shorthand keeps its important infinite so the apex twinkle keeps breathing, and matrix delays are cleared. One deliberate departure: the original net also compresses the apex flash itself to 0.01ms, which a display can only sample as a high-frequency strobe and which repaints every matrix square on every frame, so the reduced choice stops the per-square flash and breathes the whole matrix once at the 2400ms reduced period instead.",
     "Measure only the owned track via ResizeObserver and window resize, clean up both, and place initial/changed geometry without a glide. Caller changes to index settle through the original 200ms cubic-bezier(0.22, 0.61, 0.36, 1) transition; dragging removes travel easing.",
-    "Provide a fully transparent 16x30 native range overlay with identical 8px centre endpoints. Transfer focus paint to track :has(> .lpa-ce-input:focus-visible), preserving keyboard-only focus indication, restore the native input in forced colors, compress transitions/animations to the 0.01ms reduced net under prefers-reduced-motion — where the apex twinkle keeps breathing at the compressed period — and dim disabled controls without geometry changes.",
+    "Provide a fully transparent 16x30 native range overlay with identical 8px centre endpoints. Transfer focus paint to track :has(> .lpa-ce-input:focus-visible), preserving keyboard-only focus indication, restore the native input in forced colors, compress transitions/animations to the 0.01ms reduced net under prefers-reduced-motion — where the apex twinkle keeps breathing as one whole-matrix breath at the reduced period rather than the compressed one — and dim disabled controls without geometry changes.",
     "No selection, permissions, network, profile, SDK or host-model calls are performed. Integration remains outside these new files. No font, logo, image, mascot or other asset files are copied or used."
   ],
   "interface": {

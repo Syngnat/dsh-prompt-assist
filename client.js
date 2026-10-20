@@ -1458,6 +1458,12 @@ function createAssistController(deps) {
     const abort = new AbortController();
     flight = abort;
     publish({ pending: feature, error: null, preview: null });
+    const ceiling = setTimeout(() => {
+      if (revision === epoch && !abort.signal.aborted) {
+        abort.abort();
+        publish({ error: "timeout", pending: null, preview: null });
+      }
+    }, 135e3);
     try {
       const result = await deps.send("generate", sessionId, {
         feature,
@@ -1494,6 +1500,7 @@ function createAssistController(deps) {
       if (!disposed && !abort.signal.aborted && revision === epoch) publish({ error, preview: null });
       return false;
     } finally {
+      clearTimeout(ceiling);
       if (!disposed && revision === epoch) {
         flight = null;
         publish({ pending: null });
@@ -4518,6 +4525,28 @@ var init_claude_effort_style = __esm({
   }
   .lpa-effort.lpa-ce .lpa-ce-matrix-cell { animation-delay: 0s !important; }
   .lpa-effort.lpa-ce .lpa-ce-matrix-sq { animation-delay: 0s !important; }
+}
+
+/* Deliberate departure from the original net (see the SLIDER-PROVENANCE
+   adaptation): the original reduced choice compresses the apex flash to 0.01ms,
+   which a display can only sample as a high-frequency strobe, and it repaints
+   every matrix square on every frame, so a long menu stuttered while scrolling
+   at the top rung. These declarations stay outside the mapped original rules so
+   those bytes remain untouched. */
+.lpa-effort.lpa-ce {
+  --lpa-ce-period-flash-reduced: 2400ms;
+}
+@keyframes lpa-ce-breathe {
+  0%, 100% { opacity: 1; }
+  50% { opacity: .55; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .lpa-effort.lpa-ce .lpa-ce-matrix-sq {
+    animation: none !important;
+  }
+  .lpa-effort.lpa-ce .lpa-ce-matrix {
+    animation: lpa-ce-breathe var(--lpa-ce-period-flash-reduced, 2400ms) var(--lpa-ce-ease-in-out) infinite !important;
+  }
 }
 @media (forced-colors: active) {
   .lpa-ce .lpa-ce-track::before,
