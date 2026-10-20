@@ -14,7 +14,8 @@ test("enhance uses explicit JSON data, preserving original intention and visible
     qa: [{ question: pair.question, answer: pair.answer }],
     files: [{ name: file.name, text: file.text }], references: [{ name: "当前截图.png" }, { name: "查询结果" }] });
   assert.doesNotMatch(value.user, /DO_NOT_SEND|endSeq|truncated/);
-  assert.match(value.system, /改善表达，不改变意图/);
+  assert.match(value.system, /保留意图的提示词润色编辑/);
+  assert.match(value.system, /润色表达，不改变意图/);
   assert.match(value.system, /不要为了完整而编造/);
   assert.match(value.system, /文件和引用的可见名称/);
   assert.match(value.system, /仅输出一版可直接作为用户消息发送/);
