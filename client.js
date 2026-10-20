@@ -4075,7 +4075,7 @@ var init_model_picker_style = __esm({
 .lpa-model-trigger-label{display:var(--dsh-composer-model-text-display,block);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .lpa-model-trigger-icon{display:var(--dsh-composer-model-icon-display,none)}
 .lpa-model-trigger-effort{display:var(--dsh-composer-model-text-display,inline);font-size:11px;color:var(--dsw-alias-label-tertiary,var(--dsw-alias-label-secondary))}
-.lpa-model-chevron{font-size:12px;flex:none}
+.lpa-model-chevron{flex:none;width:0;height:0;border-left:3.5px solid transparent;border-right:3.5px solid transparent;border-top:4px solid currentColor;transform:translateY(-2px)}
 .lpa-model-menu{position:fixed;z-index:1200;display:flex;flex-direction:column;box-sizing:border-box;width:344px;max-width:calc(100vw - 16px);max-height:min(660px,calc(100vh - 16px));padding:6px;border:1px solid var(--dsw-alias-border-l1);border-radius:12px;background:var(--dsw-alias-bg-overlay,var(--dsw-alias-bg-layer-1));color:var(--dsw-alias-label-primary);box-shadow:0 8px 24px color-mix(in srgb,var(--dsw-alias-label-primary) 10%,transparent);font:13px/1.4 system-ui,-apple-system,"Segoe UI",sans-serif;text-align:start;overflow:hidden}
 .lpa-model-scroll{min-height:40px;overflow-y:auto;overscroll-behavior:contain;scroll-padding-block:26px;flex:1 1 auto}
 .lpa-model-group{padding:0 0 4px}
@@ -5397,7 +5397,7 @@ function ModelPicker({ locked, available, directory, load, select, t, getLocale 
       h14("span", { className: "lpa-model-trigger-icon", "aria-hidden": true }, "\u25C7"),
       h14("span", { className: "lpa-model-trigger-label" }, caption),
       effort ? h14("span", { className: "lpa-model-trigger-effort" }, effort) : null,
-      h14("span", { className: "lpa-model-chevron", "aria-hidden": true }, "\u2304")
+      h14("span", { className: "lpa-model-chevron", "aria-hidden": true })
     )),
     menu ? (0, import_react_dom.createPortal)(menu, document.body) : null
   );

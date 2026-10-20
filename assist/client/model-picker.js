@@ -283,6 +283,6 @@ export function ModelPicker({locked,available,directory,load,select,t,getLocale=
    'aria-label':t('picker.ariaCurrent',{model:caption}),title:[caption,effort].filter(Boolean).join(' · '),
    onClick:()=>visible?hide(true):show(),onKeyDown:e=>{if(visible){onKeyDown(e);return;}if(e.key==='ArrowDown'||e.key==='ArrowUp'){e.preventDefault();show(e.key==='ArrowUp'?'last':'first');}}},
    h('span',{className:'lpa-model-trigger-icon','aria-hidden':true},'◇'),h('span',{className:'lpa-model-trigger-label'},caption),
-   effort?h('span',{className:'lpa-model-trigger-effort'},effort):null,h('span',{className:'lpa-model-chevron','aria-hidden':true},'⌄'))),
+   effort?h('span',{className:'lpa-model-trigger-effort'},effort):null,h('span',{className:'lpa-model-chevron','aria-hidden':true}))),
   menu?createPortal(menu,document.body):null);
 }
