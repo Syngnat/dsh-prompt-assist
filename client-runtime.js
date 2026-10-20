@@ -716,6 +716,10 @@ var init_messages = __esm({
         "picker.models": "\u6309\u4F9B\u5E94\u5546\u5206\u7EC4\u7684\u6A21\u578B",
         "picker.account": "DeepSeek \u8D26\u6237",
         "picker.saving": "\u6B63\u5728\u5207\u6362\u2026",
+        "picker.allProviders": "\u6240\u6709\u4F9B\u5E94\u5546",
+        "picker.providerRow": "{name}\uFF1A{count} \u4E2A\u6A21\u578B",
+        "picker.pin": "\u5E38\u9A7B\u663E\u793A\uFF0C\u5176\u4F59\u6536\u8D77",
+        "picker.unpin": "\u53D6\u6D88\u5E38\u9A7B",
         "picker.groupFailed": "{name} \u7684\u6A21\u578B\u76EE\u5F55\u52A0\u8F7D\u5931\u8D25\uFF1A{message}",
         "picker.loadFailed": "\u6A21\u578B\u76EE\u5F55\u52A0\u8F7D\u5931\u8D25\uFF1A{message}",
         "picker.retry": "\u91CD\u65B0\u52A0\u8F7D",
@@ -1008,6 +1012,10 @@ var init_messages = __esm({
         "picker.models": "Models grouped by provider",
         "picker.account": "DeepSeek Account",
         "picker.saving": "Switching\u2026",
+        "picker.allProviders": "All providers",
+        "picker.providerRow": "{name}: {count} models",
+        "picker.pin": "Pin to quick list, collapse the rest",
+        "picker.unpin": "Remove from quick list",
         "picker.groupFailed": "Could not load {name}: {message}",
         "picker.loadFailed": "Could not load the model catalog: {message}",
         "picker.retry": "Reload",
@@ -4006,6 +4014,48 @@ var init_model_descriptions = __esm({
   }
 });
 
+// assist/client/model-pin-store.js
+function normalizePinIds(raw) {
+  if (!Array.isArray(raw)) return [];
+  const seen = /* @__PURE__ */ new Set();
+  const ids2 = [];
+  for (const item of raw) {
+    if (typeof item !== "string" || item === "") continue;
+    if (seen.has(item)) continue;
+    seen.add(item);
+    ids2.push(item);
+  }
+  return ids2;
+}
+function pinIdsForSections(raw, sections) {
+  const known = new Set((sections ?? []).map((g) => g?.id).filter((id2) => typeof id2 === "string"));
+  return normalizePinIds(raw).filter((id2) => known.has(id2));
+}
+function togglePinnedProvider(id2, raw) {
+  const ids2 = normalizePinIds(raw);
+  return ids2.includes(id2) ? ids2.filter((x) => x !== id2) : ids2.concat(id2);
+}
+function readPinnedProviders(storage) {
+  try {
+    return normalizePinIds(JSON.parse(storage?.getItem?.(PIN_KEY) ?? "[]"));
+  } catch {
+    return [];
+  }
+}
+function writePinnedProviders(ids2, storage) {
+  try {
+    storage?.setItem?.(PIN_KEY, JSON.stringify(normalizePinIds(ids2)));
+  } catch {
+  }
+  return ids2;
+}
+var PIN_KEY;
+var init_model_pin_store = __esm({
+  "assist/client/model-pin-store.js"() {
+    PIN_KEY = "local-prompt-assist:model-pinned-providers";
+  }
+});
+
 // assist/client/model-picker-style.js
 var pickerCss;
 var init_model_picker_style = __esm({
@@ -4039,6 +4089,26 @@ var init_model_picker_style = __esm({
 .lpa-model-failures{flex:0 1 auto;max-height:100px;overflow:auto;border-top:1px solid var(--dsw-alias-border-l1)}
 .lpa-model-retry{margin:2px 8px 6px;padding:3px 8px;border:1px solid var(--dsw-alias-border-l1);border-radius:5px;background:transparent;color:var(--dsw-alias-label-primary);font:inherit;cursor:pointer}
 .lpa-effort-frame{flex:none;padding:10px 8px;border-top:1px solid var(--dsw-alias-border-l1)}
+.lpa-model-more{display:grid;gap:1px;padding:2px 0 6px}
+.lpa-model-provider-row{display:flex;align-items:center;gap:8px;width:100%;min-height:30px;box-sizing:border-box;padding:4px 7px;border:0;border-radius:6px;background:transparent;color:inherit;font:inherit;text-align:inherit;cursor:pointer}
+.lpa-model-provider-row:hover:not(:disabled){background:var(--dsw-alias-interactive-bg-hover,var(--dsw-alias-bg-layer-2))}
+.lpa-model-provider-row:focus-visible{outline:2px solid var(--dsw-alias-brand-primary);outline-offset:-2px}
+.lpa-model-provider-row:disabled{opacity:.45;cursor:default}
+.lpa-model-provider-copy{display:flex;align-items:center;gap:6px;flex:1;min-width:0}
+.lpa-model-provider-name{font-size:12.5px;font-weight:500;line-height:17px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lpa-model-provider-meta{flex:none;display:inline-flex;align-items:center;gap:7px}
+.lpa-model-provider-count{font-size:10px;line-height:14px;letter-spacing:.02em;color:var(--dsw-alias-label-tertiary,var(--dsw-alias-label-secondary))}
+.lpa-model-provider-chevron{flex:none;font-size:13px;line-height:1;color:var(--dsw-alias-label-tertiary,var(--dsw-alias-label-secondary))}
+.lpa-model-provider-row--current .lpa-model-provider-name,.lpa-model-provider-row--current .lpa-model-provider-chevron{color:var(--dsw-alias-brand-primary)}
+.lpa-model-back-row{display:flex;align-items:center;gap:5px;width:100%;min-height:26px;box-sizing:border-box;padding:4px 7px 2px;border:0;border-radius:6px;background:transparent;color:var(--dsw-alias-label-secondary,var(--dsw-alias-label-primary));font:inherit;font-size:11.5px;text-align:inherit;cursor:pointer}
+.lpa-model-back-row:hover:not(:disabled){background:var(--dsw-alias-interactive-bg-hover,var(--dsw-alias-bg-layer-2))}
+.lpa-model-back-row:focus-visible{outline:2px solid var(--dsw-alias-brand-primary);outline-offset:-2px}
+.lpa-model-back-row:disabled{opacity:.45;cursor:default}
+.lpa-model-back-chevron{flex:none;font-size:13px;line-height:1}
+.lpa-model-pin{flex:none;display:inline-flex;align-items:center;justify-content:center;box-sizing:border-box;padding:0;border:0;border-radius:4px;background:transparent;color:var(--dsw-alias-label-tertiary,var(--dsw-alias-label-secondary));font-size:11px;line-height:1;cursor:pointer;opacity:.5}
+.lpa-model-pin:hover:not(:disabled),.lpa-model-pin:focus-visible{opacity:1}
+.lpa-model-pin:focus-visible{outline:2px solid var(--dsw-alias-brand-primary);outline-offset:-2px}
+.lpa-model-pin[aria-pressed="true"]{opacity:1;color:var(--dsw-alias-brand-primary)}
 `;
   }
 });
@@ -4705,6 +4775,21 @@ var init_claude_effort_visual = __esm({
 });
 
 // assist/client/model-picker.js
+function splitSections(state, rawPins) {
+  const sections = sectionsOf(state), pins = pinIdsForSections(rawPins, sections);
+  if (!pins.length) return { hero: sections, collapsed: [], pins };
+  const pinnedSet = new Set(pins);
+  return { hero: pins.map((id2) => sections.find((g) => g.id === id2)), collapsed: sections.filter((g) => !pinnedSet.has(g.id)), pins };
+}
+function focusOrderFor(state, pins, view) {
+  if (busyState(state)) return [];
+  const { hero, collapsed } = splitSections(state, pins);
+  if (view !== null && view !== void 0) {
+    const group = [hero, collapsed].flat().find((g) => g?.id === view);
+    return group ? ["back", ...modelsOf(group).map((m) => modelRowId(group, m))] : [];
+  }
+  return [...hero.flatMap((g) => modelsOf(g).map((m) => modelRowId(g, m))), ...collapsed.map((g) => providerRowKey(g.id))];
+}
 function orderModelProviders(groups) {
   const rank = (id2) => id2 === "deepseek-account" ? 0 : id2 === "deepseek-official" ? 1 : 2;
   return [...groups].sort((a, b) => rank(a.id) - rank(b.id));
@@ -4752,9 +4837,6 @@ function failureRows(state) {
   else if (state?.status === "error") rows.push({ id: "load", key: "picker.failed" });
   for (const f of state?.failures ?? []) rows.push({ id: "provider:" + f.id, key: "picker.groupFailed", params: { name: f.name || f.id, message: f.message || "" } });
   return rows;
-}
-function focusOrder(state) {
-  return busyState(state) ? [] : sectionsOf(state).flatMap((g) => modelsOf(g).map((m) => modelRowId(g, m)));
 }
 function menuGeometry(trigger, size, viewport) {
   const margin = 8, gap = 6;
@@ -4905,12 +4987,14 @@ function EffortSlider({ state, entry, disabled, t, submit, sliderRef }) {
 function ModelPicker({ locked, available, directory, load, select, t, getLocale = () => "en" }) {
   const state = import_react15.default.useSyncExternalStore(import_react15.default.useCallback((fn) => directory.subscribe(fn), [directory]), () => directory.getSnapshot(), () => directory.getSnapshot());
   const [open, setOpen] = import_react15.default.useState(false), [error, setError] = import_react15.default.useState(null), [submitting, setSubmitting] = import_react15.default.useState(false);
+  const [pinsStored, setPinsStored] = import_react15.default.useState(() => readPinnedProviders(safeStorage()));
+  const [view, setView] = import_react15.default.useState(null);
   const trigger = import_react15.default.useRef(null), panel = import_react15.default.useRef(null), slider = import_react15.default.useRef(null), rowRefs = import_react15.default.useRef(/* @__PURE__ */ new Map());
   const lifecycle = import_react15.default.useRef({ alive: true, source: directory, epoch: 0, open: false, operation: 0, inflight: false });
   const focusRequest = import_react15.default.useRef(null), focusRecovery = import_react15.default.useRef(null), modelFocus = import_react15.default.useRef(null), id2 = import_react15.default.useId();
   const life = lifecycle.current;
   life.source = directory;
-  const visible = open && available && !locked, entry = currentEntry(state), groups = sectionsOf(state), failures = failureRows(state);
+  const visible = open && available && !locked, entry = currentEntry(state), failures = failureRows(state);
   const busy = busyState(state) || submitting, position = usePlacement(trigger, panel, visible);
   import_react15.default.useEffect(() => {
     life.alive = true;
@@ -4936,8 +5020,24 @@ function ModelPicker({ locked, available, directory, load, select, t, getLocale 
     life.epoch++;
     setOpen(false);
     focusRequest.current = null;
+    setView(null);
     if (restore) trigger.current?.focus();
   };
+  const openProvider = (id3) => {
+    setView(id3);
+    focusRequest.current = "back";
+  };
+  const exitProvider = () => {
+    focusRequest.current = view !== null ? providerRowKey(view) : null;
+    setView(null);
+  };
+  const togglePin = (id3) => {
+    const { pins: pins2 } = splitSections(state, pinsStored);
+    const next = togglePinnedProvider(id3, pins2);
+    setPinsStored(next);
+    writePinnedProviders(next, safeStorage());
+  };
+  const { hero, collapsed, pins } = splitSections(state, pinsStored);
   const focusRow = (key) => {
     const node = rowRefs.current.get(key);
     if (node && !node.disabled) {
@@ -4959,7 +5059,7 @@ function ModelPicker({ locked, available, directory, load, select, t, getLocale 
   }, [busy, visible, directory, life]);
   import_react15.default.useLayoutEffect(() => {
     if (!visible || !position || !focusRequest.current) return;
-    const order = focusOrder(state), wanted = focusRequest.current === "last" ? order.at(-1) : order[0];
+    const order = focusOrderFor(state, pins, view), wanted = focusRequest.current === "last" ? order.at(-1) : order[0];
     if (focusRow(wanted)) {
       focusRequest.current = null;
       return;
@@ -4968,7 +5068,13 @@ function ModelPicker({ locked, available, directory, load, select, t, getLocale 
       panel.current?.querySelector("button:not(:disabled),input:not(:disabled)")?.focus();
       focusRequest.current = null;
     }
-  }, [visible, position, state]);
+  }, [visible, position, state, view, pins]);
+  import_react15.default.useLayoutEffect(() => {
+    panel.current?.querySelector(".lpa-model-scroll")?.scrollTo?.(0, 0);
+  }, [view]);
+  import_react15.default.useLayoutEffect(() => {
+    if (view !== null && ![...sectionsOf(state)].some((g) => g.id === view)) setView(null);
+  }, [view, state]);
   import_react15.default.useEffect(() => {
     if (!visible) return;
     const outside = (e) => {
@@ -5034,6 +5140,12 @@ function ModelPicker({ locked, available, directory, load, select, t, getLocale 
   };
   const onKeyDown = (e) => {
     if (e.nativeEvent.isComposing) return;
+    if (view !== null && (e.key === "Escape" || e.key === "ArrowLeft" || e.key === "Backspace") && e.target !== slider.current) {
+      e.preventDefault();
+      e.stopPropagation();
+      exitProvider();
+      return;
+    }
     if (e.key === "Escape") {
       e.preventDefault();
       e.stopPropagation();
@@ -5054,9 +5166,9 @@ function ModelPicker({ locked, available, directory, load, select, t, getLocale 
         extras[at - 1].focus();
         return;
       }
-      if (e.shiftKey && at === 0 && focusOrder(state).length) {
+      if (e.shiftKey && at === 0 && focusOrderFor(state, pins, view).length) {
         e.preventDefault();
-        if (!focusRow(modelFocus.current)) focusRow(focusOrder(state)[0]);
+        if (!focusRow(modelFocus.current)) focusRow(focusOrderFor(state, pins, view)[0]);
         return;
       }
       hide(true);
@@ -5066,7 +5178,7 @@ function ModelPicker({ locked, available, directory, load, select, t, getLocale 
     if (["ArrowDown", "ArrowUp", "Home", "End"].includes(e.key)) {
       e.preventDefault();
       e.stopPropagation();
-      const order = focusOrder(state);
+      const order = focusOrderFor(state, pins, view);
       if (busy || !order.length) return;
       const key = document.activeElement?.getAttribute("data-picker-row"), at = order.indexOf(key);
       const next = e.key === "Home" ? 0 : e.key === "End" ? order.length - 1 : at < 0 ? e.key === "ArrowUp" ? order.length - 1 : 0 : (at + (e.key === "ArrowDown" ? 1 : -1) + order.length) % order.length;
@@ -5077,6 +5189,116 @@ function ModelPicker({ locked, available, directory, load, select, t, getLocale 
   const rows = effortRows(entry, state.current, t("picker.providerDefault"), t);
   const effort = triggerEffortLabel(state, entry, rows);
   const caption = entry?.model.name || entry?.model.id || state.current?.model || (loadingState(state) ? t("picker.loading") : t("picker.fallback"));
+  const viewGroup = view !== null ? [...hero, ...collapsed].find((g) => g.id === view) : null;
+  const renderModels = (group) => modelsOf(group).map((model) => {
+    const key = modelRowId(group, model), checked = isCurrentModel(state.current, { provider: group.id, model: model.id });
+    const description = modelDescription(group.id, model, getLocale());
+    return h14(
+      "button",
+      {
+        key,
+        type: "button",
+        role: "menuitemradio",
+        "aria-checked": checked,
+        tabIndex: -1,
+        disabled: busy || locked,
+        "data-picker-row": key,
+        "data-provider-id": group.id,
+        "data-model-id": model.id,
+        ref: (node) => {
+          if (node) rowRefs.current.set(key, node);
+          else rowRefs.current.delete(key);
+        },
+        className: "lpa-model-option" + (checked ? " lpa-model-option--current" : ""),
+        onFocus: () => {
+          modelFocus.current = key;
+        },
+        onClick: () => pick(group, model)
+      },
+      h14("span", { className: "lpa-model-copy" }, h14("span", { className: "lpa-model-name" }, model.name || model.id), description ? h14("span", { className: "lpa-model-desc" }, description) : null),
+      checked ? h14("span", { className: "lpa-model-check", "aria-hidden": true }, "\u2713") : null
+    );
+  });
+  const groupHeader = (group) => h14(
+    "div",
+    { className: "lpa-model-group-name", title: group.id },
+    h14("span", null, group.id === "deepseek-account" ? t("picker.account") : group.name || group.id),
+    h14(
+      "button",
+      {
+        type: "button",
+        className: "lpa-model-pin",
+        title: pins.includes(group.id) ? t("picker.unpin") : t("picker.pin"),
+        "aria-pressed": pins.includes(group.id),
+        "aria-label": pins.includes(group.id) ? t("picker.unpin") : t("picker.pin"),
+        onClick: () => togglePin(group.id)
+      },
+      h14("span", { "aria-hidden": true }, pins.includes(group.id) ? "\u25CE" : "\u25CB")
+    )
+  );
+  const backRow = h14(
+    "button",
+    {
+      key: "back",
+      type: "button",
+      role: "menuitem",
+      "data-picker-row": "back",
+      "aria-label": t("picker.allProviders"),
+      tabIndex: -1,
+      ref: (node) => {
+        if (node) rowRefs.current.set("back", node);
+        else rowRefs.current.delete("back");
+      },
+      className: "lpa-model-back-row",
+      onClick: exitProvider,
+      disabled: busy || locked
+    },
+    h14("span", { className: "lpa-model-back-chevron", "aria-hidden": true }, "\u2039"),
+    h14("span", null, t("picker.allProviders"))
+  );
+  const providerRow = (group) => {
+    const key = providerRowKey(group.id), current = state.current?.provider === group.id;
+    return h14(
+      "button",
+      {
+        key,
+        type: "button",
+        role: "menuitem",
+        "aria-label": t("picker.providerRow", { name: group.name || group.id, count: modelsOf(group).length }),
+        tabIndex: -1,
+        disabled: busy || locked,
+        "data-picker-row": key,
+        "data-provider-id": group.id,
+        ref: (node) => {
+          if (node) rowRefs.current.set(key, node);
+          else rowRefs.current.delete(key);
+        },
+        className: "lpa-model-provider-row" + (current ? " lpa-model-provider-row--current" : ""),
+        onFocus: () => {
+          modelFocus.current = key;
+        },
+        onClick: () => {
+          if (!busy && !locked) openProvider(group.id);
+        },
+        onKeyDown: (e) => {
+          if (e.nativeEvent.isComposing) return;
+          if (e.key === "ArrowRight") {
+            e.preventDefault();
+            e.stopPropagation();
+            openProvider(group.id);
+          }
+        }
+      },
+      h14("span", { className: "lpa-model-provider-copy" }, h14("span", { className: "lpa-model-provider-name" }, group.name || group.id)),
+      h14(
+        "span",
+        { className: "lpa-model-provider-meta" },
+        current ? h14("span", { className: "lpa-model-check", "aria-hidden": true }, "\u2713") : null,
+        h14("span", { className: "lpa-model-provider-count" }, String(modelsOf(group).length)),
+        h14("span", { className: "lpa-model-provider-chevron", "aria-hidden": true }, "\u203A")
+      )
+    );
+  };
   const menu = visible ? h14(
     "div",
     {
@@ -5092,41 +5314,11 @@ function ModelPicker({ locked, available, directory, load, select, t, getLocale 
     h14(
       "div",
       { className: "lpa-model-scroll", role: "menu", "aria-label": t("picker.models") },
-      groups.map((group) => h14(
-        "section",
-        { key: group.id, className: "lpa-model-group", role: "group", "aria-label": group.name || group.id },
-        h14("div", { className: "lpa-model-group-name", title: group.id }, h14("span", null, group.id === "deepseek-account" ? t("picker.account") : group.name || group.id)),
-        modelsOf(group).map((model) => {
-          const key = modelRowId(group, model), checked = isCurrentModel(state.current, { provider: group.id, model: model.id });
-          const description = modelDescription(group.id, model, getLocale());
-          return h14(
-            "button",
-            {
-              key,
-              type: "button",
-              role: "menuitemradio",
-              "aria-checked": checked,
-              tabIndex: -1,
-              disabled: busy || locked,
-              "data-picker-row": key,
-              "data-provider-id": group.id,
-              "data-model-id": model.id,
-              ref: (node) => {
-                if (node) rowRefs.current.set(key, node);
-                else rowRefs.current.delete(key);
-              },
-              className: "lpa-model-option" + (checked ? " lpa-model-option--current" : ""),
-              onFocus: () => {
-                modelFocus.current = key;
-              },
-              onClick: () => pick(group, model)
-            },
-            h14("span", { className: "lpa-model-copy" }, h14("span", { className: "lpa-model-name" }, model.name || model.id), description ? h14("span", { className: "lpa-model-desc" }, description) : null),
-            checked ? h14("span", { className: "lpa-model-check", "aria-hidden": true }, "\u2713") : null
-          );
-        })
-      )),
-      !groups.length ? h14("p", { className: "lpa-model-status", role: "status" }, loadingState(state) ? t("picker.loading") : t("picker.empty")) : null
+      viewGroup ? [backRow, h14("section", { key: viewGroup.id, className: "lpa-model-group", role: "group", "aria-label": viewGroup.name || viewGroup.id }, groupHeader(viewGroup), renderModels(viewGroup))] : [
+        ...hero.map((group) => h14("section", { key: group.id, className: "lpa-model-group", role: "group", "aria-label": group.name || group.id }, groupHeader(group), renderModels(group))),
+        collapsed.length ? h14("div", { key: "more", className: "lpa-model-more" }, collapsed.map((group) => providerRow(group))) : null
+      ],
+      !hero.length && !collapsed.length ? h14("p", { className: "lpa-model-status", role: "status" }, loadingState(state) ? t("picker.loading") : t("picker.empty")) : null
     ),
     failures.length ? h14(
       "div",
@@ -5175,19 +5367,28 @@ function ModelPicker({ locked, available, directory, load, select, t, getLocale 
     menu ? (0, import_react_dom.createPortal)(menu, document.body) : null
   );
 }
-var import_react15, import_react_dom, h14, MODEL_SLOT, MODEL_PICKER_PRIORITY, modelRowId, gestureKeys;
+var import_react15, import_react_dom, h14, MODEL_SLOT, MODEL_PICKER_PRIORITY, modelRowId, providerRowKey, gestureKeys, safeStorage;
 var init_model_picker = __esm({
   "assist/client/model-picker.js"() {
     import_react15 = __toESM(require("react"), 1);
     import_react_dom = require("react-dom");
     init_model_descriptions();
+    init_model_pin_store();
     init_model_picker_style();
     init_claude_effort_visual();
     h14 = import_react15.default.createElement;
     MODEL_SLOT = "conversation.input.model";
     MODEL_PICKER_PRIORITY = -1;
     modelRowId = (group, model) => JSON.stringify([group.id, model.id]);
+    providerRowKey = (id2) => "provider:" + id2;
     gestureKeys = ["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "Home", "End", "PageUp", "PageDown"];
+    safeStorage = () => {
+      try {
+        return globalThis.localStorage;
+      } catch {
+        return void 0;
+      }
+    };
   }
 });
 
