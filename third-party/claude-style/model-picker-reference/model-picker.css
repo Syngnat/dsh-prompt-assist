@@ -1,0 +1,234 @@
+/* ---------- Claude Code layout: model picker ---------- */
+/* Replaces the host's two-pane model menu: level 1 carries the current
+   provider's models, a divider, the effort row and a More models row; both
+   rows open their level 2 beside this popover. The card is the shared popover
+   card (shared/popover.css); what is the picker's own is below. */
+body[data-dsh-claude-style] .dsh-claude-model-popover {
+  position: fixed;
+  min-width: 248px;
+  max-width: min(360px, calc(100vw - 16px));
+  /* The first level is sized by its content like the second: the cap is only
+     the viewport, so a short list does not leave a tall empty card. The level-1
+     list scrolls inside the body instead (see the scoped rule below); this
+     overflow-y stays for the sub popover, whose whole card scrolls. */
+  max-height: calc(100vh - 80px);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  transform-origin: bottom right;
+}
+/* Level 1 splits into a scrollable list and a pinned footer: the model rows
+   scroll under the divider / effort / more-models rows, which never leave the
+   viewport edge of the card. Only the first level does this — the sub popover
+   keeps scrolling as one card, with its provider labels pinned (below). */
+body[data-dsh-claude-style] .dsh-claude-model-popover:not(.dsh-claude-model-popover-sub) {
+  overflow: hidden;
+}
+body[data-dsh-claude-style] .dsh-claude-model-popover:not(.dsh-claude-model-popover-sub) .dsh-claude-popover-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+}
+body[data-dsh-claude-style] .dsh-claude-model-footer {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+/* The sub popover is taller than the first level and sized by its content: the
+   cap is only the viewport, so a short provider list does not leave a tall empty
+   card. Provider labels stay pinned to the top while the list scrolls. */
+body[data-dsh-claude-style] .dsh-claude-model-popover-sub {
+  padding-top: 0;
+}
+
+body[data-dsh-claude-style] .dsh-claude-model-group-section {
+  position: relative !important;
+  display: flex !important;
+  flex-direction: column !important;
+  /* Level 2 rows sit close together: the 3px the body uses between sections
+     read as a gap between models of the same provider. */
+  gap: 1px !important;
+  min-width: 0 !important;
+}
+
+body[data-dsh-claude-style] .dsh-claude-model-group-row {
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 6 !important;
+  align-self: stretch !important;
+  margin: 0 !important;
+  padding: 3px 7px 0 7px !important;
+  background: var(--dsw-alias-bg-overlay, #ffffff) !important;
+}
+
+body[data-dsh-claude-style][data-ds-dark-theme] .dsh-claude-model-group-row {
+  background: var(--dsh-claude-raised) !important;
+}
+
+body[data-dsh-claude-style] .dsh-claude-model-group {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 5px !important;
+  margin: 0 !important;
+  padding: 1px 7px !important;
+  background: var(--dsh-claude-inverse-fill) !important;
+  color: var(--dsh-claude-inverse-ink) !important;
+  border-radius: 6px !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  line-height: 16px !important;
+}
+
+/* Model / effort option and the level-2 row (label + chevron, whose hover opens
+   its own level): same row metrics and hover as the drawer items. */
+body[data-dsh-claude-style] .dsh-claude-model-option,
+body[data-dsh-claude-style] .dsh-claude-model-cell {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 32px;
+  padding: 2px 7px;
+  border: none !important;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--dsw-alias-label-primary, #141413);
+  font-size: 13px;
+  text-align: left;
+  cursor: pointer;
+  box-sizing: border-box;
+}
+body[data-dsh-claude-style] .dsh-claude-model-option:hover,
+body[data-dsh-claude-style] .dsh-claude-model-cell:hover {
+  background: var(--dsh-claude-hover-bg, rgba(0, 0, 0, 0.08)) !important;
+}
+body[data-dsh-claude-style] .dsh-claude-model-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+body[data-dsh-claude-style] .dsh-claude-model-name {
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 16px;
+}
+/* Claude's wordmark is set in Anthropic's serif, so the rest of the label follows
+   it — the row reads as one piece of lettering rather than serif art beside sans. */
+body[data-dsh-claude-style] .dsh-claude-model-option[data-brand='claude'] .dsh-claude-model-name {
+  font-family: var(--dsh-claude-font-brand) !important;
+}
+/* A vendor lockup: the mark and the vendor's own wordmark as one piece of art,
+   drawn in place of the vendor's name in the label. Its viewBox is the wordmark's
+   capital band, so the label's own cap height sizes it and the mark — which is
+   taller — paints outside the box, which is what the visible overflow is for.
+   Two mark layers ship inside the file: the colour artwork on the ivory canvas,
+   the mono one in currentColor on the warm black canvas, where a brand colour
+   like #000 or #F1F0E8 would disappear. A vendor with no colour artwork carries
+   both classes on its single layer, so it shows on either canvas. */
+body[data-dsh-claude-style] .dsh-claude-model-combine {
+  display: inline-block;
+  /* The label's own cap height sizes the mark, so the mark — which is taller —
+     paints outside the box, which is what the visible overflow is for. `cap` is
+     the unit that means "the cap height"; a browser without it takes the em
+     value here, and the rule below replaces it where the unit is understood.
+     The two heights sit in separate rules on purpose: two declarations of one
+     property in one rule are a rule the importance audit cannot judge. None of
+     the four carries a weight — the class is the skin's own and nothing else
+     styles it, which the audit confirmed by dropping each one (D9). */
+  height: 0.72em;
+  margin-right: 0.25em;
+  vertical-align: baseline;
+}
+@supports (height: 1cap) {
+  body[data-dsh-claude-style] .dsh-claude-model-combine {
+    height: 1cap;
+  }
+}
+body[data-dsh-claude-style] .dsh-claude-model-combine svg {
+  display: block;
+  height: 100%;
+  width: auto;
+  overflow: visible;
+}
+/* Dark canvas is the base: hide a *separate* colour layer. The `:not()` matters —
+   a hand-provided lockup is one layer carrying both classes so it shows on either
+   canvas, and a bare `.dsh-combine-mark-color` rule would hide it on the dark one
+   (which is how the ChatGPT knot went missing on warm black). */
+body[data-dsh-claude-style] .dsh-claude-model-combine .dsh-combine-mark-color:not(.dsh-combine-mark-mono) {
+  display: none;
+}
+body[data-dsh-claude-style]:not([data-ds-dark-theme]) .dsh-claude-model-combine .dsh-combine-mark-color {
+  display: block;
+}
+body[data-dsh-claude-style]:not([data-ds-dark-theme]) .dsh-claude-model-combine .dsh-combine-mark-mono:not(.dsh-combine-mark-color) {
+  display: none;
+}
+/* The word the lockup stands in for stays in the accessibility tree. */
+body[data-dsh-claude-style] .dsh-claude-model-combine-alt {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+/* The row carries one description line, in the shell's language: the copy
+   document is localized rather than stacked, so there is no second-language
+   rule to style. */
+body[data-dsh-claude-style] .dsh-claude-model-desc {
+  font-size: 11px;
+  line-height: 14px;
+  color: var(--dsw-alias-label-tertiary, #8f8d84);
+}
+/* The divider that closes the model list carries the shared separator's role, so
+   its line comes from shared/popover.css with every other separator in a card;
+   what stays here is its margin. The provider header's own rule is the one line
+   this sheet states, in the same language: a 0.5px border of the border ladder's
+   second rung, the rung the host picks on a menu surface (Menu.module.css). It is
+   a border on a zero-height box so the line belongs to the layout. */
+body[data-dsh-claude-style] .dsh-claude-model-rule::after {
+  height: 0;
+  border-top: 0.5px solid var(--dsw-alias-border-l2, #dedcd2);
+}
+body[data-dsh-claude-style] .dsh-claude-model-divider {
+  margin: 2px 4px;
+  flex: none;
+}
+/* The provider header: the name first, then the rule running to the right edge.
+   The line is what is left of that row, not a separate full-width rule above it
+   — one rule per provider boundary, and nothing more. An empty label leaves the
+   bare rule, which is how a provider that needs no naming (the official source)
+   is separated. */
+body[data-dsh-claude-style] .dsh-claude-model-rule {
+  display: flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  margin: 2px 4px !important;
+  flex: none !important;
+}
+body[data-dsh-claude-style] .dsh-claude-model-rule::after {
+  content: "" !important;
+  flex: 1 !important;
+}
+body[data-dsh-claude-style] .dsh-claude-model-rule-name {
+  flex: none !important;
+  font-size: 11px !important;
+  line-height: 14px !important;
+  color: var(--dsw-alias-label-caption, #a6a094) !important;
+  letter-spacing: 0.02em !important;
+}
+body[data-dsh-claude-style] .dsh-claude-model-cell-label {
+  flex: 1;
+  min-width: 0;
+}
+body[data-dsh-claude-style] .dsh-claude-model-cell-chevron {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  color: var(--dsw-alias-label-caption, #a6a094);
+}

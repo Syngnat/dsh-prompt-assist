@@ -283,6 +283,6 @@ export function ModelPicker({locked,available,directory,load,select,t,getLocale=
    'aria-label':t('picker.ariaCurrent',{model:caption}),title:[caption,effort].filter(Boolean).join(' · '),
    onClick:()=>visible?hide(true):show(),onKeyDown:e=>{if(visible){onKeyDown(e);return;}if(e.key==='ArrowDown'||e.key==='ArrowUp'){e.preventDefault();show(e.key==='ArrowUp'?'last':'first');}}},
    h('span',{className:'lpa-model-trigger-icon','aria-hidden':true},'◇'),h('span',{className:'lpa-model-trigger-label'},caption),
-   effort?h('span',{className:'lpa-model-trigger-effort'},effort):null,h('span',{className:'lpa-model-chevron','aria-hidden':true}))),
+   effort?h('span',{className:'lpa-model-trigger-effort'},effort):null,h('svg',{className:'lpa-model-chevron',viewBox:'0 0 16 16',width:12,height:12,fill:'none',stroke:'currentColor',strokeWidth:1.5,strokeLinecap:'round',strokeLinejoin:'round','aria-hidden':true,focusable:'false'},h('path',{d:'M4 6l4 4 4-4'})))),
   menu?createPortal(menu,document.body):null);
 }
