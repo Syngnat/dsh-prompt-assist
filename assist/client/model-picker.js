@@ -244,7 +244,7 @@ export function ModelPicker({locked,available,directory,load,select,t,getLocale=
  });
  const groupHeader=group=>h('div',{className:'lpa-model-group-name',title:group.id},
   h('span',null,group.id==='deepseek-account'?t('picker.account'):group.name||group.id),
-  h('button',{type:'button',className:'lpa-model-pin',title:pins.includes(group.id)?t('picker.unpin'):t('picker.pin'),'aria-pressed':pins.includes(group.id),
+  h('button',{type:'button',className:'lpa-model-pin','data-provider-id':group.id,title:pins.includes(group.id)?t('picker.unpin'):t('picker.pin'),'aria-pressed':pins.includes(group.id),
    'aria-label':pins.includes(group.id)?t('picker.unpin'):t('picker.pin'),onClick:()=>togglePin(group.id)},
    h('span',{'aria-hidden':true},pins.includes(group.id)?t('picker.pinnedMark'):t('picker.pinMark'))));
  const backRow=h('button',{key:'back',type:'button',role:'menuitem','data-picker-row':'back','aria-label':t('picker.allProviders'),tabIndex:-1,
@@ -253,7 +253,9 @@ export function ModelPicker({locked,available,directory,load,select,t,getLocale=
   h('span',{className:'lpa-model-back-chevron','aria-hidden':true},'‹'),h('span',null,t('picker.allProviders')));
  const providerRow=group=>{
   const key=providerRowKey(group.id),current=state.current?.provider===group.id;
-  return h('button',{key,type:'button',role:'menuitem','aria-label':t('picker.providerRow',{name:group.name||group.id,count:modelsOf(group).length}),
+  const pinned=pins.includes(group.id);
+  return h('div',{key,className:'lpa-model-provider-line','data-provider-id':group.id},
+   h('button',{type:'button',role:'menuitem','aria-label':t('picker.providerRow',{name:group.name||group.id,count:modelsOf(group).length}),
    tabIndex:-1,disabled:busy||locked,'data-picker-row':key,'data-provider-id':group.id,
    ref:node=>{if(node)rowRefs.current.set(key,node);else rowRefs.current.delete(key);},
    className:'lpa-model-provider-row'+(current?' lpa-model-provider-row--current':''),
@@ -263,7 +265,12 @@ export function ModelPicker({locked,available,directory,load,select,t,getLocale=
    h('span',{className:'lpa-model-provider-meta'},
     current?h('span',{className:'lpa-model-check','aria-hidden':true},'✓'):null,
     h('span',{className:'lpa-model-provider-count'},String(modelsOf(group).length)),
-    h('span',{className:'lpa-model-provider-chevron','aria-hidden':true},'›')));
+    h('span',{className:'lpa-model-provider-chevron','aria-hidden':true},'›'))),
+  h('button',{type:'button',className:'lpa-model-pin lpa-model-provider-pin','data-provider-id':group.id,
+   title:pinned?t('picker.unpin'):t('picker.pin'),'aria-pressed':pinned,
+   'aria-label':pinned?t('picker.unpin'):t('picker.pin'),disabled:busy||locked,
+   onClick:e=>{e.preventDefault();e.stopPropagation();if(!busy&&!locked)togglePin(group.id);}},
+   h('span',{'aria-hidden':true},pinned?t('picker.pinnedMark'):t('picker.pinMark'))));
  };
  const menu=visible?h('div',{ref:panel,id:id+'-panel',className:'lpa-model-menu',role:'dialog','aria-label':t('picker.aria'),'aria-busy':busy||loadingState(state),
   style:position??{left:0,top:0,visibility:'hidden'},onKeyDown},

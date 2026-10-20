@@ -718,7 +718,7 @@ var init_messages = __esm({
         "picker.saving": "\u6B63\u5728\u5207\u6362\u2026",
         "picker.allProviders": "\u6240\u6709\u4F9B\u5E94\u5546",
         "picker.providerRow": "{name}\uFF1A{count} \u4E2A\u6A21\u578B",
-        "picker.pin": "\u5E38\u9A7B\u663E\u793A\uFF0C\u5176\u4F59\u6536\u8D77",
+        "picker.pin": "\u5E38\u9A7B\u663E\u793A\uFF0C\u53EF\u540C\u65F6\u5E38\u9A7B\u591A\u4E2A\uFF0C\u5176\u4F59\u6536\u8D77",
         "picker.unpin": "\u53D6\u6D88\u5E38\u9A7B",
         "picker.pinMark": "\u5E38\u9A7B",
         "picker.pinnedMark": "\u5DF2\u5E38\u9A7B",
@@ -1016,7 +1016,7 @@ var init_messages = __esm({
         "picker.saving": "Switching\u2026",
         "picker.allProviders": "All providers",
         "picker.providerRow": "{name}: {count} models",
-        "picker.pin": "Pin to quick list, collapse the rest",
+        "picker.pin": "Pin to the quick list. Several providers can stay pinned; the rest collapse",
         "picker.unpin": "Remove from quick list",
         "picker.pinMark": "Pin",
         "picker.pinnedMark": "Pinned",
@@ -4101,6 +4101,8 @@ var init_model_picker_style = __esm({
 .lpa-model-retry{margin:2px 8px 6px;padding:3px 8px;border:1px solid var(--dsw-alias-border-l1);border-radius:5px;background:transparent;color:var(--dsw-alias-label-primary);font:inherit;cursor:pointer}
 .lpa-effort-frame{flex:none;padding:10px 8px;border-top:1px solid var(--dsw-alias-border-l1)}
 .lpa-model-more{display:grid;gap:1px;padding:2px 0 6px}
+.lpa-model-provider-line{display:flex;align-items:center;gap:6px;min-width:0}
+.lpa-model-provider-line>.lpa-model-provider-row{flex:1;min-width:0;width:auto}
 .lpa-model-provider-row{display:flex;align-items:center;gap:8px;width:100%;min-height:30px;box-sizing:border-box;padding:4px 7px;border:0;border-radius:6px;background:transparent;color:inherit;font:inherit;text-align:inherit;cursor:pointer}
 .lpa-model-provider-row:hover:not(:disabled){background:var(--dsw-alias-interactive-bg-hover,var(--dsw-alias-bg-layer-2))}
 .lpa-model-provider-row:focus-visible{outline:2px solid var(--dsw-alias-brand-primary);outline-offset:-2px}
@@ -5267,6 +5269,7 @@ function ModelPicker({ locked, available, directory, load, select, t, getLocale 
       {
         type: "button",
         className: "lpa-model-pin",
+        "data-provider-id": group.id,
         title: pins.includes(group.id) ? t("picker.unpin") : t("picker.pin"),
         "aria-pressed": pins.includes(group.id),
         "aria-label": pins.includes(group.id) ? t("picker.unpin") : t("picker.pin"),
@@ -5297,44 +5300,66 @@ function ModelPicker({ locked, available, directory, load, select, t, getLocale 
   );
   const providerRow = (group) => {
     const key = providerRowKey(group.id), current = state.current?.provider === group.id;
+    const pinned = pins.includes(group.id);
     return h14(
-      "button",
-      {
-        key,
-        type: "button",
-        role: "menuitem",
-        "aria-label": t("picker.providerRow", { name: group.name || group.id, count: modelsOf(group).length }),
-        tabIndex: -1,
-        disabled: busy || locked,
-        "data-picker-row": key,
-        "data-provider-id": group.id,
-        ref: (node) => {
-          if (node) rowRefs.current.set(key, node);
-          else rowRefs.current.delete(key);
+      "div",
+      { key, className: "lpa-model-provider-line", "data-provider-id": group.id },
+      h14(
+        "button",
+        {
+          type: "button",
+          role: "menuitem",
+          "aria-label": t("picker.providerRow", { name: group.name || group.id, count: modelsOf(group).length }),
+          tabIndex: -1,
+          disabled: busy || locked,
+          "data-picker-row": key,
+          "data-provider-id": group.id,
+          ref: (node) => {
+            if (node) rowRefs.current.set(key, node);
+            else rowRefs.current.delete(key);
+          },
+          className: "lpa-model-provider-row" + (current ? " lpa-model-provider-row--current" : ""),
+          onFocus: () => {
+            modelFocus.current = key;
+          },
+          onClick: () => {
+            if (!busy && !locked) openProvider(group.id);
+          },
+          onKeyDown: (e) => {
+            if (e.nativeEvent.isComposing) return;
+            if (e.key === "ArrowRight") {
+              e.preventDefault();
+              e.stopPropagation();
+              openProvider(group.id);
+            }
+          }
         },
-        className: "lpa-model-provider-row" + (current ? " lpa-model-provider-row--current" : ""),
-        onFocus: () => {
-          modelFocus.current = key;
-        },
-        onClick: () => {
-          if (!busy && !locked) openProvider(group.id);
-        },
-        onKeyDown: (e) => {
-          if (e.nativeEvent.isComposing) return;
-          if (e.key === "ArrowRight") {
+        h14("span", { className: "lpa-model-provider-copy" }, h14("span", { className: "lpa-model-provider-name" }, group.name || group.id)),
+        h14(
+          "span",
+          { className: "lpa-model-provider-meta" },
+          current ? h14("span", { className: "lpa-model-check", "aria-hidden": true }, "\u2713") : null,
+          h14("span", { className: "lpa-model-provider-count" }, String(modelsOf(group).length)),
+          h14("span", { className: "lpa-model-provider-chevron", "aria-hidden": true }, "\u203A")
+        )
+      ),
+      h14(
+        "button",
+        {
+          type: "button",
+          className: "lpa-model-pin lpa-model-provider-pin",
+          "data-provider-id": group.id,
+          title: pinned ? t("picker.unpin") : t("picker.pin"),
+          "aria-pressed": pinned,
+          "aria-label": pinned ? t("picker.unpin") : t("picker.pin"),
+          disabled: busy || locked,
+          onClick: (e) => {
             e.preventDefault();
             e.stopPropagation();
-            openProvider(group.id);
+            if (!busy && !locked) togglePin(group.id);
           }
-        }
-      },
-      h14("span", { className: "lpa-model-provider-copy" }, h14("span", { className: "lpa-model-provider-name" }, group.name || group.id)),
-      h14(
-        "span",
-        { className: "lpa-model-provider-meta" },
-        current ? h14("span", { className: "lpa-model-check", "aria-hidden": true }, "\u2713") : null,
-        h14("span", { className: "lpa-model-provider-count" }, String(modelsOf(group).length)),
-        h14("span", { className: "lpa-model-provider-chevron", "aria-hidden": true }, "\u203A")
+        },
+        h14("span", { "aria-hidden": true }, pinned ? t("picker.pinnedMark") : t("picker.pinMark"))
       )
     );
   };

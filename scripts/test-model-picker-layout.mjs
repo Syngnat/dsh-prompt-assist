@@ -79,6 +79,12 @@ export async function runRegression(page){
  const row=page.locator('.lpa-model-provider-row[data-provider-id="opencode-cpa"]');
  assert.match(await row.textContent(),/opencode-cpa/);assert.match(await row.textContent(),/4/);assert.match(await row.textContent(),/›/);
  assert.equal(await page.locator('.lpa-model-provider-row--current').count(),1);cases++;
+ await page.locator('.lpa-model-pin[data-provider-id="openai"]').click();await settle(page);
+ assert.deepEqual(await storedPins(),['xiaomi-token-plan-cn','openai']);
+ assert.equal(await page.locator('.lpa-model-group').count(),2);
+ assert.equal(await page.locator('.lpa-model-provider-row').count(),1);
+ await page.locator('.lpa-model-pin[data-provider-id="openai"]').click();await settle(page);
+ assert.deepEqual(await storedPins(),['xiaomi-token-plan-cn']);cases++;
  await row.click();await settle(page);
  assert.equal(await page.locator('.lpa-model-back-row').count(),1);
  assert.equal(await page.locator('.lpa-model-group').count(),1);
