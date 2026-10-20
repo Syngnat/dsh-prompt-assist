@@ -2655,13 +2655,13 @@ var package_default = {
     node: ">=22"
   },
   exports: {
-    ".": "./host-v1.2.29.js",
+    ".": "./host-v1.2.30.js",
     "./client": "./client-runtime.js",
     "./locale/*.json": "./locale/*.json",
     "./icon": "./icon.svg"
   },
   files: [
-    "host-v1.2.29.js",
+    "host-v1.2.30.js",
     "client-runtime.js",
     "client.js",
     "cordis.patch.yml",
