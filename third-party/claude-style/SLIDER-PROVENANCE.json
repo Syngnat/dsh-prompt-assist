@@ -85,7 +85,7 @@
     },
     {
       "path": "assist/client/claude-effort-style.js",
-      "sha256": "9762decbff736eeda68707f89758ddcf6ceb007e03cff35909456979a3be27dd"
+      "sha256": "10235c90ddb5fc39966f51cd625a51baac0061a9494656e5bc8815242c328aa7"
     }
   ],
   "adaptation": [
@@ -95,9 +95,9 @@
     "Preserve the original five-row device-pixel matrix solver, integer hash, eight tone buckets, smoothstep plume mask and all three original per-cell timing formulas using the 1450ms flash token.",
     "Scope copied selectors, custom properties and keyframe names to lpa-ce. Copy only required token values locally; inherit the same standard dsw host aliases with the same upstream color fallbacks. Read only a standard data-ds-dark-theme ancestor for the original dark apex palette and knob shadows.",
     "Preserve the incoming and outgoing 150ms ease-in-out wording swap with 4px travel and 2px blur. Add a persistent polite live wrapper and hide the outgoing ghost from assistive technology.",
-    "Carry generated particle delay and duration through private CSS custom properties so the existing important animation precedence is preserved and reduced-motion can override the entire animation.",
+    "Carry generated particle delay and duration through private CSS custom properties so the existing important animation precedence is preserved. The reduced choice mirrors the original theme/chrome.css net (D40): durations collapse to the 0.01ms reduced token, the flash shorthand keeps its important infinite so the apex twinkle keeps breathing, and matrix delays are cleared.",
     "Measure only the owned track via ResizeObserver and window resize, clean up both, and place initial/changed geometry without a glide. Caller changes to index settle through the original 200ms cubic-bezier(0.22, 0.61, 0.36, 1) transition; dragging removes travel easing.",
-    "Provide a fully transparent 16x30 native range overlay with identical 8px centre endpoints. Transfer focus paint to track :has(> .lpa-ce-input:focus-visible), preserving keyboard-only focus indication, restore the native input in forced colors, disable all transitions/animations with a static matrix under prefers-reduced-motion, and dim disabled controls without geometry changes.",
+    "Provide a fully transparent 16x30 native range overlay with identical 8px centre endpoints. Transfer focus paint to track :has(> .lpa-ce-input:focus-visible), preserving keyboard-only focus indication, restore the native input in forced colors, compress transitions/animations to the 0.01ms reduced net under prefers-reduced-motion — where the apex twinkle keeps breathing at the compressed period — and dim disabled controls without geometry changes.",
     "No selection, permissions, network, profile, SDK or host-model calls are performed. Integration remains outside these new files. No font, logo, image, mascot or other asset files are copied or used."
   ],
   "interface": {

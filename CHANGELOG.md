@@ -2,6 +2,11 @@
 
 [English](<README.md>) | [简体中文](<README.zh-CN.md>)
 
+## 1.2.29 — 设置点击修复与最高档动效恢复 / Clickable settings and apex motion（2026-10-20）
+
+- 修复设置页不可点击：草稿反馈区（未保存提醒、过期错误、重置与保存通知）原先是卡片的第五个直接子元素，在 Chromium 下溢出 `span 4` 的 subgrid，透明反馈网格坍缩到表单带上，吞掉完整问答轮数下拉与保存按钮的全部指针事件——必须完成的一次全局保存无法进行，输入框「增强提示词」按钮也因此一直保持灰色（启用需要已确认的全局配置）。反馈区现渲染在表单内、紧邻保存按钮之前；新增 SSR 回归断言表单必须保持为卡片的最后子元素。无网络格式、存储或模型调用变化。
+- 恢复「减弱动态效果」下的最高档闪烁：移植版原本用一刀切 `animation:none`，而上游 Claude Style 的规则把时长压缩到 0.01ms 并保留 `infinite` 闪烁迭代，使最高档点阵在 `prefers-reduced-motion`（macOS「减弱动态效果」）下仍持续呼吸。现完全镜像该语义，重新钉扎滑块来源哈希，并扩展 12 例真实 Chromium 动效回归：0.01ms 网格必须保留至少 100 个运行中的 `lpa-ce-flash` 动画，指针选择仍可提交。刻意不断言依赖引擎时钟的颜色采样。
+
 ## 1.2.28 — 输入框模型选择器 / Composer model picker（2026-10-20）
 
 - Replace the composer model seat through the supported slot contract: the plugin registers `conversation.input.model` at priority `-1`, so it shadows the shipped picker instead of adding a second control, and the shipped picker resumes rendering as soon as the plugin unloads. Session scope, `locked`, availability and the model directory stay owned by the host; a missing directory service installs no replacement.

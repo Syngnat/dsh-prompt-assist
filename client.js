@@ -2831,6 +2831,7 @@ function Settings(p) {
       custom ? field("custom", h9("input", { type: "number", min: 1, max: 20, step: 1, value: Number.isFinite(v.rounds) ? v.rounds : "", onChange: (e) => change({ rounds: e.target.value === "" ? NaN : Number(e.target.value) }) })) : null
     ),
     error ? h9("p", { role: "alert", className: "lpa-error" }, t(error)) : null,
+    p.feedback ?? null,
     h9("button", { className: "lpa-button lpa-button--primary", type: "submit", disabled: p.saving || !p.allowed }, t(p.saving ? "saving" : "save"))
   );
 }
@@ -3317,15 +3318,24 @@ function FeatureSettings({ feature, global, source, p }) {
     h12("h2", { className: "lpa-feature-title" }, p.t(feature)),
     h12("p", { className: "lpa-note" }, p.t(feature === "suggest" ? "suggestContext" : "enhanceOriginal")),
     !host.configured[feature] ? h12("p", { className: "lpa-note", role: "status" }, p.t("settings.unconfigured")) : null,
-    h12(Settings, { t: p.t, config: draft.config, catalog: options.catalog, capabilities: options.capabilities, allowed: allowed && !stale, saving, onChange: edit, save }),
-    h12(
-      "div",
-      { className: "lpa-settings-feedback" },
-      draft.dirty ? h12("p", { className: "lpa-note" }, p.t("settingsChanged")) : null,
-      stale ? h12("p", { className: "lpa-error", role: "alert" }, p.t("settings.stale")) : null,
-      draft.dirty ? h12("button", { type: "button", className: "lpa-button", disabled: !global.connected || Boolean(global.pending), onClick: reset }, p.t("settings.resetDraft")) : null,
-      noticeValue ? h12("p", { role: "status", className: noticeValue === "saved" ? "lpa-note" : "lpa-error" }, noticeValue === "saved" ? p.t("saved") : errorText(noticeValue, p.t)) : null
-    )
+    h12(Settings, {
+      t: p.t,
+      config: draft.config,
+      catalog: options.catalog,
+      capabilities: options.capabilities,
+      allowed: allowed && !stale,
+      saving,
+      onChange: edit,
+      save,
+      feedback: h12(
+        "div",
+        { className: "lpa-settings-feedback" },
+        draft.dirty ? h12("p", { className: "lpa-note" }, p.t("settingsChanged")) : null,
+        stale ? h12("p", { className: "lpa-error", role: "alert" }, p.t("settings.stale")) : null,
+        draft.dirty ? h12("button", { type: "button", className: "lpa-button", disabled: !global.connected || Boolean(global.pending), onClick: reset }, p.t("settings.resetDraft")) : null,
+        noticeValue ? h12("p", { role: "status", className: noticeValue === "saved" ? "lpa-note" : "lpa-error" }, noticeValue === "saved" ? p.t("saved") : errorText(noticeValue, p.t)) : null
+      )
+    })
   );
 }
 function SettingsPage(p) {
@@ -4045,6 +4055,10 @@ var init_claude_effort_style = __esm({
   --lpa-ce-duration-move: 200ms;
   --lpa-ce-duration-fade: 300ms;
   --lpa-ce-period-flash: 1450ms;
+  /* Not zero (the original tokens.json note): a transition whose duration and
+     delay are both zero never starts and fires no transitionend, so anything
+     listening for its end would wait forever. */
+  --lpa-ce-duration-reduced: 0.01ms;
   --lpa-ce-ease-standard: ease;
   --lpa-ce-ease-in-out: ease-in-out;
   --lpa-ce-ease-glide: cubic-bezier(0.22, 0.61, 0.36, 1);
@@ -4410,6 +4424,15 @@ var init_claude_effort_style = __esm({
   background: transparent;
   box-shadow: none;
 }
+/* The Reduced-animation choice follows the original skin's own net
+   (theme/chrome.css, D40): durations collapse to --lpa-ce-duration-reduced \u2014
+   0.01ms, not zero, so a transition whose end anything waits for still fires \u2014
+   while the flash shorthand's !important infinite keeps outranking the plain
+   iteration count, so the apex twinkle keeps breathing at the compressed
+   period instead of freezing. The matrix's scattered delays are cleared, so
+   nothing trickles in after the choice and every part lands instantly. The
+   first port's blanket animation: none also stopped that twinkle, which read
+   as a plain colouring of the top rung under the system's Reduced Motion. */
 @media (prefers-reduced-motion: reduce) {
   .lpa-effort.lpa-ce .lpa-ce-value,
   .lpa-effort.lpa-ce .lpa-ce-value-ghost,
@@ -4419,11 +4442,12 @@ var init_claude_effort_style = __esm({
   .lpa-effort.lpa-ce[data-dragging] .lpa-ce-knob,
   .lpa-effort.lpa-ce .lpa-ce-matrix-cell,
   .lpa-effort.lpa-ce .lpa-ce-matrix-sq {
-    animation: none !important;
-    transition: none !important;
+    animation-duration: var(--lpa-ce-duration-reduced) !important;
+    animation-iteration-count: 1;
+    transition-duration: var(--lpa-ce-duration-reduced) !important;
   }
-  .lpa-effort.lpa-ce .lpa-ce-value-ghost { visibility: hidden; }
-  .lpa-effort.lpa-ce[data-dragging] .lpa-ce-knob { scale: 1 !important; }
+  .lpa-effort.lpa-ce .lpa-ce-matrix-cell { animation-delay: 0s !important; }
+  .lpa-effort.lpa-ce .lpa-ce-matrix-sq { animation-delay: 0s !important; }
 }
 @media (forced-colors: active) {
   .lpa-ce .lpa-ce-track::before,

@@ -37,15 +37,20 @@ function FeatureSettings({feature,global,source,p}){
  }
  function reset(){const next=createSettingsDraft(host.settings[feature],host.settingsRevision);current.current=next;setDraft(next);setNotice(null);}
  const noticeValue=notice??options.error;
+ // The draft feedback lives inside the form: the card stays a four-child subgrid
+ // (title, context note, unconfigured note, form). A fifth child overflows the
+ // span-4 subgrid in Chromium and collapses the transparent feedback grid onto
+ // the form, which swallowed every pointer event over the rounds select and the
+ // save button — the settings could not be saved at all.
  return h('section',{className:'lpa-feature lpa-card','aria-label':p.t(feature)},
   h('h2',{className:'lpa-feature-title'},p.t(feature)),
   h('p',{className:'lpa-note'},p.t(feature==='suggest'?'suggestContext':'enhanceOriginal')),
   !host.configured[feature]?h('p',{className:'lpa-note',role:'status'},p.t('settings.unconfigured')):null,
-  h(Settings,{t:p.t,config:draft.config,catalog:options.catalog,capabilities:options.capabilities,allowed:allowed&&!stale,saving,onChange:edit,save}),
-  h('div',{className:'lpa-settings-feedback'},draft.dirty?h('p',{className:'lpa-note'},p.t('settingsChanged')):null,
-  stale?h('p',{className:'lpa-error',role:'alert'},p.t('settings.stale')):null,
-  draft.dirty?h('button',{type:'button',className:'lpa-button',disabled:!global.connected||Boolean(global.pending),onClick:reset},p.t('settings.resetDraft')):null,
-  noticeValue?h('p',{role:'status',className:noticeValue==='saved'?'lpa-note':'lpa-error'},noticeValue==='saved'?p.t('saved'):errorText(noticeValue,p.t)):null));
+  h(Settings,{t:p.t,config:draft.config,catalog:options.catalog,capabilities:options.capabilities,allowed:allowed&&!stale,saving,onChange:edit,save,
+   feedback:h('div',{className:'lpa-settings-feedback'},draft.dirty?h('p',{className:'lpa-note'},p.t('settingsChanged')):null,
+   stale?h('p',{className:'lpa-error',role:'alert'},p.t('settings.stale')):null,
+   draft.dirty?h('button',{type:'button',className:'lpa-button',disabled:!global.connected||Boolean(global.pending),onClick:reset},p.t('settings.resetDraft')):null,
+   noticeValue?h('p',{role:'status',className:noticeValue==='saved'?'lpa-note':'lpa-error'},noticeValue==='saved'?p.t('saved'):errorText(noticeValue,p.t)):null)}));
 }
 
 export function SettingsPage(p){

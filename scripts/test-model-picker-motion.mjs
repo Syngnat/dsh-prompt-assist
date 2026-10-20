@@ -177,17 +177,33 @@ export async function runMotionRegression(page){
   return {rows:matrix.rows.length,pixels:matrix.count,changedPixels:changed,flashTokens:matrix.flashTokens,durationRangeMs:[Math.min(...matrix.durations.map(milliseconds)),Math.max(...matrix.durations.map(milliseconds))],sampleCount:snapshots.length};
  });
 
- await check('reduced motion disables all component animations/transitions and pointer selection still works',async()=>{
-  await page.emulateMedia({reducedMotion:'reduce'});await openMotionFixture(page,{snapshot:defaultSnapshot('xhigh')});
-  const before=await page.evaluate(()=>{
-   const root=document.querySelector('.lpa-ce');return {styles:[root,...root.querySelectorAll('*')].map(node=>{const s=getComputedStyle(node);return {className:node.className,animationName:s.animationName,animationDuration:s.animationDuration,transitionDuration:s.transitionDuration};}),
-    running:root.getAnimations({subtree:true}).filter(a=>a.playState==='running').length,colors:[...root.querySelectorAll('.lpa-ce-matrix-sq')].map(sq=>getComputedStyle(sq).backgroundColor)};
+ await check('reduced motion collapses to the 0.01ms net while the apex twinkle keeps breathing and selection still works',async()=>{
+  await page.emulateMedia({reducedMotion:'reduce'});await openMotionFixture(page,{snapshot:defaultSnapshot('xhigh')});await waitForStop(page,3);
+  const shape=await page.evaluate(()=>{
+   const root=document.querySelector('.lpa-ce'),cell=root.querySelector('.lpa-ce-matrix-cell'),sq=root.querySelector('.lpa-ce-matrix-sq');
+   return {token:getComputedStyle(root).getPropertyValue('--lpa-ce-duration-reduced').trim(),
+    flashDuration:sq?getComputedStyle(sq).animationDuration:null,flashIteration:sq?getComputedStyle(sq).animationIterationCount:null,
+    flashDelay:sq?getComputedStyle(sq).animationDelay:null,entranceDelay:cell?getComputedStyle(cell).animationDelay:getComputedStyle(root).animationDelay,
+    knobTransition:getComputedStyle(root.querySelector('.lpa-ce-knob')).transitionDuration};
   });
-  assert.equal(before.running,0);for(const style of before.styles){assert.ok(cssList(style.animationName).every(name=>name==='none'),`Reduced animation ${style.className}: ${style.animationName}`);assert.ok(cssList(style.transitionDuration).every(value=>milliseconds(value)===0),`Reduced transition ${style.className}: ${style.transitionDuration}`);}
-  await sampleTravel(page,350);const after=await page.locator('.lpa-ce-matrix-sq').evaluateAll(nodes=>nodes.map(node=>getComputedStyle(node).backgroundColor));assert.deepEqual(after,before.colors);
-  await beginDrag(page);await moveMotionPointer(page,0.41);await settle(page);assert.equal(await selectionCount(page),0);const held=await motionGeometry(page);assert.equal(held.inputValue,1);
+  assert.equal(shape.token,'0.01ms','The reduced duration token matches the original 0.01ms value');
+  assert.ok(milliseconds(cssList(shape.flashDuration)[0])<=1,`Reduced flash duration collapses: ${shape.flashDuration}`);
+  assert.equal(shape.flashIteration,'infinite','The flash shorthand keeps its !important infinite under reduce');
+  assert.ok(milliseconds(cssList(shape.flashDelay)[0])<=1,`Reduced flash delay is cleared: ${shape.flashDelay}`);
+  assert.ok(milliseconds(cssList(shape.entranceDelay)[0])<=1,`Reduced entrance delay is cleared: ${shape.entranceDelay}`);
+  assert.ok(cssList(shape.knobTransition).every(value=>milliseconds(value)<=1),`Reduced transition ${shape.knobTransition}`);
+  // Parity with the original net: the flash machinery stays alive at the
+  // compressed period (running, never removed or frozen) instead of a blanket
+  // animation:none. Frame-by-frame color sampling is engine-clock dependent and
+  // therefore not asserted here.
+  const running=await page.evaluate(()=>{
+   const root=document.querySelector('.lpa-ce');
+   return root.getAnimations({subtree:true}).filter(a=>a.animationName==='lpa-ce-flash'&&a.playState==='running').length;
+  });
+  assert.ok(running>=100,`The compressed twinkle machinery keeps running: ${running} flash animations`);
+  await beginDrag(page);await moveMotionPointer(page,0.41);await settle(page);assert.equal(await selectionCount(page),0);
   await page.mouse.up();await settle(page);assert.equal(await selectionCount(page),1);await waitForStop(page,1);
-  return {animatedElements:before.running,checkedElements:before.styles.length,stablePixels:after.length,selection:'medium'};
+  return {token:shape.token,flashIteration:shape.flashIteration,runningFlashAnimations:running,selection:'medium'};
  });
 
  await check('pointercancel cancels the held gesture without a selection',async()=>{

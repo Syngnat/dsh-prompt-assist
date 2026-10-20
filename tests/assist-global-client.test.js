@@ -31,6 +31,22 @@ test('settings shows two profile switches even with no selected session',async()
  assert.ok(html.includes('global.title'));assert.equal((html.match(/type="checkbox"/g)||[]).length,6);assert.ok(html.includes('settings.profileSection'));assert.ok(!html.includes('settings.sessionEmpty'));
 });
 
+test('feature cards render the draft feedback inside the form so pointer events reach the controls',async()=>{
+ // In Chromium a fifth direct card child overflows the span-4 subgrid and the
+ // transparent feedback grid collapses onto the form band, eating every click
+ // over the rounds select and the save button; the form must stay the last child.
+ const React=await import('react');const {renderToStaticMarkup}=await import('react-dom/server');const {SettingsPage}=await import('../assist/client/settings-page.js');
+ const target={sessionId:null},global={data:snapshot(1,true,false),connected:true,loading:false,pending:null,readError:null,writeError:null,saved:null};
+ const html=renderToStaticMarkup(React.createElement(SettingsPage,{t:key=>key,targetSource:{getSnapshot:()=>target,subscribe:()=>()=>{}},globalSource:{getSnapshot:()=>global,subscribe:()=>()=>{},setEnabled(){}},returnToConversation(){}}));
+ const features=html.match(/<section class="lpa-feature lpa-card"[\s\S]*?<\/section>/g)||[];
+ const sections=features.filter(section=>/aria-label="(?:suggest|enhance)"/.test(section));
+ assert.equal(sections.length,2);
+ for(const section of sections){
+  assert.ok(/<\/form><\/section>$/.test(section.trim()),'the form must be the final card child: '+section.slice(-400));
+  assert.ok(/<div class="lpa-settings-feedback"><\/div><button class="lpa-button lpa-button--primary"/.test(section),'the feedback grid must sit inside the form directly before the save button: '+section.slice(-400));
+ }
+});
+
 import {createEnablementSource,normalizeEnablement,mergeGlobalSettings,createEnablementObserver} from '../assist/client/enablement-source.js';
 import {createAssistController} from '../assist/client/controller.js';
 import {DEFAULT_SETTINGS,sessionSettings} from '../assist/client/api.js';

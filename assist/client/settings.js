@@ -29,5 +29,6 @@ export function Settings(p) {
  h("div",{className:"lpa-grid"},select("rounds",custom?"custom":String(v.rounds),[1,3,5].map(n=>({id:String(n),name:n})).concat({id:"custom",name:t("custom")}),value=>{setCustom(value==="custom");if(value!=="custom")change({rounds:Number(value)});}),
  custom?field("custom",h("input",{type:"number",min:1,max:20,step:1,value:Number.isFinite(v.rounds)?v.rounds:"",onChange:e=>change({rounds:e.target.value===""?NaN:Number(e.target.value)})})):null),
  error?h("p",{role:"alert",className:"lpa-error"},t(error)):null,
+ p.feedback??null,
  h("button",{className:"lpa-button lpa-button--primary",type:"submit",disabled:p.saving||!p.allowed},t(p.saving?"saving":"save")));
 }

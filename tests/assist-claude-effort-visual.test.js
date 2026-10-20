@@ -222,7 +222,15 @@ test('transparent range keeps 16px endpoint geometry, wrapper focus, static redu
   assert.ok(css.includes('.lpa-ce-track:has(> .lpa-ce-input:focus-visible) { outline: 2px solid'));
   const reduced = css.slice(css.indexOf('@media (prefers-reduced-motion: reduce)'), css.indexOf('@media (forced-colors: active)'));
   for (const name of ['value', 'value-ghost', 'fill', 'ticks', 'knob', 'matrix-cell', 'matrix-sq']) assert.ok(reduced.includes('.lpa-ce-' + name));
-  assert.ok(reduced.includes('animation: none !important; transition: none !important;'));
+  // The reduced choice mirrors the original skin's net (theme/chrome.css, D40):
+  // durations collapse to the not-quite-zero token, the flash keeps its
+  // !important infinite so the twinkle still breathes, and matrix delays clear.
+  assert.ok(css.includes('--lpa-ce-duration-reduced: 0.01ms;'), 'reduced duration token matches the original value');
+  assert.ok(reduced.includes('animation-duration: var(--lpa-ce-duration-reduced) !important;'), 'compressed animation durations');
+  assert.ok(reduced.includes('animation-iteration-count: 1;'), 'plain single iteration beneath the shorthand');
+  assert.ok(reduced.includes('transition-duration: var(--lpa-ce-duration-reduced) !important;'), 'compressed transition durations');
+  assert.ok(reduced.includes('.lpa-effort.lpa-ce .lpa-ce-matrix-cell { animation-delay: 0s !important; }'), 'cleared entrance delay');
+  assert.ok(reduced.includes('.lpa-effort.lpa-ce .lpa-ce-matrix-sq { animation-delay: 0s !important; }'), 'cleared flash delay');
   assert.ok(reduced.includes('.lpa-effort.lpa-ce[data-dragging] .lpa-ce-knob'));
   const forced = css.slice(css.indexOf('@media (forced-colors: active)'));
   assert.match(forced, /\.lpa-effort\.lpa-ce\[data-apex\] \.lpa-ce-matrix/);

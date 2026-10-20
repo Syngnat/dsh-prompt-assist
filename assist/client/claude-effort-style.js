@@ -33,6 +33,10 @@ export const claudeEffortCss = `
   --lpa-ce-duration-move: 200ms;
   --lpa-ce-duration-fade: 300ms;
   --lpa-ce-period-flash: 1450ms;
+  /* Not zero (the original tokens.json note): a transition whose duration and
+     delay are both zero never starts and fires no transitionend, so anything
+     listening for its end would wait forever. */
+  --lpa-ce-duration-reduced: 0.01ms;
   --lpa-ce-ease-standard: ease;
   --lpa-ce-ease-in-out: ease-in-out;
   --lpa-ce-ease-glide: cubic-bezier(0.22, 0.61, 0.36, 1);
@@ -398,6 +402,15 @@ export const claudeEffortCss = `
   background: transparent;
   box-shadow: none;
 }
+/* The Reduced-animation choice follows the original skin's own net
+   (theme/chrome.css, D40): durations collapse to --lpa-ce-duration-reduced —
+   0.01ms, not zero, so a transition whose end anything waits for still fires —
+   while the flash shorthand's !important infinite keeps outranking the plain
+   iteration count, so the apex twinkle keeps breathing at the compressed
+   period instead of freezing. The matrix's scattered delays are cleared, so
+   nothing trickles in after the choice and every part lands instantly. The
+   first port's blanket animation: none also stopped that twinkle, which read
+   as a plain colouring of the top rung under the system's Reduced Motion. */
 @media (prefers-reduced-motion: reduce) {
   .lpa-effort.lpa-ce .lpa-ce-value,
   .lpa-effort.lpa-ce .lpa-ce-value-ghost,
@@ -407,11 +420,12 @@ export const claudeEffortCss = `
   .lpa-effort.lpa-ce[data-dragging] .lpa-ce-knob,
   .lpa-effort.lpa-ce .lpa-ce-matrix-cell,
   .lpa-effort.lpa-ce .lpa-ce-matrix-sq {
-    animation: none !important;
-    transition: none !important;
+    animation-duration: var(--lpa-ce-duration-reduced) !important;
+    animation-iteration-count: 1;
+    transition-duration: var(--lpa-ce-duration-reduced) !important;
   }
-  .lpa-effort.lpa-ce .lpa-ce-value-ghost { visibility: hidden; }
-  .lpa-effort.lpa-ce[data-dragging] .lpa-ce-knob { scale: 1 !important; }
+  .lpa-effort.lpa-ce .lpa-ce-matrix-cell { animation-delay: 0s !important; }
+  .lpa-effort.lpa-ce .lpa-ce-matrix-sq { animation-delay: 0s !important; }
 }
 @media (forced-colors: active) {
   .lpa-ce .lpa-ce-track::before,
