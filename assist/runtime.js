@@ -172,7 +172,16 @@ export class AssistRuntime {
     if (!Array.isArray(entries) || entries.length > 32 || (entries.length && !options.fromUI)) throw failure('file-consent-required');
     if (input.references !== undefined && (!Array.isArray(input.references) || input.references.length > 100)) throw failure('invalid-request');
     const request = { ...input, files: entries.map(entry => ({ ...entry })), references: (input.references ?? []).map(ref => typeof ref === 'object' && ref ? { ...ref } : ref) };
-    const selected = settings.followSession ? { ...this.fastService.selection(agent) } : { ...settings };
+    const session = this.fastService.selection(agent);
+    // Enhancement only edits text: inheriting the session's top reasoning rung made a
+    // short rewrite wait as long as a deep task, and time out at the deadline. It
+    // follows the session's model but keeps this feature's own reasoningEffort —
+    // empty means the model's advertised default. Other features keep the session rung.
+    const selected = settings.followSession
+      ? (input.feature === 'enhance'
+        ? { provider: session?.provider, model: session?.model }
+        : { ...session })
+      : { ...settings };
     const explicit = { ...settings, followSession: false, provider: selected.provider, model: selected.model, reasoningEffort: selected.reasoningEffort ?? '' };
     const qa = selectQA(state, settings.rounds), qaId = state.qaId;
     if (!qa.length && input.feature === 'suggest') throw failure('no-context');

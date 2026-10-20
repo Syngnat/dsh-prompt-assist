@@ -40,7 +40,10 @@ function fixture(t) {
         signal?.throwIfAborted(); prepares.push({ ...config });
         return { config: { ...config }, context: { contextWindow: 1000000 }, async *stream(options) {
           const prompt = JSON.parse(options.messages[0].content[0].text);
-          streams.push({ sessionId: options.sessionId, config: { provider: options.provider, model: options.model, reasoningEffort: options.reasoningEffort }, prompt });
+          streams.push({ sessionId: options.sessionId, config: {
+            provider: options.provider, model: options.model,
+            ...(options.reasoningEffort === undefined ? {} : { reasoningEffort: options.reasoningEffort }),
+          }, prompt });
           yield { type: 'text-delta', text: prompt.feature === 'suggest' ? JSON.stringify({ kind: 'suggestion', text: `follow up ${options.sessionId}` }) : `enhanced ${options.sessionId}` };
           yield { type: 'finish', reason: { kind: 'stop' } };
         } };
@@ -63,7 +66,7 @@ function fixture(t) {
     assert.equal(streams.at(-1).sessionId, agent.id);
     assert.deepEqual(streams.at(-1).prompt, { feature, draft,
       qa: states.get(agent.id).rounds.slice(-rounds).map(({ question, answer }) => ({ question, answer })), files: [], references: [] });
-    assert.deepEqual(result.route, { ...route, fast: false });
+    assert.deepEqual(result.route, { ...route, reasoningEffort: route.reasoningEffort ?? '', fast: false });
     assert.equal(result.cached, undefined);
     return result;
   }
@@ -103,14 +106,17 @@ test('global follow-session resolves each calling session model and effort rathe
   await f.save('suggest', { followSession: true, provider: 'unused-provider', model: 'unused-model', reasoningEffort: 'unused-effort', rounds: 3 }, f.a);
   assert.equal(f.metadataReads.length, 0, 'saving follow-session does not inspect the saving session capabilities');
   assert.equal(f.prepares.length, 0);
+  // Enhancement follows the calling session's model but keeps the model's own
+  // default reasoning rung: inheriting "max" made a short rewrite time out.
+  const enhanceRoute = selection => ({ provider: selection.provider, model: selection.model });
   for (const agent of [f.a, f.b, f.add('new', 2)]) {
-    await f.generateAndAssert(agent, 'enhance', f.selections.get(agent.id), 2);
+    await f.generateAndAssert(agent, 'enhance', enhanceRoute(f.selections.get(agent.id)), 2);
     await f.generateAndAssert(agent, 'suggest', f.selections.get(agent.id), 3);
   }
   // A main route change needs no global resave and must not reuse the previous generation's cache.
   const changed = { provider: 'alternate', model: 'main-a-changed', reasoningEffort: 'low' };
   f.selections.set('a', changed);
-  await f.generateAndAssert(f.a, 'enhance', changed, 2);
+  await f.generateAndAssert(f.a, 'enhance', enhanceRoute(changed), 2);
   await f.generateAndAssert(f.a, 'suggest', changed, 3);
   assert.equal(f.prepares.length, 8); assert.equal(f.streams.length, 8);
   assert.ok(f.metadataReads.every(route => route.provider !== 'unused-provider' && route.provider !== 'legacy-provider'));

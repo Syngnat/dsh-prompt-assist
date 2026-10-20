@@ -38,8 +38,9 @@ test('empty QA does not make an otherwise clear multi-point draft uneditable',()
 test('pasted requirements are edited without solving business rules or inventing missing fragments',()=>{
   for(const rule of ['文档复制产生的断行、粘连或截断','不要推演业务规则','不要重新计算样例结果','保留无法确定的残缺片段'])assert.ok(ENHANCE_ROLE_PROMPT.includes(rule),rule);
 });
-test('clear single constraints do not require cosmetic edits or invented technical tasks',()=>{
- for(const rule of ['改变措辞本身不是收益','不要只做同义替换','用户已确认的目标衔接','不把补充约束变成新的任务','已清晰且不需要修改的原文则按上述无改写规则处理'])assert.ok(ENHANCE_ROLE_PROMPT.includes(rule),rule);
+test('clear single constraints are polished rather than padded or invented',()=>{
+ for(const rule of ['润色是本职','润色措辞本身就是收益','润色只作用于“怎么说”','不要为了制造差异而堆砌同义词','用户已确认的目标衔接','不把补充约束变成新的任务','已清晰且不需要修改的原文则按上述无改写规则处理'])assert.ok(ENHANCE_ROLE_PROMPT.includes(rule),rule);
+ assert.doesNotMatch(ENHANCE_ROLE_PROMPT,/改变措辞本身不是收益/);
  assert.doesNotMatch(ENHANCE_ROLE_PROMPT,/只有整条请求均无法确定且没有安全编辑空间时，才原样返回原文/);
 });
 test('suggest outcome protocol is separate from plain enhancement output',()=>{
