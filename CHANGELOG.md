@@ -2,6 +2,13 @@
 
 [English](<README.md>) | [简体中文](<README.zh-CN.md>)
 
+## 1.2.28 — 输入框模型选择器 / Composer model picker（未发布 / Unreleased）
+
+- Replace the composer model seat through the supported slot contract: the plugin registers `conversation.input.model` at priority `-1`, so it shadows the shipped picker instead of adding a second control, and the shipped picker resumes rendering as soon as the plugin unloads. Session scope, `locked`, availability and the model directory stay owned by the host; a missing directory service installs no replacement.
+- Two-level menu in the reference style: the current model plus one cell per provider, the provider's models beside it, and the current model's reasoning efforts below. One user-written line may sit under each model name.
+- Descriptions live in an independent profile domain with their own revision and CAS. Identity is the exact provider and model pair, so namespaced ids stay unambiguous; over-long text is rejected instead of silently truncated. An unavailable notes store reports itself as unavailable and refuses writes, while every other assist feature keeps working.
+- Add pure helper, store, runtime and Chromium fixture regressions (997 offline tests plus 7 browser cases on a synthetic about:blank page). The fixture is not authenticated live-profile visual acceptance.
+
 ## 1.2.27 — 输入框结果锚定 / Composer-anchored results
 
 - Anchor enhancement/suggestion results to the native resident composer overlay, rather than the hero-level input dock. This avoids the Claude Style studio rule that orders all dock entries above an auto-margin workspace row, separating results from the bottom composer.

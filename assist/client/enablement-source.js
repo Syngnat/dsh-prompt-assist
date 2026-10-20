@@ -1,5 +1,6 @@
 import {sessionSettings} from './api.js';
 import {ENABLEMENT_PATH as HOST_ENABLEMENT_PATH} from '../identity.js';
+import {normalizeNotes,EMPTY_NOTES} from './model-notes.js';
 export const ENABLEMENT_PATH=HOST_ENABLEMENT_PATH.slice(1);
 const FEATURES=['suggest','enhance'];
 const invalid=()=>Object.assign(new Error('transport-invalid-response'),{code:'transport-invalid-response'});
@@ -13,7 +14,8 @@ export function normalizeEnablement(value){
  return Object.freeze({scope:'profile',revision:value.revision,enabled:Object.freeze({suggest:value.enabled.suggest,enhance:value.enabled.enhance}),
   settingsRevision:hasSettings?value.settingsRevision:null,
   settings:Object.freeze(Object.fromEntries(FEATURES.map(feature=>[feature,Object.freeze(sessionSettings(hasSettings?value.settings[feature]:undefined))]))),
-  configured:Object.freeze(Object.fromEntries(FEATURES.map(feature=>[feature,hasSettings&&value.configured[feature]])))});
+  configured:Object.freeze(Object.fromEntries(FEATURES.map(feature=>[feature,hasSettings&&value.configured[feature]]))),
+  ...normalizeNotes(value)});
 }
 const initial=()=>({data:null,connected:false,loading:true,pending:null,readError:null,writeError:null,saved:null});
 const empty=Object.freeze(initial());
@@ -43,11 +45,13 @@ export function createEnablementSource({send,fetcher=(...args)=>globalThis.fetch
   // Each independent store contributes only its monotonic component; never roll either back.
   if(old&&data.revision===old.revision&&FEATURES.some(key=>data.enabled[key]!==old.enabled[key]))throw invalid();
   if(old&&data.settingsRevision===old.settingsRevision&&(JSON.stringify(data.settings)!==JSON.stringify(old.settings)||JSON.stringify(data.configured)!==JSON.stringify(old.configured)))throw invalid();
-  if(old&&data.revision===old.revision&&data.settingsRevision===old.settingsRevision)return true;
+  if(old&&data.notesRevision===old.notesRevision&&JSON.stringify(data.notes)!==JSON.stringify(old.notes))throw invalid();
+  if(old&&data.revision===old.revision&&data.settingsRevision===old.settingsRevision&&data.notesRevision===old.notesRevision)return true;
   if(old){
-   if(data.revision<=old.revision&&(data.settingsRevision??-1)<=(old.settingsRevision??-1))return false;
+   if(data.revision<=old.revision&&(data.settingsRevision??-1)<=(old.settingsRevision??-1)&&(data.notesRevision??-1)<=(old.notesRevision??-1))return false;
    if(data.revision<old.revision)data={...data,revision:old.revision,enabled:old.enabled};
    if((data.settingsRevision??-1)<(old.settingsRevision??-1))data={...data,settingsRevision:old.settingsRevision,settings:old.settings,configured:old.configured};
+   if((data.notesRevision??-1)<(old.notesRevision??-1))data={...data,notesRevision:old.notesRevision,notes:old.notes};
    data=Object.freeze(data);
   }
   publish({data,saved:null});return true;

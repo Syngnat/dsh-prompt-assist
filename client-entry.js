@@ -2,6 +2,8 @@ import { ASSIST_COMMAND, LEGACY_COMMAND } from './assist/identity.js';
 import { createFast } from './client-fast-core.js';
 const fast = createFast(require);
 export const { derivePresentation, hydrateSession, createToggleController, quietCommandNames, HiddenFastCommand } = fast;
+// The model directory service is awaited inside the picker registration only, so a
+// missing service leaves every other assist feature running.
 export const inject = [...fast.inject, 'connection', 'layout'];
 export async function apply(ctx) {
   fast.apply(ctx);

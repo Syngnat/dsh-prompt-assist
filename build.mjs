@@ -7,6 +7,6 @@ const root = fileURLToPath(new URL('.', import.meta.url));
 const manifest = JSON.parse(await readFile(new URL('package.json', import.meta.url), 'utf8'));
 const host = 'host-v' + manifest.version + '.js';
 await build({absWorkingDir:root,entryPoints:['host-source.js'],bundle:true,platform:'node',target:'node22',format:'esm',outfile:host,external:['node:*'],minify:false});
-await build({absWorkingDir:root,entryPoints:['client-entry.js'],bundle:true,platform:'browser',target:'es2022',format:'cjs',outfile:'client-runtime.js',external:['react','react-dom','@deepseek-ai/*'],minify:false,banner:{js:'window.__ModuleLoader__.load({id:"@local/dsh-openai-fast",factory(require){var module={exports:{}};var exports=module.exports;'},footer:{js:'return module.exports;}});'}});
+await build({absWorkingDir:root,entryPoints:['client-entry.js'],bundle:true,platform:'browser',target:'es2022',format:'cjs',outfile:'client-runtime.js',external:['react','react-dom','react-dom/client','@deepseek-ai/*'],minify:false,banner:{js:'window.__ModuleLoader__.load({id:"@local/dsh-openai-fast",factory(require){var module={exports:{}};var exports=module.exports;'},footer:{js:'return module.exports;}});'}});
 await writeFile(new URL('client.js',import.meta.url),await readFile(new URL('client-runtime.js',import.meta.url)));
 console.log('Built '+host+' and both Client artifacts');

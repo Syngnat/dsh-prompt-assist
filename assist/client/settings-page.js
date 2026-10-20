@@ -6,6 +6,7 @@ import {errorText} from './api.js';
 import {EnablementPanel} from './enablement-panel.js';
 import {EMPTY_ENABLEMENT_SOURCE} from './enablement-source.js';
 import {PriorityPanel} from './priority-panel.js';
+import {ModelNotesCard} from './model-notes-card.js';
 import {createSettingsDraft,editSettingsDraft,syncSettingsDraft,acceptSettingsSave,matchesSettingsSave,createSettingsRequests} from './settings-page-state.js';
 const h=React.createElement;
 
@@ -66,5 +67,6 @@ export function SettingsPage(p){
     global.data&&!Number.isSafeInteger(global.data.settingsRevision)?h('p',{className:'lpa-error',role:'alert'},p.t('settings.hostUpgrade')):null,
     global.data?h('div',{className:'lpa-settings-cards'},['suggest','enhance'].map(feature=>h(FeatureSettings,{key:feature,feature,global,source,p}))):h('p',{className:'lpa-note lpa-empty-state'},p.t('settings.profileEmpty'))),
    p.connection?h(PriorityPanel,{connection:p.connection,t:p.t,onChanged:()=>{if(target.sessionId)void p.refreshAssist(target.sessionId).catch(()=>{});}}):null,
+   p.assistSend?h(ModelNotesCard,{send:p.assistSend,globalSource:source,t:p.t}):null,
    h(UpdatePanel,{t:p.t})));
 }

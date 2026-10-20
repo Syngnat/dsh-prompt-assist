@@ -6,6 +6,8 @@ Provides prompt enhancement, next-question suggestions, and OpenAI / xAI Priorit
 
 A plugin bundle for the DeepSeek Harness (DSH) Web GUI. Enhancement and suggestions are independent features: enable either or both for the current DSH profile. Settings live on the sidebar page, not in a composer popup. Feature switches and auxiliary controls are profile-wide; conversation content remains isolated.
 
+> **v1.2.28 (candidate):** the composer's model seat now uses this plugin's two-level menu — the current model, one cell per provider with its models beside it, the current model's reasoning efforts, and an optional one-line description under each model that you write yourself in the plugin settings. The plugin registers the same slot at a lower priority, so it replaces the shipped picker instead of adding a second control, and the shipped picker comes back when the plugin is unloaded. Session scope, `locked`, availability and the model directory stay owned by the host. **If Claude Style's "redraw model picker" is on, turn it off and refresh, otherwise both menus appear in the same seat.**
+
 > **v1.2.27:** enhancement and suggestion results now anchor directly above the resident composer, avoiding the large gap in Claude Style's new-conversation studio layout. Height follows the visible space and zoom; native menus retain precedence. No theme files, model-call policy or saved global settings change. **If upgrading from v1.2.25 or earlier, save each feature's global configuration once; already-confirmed v1.2.26 settings remain valid.**
 
 ## Compatibility policy
@@ -58,6 +60,14 @@ The package identifier remains `@local/dsh-openai-fast`, even though this reposi
 Follow-session is a globally saved policy that resolves the model and effort of the conversation making each request; it does not bind to a conversation that happened to save it. QA count is shared, but **QA content still comes only from the calling conversation**. Drafts and selected files are not shared. Main conversation model selection and main Fast preferences are unchanged.
 
 Fresh global switches start disabled; legacy session flags are retained for replay compatibility but cannot override them. When upgrading from v1.2.11 or earlier, explicitly enable the new global switches once; later upgrades preserve those choices. Following the session follows only its model and reasoning effort; auxiliary Fast always remains an independent setting. Choose 1, 3, 5, or a custom **1–20 complete Q&A rounds**. Invalid values are rejected, not silently clamped. A model change that invalidates a saved effort requires an explicit new choice; the plugin does not silently lower the effort.
+
+### Model menu and model descriptions
+
+The composer's model control is this plugin's menu. It shows the current model, one cell per provider with that provider's models beside it, and the current model's reasoning efforts. Selecting a model or an effort goes through the host's session model directory, so the main conversation behaves as before, including locked and read-only states.
+
+Under each model name you can add one line of your own text, for example what the model is good at. Write it in **Prompt assist → Model descriptions**; the line is stored in the current profile, is never sent to any provider, and never changes model behaviour. An empty line removes it. If the profile cannot store descriptions, the settings page says so and every other feature keeps working.
+
+Claude Style ships its own model menu for the same seat. Turn off its "redraw model picker" option and refresh the page to use this one; otherwise both menus appear in the same place.
 
 ### Enhance a draft
 
@@ -182,7 +192,7 @@ Use an isolated DSH Web profile and a fresh, unsent conversation, with a disposa
 | macOS and Linux | Builds/offline suite are required CI gates; DSH runtime not tested |
 | Independent security audit | Not performed/claimed |
 
-v1.2.27 passes 956 offline tests locally, including 8 new anchor regressions and the existing 17 evaluation-tool regressions. A synthetic Chromium layout regression passes 93 geometry combinations plus menu, hidden-state, click and disposal checks; this is not authenticated live-profile visual acceptance. The 24-reference corpus passes structure, quotation and declared-consistency checks, not semantic or model-quality verification. [GitHub Actions](https://github.com/Syngnat/dsh-prompt-assist/actions) gates stable publication on five exact-commit jobs: Windows/macOS/Linux builds/tests and DSH rc.1/rc.2 contracts. Historical update-page, layout and global-switch checks do not constitute full GUI acceptance of this version; full browser visual and live-model quality checks were not performed for it. The specific Hualong/DeepSeek failure remains unconfirmed, and no automatic semantic near-paraphrase blocker was added. Maintainer publication does not upgrade the current profile.
+v1.2.28 (candidate) passes 997 offline tests locally, including new model-picker, model-notes and notes-runtime regressions. A synthetic Chromium regression of the model menu passes 8 cases (trigger, placement above the trigger, viewport clamping, portal, provider cells and submenu, the description line, the reasoning-effort section, model selection, a rejected selection keeping the menu open with a reason, Escape, the locked state, and the unavailable-session case) on an about:blank page with synthetic data and no model calls; this is not authenticated live-profile visual acceptance. The slot contract behind the replacement (priority ordering, single-slot collision, directory API, permissions) was verified offline against the shipped `app.asar` and the public SDK declarations, with 15 contract cases passing; that verification does not cover live desktop rendering. The 24-reference corpus passes structure, quotation and declared-consistency checks, not semantic or model-quality verification. [GitHub Actions](https://github.com/Syngnat/dsh-prompt-assist/actions) gates stable publication on five exact-commit jobs: Windows/macOS/Linux builds/tests and DSH rc.1/rc.2 contracts. Historical update-page, layout and global-switch checks do not constitute full GUI acceptance of this version; full browser visual and live-model quality checks were not performed for it. The specific Hualong/DeepSeek failure remains unconfirmed, and no automatic semantic near-paraphrase blocker was added. Maintainer publication does not upgrade the current profile.
 
 ## License
 

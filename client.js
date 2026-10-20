@@ -260,6 +260,37 @@ var init_style = __esm({
   "assist/client/style.js"() {
     css = `
 .lpa.lpa-inline--undo{width:fit-content;max-width:calc(100% - 32px);padding:3px 6px;border-color:transparent;background:transparent}
+/* Composer model seat: the plugin shadows the shipped picker inside the same slot. */
+.lpa-model-root{position:relative;display:inline-flex;min-width:0}
+.lpa-model-trigger{display:inline-flex;align-items:center;gap:5px;box-sizing:border-box;max-width:min(320px,52cqw);height:28px;min-width:0;padding:0 6px 0 8px;border:1px solid transparent;border-radius:7px;background:transparent;color:var(--dsw-alias-label-secondary);font:inherit;font-size:13px;font-weight:500;line-height:20px;cursor:pointer}
+.lpa-model-trigger:hover:not(:disabled){background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-label-primary)}
+.lpa-model-trigger:disabled{opacity:.5;cursor:default}
+.lpa-model-trigger-icon{flex:none;font-size:11px;line-height:1;color:var(--dsw-alias-label-caption)}
+.lpa-model-trigger-label{display:var(--dsh-composer-model-text-display,block);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lpa-model-trigger-effort{flex:none;font-size:11px;line-height:16px;color:var(--dsw-alias-label-tertiary)}
+.lpa-model-chevron{flex:none;font-size:10px;line-height:1;color:var(--dsw-alias-label-caption)}
+.lpa-model-menu{position:fixed;z-index:1200;display:flex;flex-direction:column;gap:2px;width:max-content;min-width:min(248px,calc(100vw - 24px));max-width:min(360px,calc(100vw - 24px));max-height:min(420px,calc(100vh - 96px));box-sizing:border-box;padding:6px;border:1px solid var(--dsw-alias-border-l1);border-radius:12px;background:var(--dsw-alias-bg-layer-1);box-shadow:0 8px 24px rgba(20,20,19,.12),0 2px 6px rgba(20,20,19,.08);overflow-y:auto;overscroll-behavior:contain}
+.lpa-model-submenu{max-height:min(320px,calc(100vh - 96px))}
+.lpa-model-option{display:flex;align-items:center;gap:8px;box-sizing:border-box;width:100%;min-height:32px;padding:3px 8px;border:0;border-radius:6px;background:transparent;color:var(--dsw-alias-label-primary);font:inherit;font-size:13px;text-align:left;cursor:pointer}
+.lpa-model-option:hover,.lpa-model-option:focus-visible{background:var(--dsw-alias-interactive-bg-hover)}
+.lpa-model-option:disabled{opacity:.5;cursor:default}
+.lpa-model-option--current{background:var(--dsw-alias-bg-layer-2)}
+.lpa-model-copy{display:flex;flex-direction:column;gap:1px;flex:1;min-width:0}
+.lpa-model-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px;font-weight:500;line-height:16px}
+.lpa-model-desc{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11px;line-height:14px;font-weight:400;color:var(--dsw-alias-label-tertiary)}
+.lpa-model-check{flex:none;font-size:12px;line-height:1;color:var(--dsw-alias-brand-primary)}
+.lpa-model-cell{display:flex;align-items:center;gap:8px;box-sizing:border-box;width:100%;min-height:32px;padding:3px 8px;border:0;border-radius:6px;background:transparent;color:var(--dsw-alias-label-primary);font:inherit;font-size:13px;text-align:left;cursor:pointer}
+.lpa-model-cell:hover,.lpa-model-cell--open{background:var(--dsw-alias-interactive-bg-hover)}
+.lpa-model-cell-label{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:500}
+.lpa-model-cell-chevron{flex:none;font-size:14px;line-height:1;color:var(--dsw-alias-label-caption)}
+.lpa-model-section{display:flex;flex-direction:column;gap:1px;margin-top:4px;padding-top:4px;border-top:1px solid var(--dsw-alias-border-l1)}
+.lpa-model-section-title{padding:2px 8px;font-size:11px;line-height:14px;font-weight:600;letter-spacing:.02em;color:var(--dsw-alias-label-caption)}
+.lpa-model-status{padding:8px;font-size:12px;line-height:18px;color:var(--dsw-alias-label-tertiary)}
+.lpa-model-status--error{color:var(--dsw-alias-label-danger,var(--dsw-alias-label-primary))}
+.lpa-note-grid{display:grid;gap:10px;min-width:0}.lpa-note-row{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.4fr);align-items:center;gap:10px;min-width:0}
+.lpa-note-row>code{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px;color:var(--dsw-alias-label-secondary)}
+.lpa-note-row input{box-sizing:border-box;width:100%;min-width:0;min-height:30px;padding:4px 8px;border:1px solid var(--dsw-alias-border-l1);border-radius:6px;background:var(--dsw-alias-bg-layer-2);color:var(--dsw-alias-label-primary);font:inherit;font-size:12px}
+@media(max-width:720px){.lpa-note-row{grid-template-columns:minmax(0,1fr)}}
 .lpa-undo-actions{display:flex;justify-content:center;align-items:center}
 .lpa-undo-actions>.lpa-button{width:auto;flex:none}
 
@@ -704,6 +735,28 @@ var init_messages = __esm({
         effort: "\u63A8\u7406\u6863",
         nativeDefault: "\u6A21\u578B\u9ED8\u8BA4",
         fast: "\u8F85\u52A9 Fast\uFF08\u72EC\u7ACB\uFF0C\u53EF\u80FD\u989D\u5916\u8BA1\u8D39\uFF09",
+        modelPick: "\u9009\u62E9\u6A21\u578B",
+        modelPickCurrent: "\u9009\u62E9\u6A21\u578B\uFF0C\u5F53\u524D {model}",
+        modelLoading: "\u6B63\u5728\u52A0\u8F7D\u6A21\u578B\u2026",
+        modelEmpty: "\u6CA1\u6709\u53EF\u7528\u7684\u6A21\u578B\u3002",
+        modelCatalogFailed: "\u8BFB\u53D6\u6A21\u578B\u76EE\u5F55\u5931\u8D25\uFF0C\u4ECD\u53EF\u91CD\u8BD5\u3002",
+        modelEffort: "\u63A8\u7406\u6863",
+        "picker.fallback": "\u9009\u62E9\u6A21\u578B",
+        "picker.loading": "\u6B63\u5728\u52A0\u8F7D\u6A21\u578B\u2026",
+        "picker.empty": "\u6CA1\u6709\u53EF\u7528\u7684\u6A21\u578B\u3002",
+        "picker.failed": "\u6A21\u578B\u64CD\u4F5C\u5931\u8D25\uFF0C\u8BF7\u91CD\u8BD5\u3002",
+        "picker.sessionInUse": "\u8BE5\u4F1A\u8BDD\u6B63\u5728\u88AB\u5176\u4ED6 DSH \u5B9E\u4F8B\u4F7F\u7528\uFF0C\u8BF7\u5173\u95ED\u5176\u4ED6\u5B9E\u4F8B\u540E\u91CD\u8BD5\u3002",
+        "picker.effort": "\u63A8\u7406\u6863",
+        "picker.providerDefault": "\u670D\u52A1\u5546\u9ED8\u8BA4",
+        "picker.aria": "\u6A21\u578B\u9009\u62E9\u5668",
+        "picker.ariaCurrent": "\u9009\u62E9\u6A21\u578B\uFF0C\u5F53\u524D {model}",
+        modelNotesTitle: "\u6A21\u578B\u8BF4\u660E",
+        modelNotesHint: "\u4E3A\u6A21\u578B\u5199\u4E00\u884C\u8BF4\u660E\uFF0C\u663E\u793A\u5728\u8F93\u5165\u6846\u7684\u6A21\u578B\u83DC\u5355\u91CC\uFF0C\u4F8B\u5982\u5B83\u7684\u7279\u70B9\u6216\u9002\u7528\u573A\u666F\u3002\u8BF4\u660E\u53EA\u4FDD\u5B58\u5728\u5F53\u524D profile\uFF0C\u4E0D\u5F71\u54CD\u6A21\u578B\u884C\u4E3A\uFF0C\u4E5F\u4E0D\u6539\u53D8\u4EFB\u4F55\u8BBE\u7F6E\u3002",
+        modelNotesLoading: "\u6B63\u5728\u8BFB\u53D6\u6A21\u578B\u5217\u8868\u2026",
+        modelNotesError: "\u6A21\u578B\u8BF4\u660E\u4FDD\u5B58\u5931\u8D25\uFF0C\u8BF7\u91CD\u8BD5\u3002",
+        modelNotesEmpty: "\u6682\u65E0\u53EF\u586B\u5199\u7684\u6A21\u578B\u3002",
+        modelNotesUnavailable: "\u5F53\u524D profile \u65E0\u6CD5\u4FDD\u5B58\u6A21\u578B\u8BF4\u660E\uFF0C\u5176\u4ED6\u529F\u80FD\u4E0D\u53D7\u5F71\u54CD\u3002",
+        modelNotePlaceholder: "\u4E00\u884C\u8BF4\u660E\uFF08\u7559\u7A7A\u5219\u5220\u9664\uFF09",
         rounds: "\u5B8C\u6574\u95EE\u7B54\u8F6E\u6570",
         custom: "\u81EA\u5B9A\u4E49",
         save: "\u4FDD\u5B58\u914D\u7F6E",
@@ -971,6 +1024,28 @@ var init_messages = __esm({
         effort: "Reasoning effort",
         nativeDefault: "Model default",
         fast: "Assist Fast (independent; extra charges may apply)",
+        modelPick: "Select model",
+        modelPickCurrent: "Select model, currently {model}",
+        modelLoading: "Loading models\u2026",
+        modelEmpty: "No models available.",
+        modelCatalogFailed: "Could not read the model catalog. You can try again.",
+        modelEffort: "Reasoning effort",
+        "picker.fallback": "Select model",
+        "picker.loading": "Loading models\u2026",
+        "picker.empty": "No models available.",
+        "picker.failed": "The model action failed. Try again.",
+        "picker.sessionInUse": "This session is already in use by another DSH instance. Quit the other instance and try again.",
+        "picker.effort": "Reasoning effort",
+        "picker.providerDefault": "Provider default",
+        "picker.aria": "Model picker",
+        "picker.ariaCurrent": "Select model, currently {model}",
+        modelNotesTitle: "Model descriptions",
+        modelNotesHint: "Write one line per model; it appears under the model name in the composer menu, for example what it is good at. Descriptions stay in this profile, never change model behaviour and are not settings.",
+        modelNotesLoading: "Reading the model list\u2026",
+        modelNotesError: "Could not save the model description. Try again.",
+        modelNotesEmpty: "No models to describe yet.",
+        modelNotesUnavailable: "This profile cannot store model descriptions. Everything else still works.",
+        modelNotePlaceholder: "One line (empty removes it)",
         rounds: "Complete Q&A rounds",
         custom: "Custom",
         save: "Save settings",
@@ -1482,6 +1557,43 @@ var init_controller = __esm({
   }
 });
 
+// assist/client/model-notes.js
+function noteKey(provider, model) {
+  const valid = (id2) => typeof id2 === "string" && id2.length > 0 && id2.length <= 512 && !/[\u0000-\u001f\u007f]/.test(id2);
+  return valid(provider) && valid(model) ? JSON.stringify([provider, model]) : "";
+}
+function normalizeNoteText(value) {
+  return typeof value === "string" ? value.replace(/\s+/g, " ").trim() : "";
+}
+function noteFor(notes, provider, model) {
+  const key = noteKey(provider, model);
+  return key && notes && Object.hasOwn(notes, key) && typeof notes[key] === "string" ? notes[key] : "";
+}
+function normalizeNotes(value) {
+  const missing = value.notes === void 0 && value.notesRevision === void 0 && value.notesAvailable === void 0;
+  if (missing) return { notes: EMPTY_NOTES, notesRevision: 0, notesAvailable: false };
+  if (typeof value.notesAvailable !== "boolean" || !Number.isSafeInteger(value.notesRevision) || value.notesRevision < 0 || !value.notes || typeof value.notes !== "object" || Array.isArray(value.notes)) throw Error("invalid-model-notes");
+  const entries = Object.entries(value.notes);
+  if (entries.length > 500) throw Error("invalid-model-notes");
+  for (const [key, text] of entries) {
+    let pair;
+    try {
+      pair = JSON.parse(key);
+    } catch {
+      throw Error("invalid-model-notes");
+    }
+    if (!Array.isArray(pair) || pair.length !== 2 || noteKey(...pair) !== key || typeof text !== "string" || text.length > NOTE_MAX || normalizeNoteText(text) !== text) throw Error("invalid-model-notes");
+  }
+  return { notes: Object.freeze(Object.fromEntries(entries)), notesRevision: value.notesRevision, notesAvailable: value.notesAvailable };
+}
+var NOTE_MAX, EMPTY_NOTES;
+var init_model_notes = __esm({
+  "assist/client/model-notes.js"() {
+    NOTE_MAX = 120;
+    EMPTY_NOTES = Object.freeze({});
+  }
+});
+
 // assist/client/enablement-source.js
 function normalizeEnablement(value) {
   if (!value || value.scope !== "profile" || !Number.isSafeInteger(value.revision) || value.revision < 0 || !value.enabled || FEATURES.some((feature) => typeof value.enabled[feature] !== "boolean")) throw invalid();
@@ -1496,7 +1608,8 @@ function normalizeEnablement(value) {
     enabled: Object.freeze({ suggest: value.enabled.suggest, enhance: value.enabled.enhance }),
     settingsRevision: hasSettings ? value.settingsRevision : null,
     settings: Object.freeze(Object.fromEntries(FEATURES.map((feature) => [feature, Object.freeze(sessionSettings(hasSettings ? value.settings[feature] : void 0))]))),
-    configured: Object.freeze(Object.fromEntries(FEATURES.map((feature) => [feature, hasSettings && value.configured[feature]])))
+    configured: Object.freeze(Object.fromEntries(FEATURES.map((feature) => [feature, hasSettings && value.configured[feature]]))),
+    ...normalizeNotes(value)
   });
 }
 function mergeGlobalSettings(settings, global) {
@@ -1528,11 +1641,13 @@ function createEnablementSource({ send, fetcher = (...args) => globalThis.fetch(
     if (old?.settingsRevision != null && data.settingsRevision === null) throw invalid();
     if (old && data.revision === old.revision && FEATURES.some((key) => data.enabled[key] !== old.enabled[key])) throw invalid();
     if (old && data.settingsRevision === old.settingsRevision && (JSON.stringify(data.settings) !== JSON.stringify(old.settings) || JSON.stringify(data.configured) !== JSON.stringify(old.configured))) throw invalid();
-    if (old && data.revision === old.revision && data.settingsRevision === old.settingsRevision) return true;
+    if (old && data.notesRevision === old.notesRevision && JSON.stringify(data.notes) !== JSON.stringify(old.notes)) throw invalid();
+    if (old && data.revision === old.revision && data.settingsRevision === old.settingsRevision && data.notesRevision === old.notesRevision) return true;
     if (old) {
-      if (data.revision <= old.revision && (data.settingsRevision ?? -1) <= (old.settingsRevision ?? -1)) return false;
+      if (data.revision <= old.revision && (data.settingsRevision ?? -1) <= (old.settingsRevision ?? -1) && (data.notesRevision ?? -1) <= (old.notesRevision ?? -1)) return false;
       if (data.revision < old.revision) data = { ...data, revision: old.revision, enabled: old.enabled };
       if ((data.settingsRevision ?? -1) < (old.settingsRevision ?? -1)) data = { ...data, settingsRevision: old.settingsRevision, settings: old.settings, configured: old.configured };
+      if ((data.notesRevision ?? -1) < (old.notesRevision ?? -1)) data = { ...data, notesRevision: old.notesRevision, notes: old.notes };
       data = Object.freeze(data);
     }
     publish({ data, saved: null });
@@ -1762,6 +1877,7 @@ var init_enablement_source = __esm({
   "assist/client/enablement-source.js"() {
     init_api();
     init_identity();
+    init_model_notes();
     ENABLEMENT_PATH2 = ENABLEMENT_PATH.slice(1);
     FEATURES = ["suggest", "enhance"];
     invalid = () => Object.assign(new Error("transport-invalid-response"), { code: "transport-invalid-response" });
@@ -3153,6 +3269,144 @@ var init_priority_panel = __esm({
   }
 });
 
+// assist/client/model-notes-card.js
+function ModelNotesCard({ send, globalSource, t }) {
+  const global = import_react13.default.useSyncExternalStore(globalSource.subscribe, globalSource.getSnapshot, globalSource.getSnapshot);
+  const notes = global.data?.notes ?? {};
+  const revision = global.data?.notesRevision;
+  const available = global.data?.notesAvailable === true;
+  const editable = available && Number.isSafeInteger(revision);
+  const [catalog, setCatalog] = import_react13.default.useState({ status: "idle", models: [] });
+  const [error, setError] = import_react13.default.useState(null);
+  const [saving, setSaving] = import_react13.default.useState("");
+  const [drafts, setDrafts] = import_react13.default.useState({});
+  import_react13.default.useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      setCatalog({ status: "loading", models: [] });
+      try {
+        const first = await send("catalog", "", {});
+        const providers = (first?.providers ?? []).filter((provider) => typeof provider?.id === "string" && provider.id);
+        const models = [];
+        for (const provider of providers) {
+          let page;
+          try {
+            page = await send("catalog", "", { provider: provider.id });
+          } catch {
+            continue;
+          }
+          for (const model of page?.models ?? []) {
+            if (typeof model?.id !== "string" || !model.id) continue;
+            models.push({ provider: provider.id, providerName: provider.name ?? provider.id, id: model.id, name: model.name ?? model.id });
+          }
+        }
+        if (!cancelled) setCatalog({ status: "ready", models });
+      } catch (caught) {
+        if (!cancelled) {
+          setCatalog({ status: "error", models: [] });
+          setError(caught);
+        }
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [send]);
+  const commit = async (model, raw) => {
+    const value = normalizeNoteText(raw);
+    const key = noteKey(model.provider, model.id);
+    if (!key) return;
+    if ((notes[key] ?? "") === value) {
+      setDrafts((old) => {
+        const next = { ...old };
+        delete next[key];
+        return next;
+      });
+      return;
+    }
+    setSaving(key);
+    setError(null);
+    const attempt = async (currentRevision) => send("save-note", "", {
+      provider: model.provider,
+      model: model.id,
+      text: value,
+      expectedRevision: currentRevision
+    });
+    try {
+      await attempt(revision);
+    } catch (caught) {
+      if (caught?.code === "stale-model-notes") {
+        const fresh = globalSource.getSnapshot()?.data?.notesRevision;
+        try {
+          await attempt(fresh);
+        } catch (next) {
+          setError(next);
+        }
+      } else setError(caught);
+    } finally {
+      setSaving("");
+      setDrafts((old) => {
+        const next = { ...old };
+        delete next[key];
+        return next;
+      });
+    }
+  };
+  const rows = catalog.models.map((model) => {
+    const key = noteKey(model.provider, model.id);
+    const saved = key ? notes[key] ?? "" : "";
+    const value = key && Object.hasOwn(drafts, key) ? drafts[key] : saved;
+    const label = model.name === model.id ? key : `${model.name} \xB7 ${key}`;
+    return h12(
+      "div",
+      { className: "lpa-note-row", key },
+      h12("code", { title: label }, label),
+      h12("input", {
+        type: "text",
+        value,
+        maxLength: 120,
+        disabled: !editable || saving === key,
+        placeholder: t("modelNotePlaceholder"),
+        "aria-label": label,
+        onChange: (event) => setDrafts((old) => ({ ...old, [key]: event.target.value })),
+        onBlur: (event) => {
+          void commit(model, event.target.value);
+        },
+        onKeyDown: (event) => {
+          if (event.key === "Enter") {
+            event.preventDefault();
+            void commit(model, event.currentTarget.value);
+          }
+        }
+      })
+    );
+  });
+  return h12(
+    "section",
+    { className: "lpa-card", "aria-label": t("modelNotesTitle") },
+    h12(
+      "header",
+      { className: "lpa-card-header" },
+      h12("h2", { className: "lpa-card-title" }, t("modelNotesTitle")),
+      h12("p", { className: "lpa-note" }, t("modelNotesHint"))
+    ),
+    !available ? h12("p", { className: "lpa-note", role: "status" }, t("modelNotesUnavailable")) : null,
+    available && !Number.isSafeInteger(revision) ? h12("p", { className: "lpa-note", role: "status" }, t("settings.hostUpgrade")) : null,
+    catalog.status === "loading" ? h12("p", { className: "lpa-note", role: "status" }, t("modelNotesLoading")) : null,
+    catalog.status === "ready" && rows.length === 0 ? h12("p", { className: "lpa-note lpa-empty-state" }, t("modelNotesEmpty")) : null,
+    rows.length ? h12("div", { className: "lpa-note-grid" }, rows) : null,
+    error ? h12("p", { className: "lpa-error", role: "alert" }, t("modelNotesError")) : null
+  );
+}
+var import_react13, h12;
+var init_model_notes_card = __esm({
+  "assist/client/model-notes-card.js"() {
+    import_react13 = __toESM(require("react"), 1);
+    init_model_notes();
+    h12 = import_react13.default.createElement;
+  }
+});
+
 // assist/client/settings-page-state.js
 function createSettingsDraft(config, settingsRevision = null) {
   return { config: sessionSettings(config), version: 0, dirty: false, settingsRevision };
@@ -3201,19 +3455,19 @@ var init_settings_page_state = __esm({
 // assist/client/settings-page.js
 function FeatureSettings({ feature, global, source, p }) {
   const host = global.data;
-  const [draft, setDraft] = import_react13.default.useState(() => createSettingsDraft(host.settings[feature], host.settingsRevision));
-  const current = import_react13.default.useRef(draft);
+  const [draft, setDraft] = import_react14.default.useState(() => createSettingsDraft(host.settings[feature], host.settingsRevision));
+  const current = import_react14.default.useRef(draft);
   current.current = draft;
-  const [saving, setSaving] = import_react13.default.useState(false), [notice, setNotice] = import_react13.default.useState(null);
-  const scope = import_react13.default.useRef(null), inFlight = import_react13.default.useRef(false);
-  import_react13.default.useEffect(() => {
+  const [saving, setSaving] = import_react14.default.useState(false), [notice, setNotice] = import_react14.default.useState(null);
+  const scope = import_react14.default.useRef(null), inFlight = import_react14.default.useRef(false);
+  import_react14.default.useEffect(() => {
     const requests = createSettingsRequests();
     scope.current = requests;
     inFlight.current = false;
     setSaving(false);
     return () => requests.close();
   }, []);
-  import_react13.default.useEffect(() => {
+  import_react14.default.useEffect(() => {
     const next = syncSettingsDraft(current.current, host.settings[feature], host.settingsRevision);
     current.current = next;
     setDraft(next);
@@ -3261,71 +3515,73 @@ function FeatureSettings({ feature, global, source, p }) {
     setNotice(null);
   }
   const noticeValue = notice ?? options.error;
-  return h12(
+  return h13(
     "section",
     { className: "lpa-feature lpa-card", "aria-label": p.t(feature) },
-    h12("h2", { className: "lpa-feature-title" }, p.t(feature)),
-    h12("p", { className: "lpa-note" }, p.t(feature === "suggest" ? "suggestContext" : "enhanceOriginal")),
-    !host.configured[feature] ? h12("p", { className: "lpa-note", role: "status" }, p.t("settings.unconfigured")) : null,
-    h12(Settings, { t: p.t, config: draft.config, catalog: options.catalog, capabilities: options.capabilities, allowed: allowed && !stale, saving, onChange: edit, save }),
-    h12(
+    h13("h2", { className: "lpa-feature-title" }, p.t(feature)),
+    h13("p", { className: "lpa-note" }, p.t(feature === "suggest" ? "suggestContext" : "enhanceOriginal")),
+    !host.configured[feature] ? h13("p", { className: "lpa-note", role: "status" }, p.t("settings.unconfigured")) : null,
+    h13(Settings, { t: p.t, config: draft.config, catalog: options.catalog, capabilities: options.capabilities, allowed: allowed && !stale, saving, onChange: edit, save }),
+    h13(
       "div",
       { className: "lpa-settings-feedback" },
-      draft.dirty ? h12("p", { className: "lpa-note" }, p.t("settingsChanged")) : null,
-      stale ? h12("p", { className: "lpa-error", role: "alert" }, p.t("settings.stale")) : null,
-      draft.dirty ? h12("button", { type: "button", className: "lpa-button", disabled: !global.connected || Boolean(global.pending), onClick: reset }, p.t("settings.resetDraft")) : null,
-      noticeValue ? h12("p", { role: "status", className: noticeValue === "saved" ? "lpa-note" : "lpa-error" }, noticeValue === "saved" ? p.t("saved") : errorText(noticeValue, p.t)) : null
+      draft.dirty ? h13("p", { className: "lpa-note" }, p.t("settingsChanged")) : null,
+      stale ? h13("p", { className: "lpa-error", role: "alert" }, p.t("settings.stale")) : null,
+      draft.dirty ? h13("button", { type: "button", className: "lpa-button", disabled: !global.connected || Boolean(global.pending), onClick: reset }, p.t("settings.resetDraft")) : null,
+      noticeValue ? h13("p", { role: "status", className: noticeValue === "saved" ? "lpa-note" : "lpa-error" }, noticeValue === "saved" ? p.t("saved") : errorText(noticeValue, p.t)) : null
     )
   );
 }
 function SettingsPage(p) {
-  const target = import_react13.default.useSyncExternalStore(p.targetSource.subscribe, p.targetSource.getSnapshot, p.targetSource.getSnapshot);
+  const target = import_react14.default.useSyncExternalStore(p.targetSource.subscribe, p.targetSource.getSnapshot, p.targetSource.getSnapshot);
   const source = p.globalSource ?? EMPTY_ENABLEMENT_SOURCE;
-  const global = import_react13.default.useSyncExternalStore(source.subscribe, source.getSnapshot, source.getSnapshot);
-  return h12(
+  const global = import_react14.default.useSyncExternalStore(source.subscribe, source.getSnapshot, source.getSnapshot);
+  return h13(
     "section",
     { className: "lpa lpa-settings-page", "aria-label": p.t("title") },
-    h12(
+    h13(
       "header",
       { className: "lpa-settings-header" },
-      h12("div", { className: "lpa-settings-heading" }, h12("h1", null, p.t("title")), h12("p", { className: "lpa-note lpa-settings-subtitle" }, p.t("settings.subtitle"))),
-      h12("button", { type: "button", className: "lpa-button", onClick: p.returnToConversation }, p.t("returnConversation"))
+      h13("div", { className: "lpa-settings-heading" }, h13("h1", null, p.t("title")), h13("p", { className: "lpa-note lpa-settings-subtitle" }, p.t("settings.subtitle"))),
+      h13("button", { type: "button", className: "lpa-button", onClick: p.returnToConversation }, p.t("returnConversation"))
     ),
-    h12(
+    h13(
       "div",
       { className: "lpa-settings-sections" },
-      h12(EnablementPanel, { globalSource: source, t: p.t }),
-      h12(
+      h13(EnablementPanel, { globalSource: source, t: p.t }),
+      h13(
         "section",
         { className: "lpa-session-panel lpa-card", "aria-label": p.t("settings.profileSection") },
-        h12("header", { className: "lpa-card-header" }, h12("h2", { className: "lpa-card-title" }, p.t("settings.profileSection")), h12("p", { className: "lpa-note" }, p.t("profileScope"))),
-        global.loading ? h12("p", { role: "status" }, p.t("global.loading")) : null,
-        !global.connected ? h12("p", { className: "lpa-note", role: "status" }, p.t("global.disconnected")) : null,
-        global.readError ? h12("p", { className: "lpa-error", role: "alert" }, errorText(global.readError, p.t)) : null,
-        global.data && !Number.isSafeInteger(global.data.settingsRevision) ? h12("p", { className: "lpa-error", role: "alert" }, p.t("settings.hostUpgrade")) : null,
-        global.data ? h12("div", { className: "lpa-settings-cards" }, ["suggest", "enhance"].map((feature) => h12(FeatureSettings, { key: feature, feature, global, source, p }))) : h12("p", { className: "lpa-note lpa-empty-state" }, p.t("settings.profileEmpty"))
+        h13("header", { className: "lpa-card-header" }, h13("h2", { className: "lpa-card-title" }, p.t("settings.profileSection")), h13("p", { className: "lpa-note" }, p.t("profileScope"))),
+        global.loading ? h13("p", { role: "status" }, p.t("global.loading")) : null,
+        !global.connected ? h13("p", { className: "lpa-note", role: "status" }, p.t("global.disconnected")) : null,
+        global.readError ? h13("p", { className: "lpa-error", role: "alert" }, errorText(global.readError, p.t)) : null,
+        global.data && !Number.isSafeInteger(global.data.settingsRevision) ? h13("p", { className: "lpa-error", role: "alert" }, p.t("settings.hostUpgrade")) : null,
+        global.data ? h13("div", { className: "lpa-settings-cards" }, ["suggest", "enhance"].map((feature) => h13(FeatureSettings, { key: feature, feature, global, source, p }))) : h13("p", { className: "lpa-note lpa-empty-state" }, p.t("settings.profileEmpty"))
       ),
-      p.connection ? h12(PriorityPanel, { connection: p.connection, t: p.t, onChanged: () => {
+      p.connection ? h13(PriorityPanel, { connection: p.connection, t: p.t, onChanged: () => {
         if (target.sessionId) void p.refreshAssist(target.sessionId).catch(() => {
         });
       } }) : null,
-      h12(UpdatePanel, { t: p.t })
+      p.assistSend ? h13(ModelNotesCard, { send: p.assistSend, globalSource: source, t: p.t }) : null,
+      h13(UpdatePanel, { t: p.t })
     )
   );
 }
-var import_react13, h12;
+var import_react14, h13;
 var init_settings_page = __esm({
   "assist/client/settings-page.js"() {
     init_update_panel();
-    import_react13 = __toESM(require("react"), 1);
+    import_react14 = __toESM(require("react"), 1);
     init_settings();
     init_runtime();
     init_api();
     init_enablement_panel();
     init_enablement_source();
     init_priority_panel();
+    init_model_notes_card();
     init_settings_page_state();
-    h12 = import_react13.default.createElement;
+    h13 = import_react14.default.createElement;
   }
 });
 
@@ -3347,16 +3603,336 @@ var init_settings_target = __esm({
   }
 });
 
+// assist/client/model-picker.js
+function orderModelProviders(groups) {
+  const rank = (id2) => id2 === "deepseek-account" ? 0 : id2 === "deepseek-official" ? 1 : 2;
+  return [...groups].sort((left, right) => rank(left.id) - rank(right.id));
+}
+function sectionsOf(snapshot) {
+  const groups = Array.isArray(snapshot?.groups) ? snapshot.groups : [];
+  return orderModelProviders(groups.filter((group) => group && typeof group.id === "string" && Array.isArray(group.models) && group.models.length > 0));
+}
+function currentEntry(snapshot) {
+  const current = snapshot?.current;
+  if (!current || typeof current.provider !== "string" || typeof current.model !== "string") return null;
+  for (const group of sectionsOf(snapshot)) {
+    if (group.id !== current.provider) continue;
+    for (const model of group.models) if (model && model.id === current.model) return { group, model };
+  }
+  return null;
+}
+function effectiveEffort(entry, current) {
+  const reasoning = entry?.model?.reasoning;
+  if (!reasoning) return "";
+  const id2 = current?.reasoningEffort !== void 0 ? current.reasoningEffort : reasoning.defaultEffort;
+  return typeof id2 === "string" ? id2 : "";
+}
+function effortRows(entry, current, providerDefaultLabel) {
+  const reasoning = entry?.model?.reasoning;
+  if (!reasoning) return [];
+  const active = effectiveEffort(entry, current);
+  const rows = [];
+  if (reasoning.defaultEffort === void 0) {
+    rows.push({ id: "effort:provider-default", effort: void 0, label: providerDefaultLabel, active: active === "" });
+  }
+  for (const effort of Array.isArray(reasoning.efforts) ? reasoning.efforts : []) {
+    if (!effort || typeof effort.id !== "string") continue;
+    rows.push({ id: "effort:" + effort.id, effort: effort.id, label: typeof effort.name === "string" && effort.name ? effort.name : effort.id, active: effort.id === active });
+  }
+  return rows.length > 1 ? rows : [];
+}
+function triggerEffortLabel(snapshot, entry, effortOptions) {
+  const active = effortOptions.find((row) => row.active);
+  if (active) return active.label;
+  if (entry) return "";
+  return typeof snapshot?.retainedEffort === "string" ? snapshot.retainedEffort : "";
+}
+function busyState(snapshot) {
+  return snapshot?.pending !== null && snapshot?.pending !== void 0;
+}
+function loadingState(snapshot) {
+  return snapshot?.status === "loading" || snapshot?.status === "idle";
+}
+function levelOneRows(snapshot) {
+  const entry = currentEntry(snapshot);
+  const rows = [];
+  if (entry) rows.push({ kind: "current", id: "current", group: entry.group, model: entry.model });
+  for (const group of sectionsOf(snapshot)) rows.push({ kind: "provider", id: "provider:" + group.id, group });
+  return rows;
+}
+function menuGeometry(trigger, size, viewport) {
+  const width = viewport.width, height = viewport.height;
+  const left = Math.max(MARGIN, Math.min(trigger.right - size.width, width - size.width - MARGIN));
+  const above = trigger.top - GAP - size.height;
+  const top = above >= MARGIN ? above : Math.min(trigger.bottom + GAP, height - size.height - MARGIN);
+  return { left: Math.round(left), top: Math.round(Math.max(MARGIN, top)) };
+}
+function submenuGeometry(anchor, size, viewport) {
+  const width = viewport.width, height = viewport.height;
+  const left = anchor.right + GAP <= width - size.width - MARGIN ? anchor.right + GAP : Math.max(MARGIN, anchor.left - GAP - size.width);
+  const top = Math.max(MARGIN, Math.min(anchor.top, height - size.height - MARGIN));
+  return { left: Math.round(left), top: Math.round(top) };
+}
+function useAnchored(triggerRef, panelRef, open, measure) {
+  const [position, setPosition] = import_react15.default.useState(null);
+  const last = import_react15.default.useRef(null);
+  import_react15.default.useLayoutEffect(() => {
+    if (!open) {
+      last.current = null;
+      setPosition(null);
+      return;
+    }
+    const place = () => {
+      const trigger = triggerRef.current, panel2 = panelRef.current;
+      if (!trigger || !panel2) return;
+      const size = { width: panel2.offsetWidth, height: panel2.offsetHeight };
+      if (!size.width || !size.height) return;
+      const next = measure(trigger.getBoundingClientRect(), size, { width: globalThis.innerWidth, height: globalThis.innerHeight });
+      if (last.current && last.current.left === next.left && last.current.top === next.top) return;
+      last.current = next;
+      setPosition(next);
+    };
+    place();
+    globalThis.addEventListener("resize", place);
+    globalThis.addEventListener("scroll", place, true);
+    const panel = panelRef.current;
+    const observer = typeof globalThis.ResizeObserver === "function" && panel ? new globalThis.ResizeObserver(place) : null;
+    if (panel) observer?.observe(panel);
+    return () => {
+      observer?.disconnect();
+      globalThis.removeEventListener("resize", place);
+      globalThis.removeEventListener("scroll", place, true);
+    };
+  }, [open, measure]);
+  return position;
+}
+function ModelPicker({ locked, available, directory, load, select, t, notesSource }) {
+  const state = import_react15.default.useSyncExternalStore(
+    import_react15.default.useCallback((listener) => directory.subscribe(listener), [directory]),
+    () => directory.getSnapshot(),
+    () => directory.getSnapshot()
+  );
+  const notesRef = import_react15.default.useRef(notesSource);
+  notesRef.current = notesSource;
+  const subscribeNotes = import_react15.default.useCallback((listener) => notesRef.current.subscribe(listener), []);
+  const readNotes = import_react15.default.useCallback(() => notesRef.current.getSnapshot(), []);
+  const notes = import_react15.default.useSyncExternalStore(subscribeNotes, readNotes, readNotes);
+  const [open, setOpen] = import_react15.default.useState(false);
+  const [submenu, setSubmenu] = import_react15.default.useState(null);
+  const [error, setError] = import_react15.default.useState(null);
+  const triggerRef = import_react15.default.useRef(null), panelRef = import_react15.default.useRef(null), submenuRef = import_react15.default.useRef(null);
+  const entry = currentEntry(state);
+  const busy = busyState(state);
+  const loading = loadingState(state) && sectionsOf(state).length === 0;
+  const effortOptions = effortRows(entry, state?.current, t("picker.providerDefault"));
+  const position = useAnchored(triggerRef, panelRef, open, menuGeometry);
+  const submenuPosition = useAnchored(panelRef, submenuRef, Boolean(submenu), submenuGeometry);
+  import_react15.default.useEffect(() => {
+    if (!open) {
+      setSubmenu(null);
+      setError(null);
+      return;
+    }
+    const onPointer = (event) => {
+      if (triggerRef.current?.contains(event.target)) return;
+      if (panelRef.current?.contains(event.target)) return;
+      if (submenuRef.current?.contains(event.target)) return;
+      setOpen(false);
+    };
+    const onKey = (event) => {
+      if (event.key !== "Escape") return;
+      event.stopPropagation();
+      setOpen(false);
+      setSubmenu(null);
+      triggerRef.current?.focus?.();
+    };
+    globalThis.document.addEventListener("pointerdown", onPointer, true);
+    globalThis.document.addEventListener("keydown", onKey, true);
+    return () => {
+      globalThis.document.removeEventListener("pointerdown", onPointer, true);
+      globalThis.document.removeEventListener("keydown", onKey, true);
+    };
+  }, [open]);
+  if (!available) return null;
+  const show = () => {
+    setOpen(true);
+    setSubmenu(null);
+    setError(null);
+    try {
+      const pending = load?.();
+      if (pending && typeof pending.catch === "function") pending.catch(() => {
+      });
+    } catch {
+    }
+  };
+  const close = () => {
+    setOpen(false);
+    setSubmenu(null);
+    triggerRef.current?.focus?.();
+  };
+  const submit = (selection) => {
+    Promise.resolve().then(() => select?.(selection)).then((result) => {
+      if (result && result.ok === false) {
+        setError(result.error?.code ?? "model-failed");
+        return;
+      }
+      close();
+    }).catch(() => setError("model-failed"));
+  };
+  const pickModel = (group, model) => submit({ provider: group.id, model: model.id });
+  const pickEffort = (row) => {
+    if (!entry) return;
+    submit({ provider: entry.group.id, model: entry.model.id, ...row.effort === void 0 ? {} : { reasoningEffort: row.effort } });
+  };
+  const modelOption = (group, model, selected) => {
+    const note = noteFor(notes, group.id, model.id);
+    const name = typeof model.name === "string" && model.name ? model.name : model.id;
+    return h14(
+      "button",
+      {
+        key: group.id + "/" + model.id,
+        type: "button",
+        role: "menuitemradio",
+        tabIndex: -1,
+        "aria-checked": selected ? "true" : "false",
+        className: "lpa-model-option" + (selected ? " lpa-model-option--current" : ""),
+        disabled: busy,
+        onClick: () => pickModel(group, model)
+      },
+      h14(
+        "span",
+        { className: "lpa-model-copy" },
+        h14("span", { className: "lpa-model-name" }, name),
+        note ? h14("span", { className: "lpa-model-desc" }, note) : null
+      ),
+      selected ? h14("span", { className: "lpa-model-check", "aria-hidden": "true" }, "\u2713") : null
+    );
+  };
+  const providerCell = (group) => {
+    const isOpen = submenu === group.id;
+    return h14(
+      "button",
+      {
+        key: group.id,
+        type: "button",
+        role: "menuitem",
+        tabIndex: -1,
+        className: "lpa-model-cell" + (isOpen ? " lpa-model-cell--open" : ""),
+        "aria-haspopup": "menu",
+        "aria-expanded": isOpen ? "true" : "false",
+        onClick: () => setSubmenu(isOpen ? null : group.id),
+        onMouseEnter: () => setSubmenu(group.id)
+      },
+      h14("span", { className: "lpa-model-cell-label" }, typeof group.name === "string" && group.name ? group.name : group.id),
+      h14("span", { className: "lpa-model-cell-chevron", "aria-hidden": "true" }, "\u203A")
+    );
+  };
+  const currentModel = entry ? entry.model : null;
+  const triggerText = loading ? t("picker.loading") : currentModel ? currentModel.name ?? currentModel.id : t("picker.fallback");
+  const effortLabel = triggerEffortLabel(state, entry, effortOptions);
+  const list = h14(
+    "div",
+    {
+      ref: panelRef,
+      className: "lpa-model-menu",
+      role: "menu",
+      "aria-label": t("picker.aria"),
+      style: position ?? { left: 0, top: 0, visibility: "hidden" },
+      "aria-busy": loading || busy ? "true" : "false"
+    },
+    loading ? h14("div", { className: "lpa-model-status", role: "status" }, t("picker.loading")) : sectionsOf(state).length === 0 ? h14("div", { className: "lpa-model-status" }, state?.status === "error" ? t("picker.failed") : t("picker.empty")) : levelOneRows(state).map((row) => row.kind === "current" ? modelOption(row.group, row.model, true) : providerCell(row.group)),
+    effortOptions.length ? h14(
+      "div",
+      { className: "lpa-model-section" },
+      h14("div", { className: "lpa-model-section-title" }, t("picker.effort")),
+      effortOptions.map((row) => h14(
+        "button",
+        {
+          key: row.id,
+          type: "button",
+          role: "menuitemradio",
+          tabIndex: -1,
+          "aria-checked": row.active ? "true" : "false",
+          className: "lpa-model-option" + (row.active ? " lpa-model-option--current" : ""),
+          disabled: busy,
+          onClick: () => pickEffort(row)
+        },
+        h14("span", { className: "lpa-model-copy" }, h14("span", { className: "lpa-model-name" }, row.label)),
+        row.active ? h14("span", { className: "lpa-model-check", "aria-hidden": "true" }, "\u2713") : null
+      ))
+    ) : null,
+    error ? h14(
+      "div",
+      { className: "lpa-model-status lpa-model-status--error", role: "alert" },
+      error === "session/writer-held" ? t("picker.sessionInUse") : t("picker.failed")
+    ) : null
+  );
+  const submenuPanel = submenu ? h14(
+    "div",
+    {
+      ref: submenuRef,
+      className: "lpa-model-menu lpa-model-submenu",
+      role: "menu",
+      "aria-label": t("picker.aria"),
+      style: submenuPosition ?? { left: 0, top: 0, visibility: "hidden" }
+    },
+    (sectionsOf(state).find((group) => group.id === submenu)?.models ?? []).map((model) => modelOption(
+      sectionsOf(state).find((group) => group.id === submenu),
+      model,
+      Boolean(entry && entry.group.id === submenu && entry.model.id === model.id)
+    ))
+  ) : null;
+  return h14(
+    "div",
+    { className: "lpa-model-root" },
+    h14(
+      "button",
+      {
+        ref: triggerRef,
+        type: "button",
+        className: "lpa-model-trigger",
+        "aria-haspopup": "menu",
+        "aria-expanded": open ? "true" : "false",
+        "aria-label": t("picker.ariaCurrent", { model: triggerText }),
+        title: effortLabel ? triggerText + " \xB7 " + effortLabel : triggerText,
+        disabled: Boolean(locked),
+        onClick: () => {
+          if (open) close();
+          else show();
+        }
+      },
+      h14("span", { className: "lpa-model-trigger-icon", "aria-hidden": "true" }, "\u25C8"),
+      h14("span", { className: "lpa-model-trigger-label" }, triggerText),
+      effortLabel ? h14("span", { className: "lpa-model-trigger-effort" }, effortLabel) : null,
+      h14("span", { className: "lpa-model-chevron", "aria-hidden": "true" }, "\u25BE")
+    ),
+    open ? (0, import_react_dom.createPortal)(h14(import_react15.default.Fragment, null, list, submenuPanel), globalThis.document.body) : null
+  );
+}
+var import_react15, import_react_dom, h14, MODEL_SLOT, MODEL_PICKER_PRIORITY, MARGIN, GAP;
+var init_model_picker = __esm({
+  "assist/client/model-picker.js"() {
+    import_react15 = __toESM(require("react"), 1);
+    import_react_dom = require("react-dom");
+    init_model_notes();
+    h14 = import_react15.default.createElement;
+    MODEL_SLOT = "conversation.input.model";
+    MODEL_PICKER_PRIORITY = -1;
+    MARGIN = 12;
+    GAP = 8;
+  }
+});
+
 // assist/client/index.js
 var client_exports = {};
 __export(client_exports, {
   installAssist: () => installAssist
 });
 function AssistIcon({ size = 20 }) {
-  return h13("svg", { width: size, height: size, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: 1.7, "aria-hidden": true }, h13("path", { d: "M4 5h10M4 10h7M4 15h6M14 4v4m-2-2h4M17 10l3 3-7 7H10v-3Z" }));
+  return h15("svg", { width: size, height: size, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: 1.7, "aria-hidden": true }, h15("path", { d: "M4 5h10M4 10h7M4 15h6M14 4v4m-2-2h4M17 10l3 3-7 7H10v-3Z" }));
 }
 function SettingsSurface(p) {
-  return h13(import_react14.default.Fragment, null, h13("style", null, css), h13(SettingsPage, p));
+  return h15(import_react16.default.Fragment, null, h15("style", null, css), h15(SettingsPage, p));
 }
 function installAssist(ctx) {
   ctx.effect(() => ctx.locale.register(NS, dictionaries));
@@ -3387,16 +3963,38 @@ function installAssist(ctx) {
     const language = ctx.locale.getLocale().active;
     return dictionaries[language]?.title ?? (language.startsWith("zh") ? dictionaries.zh.title : dictionaries.en.title);
   };
+  ctx.inject(["slots", "sessions", "modelDirectories"], (scope) => {
+    const models = scope.modelDirectories, sessions = scope.sessions;
+    scope.slots.inject(MODEL_SLOT, () => scope.slots.register({
+      name: MODEL_SLOT,
+      priority: MODEL_PICKER_PRIORITY,
+      locale: NS,
+      inject: (sessionId) => {
+        const directory = models.directoryFor(sessionId);
+        const available = sessions.subagentAddress(sessionId) === void 0;
+        return {
+          available,
+          directory: directory.store,
+          load: () => {
+            if (available) directory.load().catch(() => {
+            });
+          },
+          select: (selection) => available ? directory.select(selection) : Promise.resolve(void 0),
+          notesSource: { subscribe: (listener) => globalSource.subscribe(listener), getSnapshot: () => globalSource.getSnapshot()?.data?.notes ?? EMPTY_NOTES }
+        };
+      }
+    }, ModelPicker));
+  });
   ctx.slots.inject("sidebar.panellist", () => ctx.slots.register({ name: "sidebar.panellist", id: "local-prompt-assist", order: 40, label, locale: NS }, AssistIcon));
   ctx.slots.inject("main", () => ctx.slots.register({ name: "main", key: "local-prompt-assist", locale: NS, inject: () => ({ assistSend, globalSource, targetSource, connection: ctx.connection, returnToConversation: () => ctx.layout.selectPanel(null), refreshAssist: (id2) => ctx.sessions.refreshProjections(id2) }) }, SettingsSurface));
   ctx.slots.inject("conversation.input.right", () => ctx.slots.register({ name: "conversation.input.right", id: "local-prompt-enhance-action", order: 1005, label: dictionaries.en.enhance, locale: NS, inject: inject2 }, EnhanceButton));
   ctx.slots.inject("conversation.input.right", () => ctx.slots.register({ name: "conversation.input.right", id: "local-next-question-action", order: 1010, label: dictionaries.en.suggest, locale: NS, inject: inject2 }, SuggestButton));
   ctx.slots.inject("conversation.input.overlay", () => ctx.slots.register({ name: "conversation.input.overlay", id: "local-prompt-assist-results", order: 50, label, locale: NS, inject: inject2 }, AssistPanel));
 }
-var import_react14, h13;
+var import_react16, h15;
 var init_client = __esm({
   "assist/client/index.js"() {
-    import_react14 = __toESM(require("react"), 1);
+    import_react16 = __toESM(require("react"), 1);
     init_enhance_action();
     init_enhance_button();
     init_suggest_button();
@@ -3408,7 +4006,9 @@ var init_client = __esm({
     init_style();
     init_settings_target();
     init_enablement_source();
-    h13 = import_react14.default.createElement;
+    init_model_picker();
+    init_model_notes();
+    h15 = import_react16.default.createElement;
   }
 });
 
@@ -3430,8 +4030,8 @@ init_identity();
 init_policy();
 init_priority_source();
 function createFast(require2) {
-  let React15;
-  let h14;
+  let React17;
+  let h16;
   const NS2 = "local-openai-fast";
   const quietCommandNames2 = Object.freeze(["openai-fast", "openai-fast-ui-health"]);
   function HiddenFastCommand2() {
@@ -3624,8 +4224,8 @@ function createFast(require2) {
       .local-openai-fast__notice{position:absolute;bottom:34px;right:0;max-width:280px;width:max-content;padding:8px 10px;border:1px solid var(--dsw-alias-border-l2);border-radius:7px;background:var(--dsw-alias-bg-overlay);color:var(--dsw-alias-label-primary);font-size:12px;line-height:18px;z-index:20}
     `;
   function useDefaultSelection(remote) {
-    const [selection, setSelection] = React15.useState(null);
-    React15.useEffect(() => {
+    const [selection, setSelection] = React17.useState(null);
+    React17.useEffect(() => {
       let active = true;
       remote.session.modelCatalog().then((result) => {
         if (active && result.ok) setSelection(result.value.default);
@@ -3638,12 +4238,12 @@ function createFast(require2) {
     return selection;
   }
   function FastToggle(props) {
-    const fastState = React15.useSyncExternalStore(props.fastSource.subscribe, props.fastSource.getSnapshot, props.fastSource.getSnapshot);
-    const modelState = React15.useSyncExternalStore(props.modelSource.subscribe, props.modelSource.getSnapshot, props.modelSource.getSnapshot);
-    const priorityState = props.prioritySource ? React15.useSyncExternalStore(props.prioritySource.subscribe, props.prioritySource.getSnapshot, props.prioritySource.getSnapshot) : null;
+    const fastState = React17.useSyncExternalStore(props.fastSource.subscribe, props.fastSource.getSnapshot, props.fastSource.getSnapshot);
+    const modelState = React17.useSyncExternalStore(props.modelSource.subscribe, props.modelSource.getSnapshot, props.modelSource.getSnapshot);
+    const priorityState = props.prioritySource ? React17.useSyncExternalStore(props.prioritySource.subscribe, props.prioritySource.getSnapshot, props.prioritySource.getSnapshot) : null;
     const selected = modelState?.next ?? null;
     const defaultSelection = useDefaultSelection(props.remote);
-    const sessionState = React15.useSyncExternalStore(props.sessionSource.subscribe, props.sessionSource.getSnapshot, props.sessionSource.getSnapshot);
+    const sessionState = React17.useSyncExternalStore(props.sessionSource.subscribe, props.sessionSource.getSnapshot, props.sessionSource.getSnapshot);
     const unavailable = Boolean(sessionState?.subagent) || sessionState?.removed === true;
     const allowed = props.useAccess("commands/execute");
     const wireProviders = Array.isArray(fastState?.providers) ? fastState.providers : [];
@@ -3652,8 +4252,8 @@ function createFast(require2) {
     const viewState = hasFastState(fastState) ? { enabled: fastState.enabled === true, providers } : priorityReady ? { enabled: false, providers } : fastState;
     const { visible, enabled, eligible, reason } = derivePresentation2(viewState, selected, defaultSelection);
     const ready = hasFastState(fastState);
-    const [loadFailed, setLoadFailed] = React15.useState(false);
-    React15.useEffect(() => {
+    const [loadFailed, setLoadFailed] = React17.useState(false);
+    React17.useEffect(() => {
       setLoadFailed(false);
       const retry = createHydrationRetry({
         attempt: props.ensureHydrated,
@@ -3663,17 +4263,17 @@ function createFast(require2) {
       void retry.start();
       return () => retry.dispose();
     }, [props.hydrationKey, props.sessionId, ready]);
-    const [interaction, setInteraction] = React15.useState({ enabled: null, pending: false });
-    const [error, setError] = React15.useState("");
-    const [notice, setNotice] = React15.useState("");
-    const alive = React15.useRef(true);
-    React15.useEffect(() => {
+    const [interaction, setInteraction] = React17.useState({ enabled: null, pending: false });
+    const [error, setError] = React17.useState("");
+    const [notice, setNotice] = React17.useState("");
+    const alive = React17.useRef(true);
+    React17.useEffect(() => {
       alive.current = true;
       return () => {
         alive.current = false;
       };
     }, []);
-    const controller = React15.useMemo(() => createToggleController2({
+    const controller = React17.useMemo(() => createToggleController2({
       initial: enabled,
       send: async (next) => {
         const result = await props.remote.commands.execute(
@@ -3695,13 +4295,13 @@ function createFast(require2) {
         });
       }
     }), [props.remote, props.sessionId]);
-    React15.useEffect(() => controller.sync(enabled), [controller, enabled]);
+    React17.useEffect(() => controller.sync(enabled), [controller, enabled]);
     const checked = eligible && (interaction.enabled ?? enabled);
     const provider = (selected ?? defaultSelection)?.provider ?? "";
     const providerName = priorityState?.names?.[provider];
     const providerLabel = typeof providerName === "string" && providerName && providerName !== provider ? providerName + " (" + provider + ")" : provider;
     const blocked = reason === "loading" ? props.t(loadFailed ? "loadError" : "loading") : reason === "unsupported-provider" ? props.t("unsupportedProvider") + ": " + providerLabel : !allowed ? props.t("access") : null;
-    React15.useEffect(() => {
+    React17.useEffect(() => {
       if (!blocked) setNotice("");
     }, [blocked]);
     if (!visible || unavailable) return null;
@@ -3715,11 +4315,11 @@ function createFast(require2) {
       controller.toggle().catch(() => {
       });
     }
-    return h14(
+    return h16(
       "span",
       { className: "local-openai-fast", title: blocked ?? props.t(checked ? "on" : "off") },
-      h14("style", null, css2),
-      h14("button", {
+      h16("style", null, css2),
+      h16("button", {
         type: "button",
         role: "switch",
         className: "local-openai-fast__button",
@@ -3728,10 +4328,10 @@ function createFast(require2) {
         "aria-busy": interaction.pending || reason === "loading" && !loadFailed,
         "aria-disabled": !allowed || !eligible,
         onClick: toggle
-      }, h14(
+      }, h16(
         "svg",
         { viewBox: "0 0 20 20", width: 14, height: 14, fill: "none", "aria-hidden": true },
-        h14("path", {
+        h16("path", {
           d: "M11.5 2 4 11h5l-.5 7L16 8h-5l.5-6Z",
           stroke: "currentColor",
           strokeWidth: 1.5,
@@ -3739,8 +4339,8 @@ function createFast(require2) {
           fill: checked ? "currentColor" : "none"
         })
       ), props.t("label")),
-      notice ? h14("span", { role: "status", className: "local-openai-fast__notice" }, notice) : null,
-      error ? h14("span", { role: "alert", className: "local-openai-fast__error" }, error) : null
+      notice ? h16("span", { role: "status", className: "local-openai-fast__notice" }, notice) : null,
+      error ? h16("span", { role: "alert", className: "local-openai-fast__error" }, error) : null
     );
   }
   return {
@@ -3752,8 +4352,8 @@ function createFast(require2) {
     HiddenFastCommand: HiddenFastCommand2,
     inject: ["slots", "locale", "sessions", "remote", "remote.commands", "remote.session"],
     apply(ctx) {
-      React15 = require2("react");
-      h14 = React15.createElement;
+      React17 = require2("react");
+      h16 = React17.createElement;
       ctx.effect(() => ctx.locale.register(NS2, dictionaries2));
       const prioritySource = createPrioritySource(ctx.connection);
       ctx.effect(() => {

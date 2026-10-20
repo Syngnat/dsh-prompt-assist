@@ -22,7 +22,7 @@ function page(sessionId = null) {
 
 test("settings page exposes four ordered card sections and a useful empty-session state", () => {
   const html = page();
-  assert.equal((html.match(/<section[^>]*class="[^"]*\blpa-card(?=[\s"])/g) ?? []).length, 6);
+  assert.equal((html.match(/<section[^>]*class="[^"]*\blpa-card(?=[\s"])/g) ?? []).length, 7);
   const titles = [...html.matchAll(/<h2[^>]*>(settings\.[^<]+)<\/h2>/g)].map(match => match[1]);
   assert.deepEqual(titles, ["settings.globalSection", "settings.profileSection", "settings.prioritySection", "settings.updatesSection"]);
   assert.match(html, /settings.subtitle/);
