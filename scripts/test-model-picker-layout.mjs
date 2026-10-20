@@ -48,7 +48,7 @@ export async function runRegression(page){
  await reset();await open();await drag(0,false);assert.equal(await count(),0);await page.mouse.up();await settle(page);assert.equal(await count(),1);assert.equal((await last()).reasoningEffort,'low');cases++;
  await reset();await open();await drag(2/3);assert.equal(await count(),0);cases++;
  await reset();await open();await drag(0,false);await range().dispatchEvent('pointercancel',{pointerId:1});await page.mouse.up();await settle(page);assert.equal(await count(),0);cases++;
- await reset();await open();await drag(0,false);await page.evaluate(()=>{const s=window.fixture.state();const groups=structuredClone(s.groups);groups[2].models[0].reasoning.efforts.reverse();window.fixture.patch({groups});});await settle(page);await page.mouse.move(800,400,{steps:5});await page.mouse.up();await settle(page);assert.equal(await count(),0);cases++;
+ await reset();await open();await drag(0,false);await page.evaluate(()=>{const s=window.fixture.state();const groups=structuredClone(s.groups);groups[2].models[0].reasoning.efforts=[...groups[2].models[0].reasoning.efforts,{id:'provider-custom',name:'Provider custom'}].reverse();window.fixture.patch({groups});});await settle(page);await page.mouse.move(800,400,{steps:5});await page.mouse.up();await settle(page);assert.equal(await count(),0);cases++;
  await reset();await open();await drag(0,false);await page.evaluate(()=>window.fixture.patch({current:{provider:'openai',model:'gpt-5.2',reasoningEffort:'high'}}));await settle(page);await page.mouse.up();assert.equal(await count(),0);cases++;
  await reset({fail:true});await open();await page.locator('[data-model-id="gpt-5.2"]').click();await settle(page);assert.equal(await page.locator('.lpa-model-menu').count(),1);assert.match(await page.locator('[role=alert]').textContent(),/其他 DSH/);cases++;
  await reset({snapshot:{failures:[{id:'bad',name:'失败供应商',message:'test offline'}],error:'test network'},retry:true});await open();assert.match(await page.locator('.lpa-model-failures').textContent(),/test offline/);assert.equal(await page.locator('.lpa-model-option').count(),8);await page.locator('.lpa-model-retry').click();await settle(page);assert.equal(await page.locator('.lpa-model-failures').count(),0);cases++;
@@ -109,6 +109,15 @@ export async function runRegression(page){
  await settle(page);
  assert.equal(await page.locator('.lpa-model-back-row').count(),0);
  assert.equal(await page.locator('.lpa-model-menu').count(),1);cases++;
+ await reset();
+ await page.evaluate(()=>{const groups=structuredClone(window.fixture.state().groups);const gpt=groups.find(g=>g.id==='openai').models.find(m=>m.id==='gpt-6-astra');gpt.reasoning={defaultEffort:'max',efforts:[{id:'max',name:'Max'},{id:'xhigh',name:'Extra high'},{id:'high',name:'High'},{id:'medium',name:'Medium'},{id:'low',name:'Low'}]};window.fixture.patch({groups,current:{provider:'openai',model:'gpt-6-astra',reasoningEffort:'low'}});});
+ await open();
+ assert.equal(await range().inputValue(),'0');
+ assert.equal(await range().getAttribute('aria-valuetext'),'低');
+ await drag(1);
+ assert.equal((await last()).reasoningEffort,'max');
+ assert.equal(await range().inputValue(),'4');
+ assert.equal(await range().getAttribute('aria-valuetext'),'最高');cases++;
  await page.evaluate(key=>window.__pinStorage.removeItem(key),PIN_KEY);
  await reset();await open();await page.evaluate(()=>window.fixture.unmount());await settle(page);assert.equal(await page.locator('.lpa-model-menu').count(),0);cases++;
  return {passed:true,cases,modelCalls:0};

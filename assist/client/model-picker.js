@@ -41,12 +41,27 @@ export function currentEntry(state){
 export function busyState(state){return state?.pending!=null;}
 export function loadingState(state){return state?.status==='loading'||state?.status==='idle';}
 export function effectiveEffort(entry,current){return current?.reasoningEffort??entry?.model?.reasoning?.defaultEffort;}
+/** Fastest to strongest. A provider's advertised scale may arrive in either direction. */
+const EFFORT_SCALE=['none','off','minimal','low','medium','high','xhigh','max'];
+/**
+ * Advertised order is not necessarily a display order: some providers list their
+ * levels from the strongest down, which would put the top rung at the fast end of
+ * the slider and flip every label. Known levels are re-sorted onto the
+ * fastest→strongest scale; a catalog that advertises any custom id keeps exactly
+ * the order the Host gave it, because only the provider knows that scale.
+ */
+export function orderedEfforts(efforts){
+ const list=(efforts??[]).filter(item=>item&&typeof item.id==='string');
+ const ranks=list.map(item=>EFFORT_SCALE.indexOf(item.id.toLowerCase()));
+ if(ranks.some(rank=>rank<0))return list;
+ return list.map((item,index)=>({item,rank:ranks[index]})).sort((a,b)=>a.rank-b.rank).map(entry=>entry.item);
+}
 /** Discrete positions come only from this model's advertised metadata, never a global effort scale. */
 export function effortRows(entry,current,defaultLabel,t){
  const reasoning=entry?.model?.reasoning;if(!reasoning)return [];
  const active=effectiveEffort(entry,current), rows=[];
  if(reasoning.defaultEffort===undefined)rows.push({id:'default',effort:undefined,label:defaultLabel,active:active===undefined});
- for(const item of reasoning.efforts??[])if(typeof item?.id==='string'&&!rows.some(r=>r.effort===item.id))rows.push({id:JSON.stringify(item.id),effort:item.id,label:t&&['none','minimal','low','medium','high','xhigh','max'].includes(item.id)?t('picker.level.'+item.id):item.name||item.id,active:item.id===active});
+ for(const item of orderedEfforts(reasoning.efforts))if(typeof item?.id==='string'&&!rows.some(r=>r.effort===item.id))rows.push({id:JSON.stringify(item.id),effort:item.id,label:t&&['none','minimal','low','medium','high','xhigh','max'].includes(item.id)?t('picker.level.'+item.id):item.name||item.id,active:item.id===active});
  return rows;
 }
 export function triggerEffortLabel(state,entry,rows){return rows.find(r=>r.active)?.label??state?.retainedEffort??state?.current?.reasoningEffort??'';}

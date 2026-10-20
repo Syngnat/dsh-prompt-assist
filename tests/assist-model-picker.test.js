@@ -98,6 +98,25 @@ test('discrete effort positions use this model advertised metadata order', () =>
   assert.deepEqual(rows.filter(row => row.active).map(row => row.effort), ['high']);
 });
 
+test('a provider that advertises its levels strongest-first still runs the slider fastest-first', () => {
+  const reversed = {model: {id: 'm', reasoning: {defaultEffort: 'max', efforts: [
+    {id: 'max', name: 'Max'}, {id: 'xhigh', name: 'Extra high'}, {id: 'high', name: 'High'},
+    {id: 'medium', name: 'Medium'}, {id: 'low', name: 'Low'},
+  ]}}};
+  const rows = effortRows(reversed, {reasoningEffort: 'max'}, 'Default');
+  assert.deepEqual(rows.map(row => row.effort), ['low', 'medium', 'high', 'xhigh', 'max']);
+  assert.deepEqual(rows.filter(row => row.active).map(row => row.effort), ['max']);
+  assert.equal(rows.at(-1).label, 'Max');
+  assert.equal(rows[0].label, 'Low');
+});
+
+test('a scale carrying any custom id keeps exactly the order the Host advertised', () => {
+  const custom = {model: {reasoning: {defaultEffort: 'deep', efforts: [{id: 'deep'}, {id: 'fast'}, {id: 'max'}]}}};
+  assert.deepEqual(effortRows(custom, {}, 'Default').map(row => row.effort), ['deep', 'fast', 'max']);
+  const reversedCustom = {model: {reasoning: {defaultEffort: 'max', efforts: [{id: 'max'}, {id: 'deep'}, {id: 'low'}]}}};
+  assert.deepEqual(effortRows(reversedCustom, {}, 'Default').map(row => row.effort), ['max', 'deep', 'low']);
+});
+
 test('effort positions omit duplicates and invalid IDs without inventing levels', () => {
   const custom = {model: {reasoning: {defaultEffort: 'fast', efforts: [{id: 'deep'}, {id: 'fast'}, {id: 'deep'}, null, {id: 2}]}}};
   const rows = effortRows(custom, {}, 'Default');

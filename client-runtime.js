@@ -4845,12 +4845,18 @@ function loadingState(state) {
 function effectiveEffort(entry, current) {
   return current?.reasoningEffort ?? entry?.model?.reasoning?.defaultEffort;
 }
+function orderedEfforts(efforts) {
+  const list = (efforts ?? []).filter((item) => item && typeof item.id === "string");
+  const ranks = list.map((item) => EFFORT_SCALE.indexOf(item.id.toLowerCase()));
+  if (ranks.some((rank) => rank < 0)) return list;
+  return list.map((item, index) => ({ item, rank: ranks[index] })).sort((a, b) => a.rank - b.rank).map((entry) => entry.item);
+}
 function effortRows(entry, current, defaultLabel, t) {
   const reasoning = entry?.model?.reasoning;
   if (!reasoning) return [];
   const active = effectiveEffort(entry, current), rows = [];
   if (reasoning.defaultEffort === void 0) rows.push({ id: "default", effort: void 0, label: defaultLabel, active: active === void 0 });
-  for (const item of reasoning.efforts ?? []) if (typeof item?.id === "string" && !rows.some((r) => r.effort === item.id)) rows.push({ id: JSON.stringify(item.id), effort: item.id, label: t && ["none", "minimal", "low", "medium", "high", "xhigh", "max"].includes(item.id) ? t("picker.level." + item.id) : item.name || item.id, active: item.id === active });
+  for (const item of orderedEfforts(reasoning.efforts)) if (typeof item?.id === "string" && !rows.some((r) => r.effort === item.id)) rows.push({ id: JSON.stringify(item.id), effort: item.id, label: t && ["none", "minimal", "low", "medium", "high", "xhigh", "max"].includes(item.id) ? t("picker.level." + item.id) : item.name || item.id, active: item.id === active });
   return rows;
 }
 function triggerEffortLabel(state, entry, rows) {
@@ -5396,7 +5402,7 @@ function ModelPicker({ locked, available, directory, load, select, t, getLocale 
     menu ? (0, import_react_dom.createPortal)(menu, document.body) : null
   );
 }
-var import_react15, import_react_dom, h14, MODEL_SLOT, MODEL_PICKER_PRIORITY, modelRowId, providerRowKey, gestureKeys, safeStorage;
+var import_react15, import_react_dom, h14, MODEL_SLOT, MODEL_PICKER_PRIORITY, modelRowId, providerRowKey, EFFORT_SCALE, gestureKeys, safeStorage;
 var init_model_picker = __esm({
   "assist/client/model-picker.js"() {
     import_react15 = __toESM(require("react"), 1);
@@ -5410,6 +5416,7 @@ var init_model_picker = __esm({
     MODEL_PICKER_PRIORITY = -1;
     modelRowId = (group, model) => JSON.stringify([group.id, model.id]);
     providerRowKey = (id2) => "provider:" + id2;
+    EFFORT_SCALE = ["none", "off", "minimal", "low", "medium", "high", "xhigh", "max"];
     gestureKeys = ["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "Home", "End", "PageUp", "PageDown"];
     safeStorage = () => {
       try {
