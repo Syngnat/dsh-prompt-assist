@@ -5,7 +5,7 @@ import { normalizeConfig } from './config.js';
 import { selectQA } from './context.js';
 import { readSelectedFiles } from './files.js';
 import { buildAssistPrompt } from './prompts.js';
-import { callAssistModel, resolveAssistRoute, failure } from './model-call.js';
+import { callAssistModel, polishEffort, resolveAssistRoute, failure } from './model-call.js';
 import { fileReaders } from './file-adapter.js';
 import { isProviderFailureCode, providerFailureCode } from './provider-failure.js';
 
@@ -173,10 +173,11 @@ export class AssistRuntime {
     if (input.references !== undefined && (!Array.isArray(input.references) || input.references.length > 100)) throw failure('invalid-request');
     const request = { ...input, files: entries.map(entry => ({ ...entry })), references: (input.references ?? []).map(ref => typeof ref === 'object' && ref ? { ...ref } : ref) };
     const session = this.fastService.selection(agent);
-    // Enhancement only edits text: inheriting the session's top reasoning rung made a
-    // short rewrite wait as long as a deep task, and time out at the deadline. It
-    // follows the session's model but keeps this feature's own reasoningEffort —
-    // empty means the model's advertised default. Other features keep the session rung.
+    // Enhancement only edits text. Omitting the effort lets the Host fill in the
+    // session default — often the toolbar's top rung — so a short rewrite waits as
+    // long as a deep task. An empty effort is pinned to the fastest advertised polish
+    // rung after the catalog is known. An explicit effort is kept. Other features
+    // keep the session rung.
     const selected = settings.followSession
       ? (input.feature === 'enhance'
         ? { provider: session?.provider, model: session?.model }
@@ -216,7 +217,11 @@ export class AssistRuntime {
       if (this.settingsOf(agent)[input.feature] !== settings || (input.feature === 'suggest' && this.projection(agent).qaId !== qaId)) throw failure('stale-context');
     };
     check();
-    const route = await resolveAssistRoute(this.ctx, agent, explicit, this.fastService, this.providers, signal);
+    let route = await resolveAssistRoute(this.ctx, agent, explicit, this.fastService, this.providers, signal);
+    if (input.feature === 'enhance' && !explicit.reasoningEffort) {
+      const effort = polishEffort(route.metadata);
+      if (effort) route = { ...route, reasoningEffort: effort };
+    }
     check();
     const files = await readSelectedFiles(input.files, { ...readers, signal });
     check();

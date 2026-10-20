@@ -31,6 +31,17 @@ function raceAbort(promise, signal) {
   });
 }
 
+/** Text editing does not need the session's top rung. Prefer the fastest advertised
+    level that still follows instructions; return '' when the catalog has none of these,
+    so the Host default stays in force instead of an invented id. */
+const POLISH_EFFORTS = ['low', 'minimal', 'off', 'none'];
+export function polishEffort(metadata) {
+  const ids = new Set((metadata?.reasoning?.efforts ?? [])
+    .map(item => (typeof item?.id === 'string' ? item.id : ''))
+    .filter(Boolean));
+  return POLISH_EFFORTS.find(id => ids.has(id)) ?? '';
+}
+
 export async function resolveAssistRoute(ctx, agent, settings, fastService, providers, signal) {
   const selected = settings.followSession ? fastService.selection(agent) : settings;
   if (!selected?.provider || !selected?.model) throw failure('not-configured');

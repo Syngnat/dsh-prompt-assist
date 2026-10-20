@@ -193,6 +193,8 @@ Use an isolated DSH Web profile and a fresh, unsent conversation, with a disposa
 | macOS and Linux | Builds/offline suite are required CI gates; DSH runtime not tested |
 | Independent security audit | Not performed/claimed |
 
+v1.2.34 passes 1019 offline tests locally (1018 passing, 1 skipped). Enhancement with no explicit reasoning effort now requests the fastest advertised polish rung (`low`, else `minimal`/`off`/`none`) so the Host cannot substitute the session's top rung.
+
 v1.2.33 passes 1017 offline tests locally (1016 passing, 1 skipped), adding the short-request polish contract (colloquial fillers and redundant particles are improvable, short sentences are not exempt, and the old "a clear short request may stay as it is" example is gone), while the synthetic Chromium interaction regression still passes 41 cases.
 
 v1.2.32 passes 1017 offline tests locally (1016 passing, 1 skipped), covering the enhancement polish contract and the follow-session reasoning policy, while the synthetic Chromium interaction regression still passes 41 cases. Enhancement now polishes the draft into fluent written requests without changing what is asked, and follows the session's model at the model's own default reasoning rung instead of inheriting the toolbar's top rung, which shortened the wait; the "wait limit" notice still means the model returned nothing within 120 seconds and the draft was left untouched.

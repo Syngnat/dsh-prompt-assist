@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { callAssistModel as callNativeAssistModel, resolveAssistRoute } from "../assist/model-call.js";
+import { callAssistModel as callNativeAssistModel, polishEffort, resolveAssistRoute } from "../assist/model-call.js";
 import { installFastBridge } from "../bridge-v2.js";
 import { priorityOverride } from "../assist/priority-scope.js";
 
@@ -176,4 +176,12 @@ test("unknown model context budget refuses dispatch instead of guessing a window
   const ctx={llm:{async prepareCall(config){return {config,stream(){streams+=1;throw Error("must not dispatch");}};}}};
   await assert.rejects(callAssistModel(ctx,agent,{provider:"openai",model:"gpt-test",fast:false,metadata:{}},prompt,"enhance"),{code:"context-unknown"});
   assert.equal(streams,0);
+});
+
+test("enhancement pins an omitted effort to the fastest instruction-following rung", () => {
+  const efforts = ids => ({ reasoning: { efforts: ids.map(id => ({ id })) } });
+  assert.equal(polishEffort(efforts(["xhigh", "high", "low", "off"])), "low");
+  assert.equal(polishEffort(efforts(["max", "off"])), "off");
+  assert.equal(polishEffort(efforts(["high", "xhigh"])), "");
+  assert.equal(polishEffort({}), "");
 });

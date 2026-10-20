@@ -106,9 +106,9 @@ test('global follow-session resolves each calling session model and effort rathe
   await f.save('suggest', { followSession: true, provider: 'unused-provider', model: 'unused-model', reasoningEffort: 'unused-effort', rounds: 3 }, f.a);
   assert.equal(f.metadataReads.length, 0, 'saving follow-session does not inspect the saving session capabilities');
   assert.equal(f.prepares.length, 0);
-  // Enhancement follows the calling session's model but keeps the model's own
-  // default reasoning rung: inheriting "max" made a short rewrite time out.
-  const enhanceRoute = selection => ({ provider: selection.provider, model: selection.model });
+  // Enhancement follows the calling session's model, but an omitted effort is pinned
+  // to the fastest advertised polish rung (low here) so the Host cannot substitute xhigh.
+  const enhanceRoute = selection => ({ provider: selection.provider, model: selection.model, reasoningEffort: 'low' });
   for (const agent of [f.a, f.b, f.add('new', 2)]) {
     await f.generateAndAssert(agent, 'enhance', enhanceRoute(f.selections.get(agent.id)), 2);
     await f.generateAndAssert(agent, 'suggest', f.selections.get(agent.id), 3);
