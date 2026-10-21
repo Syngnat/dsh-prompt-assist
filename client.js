@@ -517,6 +517,7 @@ var init_messages = __esm({
         "global.suggestHint": "\u65B0\u7684\u5B8C\u6574\u95EE\u7B54\u7ED3\u675F\u3001\u4F1A\u8BDD\u7A7A\u95F2\u4E14\u8349\u7A3F\u4E3A\u7A7A\u65F6\u81EA\u52A8\u8BF7\u6C42\u4E0B\u4E00\u95EE\u3002",
         "global.enhanceHint": "\u53EA\u5728\u70B9\u51FB\u201C\u589E\u5F3A\u63D0\u793A\u8BCD\u201D\u65F6\u8BF7\u6C42\uFF0C\u4E0D\u4F1A\u81EA\u52A8\u89E6\u53D1\u3002",
         "settings.subtitle": "\u5F53\u524D profile \u7684\u5168\u5C40\u5F00\u5173\u3001\u72EC\u7ACB\u8F85\u52A9\u6A21\u578B\u4E0E\u8F6E\u6570\u3001Priority \u6388\u6743\u548C\u7248\u672C\u66F4\u65B0\uFF1B\u4E0D\u5FC5\u9009\u62E9\u4F1A\u8BDD\u3002",
+        "settings.open": "\u6253\u5F00\u8BBE\u7F6E",
         "settings.profileSection": "\u5168\u5C40\u8F85\u52A9\u53C2\u6570\uFF08\u5F53\u524D profile\uFF09",
         "settings.hostUpgrade": "\u5BBF\u4E3B\u5C1A\u672A\u63D0\u4F9B\u5168\u5C40\u6A21\u578B\u53C2\u6570\uFF1B\u4E3A\u5B89\u5168\u8D77\u89C1\uFF0C\u53C2\u6570\u4FDD\u5B58\u4E0E\u8F85\u52A9\u8BF7\u6C42\u5DF2\u505C\u7528\u3002\u8BF7\u66F4\u65B0\u5E76\u91CD\u542F\u5BBF\u4E3B\u540E\u91CD\u8BFB\uFF0C\u4E0D\u4F1A\u91C7\u7528\u65E7\u4F1A\u8BDD\u53C2\u6570\u3002",
         "profileScope": "\u4E24\u9879\u529F\u80FD\u5206\u522B\u4FDD\u5B58\u6A21\u578B\u3001\u63A8\u7406\u6863\u3001\u8F85\u52A9 Fast \u4E0E\u95EE\u7B54\u8F6E\u6570\uFF0C\u4F9B\u6240\u6709\u4F1A\u8BDD\u4F7F\u7528\u3002\u8DDF\u968F\u4F1A\u8BDD\u9009\u9879\u5728\u5168\u5C40\u4FDD\u5B58\uFF0C\u8C03\u7528\u65F6\u624D\u89E3\u6790\u6240\u5728\u4F1A\u8BDD\u7684\u6A21\u578B\u3002",
@@ -815,6 +816,7 @@ var init_messages = __esm({
         "global.suggestHint": "Requests a next question automatically after a new complete Q&A, when the session is idle with an empty draft.",
         "global.enhanceHint": "Requests only when you click Enhance. Nothing runs automatically.",
         "settings.subtitle": "Profile-wide switches, independent auxiliary models and rounds, Priority authorization and updates. No session selection is needed.",
+        "settings.open": "Open settings",
         "settings.profileSection": "Profile-wide auxiliary settings",
         "settings.hostUpgrade": "The Host does not provide global model settings yet. Settings saves and auxiliary requests are disabled for safety. Update and restart the Host, then reload; old session settings are never used instead.",
         "profileScope": "Each feature saves its own model, effort, auxiliary Fast and Q&A rounds for every session. Follow session is saved globally and resolves the calling session\u2019s model at runtime.",
@@ -5462,8 +5464,10 @@ var client_exports = {};
 __export(client_exports, {
   installAssist: () => installAssist
 });
-function AssistIcon({ size = 20 }) {
-  return h15("svg", { width: size, height: size, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: 1.7, "aria-hidden": true }, h15("path", { d: "M4 5h10M4 10h7M4 15h6M14 4v4m-2-2h4M17 10l3 3-7 7H10v-3Z" }));
+function isOwnPage(subject) {
+  if (subject?.kind === "bundle") return subject.pkg?.name === PACKAGE_NAME;
+  if (subject?.kind === "row") return subject.row?.rowId === ROW_ID;
+  return false;
 }
 function SettingsSurface(p) {
   return h15(import_react16.default.Fragment, null, h15("style", null, css), h15(SettingsPage, p));
@@ -5516,13 +5520,19 @@ function installAssist(ctx) {
       }
     }, ModelPicker));
   });
-  ctx.slots.inject("sidebar.panellist", () => ctx.slots.register({ name: "sidebar.panellist", id: "local-prompt-assist", order: 40, label, locale: NS }, AssistIcon));
+  ctx.slots.inject("plugins.detail.actions", () => ctx.slots.register(
+    { name: "plugins.detail.actions", id: "local-prompt-assist-open", order: 100, label, locale: NS },
+    ({ subject, t }) => {
+      if (!isOwnPage(subject)) return null;
+      return h15("button", { type: "button", className: "lpa-button", onClick: () => ctx.layout.selectPanel("local-prompt-assist") }, t("settings.open"));
+    }
+  ));
   ctx.slots.inject("main", () => ctx.slots.register({ name: "main", key: "local-prompt-assist", locale: NS, inject: () => ({ assistSend, globalSource, targetSource, connection: ctx.connection, returnToConversation: () => ctx.layout.selectPanel(null), refreshAssist: (id2) => ctx.sessions.refreshProjections(id2) }) }, SettingsSurface));
   ctx.slots.inject("conversation.input.right", () => ctx.slots.register({ name: "conversation.input.right", id: "local-prompt-enhance-action", order: 1005, label: dictionaries.en.enhance, locale: NS, inject: inject2 }, EnhanceButton));
   ctx.slots.inject("conversation.input.right", () => ctx.slots.register({ name: "conversation.input.right", id: "local-next-question-action", order: 1010, label: dictionaries.en.suggest, locale: NS, inject: inject2 }, SuggestButton));
   ctx.slots.inject("conversation.input.overlay", () => ctx.slots.register({ name: "conversation.input.overlay", id: "local-prompt-assist-results", order: 50, label, locale: NS, inject: inject2 }, AssistPanel));
 }
-var import_react16, h15;
+var import_react16, h15, PACKAGE_NAME, ROW_ID;
 var init_client = __esm({
   "assist/client/index.js"() {
     import_react16 = __toESM(require("react"), 1);
@@ -5539,6 +5549,8 @@ var init_client = __esm({
     init_enablement_source();
     init_model_picker();
     h15 = import_react16.default.createElement;
+    PACKAGE_NAME = "@local/dsh-openai-fast";
+    ROW_ID = "local-openai-fast";
   }
 });
 

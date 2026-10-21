@@ -1,6 +1,6 @@
 {
   "name": "@local/dsh-openai-fast",
-  "version": "1.2.40",
+  "version": "1.2.41",
   "private": true,
   "description": "Provides prompt enhancement, next-question suggestions, and Priority acceleration for authorized OpenAI and xAI routes, with profile-wide auxiliary model, reasoning, Fast and QA controls.",
   "type": "module",
