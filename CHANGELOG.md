@@ -2,6 +2,16 @@
 
 [English](<README.md>) | [简体中文](<README.zh-CN.md>)
 
+## 1.2.42 — Fast 按路由授权 / Route-scoped Fast（2026-10-21）
+
+- Fast/Priority 的授权单位从「供应商名单」改为「路由」`(供应商, 模型, 协议, 来源)`。给 Magpie 这类网关授权后，它下面带前缀的 OpenAI 模型（如 `cpa/gpt-6.1-sol`）不再隐藏开关；同一网关的 `cpa/glm-5.3-flash`、`cpa/deepseek-v4.1-flash` 也永远不会被顺带加速。
+- 每条路由解析为 `ready`、`needs-verification`、`grant-missing`、`rejected`、`api-incompatible`、`not-candidate`。只有「协议无法承载 `service_tier`」与「非 OpenAI/Grok 4+ 家族」隐藏控件，其余一律可见并说明原因（新增「尚未验证」「上游拒绝」文案）。开关显示、Host 状态、辅助运行时与桥接注入共用同一个解析器，不会再出现按钮与实际上线行为不一致。
+- 授权支持供应商、该供应商上的家族、精确模型三种粒度，精确模型优先。默认的 `openai` / `openai-codex` / `cpa` 名单仍按供应商级授权处理，已有配置与已保存的 Fast 偏好升级后保持原行为，无需迁移。
+- 模型 ID 改为统一语法解析：命名空间可含 CJK，家族只由最后一段决定；`cpa/../gpt-6.1-sol`、空段、反斜杠、`?`、`#`、空白等非法 ID 直接判为不可用，不会被当成 OpenAI 路由。前缀 ID 上行时保持原样，不做改写。
+- `openai_fast` 的 `status` 返回值新增 `state`/`family`/`api`/`grant`/`evidence`，可以直接看出某条路由为什么没有开启 Fast。
+- 测试：新增 31 条路由真值表用例 + 家族×授权×证据网格、模型 ID 语法用例，以及授权网关后的反向集成用例（其他家族请求绝不带 `service_tier`，前缀 ID 原样上行，撤销授权立即停止注入）。`pnpm run fast:truth-table` 可打印全部用例。
+- 文档：新增 `docs/fast-route-authorization.md`，中英文 README 与安全说明同步更新。
+- 范围说明：本轮只实现解析器、Host/Client 接线与测试。`grant-missing` 与 `rejected` 两种状态已定义并有测试覆盖，但上游预检证据尚未接入（下一步实现），因此当前运行时不会出现这两态；设置面板仍是供应商级授权，路由级授权的界面在下一版。
 ## 1.2.41 — 提示词辅助不再占侧栏位置 / Out of the sidebar（2026-10-21）
 
 - 提示词辅助不再在侧栏占一行。设置改为从「插件」页里这个插件自己的页面打开，侧栏只留一个应用入口。
