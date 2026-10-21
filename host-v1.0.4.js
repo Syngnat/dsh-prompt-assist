@@ -43,7 +43,7 @@ export async function apply(ctx, config = {}) {
   });
   ctx.tools.register({
     name: 'openai_fast',
-    description: 'Read or change Fast (request-level Priority) for this session. It applies to authorized OpenAI gpt/o and xAI Grok 4+ routes; Priority may incur extra charges. Root sessions start off; local subagents inherit their parent unless explicitly overridden.',
+    description: 'Read or change Fast (request-level Priority) for this session. It applies to authorized OpenAI gpt/o and xAI Grok 4+ routes; Priority may incur extra charges. Root sessions start off; local subagents inherit their parent unless explicitly overridden. status also reports the route state: ready (injecting), needs-verification, grant-missing, rejected, api-incompatible or not-candidate.',
     parameters: {
       type: 'object', properties: {
         action: { type: 'string', enum: ['status', 'on', 'off'], description: 'status reads preference, inheritance and model capabilities; on/off explicitly sets this session’s preference.' },
@@ -57,7 +57,24 @@ export async function apply(ctx, config = {}) {
           reasoningEffort: { oneOf: [{ type: 'string' }, { type: 'null' }] },
           supportedReasoningEfforts: { oneOf: [{ type: 'array', items: { type: 'string' } }, { type: 'null' }] },
           modelCapabilityFix: { type: 'string', enum: ['updated', 'unchanged', 'not-configured', 'failed', 'not-requested'] },
-        }, required: ['enabled', 'eligible', 'inherited', 'provider', 'model', 'reasoningEffort', 'supportedReasoningEfforts', 'modelCapabilityFix'], additionalProperties: false,
+          // Resolver output: authorization evidence for this route, not just a boolean.
+          state: { type: 'string', enum: ['ready', 'needs-verification', 'grant-missing', 'rejected', 'api-incompatible', 'not-candidate'] },
+          family: { oneOf: [{ type: 'string', enum: ['openai', 'xai', 'other'] }, { type: 'null' }] },
+          api: { oneOf: [{ type: 'string' }, { type: 'null' }] },
+          grant: { oneOf: [
+            { type: 'object', properties: {
+              provider: { type: 'string' },
+              model: { oneOf: [{ type: 'string' }, { type: 'null' }] },
+              family: { oneOf: [{ type: 'string' }, { type: 'null' }] },
+            }, required: ['provider', 'model', 'family'], additionalProperties: false },
+            { type: 'null' },
+          ] },
+          evidence: { oneOf: [
+            { type: 'object', properties: { priority: { type: 'string', enum: ['verified', 'declared', 'unknown', 'rejected'] } },
+              required: ['priority'], additionalProperties: false },
+            { type: 'null' },
+          ] },
+        }, required: ['enabled', 'eligible', 'inherited', 'provider', 'model', 'reasoningEffort', 'supportedReasoningEfforts', 'modelCapabilityFix', 'state', 'family', 'api', 'grant', 'evidence'], additionalProperties: false,
       },
       render: (_args, value) => [{ type: 'text', text: JSON.stringify(value) }],
     },

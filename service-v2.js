@@ -1,5 +1,5 @@
 import { COMMAND_NAME, PROJECTION_KEY } from './projection.js';
-import { isOpenAISelection } from './policy.js';
+import { resolveFastRoute } from './fast-route.js';
 import { resolveFastPreference } from './fast-scope.js';
 
 /** UI and model tool retain one command operation and one durable preference. */
@@ -22,14 +22,23 @@ export class OpenAIFastService {
 
   enabled(agent) { return this.preference(agent).enabled; }
 
+  /** One resolver call answers both "may we inject?" and "why not?" for every call site. */
+  resolution(selection) {
+    return resolveFastRoute(selection, { grants: this.providers });
+  }
+
   status(agent) {
     const selection = this.selection(agent);
-    const eligible = isOpenAISelection(selection, this.providers);
+    const resolution = this.resolution(selection);
+    const eligible = resolution.eligible;
     const preference = this.preference(agent);
     return {
       enabled: eligible && preference.enabled, eligible, inherited: preference.inherited,
       provider: selection.provider, model: selection.model,
       reasoningEffort: selection.reasoningEffort ?? null,
+      // Evidence travels with the answer so a caller never has to re-derive authorization.
+      state: resolution.state, family: resolution.route?.family ?? null, api: resolution.route?.api ?? null,
+      grant: resolution.grant, evidence: resolution.evidence,
     };
   }
 

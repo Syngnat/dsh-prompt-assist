@@ -100,6 +100,8 @@ plugin_manager({
 
 **带前缀的 Grok ID（v1.2.26）：** 补充识别 `安和桥/grok-4.7`、`xai/grok-4.7` 等目录命名空间；v1.2.24/1.2.25 只识别裸 ID，因此这种命名会导致按钮隐藏。仅按最后一个模型段识别家族，发送时保留完整 ID；前缀不等于供应商授权，仍须校验真实 provider ID。
 
+**以路由为单位授权。** Fast 的授权单位是 `(供应商, 模型, 协议, 来源)` 路由，而不是模型名，也不只是供应商。给网关授权后，它下面带前缀的 OpenAI 模型不再隐藏按钮，也不会顺带加速该网关的其他家族模型：每条路由解析为 `ready`、`needs-verification`、`grant-missing`、`rejected`、`api-incompatible` 或 `not-candidate`。只有 `api-incompatible` 与 `not-candidate` 会隐藏控件，其余可操作状态一律可见并各自说明原因。授权可指定供应商、该供应商上的某个家族、或某个确切模型，精确模型优先。详见 [Fast 路由授权](docs/fast-route-authorization.md)，`pnpm run fast:truth-table` 可打印全部用例。
+
 > **从v1.2.13起：** 已识别的 GPT/OpenAI 模型不再因供应商未获准或 Host 投影尚未载入而静默隐藏 Fast；改为禁用并说明原因。元数据读取只进行有界重试，不会请求模型。模型名匹配忽略大小写，供应商 ID 仍精确匹配；兼容 OpenAI 协议不代表支持 Priority，不能自动放开收费授权。
 
 主 **Fast** 图标按钮紧邻模型选择器，只作用于明确允许的 OpenAI 或 Grok 4+ 模型路由，并要求上游服务商支持 Priority。它可能额外收费，不保证一定更快。支持继承的子智能体在没有独立设置时继承父会话偏好。

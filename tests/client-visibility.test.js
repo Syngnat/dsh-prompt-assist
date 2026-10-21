@@ -22,7 +22,7 @@ test('Client config cannot contradict the authoritative Host allowlist', () => {
   assert.equal(view.visible, true);
   assert.equal(view.eligible, false);
   assert.equal(view.enabled, false);
-  assert.equal(view.reason, 'unsupported-provider');
+  assert.equal(view.reason, 'needs-verification');
 });
 
 test('published Fast state, rather than object truthiness, controls checked state', () => {
@@ -61,4 +61,26 @@ test('a new binding for the same session refreshes again after reconnect', () =>
   bundle.hydrateSession(ready, {}, 'same-session', refresh, report);
   bundle.hydrateSession(ready, {}, 'same-session', refresh, report);
   assert.equal(reads, 2);
+});
+test('the reported Magpie route stays visible and explains itself instead of vanishing', () => {
+  const reported = { provider: 'magpie', model: 'cpa/gpt-6.1-sol' };
+  const pending = bundle.derivePresentation({ enabled: false, providers: ['openai', 'openai-codex', 'cpa'] }, reported, null);
+  assert.equal(pending.visible, true, 'the switch must not vanish on a namespaced OpenAI route');
+  assert.equal(pending.enabled, false);
+  assert.equal(pending.eligible, false);
+  assert.equal(pending.reason, 'needs-verification');
+  const ready = bundle.derivePresentation({ enabled: true, providers: ['magpie'] }, reported, null);
+  assert.equal(ready.visible, true);
+  assert.equal(ready.enabled, true);
+  assert.equal(ready.eligible, true);
+  assert.equal(ready.reason, 'ready');
+});
+
+test('granting the gateway never shows Fast on its other model families', () => {
+  for (const model of ['cpa/glm-5.3-flash', 'cpa/deepseek-v4.1-flash', 'glm-5.3-flash']) {
+    const view = bundle.derivePresentation({ enabled: true, providers: ['magpie'] }, { provider: 'magpie', model }, null);
+    assert.equal(view.visible, false, model);
+    assert.equal(view.eligible, false, model);
+    assert.equal(view.reason, 'unsupported-model', model);
+  }
 });

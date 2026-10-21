@@ -131,7 +131,7 @@ test("presentation exposes GPT without granting an unapproved provider", () => {
   const bundle = pure();
   for (const providers of [[], ["openai"]]) {
     assert.deepEqual(bundle.derivePresentation({enabled: true, providers}, selected, null),
-      {visible: true, enabled: false, eligible: false, reason: "unsupported-provider"});
+      {visible: true, enabled: false, eligible: false, reason: "needs-verification"});
   }
 });
 
@@ -184,7 +184,7 @@ for (const model of ["grok-4.6", "grok-4.7", "grok-4.8", "安和桥/grok-4.7"]) 
     }
     for (const providers of [[], ["openai"], ["XAI"]]) {
       assert.deepEqual(bundle.derivePresentation({enabled: true, providers}, selection, null),
-        {visible: true, enabled: false, eligible: false, reason: "unsupported-provider"});
+        {visible: true, enabled: false, eligible: false, reason: "needs-verification"});
     }
     for (const wire of [undefined, null, true, false, {enabled: true}, {enabled: "true", providers: ["xai"]}]) {
       assert.deepEqual(bundle.derivePresentation(wire, selection, null),

@@ -49,23 +49,123 @@ var init_identity = __esm({
   }
 });
 
-// policy.js
-function isOpenAIModel(model) {
-  return typeof model === "string" && /^(?:gpt-|chatgpt-|codex(?:-|$)|o[1-9](?:-|$))/i.test(model);
+// model-id.js
+function parseModelId(value) {
+  if (typeof value !== "string" || value.length === 0 || UNSAFE.test(value)) return null;
+  const segments = value.split("/");
+  if (segments.some((part) => part.length === 0 || part === "." || part === "..")) return null;
+  if (segments.slice(0, -1).some((part) => !NAMESPACE.test(part))) return null;
+  const last = segments[segments.length - 1];
+  const family = MODEL_FAMILIES.find((entry) => entry.test(last))?.id ?? "other";
+  return Object.freeze({ id: value, segments: Object.freeze(segments), last, family });
 }
-function isGrokModel(model) {
-  if (typeof model !== "string" || /[\s\\?#\u0000-\u001f\u007f]/u.test(model)) return false;
-  const segments = model.split("/");
-  if (segments.some((part) => !part || part === "." || part === "..") || segments.slice(0, -1).some((part) => !/^[\p{L}\p{M}\p{N}_.-]+$/u.test(part))) return false;
-  return /^grok-(?:[4-9]|[1-9]\d+)(?:[.-]|$)/i.test(segments.at(-1));
+function modelFamily(model) {
+  return parseModelId(model)?.family ?? "other";
 }
 function isPriorityModel(model) {
-  return isOpenAIModel(model) || isGrokModel(model);
+  const family = modelFamily(model);
+  return MODEL_FAMILIES.some((entry) => entry.id === family);
 }
-var DEFAULT_PROVIDERS;
-var init_policy = __esm({
-  "policy.js"() {
-    DEFAULT_PROVIDERS = Object.freeze(["openai", "openai-codex"]);
+var NAMESPACE, UNSAFE, MODEL_FAMILIES;
+var init_model_id = __esm({
+  "model-id.js"() {
+    NAMESPACE = /^[\p{L}\p{M}\p{N}_.-]+$/u;
+    UNSAFE = /[\s\\?#\u0000-\u001f\u007f]/u;
+    MODEL_FAMILIES = Object.freeze([
+      Object.freeze({
+        id: "openai",
+        test: (last) => /^(?:gpt-|chatgpt-|codex(?:-|$)|o[1-9](?:-|$))/i.test(last)
+      }),
+      Object.freeze({
+        // Grok 4 and later; forward-compatible with future major versions. grok-1/2/3 are out of scope.
+        id: "xai",
+        test: (last) => /^grok-(?:[4-9]|[1-9]\d+)(?:[.-]|$)/i.test(last)
+      })
+    ]);
+  }
+});
+
+// fast-route.js
+function routeKey(provider, model) {
+  return provider + "\0" + model;
+}
+function normalizeGrants(value) {
+  const list = typeof value === "function" ? value() : value;
+  if (!Array.isArray(list)) return Object.freeze([]);
+  const grants = [];
+  for (const item of list) {
+    if (typeof item === "string") {
+      if (item) grants.push(grant(item, null, null));
+      continue;
+    }
+    if (!item || typeof item !== "object" || Array.isArray(item)) continue;
+    const provider = typeof item.provider === "string" ? item.provider : "";
+    if (!provider) continue;
+    const model = typeof item.model === "string" && item.model ? item.model : null;
+    const family = typeof item.family === "string" && item.family && item.family !== "other" ? item.family : null;
+    grants.push(grant(provider, model, family));
+  }
+  return Object.freeze(grants);
+}
+function matchGrant(value, route) {
+  if (!route) return null;
+  let family = null;
+  for (const candidate of normalizeGrants(value)) {
+    if (candidate.provider !== route.provider) continue;
+    if (candidate.model) {
+      if (candidate.model === route.model) return candidate;
+      continue;
+    }
+    if (candidate.family) {
+      if (candidate.family === route.family) family = family ?? candidate;
+      continue;
+    }
+    return candidate;
+  }
+  return family;
+}
+function resolveFastRoute(selection, policy = {}) {
+  const provider = selection && typeof selection.provider === "string" && selection.provider ? selection.provider : "";
+  const parsed = parseModelId(selection && selection.model);
+  const route = provider && parsed ? Object.freeze({
+    provider,
+    model: parsed.id,
+    family: parsed.family,
+    api: policy.apis?.[provider] ?? null
+  }) : null;
+  if (!route || route.family === "other") return result("not-candidate", route);
+  if (route.api && !SUPPORTED_APIS.has(route.api)) return result("api-incompatible", route);
+  const evidence = policy.routes?.[routeKey(route.provider, route.model)] ?? null;
+  const priority = evidence?.priority ?? "unknown";
+  if (priority === "rejected") return result("rejected", route, matchGrant(policy.grants, route), evidence);
+  const granted = matchGrant(policy.grants, route);
+  if (granted) return result("ready", route, granted, evidence);
+  if (priority === "verified") return result("grant-missing", route, null, evidence);
+  return result("needs-verification", route, null, evidence);
+}
+var SUPPORTED_APIS, FAST_ROUTE_STATES, ROUTE_EVIDENCE, grant, result;
+var init_fast_route = __esm({
+  "fast-route.js"() {
+    init_model_id();
+    SUPPORTED_APIS = /* @__PURE__ */ new Set(["openai-responses", "openai-completions", "openai-codex-responses"]);
+    FAST_ROUTE_STATES = Object.freeze([
+      "ready",
+      "needs-verification",
+      "grant-missing",
+      "rejected",
+      "api-incompatible",
+      "not-candidate"
+    ]);
+    ROUTE_EVIDENCE = Object.freeze(["verified", "declared", "unknown", "rejected"]);
+    grant = (provider, model, family) => Object.freeze({ provider, model, family });
+    result = (state, route, grant2, evidence) => Object.freeze({
+      state,
+      visible: state === "ready" || state === "needs-verification" || state === "grant-missing" || state === "rejected",
+      eligible: state === "ready",
+      route,
+      grant: grant2 ?? null,
+      evidence: evidence ?? null
+    });
   }
 });
 
@@ -103,13 +203,13 @@ function createPrioritySource(connection) {
     const token = ++epoch;
     inflight = (async () => {
       try {
-        const result = await connection.rpc.call(ASSIST_CHANNEL, PRIORITY_ENDPOINT, { action: "snapshot" });
+        const result2 = await connection.rpc.call(ASSIST_CHANNEL, PRIORITY_ENDPOINT, { action: "snapshot" });
         if (disposed || token !== epoch) return snapshot;
-        if (result?.ok !== true) {
+        if (result2?.ok !== true) {
           publish({ ...snapshot, status: "error" });
           return snapshot;
         }
-        const value = result.value;
+        const value = result2.value;
         publish({
           status: "ready",
           revision: Number.isSafeInteger(value?.revision) ? value.revision : null,
@@ -428,7 +528,7 @@ async function streamAssist(fetcher, sessionId, input, signal, onText) {
   const response = await fetcher(STREAM_PATH.slice(1), { method: "POST", credentials: "same-origin", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...input, sessionId, action: "generate" }), signal });
   if (!response.ok || !response.body) throw Object.assign(new Error("transport-unavailable"), { code: "transport-unavailable" });
   const reader = response.body.getReader(), decoder = new TextDecoder();
-  let buffer = "", text = "", result, complete = false;
+  let buffer = "", text = "", result2, complete = false;
   const accept = (line) => {
     if (!line) return;
     const frame = JSON.parse(line);
@@ -440,7 +540,7 @@ async function streamAssist(fetcher, sessionId, input, signal, onText) {
       text = frame.text;
       onText(text);
     } else if (frame.type === "result") {
-      result = frame.value;
+      result2 = frame.value;
       complete = true;
     } else if (frame.type === "error") throw Object.assign(new Error(frame.code), { code: frame.code });
   };
@@ -458,7 +558,7 @@ async function streamAssist(fetcher, sessionId, input, signal, onText) {
     buffer += decoder.decode();
     if (buffer) accept(buffer);
     if (!complete) throw Object.assign(new Error("incomplete-stream"), { code: "transport-incomplete" });
-    return result;
+    return result2;
   } finally {
     await reader.cancel().catch(() => {
     });
@@ -476,9 +576,9 @@ var init_stream_transport = __esm({
 function createAssistRpcApi(connection, fetcher = (...args) => globalThis.fetch(...args)) {
   return async (action, sessionId, input = {}, signal, onText) => {
     if (action === "generate" && typeof onText === "function") return streamAssist(fetcher, sessionId, input, signal, onText);
-    let result;
+    let result2;
     try {
-      result = await connection.rpc.call(
+      result2 = await connection.rpc.call(
         ASSIST_CHANNEL,
         ASSIST_ENDPOINT,
         { ...input, action, sessionId },
@@ -488,11 +588,11 @@ function createAssistRpcApi(connection, fetcher = (...args) => globalThis.fetch(
       if (signal?.aborted) throw error;
       throw Object.assign(new Error("transport-unavailable"), { code: "transport-unavailable" });
     }
-    if (result?.ok !== true) {
-      const code2 = result?.error?.code ?? "transport-invalid-response";
+    if (result2?.ok !== true) {
+      const code2 = result2?.error?.code ?? "transport-invalid-response";
       throw Object.assign(new Error(code2), { code: code2 });
     }
-    return result.value;
+    return result2.value;
   };
 }
 var init_rpc_transport = __esm({
@@ -1194,10 +1294,10 @@ var init_result_anchor = __esm({
 });
 
 // assist/client/panel-visibility.js
-function shouldShowPanel({ open, result, undo, input, sessionId }) {
-  const preview = ownsResult(result?.preview, sessionId);
+function shouldShowPanel({ open, result: result2, undo, input, sessionId }) {
+  const preview = ownsResult(result2?.preview, sessionId);
   const actionableUndo = ownsResult(undo, sessionId) && input.draft === undo.original && input.draftRev === undo.draftRev;
-  return Boolean(open || preview || ownsResult(result?.noSuggestion, sessionId) && result.noSuggestion.automatic !== true || result?.pending || result?.error || actionableUndo);
+  return Boolean(open || preview || ownsResult(result2?.noSuggestion, sessionId) && result2.noSuggestion.automatic !== true || result2?.pending || result2?.error || actionableUndo);
 }
 var init_panel_visibility = __esm({
   "assist/client/panel-visibility.js"() {
@@ -1471,7 +1571,7 @@ function createAssistController(deps) {
       }
     }, 135e3);
     try {
-      const result = await deps.send("generate", sessionId, {
+      const result2 = await deps.send("generate", sessionId, {
         feature,
         requestId: deps.requestId(),
         draft: snapshot.original,
@@ -1488,18 +1588,18 @@ function createAssistController(deps) {
         feature
       }));
       if (disposed || abort.signal.aborted || revision !== epoch) return false;
-      if (!result || result.draftRev !== snapshot.draftRev || result.original !== snapshot.original || result.feature !== feature || feature === "suggest" && result.qaId !== qaId) {
+      if (!result2 || result2.draftRev !== snapshot.draftRev || result2.original !== snapshot.original || result2.feature !== feature || feature === "suggest" && result2.qaId !== qaId) {
         publish({ error: "stale", preview: null });
         return false;
       }
-      const noSuggestion = result.outcome === "no-suggestion";
-      const validText = typeof result.text === "string" && result.text.trim() !== "";
-      const validOutcome = noSuggestion ? feature === "suggest" && result.text === "" : validText && (feature === "suggest" ? (result.outcome === void 0 || result.outcome === "suggestion") && !isNoSuggestionPlaceholder(result.text) : result.outcome === void 0);
+      const noSuggestion = result2.outcome === "no-suggestion";
+      const validText = typeof result2.text === "string" && result2.text.trim() !== "";
+      const validOutcome = noSuggestion ? feature === "suggest" && result2.text === "" : validText && (feature === "suggest" ? (result2.outcome === void 0 || result2.outcome === "suggestion") && !isNoSuggestionPlaceholder(result2.text) : result2.outcome === void 0);
       if (!validOutcome) {
         publish({ error: "requestError", preview: null, noSuggestion: null });
         return false;
       }
-      const receipt = { ...result, sessionId, snapshot: { ...snapshot, structured: snapshot.structured || result.structured === true } };
+      const receipt = { ...result2, sessionId, snapshot: { ...snapshot, structured: snapshot.structured || result2.structured === true } };
       publish(noSuggestion ? { noSuggestion: { ...receipt, automatic: automatic === true }, preview: null } : { preview: receipt, noSuggestion: null });
       return true;
     } catch (error) {
@@ -1852,7 +1952,7 @@ function useAssistRuntime(p) {
   const wire = import_react4.default.useSyncExternalStore(p.assistSource.subscribe, p.assistSource.getSnapshot, p.assistSource.getSnapshot);
   const selection = import_react4.default.useSyncExternalStore(p.assistModel.subscribe, p.assistModel.getSnapshot, p.assistModel.getSnapshot);
   const [host, setHost] = import_react4.default.useState(null);
-  const [result, setResult] = import_react4.default.useState({ pending: null, preview: null, noSuggestion: null, error: null });
+  const [result2, setResult] = import_react4.default.useState({ pending: null, preview: null, noSuggestion: null, error: null });
   const [notice, setNotice] = import_react4.default.useState(null);
   const current = import_react4.default.useRef({ input, actions: p.inputActions, sessionId: p.sessionId });
   current.current = { input, actions: p.inputActions, sessionId: p.sessionId };
@@ -1869,7 +1969,7 @@ function useAssistRuntime(p) {
   const settings = import_react4.default.useMemo(() => mergeGlobalSettings(null, enablement), [enablement.connected, enablement.data]);
   const state = reconciled.state ? { ...reconciled.state, settings } : null;
   const route = selection?.next ?? state?.current;
-  const routeKey = JSON.stringify(route ?? null);
+  const routeKey2 = JSON.stringify(route ?? null);
   import_react4.default.useEffect(() => {
     alive.current = true;
     controller.mount();
@@ -1897,8 +1997,8 @@ function useAssistRuntime(p) {
     return () => abort.abort();
   }, [p.sessionId, send, wire?.qaId, wire?.busy, session?.running]);
   import_react4.default.useEffect(() => {
-    observeEnablement({ sessionId: p.sessionId, input, settings, qaId: state?.qaId, busy, paused: false, routeKey }, enablement);
-  }, [observeEnablement, p.sessionId, input, settings, state?.qaId, busy, routeKey, enablement.connected, enablement.data]);
+    observeEnablement({ sessionId: p.sessionId, input, settings, qaId: state?.qaId, busy, paused: false, routeKey: routeKey2 }, enablement);
+  }, [observeEnablement, p.sessionId, input, settings, state?.qaId, busy, routeKey2, enablement.connected, enablement.data]);
   async function save() {
     setNotice("settings.globalOnly");
     return false;
@@ -1907,7 +2007,7 @@ function useAssistRuntime(p) {
     setNotice("settings.globalOnly");
     controller.configurationEdited();
   }
-  return { sessionId: p.sessionId, input, session, state, currentModel: route, settings, result, controller, send, save, edited, dirty: false, dirtyFeatures: [], saving: false, notice, setNotice, allowed, busy, readInput: () => current.current.input };
+  return { sessionId: p.sessionId, input, session, state, currentModel: route, settings, result: result2, controller, send, save, edited, dirty: false, dirtyFeatures: [], saving: false, notice, setNotice, allowed, busy, readInput: () => current.current.input };
 }
 function useModelOptions(runtime, feature, config, open) {
   const [catalog, setCatalog] = import_react4.default.useState({ providers: [], models: [] });
@@ -2101,9 +2201,9 @@ function AssistPanel(p) {
   const button = (key, onClick, disabled = false) => h6("button", { type: "button", className: "lpa-button", onClick, disabled }, t(key));
   const validUndo = ownsResult(undo, p.sessionId) && r.input.draft === undo.original && r.input.draftRev === undo.draftRev;
   const undoApply = () => {
-    const result = undoText(undo, r.readInput, p.inputActions);
-    if (result.ok) setUndo(null);
-    else r.setNotice(result.reason);
+    const result2 = undoText(undo, r.readInput, p.inputActions);
+    if (result2.ok) setUndo(null);
+    else r.setNotice(result2.reason);
   };
   const dismiss = () => {
     r.controller.dismiss();
@@ -2910,6 +3010,16 @@ var init_enablement_panel = __esm({
   }
 });
 
+// policy.js
+var DEFAULT_PROVIDERS;
+var init_policy = __esm({
+  "policy.js"() {
+    init_model_id();
+    init_fast_route();
+    DEFAULT_PROVIDERS = Object.freeze(["openai", "openai-codex"]);
+  }
+});
+
 // assist/client/priority-panel.js
 function availableCandidates(candidates, state) {
   const excluded = /* @__PURE__ */ new Set([...providerIds(state?.configured), ...providerIds(state?.authorized)]);
@@ -3058,10 +3168,10 @@ function createPriorityController(connection, { onChanged } = {}) {
     flight = null;
   };
   async function rpc(payload, signal) {
-    const result = await connection.rpc.call(ASSIST_CHANNEL, ENDPOINT, payload, signal);
+    const result2 = await connection.rpc.call(ASSIST_CHANNEL, ENDPOINT, payload, signal);
     if (signal.aborted) throw { code: "cancelled" };
-    if (result?.ok !== true) throw { code: result?.error?.code };
-    return result.value;
+    if (result2?.ok !== true) throw { code: result2?.error?.code };
+    return result2.value;
   }
   async function read(signal) {
     readState(await rpc({ action: "snapshot" }, signal));
@@ -5157,10 +5267,10 @@ function ModelPicker({ locked, available, directory, load, select, t, getLocale 
     setError(null);
     const epoch = life.epoch, source = directory, operation = ++life.operation;
     focusRecovery.current = panel.current?.contains(document.activeElement) ? { source, epoch, node: document.activeElement } : null;
-    return Promise.resolve().then(() => select(selection)).then((result) => {
+    return Promise.resolve().then(() => select(selection)).then((result2) => {
       if (!life.alive || life.source !== source || life.operation !== operation) return;
       if (life.open && life.epoch === epoch) {
-        if (result?.ok !== true) setError(result?.error?.code ?? "model-failed");
+        if (result2?.ok !== true) setError(result2?.error?.code ?? "model-failed");
         else if (closeOnSuccess) hide(true);
       }
     }, () => {
@@ -5569,7 +5679,8 @@ module.exports = __toCommonJS(client_entry_exports);
 init_identity();
 
 // client-fast-core.js
-init_policy();
+init_model_id();
+init_fast_route();
 init_priority_source();
 function createFast(require2) {
   let React17;
@@ -5583,16 +5694,21 @@ function createFast(require2) {
   function hasFastState(value) {
     return Boolean(value && typeof value === "object" && !Array.isArray(value) && typeof value.enabled === "boolean" && Array.isArray(value.providers) && value.providers.every((provider) => typeof provider === "string"));
   }
+  const grantsOf = (value) => Array.isArray(value?.providers) ? value.providers.filter((provider) => typeof provider === "string" && provider).map((provider) => ({ provider })) : [];
   function derivePresentation2(fastState, selected, fallback) {
     const selection = selected ?? fallback;
-    const family = isPriorityModel(selection?.model);
-    const ready = hasFastState(fastState);
-    const eligible = Boolean(family && ready && fastState.providers.includes(selection.provider));
+    if (!selection || modelFamily(selection.model) === "other") {
+      return { visible: false, enabled: false, eligible: false, reason: !selection ? "no-selection" : "unsupported-model" };
+    }
+    if (!hasFastState(fastState)) {
+      return { visible: true, enabled: false, eligible: false, reason: "loading" };
+    }
+    const resolution = resolveFastRoute(selection, { grants: grantsOf(fastState) });
     return {
-      visible: family,
-      enabled: eligible && fastState.enabled === true,
-      eligible,
-      reason: !selection ? "no-selection" : !family ? "unsupported-model" : !ready ? "loading" : !eligible ? "unsupported-provider" : "ready"
+      visible: resolution.visible,
+      enabled: resolution.eligible && fastState.enabled === true,
+      eligible: resolution.eligible,
+      reason: resolution.state
     };
   }
   function hydrateSession2(readyBindings, binding, sessionId, refresh, isReady = () => true) {
@@ -5740,6 +5856,8 @@ function createFast(require2) {
       loading: "Fast \u72B6\u6001\u5C1A\u672A\u786E\u8BA4\uFF0C\u5F00\u5173\u6682\u4E0D\u53EF\u7528\uFF1B\u8FD9\u4E0D\u4F1A\u66F4\u6539\u5DF2\u4FDD\u5B58\u7684 Fast \u8BBE\u7F6E\u3002",
       loadError: "Fast \u72B6\u6001\u540C\u6B65\u5931\u8D25\u3002\u8BF7\u5237\u65B0\u9875\u9762\uFF0C\u6216\u68C0\u67E5 Host \u4E0E Client \u63D2\u4EF6\u7248\u672C\u662F\u5426\u4E00\u81F4\u3002",
       unsupportedProvider: "\u6B64\u4F9B\u5E94\u5546\u672A\u5728 Priority \u5141\u8BB8\u540D\u5355\u4E2D\uFF0CFast \u4E0D\u4F1A\u5F00\u542F\u3002\u53EF\u5728\u201C\u63D0\u793A\u8BCD\u8F85\u52A9 \u2192 Priority \u4F9B\u5E94\u5546\u6388\u6743\u201D\u4E2D\u81EA\u52A9\u6388\u6743\uFF08\u8BE5\u4F9B\u5E94\u5546\u5FC5\u987B\u63D0\u4F9B OpenAI \u7CFB\u5217\u6216 Grok 4+ \u6A21\u578B\uFF0C\u5E76\u652F\u6301 Priority\uFF09\u3002\u4F9B\u5E94\u5546 ID",
+      unverified: "\u6B64\u6A21\u578B\u8DEF\u7531\u5C1A\u672A\u9A8C\u8BC1\u662F\u5426\u652F\u6301 Priority\uFF0CFast \u6682\u4E0D\u5F00\u542F\u3002\u786E\u8BA4\u4E0A\u6E38\u652F\u6301\u540E\uFF0C\u53EF\u5728\u201C\u63D0\u793A\u8BCD\u8F85\u52A9 \u2192 Priority \u4F9B\u5E94\u5546\u6388\u6743\u201D\u4E2D\u663E\u5F0F\u6388\u6743\u3002\u4F9B\u5E94\u5546 ID",
+      rejected: "\u4E0A\u6E38\u5DF2\u5FFD\u7565\u6216\u62D2\u7EDD Priority\uFF0CFast \u4E0D\u4F1A\u5728\u6B64\u8DEF\u7531\u5F00\u542F\u3002\u4F9B\u5E94\u5546 ID",
       access: "\u5F53\u524D\u4F1A\u8BDD\u6CA1\u6709\u6267\u884C Fast \u5F00\u5173\u547D\u4EE4\u7684\u6743\u9650\u3002"
     },
     en: {
@@ -5751,6 +5869,8 @@ function createFast(require2) {
       loading: "Fast status is not confirmed yet; the control is temporarily unavailable. Existing Host settings are unchanged.",
       loadError: "Fast state could not be loaded. Refresh or check that Host and Client plugin versions match.",
       unsupportedProvider: "This provider is not authorized for Priority, so Fast stays off. Authorize it under \u201CPrompt assist \u2192 Priority provider authorization\u201D; the provider must offer OpenAI-family or Grok 4+ models and support Priority. Provider ID",
+      unverified: "Priority support for this route is not verified yet, so Fast stays off. Authorize it under \u201CPrompt assist \u2192 Priority provider authorization\u201D once the upstream is confirmed. Provider ID",
+      rejected: "The upstream ignored or refused Priority, so Fast stays off on this route. Provider ID",
       access: "This session cannot execute Fast toggle commands."
     }
   };
@@ -5769,8 +5889,8 @@ function createFast(require2) {
     const [selection, setSelection] = React17.useState(null);
     React17.useEffect(() => {
       let active = true;
-      remote.session.modelCatalog().then((result) => {
-        if (active && result.ok) setSelection(result.value.default);
+      remote.session.modelCatalog().then((result2) => {
+        if (active && result2.ok) setSelection(result2.value.default);
       }).catch(() => {
       });
       return () => {
@@ -5818,14 +5938,14 @@ function createFast(require2) {
     const controller = React17.useMemo(() => createToggleController2({
       initial: enabled,
       send: async (next) => {
-        const result = await props.remote.commands.execute(
+        const result2 = await props.remote.commands.execute(
           props.sessionId,
           `/openai-fast ${next ? "on" : "off"}`,
           []
         );
-        if (!result.ok) throw new Error(result.error.message);
-        if (result.value?.result.kind !== "success") {
-          throw new Error(result.value?.result.text ?? props.t("error"));
+        if (!result2.ok) throw new Error(result2.error.message);
+        if (result2.value?.result.kind !== "success") {
+          throw new Error(result2.value?.result.text ?? props.t("error"));
         }
       },
       publish: (value) => {
@@ -5842,7 +5962,7 @@ function createFast(require2) {
     const provider = (selected ?? defaultSelection)?.provider ?? "";
     const providerName = priorityState?.names?.[provider];
     const providerLabel = typeof providerName === "string" && providerName && providerName !== provider ? providerName + " (" + provider + ")" : provider;
-    const blocked = reason === "loading" ? props.t(loadFailed ? "loadError" : "loading") : reason === "unsupported-provider" ? props.t("unsupportedProvider") + ": " + providerLabel : !allowed ? props.t("access") : null;
+    const blocked = reason === "loading" ? props.t(loadFailed ? "loadError" : "loading") : reason === "needs-verification" ? props.t("unverified") + ": " + providerLabel : reason === "grant-missing" ? props.t("unsupportedProvider") + ": " + providerLabel : reason === "rejected" ? props.t("rejected") + ": " + providerLabel : !allowed ? props.t("access") : null;
     React17.useEffect(() => {
       if (!blocked) setNotice("");
     }, [blocked]);

@@ -40,7 +40,8 @@
     "test": "node --test tests/*.test.js",
     "build": "node build.mjs",
     "release:stable": "node scripts/publish-stable.mjs",
-    "eval:enhancement": "node evals/enhancement/cli.mjs"
+    "eval:enhancement": "node evals/enhancement/cli.mjs",
+    "fast:truth-table": "node scripts/fast-route-truth-table.mjs"
   },
   "dsh": {
     "bundle": {

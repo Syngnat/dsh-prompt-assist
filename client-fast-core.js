@@ -1,4 +1,5 @@
-import { isPriorityModel } from './policy.js';
+import { modelFamily } from './model-id.js';
+import { resolveFastRoute } from './fast-route.js';
 import { createPrioritySource, onPriorityChanged } from './assist/client/priority-source.js';
 
 export function createFast(require) {
@@ -13,17 +14,26 @@ export function createFast(require) {
         && typeof value.enabled === 'boolean' && Array.isArray(value.providers)
         && value.providers.every(provider => typeof provider === 'string'));
     }
+    /** The projection publishes an authorized provider list; route grants reuse the same resolver. */
+    const grantsOf = value => Array.isArray(value?.providers)
+      ? value.providers.filter(provider => typeof provider === 'string' && provider).map(provider => ({ provider }))
+      : [];
     function derivePresentation(fastState, selected, fallback) {
       const selection = selected ?? fallback;
-      const family = isPriorityModel(selection?.model);
-      const ready = hasFastState(fastState);
-      const eligible = Boolean(family && ready && fastState.providers.includes(selection.provider));
+      // Client rendering and Host injection share one resolver, so a visible control always agrees
+      // with what the bridge would do; only structurally impossible routes stay hidden.
+      if (!selection || modelFamily(selection.model) === 'other') {
+        return { visible: false, enabled: false, eligible: false, reason: !selection ? 'no-selection' : 'unsupported-model' };
+      }
+      if (!hasFastState(fastState)) {
+        return { visible: true, enabled: false, eligible: false, reason: 'loading' };
+      }
+      const resolution = resolveFastRoute(selection, { grants: grantsOf(fastState) });
       return {
-        visible: family,
-        enabled: eligible && fastState.enabled === true,
-        eligible,
-        reason: !selection ? 'no-selection' : !family ? 'unsupported-model'
-          : !ready ? 'loading' : !eligible ? 'unsupported-provider' : 'ready',
+        visible: resolution.visible,
+        enabled: resolution.eligible && fastState.enabled === true,
+        eligible: resolution.eligible,
+        reason: resolution.state,
       };
     }
     /** Mark a binding ready only after a successful, usable projection read. */
@@ -139,6 +149,8 @@ export function createFast(require) {
         loading: 'Fast 状态尚未确认，开关暂不可用；这不会更改已保存的 Fast 设置。',
         loadError: 'Fast 状态同步失败。请刷新页面，或检查 Host 与 Client 插件版本是否一致。',
         unsupportedProvider: '此供应商未在 Priority 允许名单中，Fast 不会开启。可在“提示词辅助 → Priority 供应商授权”中自助授权（该供应商必须提供 OpenAI 系列或 Grok 4+ 模型，并支持 Priority）。供应商 ID',
+        unverified: '此模型路由尚未验证是否支持 Priority，Fast 暂不开启。确认上游支持后，可在“提示词辅助 → Priority 供应商授权”中显式授权。供应商 ID',
+        rejected: '上游已忽略或拒绝 Priority，Fast 不会在此路由开启。供应商 ID',
         access: '当前会话没有执行 Fast 开关命令的权限。',
       },
       en: {
@@ -149,6 +161,8 @@ export function createFast(require) {
         loading: 'Fast status is not confirmed yet; the control is temporarily unavailable. Existing Host settings are unchanged.',
         loadError: 'Fast state could not be loaded. Refresh or check that Host and Client plugin versions match.',
         unsupportedProvider: 'This provider is not authorized for Priority, so Fast stays off. Authorize it under “Prompt assist → Priority provider authorization”; the provider must offer OpenAI-family or Grok 4+ models and support Priority. Provider ID',
+        unverified: 'Priority support for this route is not verified yet, so Fast stays off. Authorize it under “Prompt assist → Priority provider authorization” once the upstream is confirmed. Provider ID',
+        rejected: 'The upstream ignored or refused Priority, so Fast stays off on this route. Provider ID',
         access: 'This session cannot execute Fast toggle commands.',
       },
     };
@@ -240,7 +254,9 @@ export function createFast(require) {
       const providerLabel = typeof providerName === 'string' && providerName && providerName !== provider
         ? providerName + ' (' + provider + ')' : provider;
       const blocked = reason === 'loading' ? props.t(loadFailed ? 'loadError' : 'loading')
-        : reason === 'unsupported-provider' ? props.t('unsupportedProvider') + ': ' + providerLabel
+        : reason === 'needs-verification' ? props.t('unverified') + ': ' + providerLabel
+        : reason === 'grant-missing' ? props.t('unsupportedProvider') + ': ' + providerLabel
+        : reason === 'rejected' ? props.t('rejected') + ': ' + providerLabel
         : !allowed ? props.t('access') : null;
       // A disabled <button> is not hoverable and shows no title in Chromium, so the control stays
       // focusable and clickable: a blocked click explains itself and never sends a command.

@@ -40,9 +40,9 @@ var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__ge
   mod
 ));
 
-// node_modules/.pnpm/semver@7.8.5/node_modules/semver/internal/constants.js
+// ../dsh-prompt-assist/node_modules/.pnpm/semver@7.8.5/node_modules/semver/internal/constants.js
 var require_constants = __commonJS({
-  "node_modules/.pnpm/semver@7.8.5/node_modules/semver/internal/constants.js"(exports, module) {
+  "../dsh-prompt-assist/node_modules/.pnpm/semver@7.8.5/node_modules/semver/internal/constants.js"(exports, module) {
     "use strict";
     var SEMVER_SPEC_VERSION = "2.0.0";
     var MAX_LENGTH = 256;
@@ -72,9 +72,9 @@ var require_constants = __commonJS({
   }
 });
 
-// node_modules/.pnpm/semver@7.8.5/node_modules/semver/internal/debug.js
+// ../dsh-prompt-assist/node_modules/.pnpm/semver@7.8.5/node_modules/semver/internal/debug.js
 var require_debug = __commonJS({
-  "node_modules/.pnpm/semver@7.8.5/node_modules/semver/internal/debug.js"(exports, module) {
+  "../dsh-prompt-assist/node_modules/.pnpm/semver@7.8.5/node_modules/semver/internal/debug.js"(exports, module) {
     "use strict";
     var debug = typeof process === "object" && process.env && process.env.NODE_DEBUG && /\bsemver\b/i.test(process.env.NODE_DEBUG) ? (...args) => console.error("SEMVER", ...args) : () => {
     };
@@ -82,9 +82,9 @@ var require_debug = __commonJS({
   }
 });
 
-// node_modules/.pnpm/semver@7.8.5/node_modules/semver/internal/re.js
+// ../dsh-prompt-assist/node_modules/.pnpm/semver@7.8.5/node_modules/semver/internal/re.js
 var require_re = __commonJS({
-  "node_modules/.pnpm/semver@7.8.5/node_modules/semver/internal/re.js"(exports, module) {
+  "../dsh-prompt-assist/node_modules/.pnpm/semver@7.8.5/node_modules/semver/internal/re.js"(exports, module) {
     "use strict";
     var {
       MAX_SAFE_COMPONENT_LENGTH,
@@ -170,9 +170,9 @@ var require_re = __commonJS({
   }
 });
 
-// node_modules/.pnpm/semver@7.8.5/node_modules/semver/internal/parse-options.js
+// ../dsh-prompt-assist/node_modules/.pnpm/semver@7.8.5/node_modules/semver/internal/parse-options.js
 var require_parse_options = __commonJS({
-  "node_modules/.pnpm/semver@7.8.5/node_modules/semver/internal/parse-options.js"(exports, module) {
+  "../dsh-prompt-assist/node_modules/.pnpm/semver@7.8.5/node_modules/semver/internal/parse-options.js"(exports, module) {
     "use strict";
     var looseOption = Object.freeze({ loose: true });
     var emptyOpts = Object.freeze({});
@@ -189,9 +189,9 @@ var require_parse_options = __commonJS({
   }
 });
 
-// node_modules/.pnpm/semver@7.8.5/node_modules/semver/internal/identifiers.js
+// ../dsh-prompt-assist/node_modules/.pnpm/semver@7.8.5/node_modules/semver/internal/identifiers.js
 var require_identifiers = __commonJS({
-  "node_modules/.pnpm/semver@7.8.5/node_modules/semver/internal/identifiers.js"(exports, module) {
+  "../dsh-prompt-assist/node_modules/.pnpm/semver@7.8.5/node_modules/semver/internal/identifiers.js"(exports, module) {
     "use strict";
     var numeric = /^[0-9]+$/;
     var compareIdentifiers = (a, b) => {
@@ -214,9 +214,9 @@ var require_identifiers = __commonJS({
   }
 });
 
-// node_modules/.pnpm/semver@7.8.5/node_modules/semver/classes/semver.js
+// ../dsh-prompt-assist/node_modules/.pnpm/semver@7.8.5/node_modules/semver/classes/semver.js
 var require_semver = __commonJS({
-  "node_modules/.pnpm/semver@7.8.5/node_modules/semver/classes/semver.js"(exports, module) {
+  "../dsh-prompt-assist/node_modules/.pnpm/semver@7.8.5/node_modules/semver/classes/semver.js"(exports, module) {
     "use strict";
     var debug = require_debug();
     var { MAX_LENGTH, MAX_SAFE_INTEGER } = require_constants();
@@ -506,9 +506,9 @@ var require_semver = __commonJS({
   }
 });
 
-// node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/parse.js
+// ../dsh-prompt-assist/node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/parse.js
 var require_parse = __commonJS({
-  "node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/parse.js"(exports, module) {
+  "../dsh-prompt-assist/node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/parse.js"(exports, module) {
     "use strict";
     var SemVer = require_semver();
     var parse = (version, options, throwErrors = false) => {
@@ -528,9 +528,9 @@ var require_parse = __commonJS({
   }
 });
 
-// node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/valid.js
+// ../dsh-prompt-assist/node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/valid.js
 var require_valid = __commonJS({
-  "node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/valid.js"(exports, module) {
+  "../dsh-prompt-assist/node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/valid.js"(exports, module) {
     "use strict";
     var parse = require_parse();
     var valid = (version, options) => {
@@ -541,9 +541,9 @@ var require_valid = __commonJS({
   }
 });
 
-// node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/clean.js
+// ../dsh-prompt-assist/node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/clean.js
 var require_clean = __commonJS({
-  "node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/clean.js"(exports, module) {
+  "../dsh-prompt-assist/node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/clean.js"(exports, module) {
     "use strict";
     var parse = require_parse();
     var clean = (version, options) => {
@@ -554,9 +554,9 @@ var require_clean = __commonJS({
   }
 });
 
-// node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/inc.js
+// ../dsh-prompt-assist/node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/inc.js
 var require_inc = __commonJS({
-  "node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/inc.js"(exports, module) {
+  "../dsh-prompt-assist/node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/inc.js"(exports, module) {
     "use strict";
     var SemVer = require_semver();
     var inc = (version, release, options, identifier, identifierBase) => {
@@ -578,9 +578,9 @@ var require_inc = __commonJS({
   }
 });
 
-// node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/diff.js
+// ../dsh-prompt-assist/node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/diff.js
 var require_diff = __commonJS({
-  "node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/diff.js"(exports, module) {
+  "../dsh-prompt-assist/node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/diff.js"(exports, module) {
     "use strict";
     var parse = require_parse();
     var diff = (version1, version2) => {
@@ -622,9 +622,9 @@ var require_diff = __commonJS({
   }
 });
 
-// node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/major.js
+// ../dsh-prompt-assist/node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/major.js
 var require_major = __commonJS({
-  "node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/major.js"(exports, module) {
+  "../dsh-prompt-assist/node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/major.js"(exports, module) {
     "use strict";
     var SemVer = require_semver();
     var major = (a, loose) => new SemVer(a, loose).major;
@@ -632,9 +632,9 @@ var require_major = __commonJS({
   }
 });
 
-// node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/minor.js
+// ../dsh-prompt-assist/node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/minor.js
 var require_minor = __commonJS({
-  "node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/minor.js"(exports, module) {
+  "../dsh-prompt-assist/node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/minor.js"(exports, module) {
     "use strict";
     var SemVer = require_semver();
     var minor = (a, loose) => new SemVer(a, loose).minor;
@@ -642,9 +642,9 @@ var require_minor = __commonJS({
   }
 });
 
-// node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/patch.js
+// ../dsh-prompt-assist/node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/patch.js
 var require_patch = __commonJS({
-  "node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/patch.js"(exports, module) {
+  "../dsh-prompt-assist/node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/patch.js"(exports, module) {
     "use strict";
     var SemVer = require_semver();
     var patch = (a, loose) => new SemVer(a, loose).patch;
@@ -652,9 +652,9 @@ var require_patch = __commonJS({
   }
 });
 
-// node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/prerelease.js
+// ../dsh-prompt-assist/node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/prerelease.js
 var require_prerelease = __commonJS({
-  "node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/prerelease.js"(exports, module) {
+  "../dsh-prompt-assist/node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/prerelease.js"(exports, module) {
     "use strict";
     var parse = require_parse();
     var prerelease = (version, options) => {
@@ -665,9 +665,9 @@ var require_prerelease = __commonJS({
   }
 });
 
-// node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/compare.js
+// ../dsh-prompt-assist/node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/compare.js
 var require_compare = __commonJS({
-  "node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/compare.js"(exports, module) {
+  "../dsh-prompt-assist/node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/compare.js"(exports, module) {
     "use strict";
     var SemVer = require_semver();
     var compare = (a, b, loose) => new SemVer(a, loose).compare(new SemVer(b, loose));
@@ -675,9 +675,9 @@ var require_compare = __commonJS({
   }
 });
 
-// node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/rcompare.js
+// ../dsh-prompt-assist/node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/rcompare.js
 var require_rcompare = __commonJS({
-  "node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/rcompare.js"(exports, module) {
+  "../dsh-prompt-assist/node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/rcompare.js"(exports, module) {
     "use strict";
     var compare = require_compare();
     var rcompare = (a, b, loose) => compare(b, a, loose);
@@ -685,9 +685,9 @@ var require_rcompare = __commonJS({
   }
 });
 
-// node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/compare-loose.js
+// ../dsh-prompt-assist/node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/compare-loose.js
 var require_compare_loose = __commonJS({
-  "node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/compare-loose.js"(exports, module) {
+  "../dsh-prompt-assist/node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/compare-loose.js"(exports, module) {
     "use strict";
     var compare = require_compare();
     var compareLoose = (a, b) => compare(a, b, true);
@@ -695,9 +695,9 @@ var require_compare_loose = __commonJS({
   }
 });
 
-// node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/compare-build.js
+// ../dsh-prompt-assist/node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/compare-build.js
 var require_compare_build = __commonJS({
-  "node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/compare-build.js"(exports, module) {
+  "../dsh-prompt-assist/node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/compare-build.js"(exports, module) {
     "use strict";
     var SemVer = require_semver();
     var compareBuild = (a, b, loose) => {
@@ -709,9 +709,9 @@ var require_compare_build = __commonJS({
   }
 });
 
-// node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/sort.js
+// ../dsh-prompt-assist/node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/sort.js
 var require_sort = __commonJS({
-  "node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/sort.js"(exports, module) {
+  "../dsh-prompt-assist/node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/sort.js"(exports, module) {
     "use strict";
     var compareBuild = require_compare_build();
     var sort = (list, loose) => list.sort((a, b) => compareBuild(a, b, loose));
@@ -719,9 +719,9 @@ var require_sort = __commonJS({
   }
 });
 
-// node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/rsort.js
+// ../dsh-prompt-assist/node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/rsort.js
 var require_rsort = __commonJS({
-  "node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/rsort.js"(exports, module) {
+  "../dsh-prompt-assist/node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/rsort.js"(exports, module) {
     "use strict";
     var compareBuild = require_compare_build();
     var rsort = (list, loose) => list.sort((a, b) => compareBuild(b, a, loose));
@@ -729,9 +729,9 @@ var require_rsort = __commonJS({
   }
 });
 
-// node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/gt.js
+// ../dsh-prompt-assist/node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/gt.js
 var require_gt = __commonJS({
-  "node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/gt.js"(exports, module) {
+  "../dsh-prompt-assist/node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/gt.js"(exports, module) {
     "use strict";
     var compare = require_compare();
     var gt = (a, b, loose) => compare(a, b, loose) > 0;
@@ -739,9 +739,9 @@ var require_gt = __commonJS({
   }
 });
 
-// node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/lt.js
+// ../dsh-prompt-assist/node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/lt.js
 var require_lt = __commonJS({
-  "node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/lt.js"(exports, module) {
+  "../dsh-prompt-assist/node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/lt.js"(exports, module) {
     "use strict";
     var compare = require_compare();
     var lt = (a, b, loose) => compare(a, b, loose) < 0;
@@ -749,9 +749,9 @@ var require_lt = __commonJS({
   }
 });
 
-// node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/eq.js
+// ../dsh-prompt-assist/node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/eq.js
 var require_eq = __commonJS({
-  "node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/eq.js"(exports, module) {
+  "../dsh-prompt-assist/node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/eq.js"(exports, module) {
     "use strict";
     var compare = require_compare();
     var eq = (a, b, loose) => compare(a, b, loose) === 0;
@@ -759,9 +759,9 @@ var require_eq = __commonJS({
   }
 });
 
-// node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/neq.js
+// ../dsh-prompt-assist/node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/neq.js
 var require_neq = __commonJS({
-  "node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/neq.js"(exports, module) {
+  "../dsh-prompt-assist/node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/neq.js"(exports, module) {
     "use strict";
     var compare = require_compare();
     var neq = (a, b, loose) => compare(a, b, loose) !== 0;
@@ -769,9 +769,9 @@ var require_neq = __commonJS({
   }
 });
 
-// node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/gte.js
+// ../dsh-prompt-assist/node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/gte.js
 var require_gte = __commonJS({
-  "node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/gte.js"(exports, module) {
+  "../dsh-prompt-assist/node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/gte.js"(exports, module) {
     "use strict";
     var compare = require_compare();
     var gte = (a, b, loose) => compare(a, b, loose) >= 0;
@@ -779,9 +779,9 @@ var require_gte = __commonJS({
   }
 });
 
-// node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/lte.js
+// ../dsh-prompt-assist/node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/lte.js
 var require_lte = __commonJS({
-  "node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/lte.js"(exports, module) {
+  "../dsh-prompt-assist/node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/lte.js"(exports, module) {
     "use strict";
     var compare = require_compare();
     var lte = (a, b, loose) => compare(a, b, loose) <= 0;
@@ -789,9 +789,9 @@ var require_lte = __commonJS({
   }
 });
 
-// node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/cmp.js
+// ../dsh-prompt-assist/node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/cmp.js
 var require_cmp = __commonJS({
-  "node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/cmp.js"(exports, module) {
+  "../dsh-prompt-assist/node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/cmp.js"(exports, module) {
     "use strict";
     var eq = require_eq();
     var neq = require_neq();
@@ -839,9 +839,9 @@ var require_cmp = __commonJS({
   }
 });
 
-// node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/coerce.js
+// ../dsh-prompt-assist/node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/coerce.js
 var require_coerce = __commonJS({
-  "node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/coerce.js"(exports, module) {
+  "../dsh-prompt-assist/node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/coerce.js"(exports, module) {
     "use strict";
     var SemVer = require_semver();
     var parse = require_parse();
@@ -885,9 +885,9 @@ var require_coerce = __commonJS({
   }
 });
 
-// node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/truncate.js
+// ../dsh-prompt-assist/node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/truncate.js
 var require_truncate = __commonJS({
-  "node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/truncate.js"(exports, module) {
+  "../dsh-prompt-assist/node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/truncate.js"(exports, module) {
     "use strict";
     var parse = require_parse();
     var constants = require_constants();
@@ -926,9 +926,9 @@ var require_truncate = __commonJS({
   }
 });
 
-// node_modules/.pnpm/semver@7.8.5/node_modules/semver/internal/lrucache.js
+// ../dsh-prompt-assist/node_modules/.pnpm/semver@7.8.5/node_modules/semver/internal/lrucache.js
 var require_lrucache = __commonJS({
-  "node_modules/.pnpm/semver@7.8.5/node_modules/semver/internal/lrucache.js"(exports, module) {
+  "../dsh-prompt-assist/node_modules/.pnpm/semver@7.8.5/node_modules/semver/internal/lrucache.js"(exports, module) {
     "use strict";
     var LRUCache = class {
       constructor() {
@@ -964,9 +964,9 @@ var require_lrucache = __commonJS({
   }
 });
 
-// node_modules/.pnpm/semver@7.8.5/node_modules/semver/classes/range.js
+// ../dsh-prompt-assist/node_modules/.pnpm/semver@7.8.5/node_modules/semver/classes/range.js
 var require_range = __commonJS({
-  "node_modules/.pnpm/semver@7.8.5/node_modules/semver/classes/range.js"(exports, module) {
+  "../dsh-prompt-assist/node_modules/.pnpm/semver@7.8.5/node_modules/semver/classes/range.js"(exports, module) {
     "use strict";
     var SPACE_CHARACTERS = /\s+/g;
     var Range = class _Range {
@@ -1070,9 +1070,9 @@ var require_range = __commonJS({
         if (rangeMap.size > 1 && rangeMap.has("")) {
           rangeMap.delete("");
         }
-        const result = [...rangeMap.values()];
-        cache.set(memoKey, result);
-        return result;
+        const result2 = [...rangeMap.values()];
+        cache.set(memoKey, result2);
+        return result2;
       }
       intersects(range, options) {
         if (!(range instanceof _Range)) {
@@ -1128,16 +1128,16 @@ var require_range = __commonJS({
     var isNullSet = (c) => c.value === "<0.0.0-0";
     var isAny = (c) => c.value === "";
     var isSatisfiable = (comparators, options) => {
-      let result = true;
+      let result2 = true;
       const remainingComparators = comparators.slice();
       let testComparator = remainingComparators.pop();
-      while (result && remainingComparators.length) {
-        result = remainingComparators.every((otherComparator) => {
+      while (result2 && remainingComparators.length) {
+        result2 = remainingComparators.every((otherComparator) => {
           return testComparator.intersects(otherComparator, options);
         });
         testComparator = remainingComparators.pop();
       }
-      return result;
+      return result2;
     };
     var parseComparator = (comp, options) => {
       comp = comp.replace(re[t.BUILD], "");
@@ -1349,9 +1349,9 @@ var require_range = __commonJS({
   }
 });
 
-// node_modules/.pnpm/semver@7.8.5/node_modules/semver/classes/comparator.js
+// ../dsh-prompt-assist/node_modules/.pnpm/semver@7.8.5/node_modules/semver/classes/comparator.js
 var require_comparator = __commonJS({
-  "node_modules/.pnpm/semver@7.8.5/node_modules/semver/classes/comparator.js"(exports, module) {
+  "../dsh-prompt-assist/node_modules/.pnpm/semver@7.8.5/node_modules/semver/classes/comparator.js"(exports, module) {
     "use strict";
     var ANY = /* @__PURE__ */ Symbol("SemVer ANY");
     var Comparator = class _Comparator {
@@ -1462,9 +1462,9 @@ var require_comparator = __commonJS({
   }
 });
 
-// node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/satisfies.js
+// ../dsh-prompt-assist/node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/satisfies.js
 var require_satisfies = __commonJS({
-  "node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/satisfies.js"(exports, module) {
+  "../dsh-prompt-assist/node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/satisfies.js"(exports, module) {
     "use strict";
     var Range = require_range();
     var satisfies = (version, range, options) => {
@@ -1479,9 +1479,9 @@ var require_satisfies = __commonJS({
   }
 });
 
-// node_modules/.pnpm/semver@7.8.5/node_modules/semver/ranges/to-comparators.js
+// ../dsh-prompt-assist/node_modules/.pnpm/semver@7.8.5/node_modules/semver/ranges/to-comparators.js
 var require_to_comparators = __commonJS({
-  "node_modules/.pnpm/semver@7.8.5/node_modules/semver/ranges/to-comparators.js"(exports, module) {
+  "../dsh-prompt-assist/node_modules/.pnpm/semver@7.8.5/node_modules/semver/ranges/to-comparators.js"(exports, module) {
     "use strict";
     var Range = require_range();
     var toComparators = (range, options) => new Range(range, options).set.map((comp) => comp.map((c) => c.value).join(" ").trim().split(" "));
@@ -1489,9 +1489,9 @@ var require_to_comparators = __commonJS({
   }
 });
 
-// node_modules/.pnpm/semver@7.8.5/node_modules/semver/ranges/max-satisfying.js
+// ../dsh-prompt-assist/node_modules/.pnpm/semver@7.8.5/node_modules/semver/ranges/max-satisfying.js
 var require_max_satisfying = __commonJS({
-  "node_modules/.pnpm/semver@7.8.5/node_modules/semver/ranges/max-satisfying.js"(exports, module) {
+  "../dsh-prompt-assist/node_modules/.pnpm/semver@7.8.5/node_modules/semver/ranges/max-satisfying.js"(exports, module) {
     "use strict";
     var SemVer = require_semver();
     var Range = require_range();
@@ -1518,9 +1518,9 @@ var require_max_satisfying = __commonJS({
   }
 });
 
-// node_modules/.pnpm/semver@7.8.5/node_modules/semver/ranges/min-satisfying.js
+// ../dsh-prompt-assist/node_modules/.pnpm/semver@7.8.5/node_modules/semver/ranges/min-satisfying.js
 var require_min_satisfying = __commonJS({
-  "node_modules/.pnpm/semver@7.8.5/node_modules/semver/ranges/min-satisfying.js"(exports, module) {
+  "../dsh-prompt-assist/node_modules/.pnpm/semver@7.8.5/node_modules/semver/ranges/min-satisfying.js"(exports, module) {
     "use strict";
     var SemVer = require_semver();
     var Range = require_range();
@@ -1547,9 +1547,9 @@ var require_min_satisfying = __commonJS({
   }
 });
 
-// node_modules/.pnpm/semver@7.8.5/node_modules/semver/ranges/min-version.js
+// ../dsh-prompt-assist/node_modules/.pnpm/semver@7.8.5/node_modules/semver/ranges/min-version.js
 var require_min_version = __commonJS({
-  "node_modules/.pnpm/semver@7.8.5/node_modules/semver/ranges/min-version.js"(exports, module) {
+  "../dsh-prompt-assist/node_modules/.pnpm/semver@7.8.5/node_modules/semver/ranges/min-version.js"(exports, module) {
     "use strict";
     var SemVer = require_semver();
     var Range = require_range();
@@ -1606,9 +1606,9 @@ var require_min_version = __commonJS({
   }
 });
 
-// node_modules/.pnpm/semver@7.8.5/node_modules/semver/ranges/valid.js
+// ../dsh-prompt-assist/node_modules/.pnpm/semver@7.8.5/node_modules/semver/ranges/valid.js
 var require_valid2 = __commonJS({
-  "node_modules/.pnpm/semver@7.8.5/node_modules/semver/ranges/valid.js"(exports, module) {
+  "../dsh-prompt-assist/node_modules/.pnpm/semver@7.8.5/node_modules/semver/ranges/valid.js"(exports, module) {
     "use strict";
     var Range = require_range();
     var validRange = (range, options) => {
@@ -1622,9 +1622,9 @@ var require_valid2 = __commonJS({
   }
 });
 
-// node_modules/.pnpm/semver@7.8.5/node_modules/semver/ranges/outside.js
+// ../dsh-prompt-assist/node_modules/.pnpm/semver@7.8.5/node_modules/semver/ranges/outside.js
 var require_outside = __commonJS({
-  "node_modules/.pnpm/semver@7.8.5/node_modules/semver/ranges/outside.js"(exports, module) {
+  "../dsh-prompt-assist/node_modules/.pnpm/semver@7.8.5/node_modules/semver/ranges/outside.js"(exports, module) {
     "use strict";
     var SemVer = require_semver();
     var Comparator = require_comparator();
@@ -1691,9 +1691,9 @@ var require_outside = __commonJS({
   }
 });
 
-// node_modules/.pnpm/semver@7.8.5/node_modules/semver/ranges/gtr.js
+// ../dsh-prompt-assist/node_modules/.pnpm/semver@7.8.5/node_modules/semver/ranges/gtr.js
 var require_gtr = __commonJS({
-  "node_modules/.pnpm/semver@7.8.5/node_modules/semver/ranges/gtr.js"(exports, module) {
+  "../dsh-prompt-assist/node_modules/.pnpm/semver@7.8.5/node_modules/semver/ranges/gtr.js"(exports, module) {
     "use strict";
     var outside = require_outside();
     var gtr = (version, range, options) => outside(version, range, ">", options);
@@ -1701,9 +1701,9 @@ var require_gtr = __commonJS({
   }
 });
 
-// node_modules/.pnpm/semver@7.8.5/node_modules/semver/ranges/ltr.js
+// ../dsh-prompt-assist/node_modules/.pnpm/semver@7.8.5/node_modules/semver/ranges/ltr.js
 var require_ltr = __commonJS({
-  "node_modules/.pnpm/semver@7.8.5/node_modules/semver/ranges/ltr.js"(exports, module) {
+  "../dsh-prompt-assist/node_modules/.pnpm/semver@7.8.5/node_modules/semver/ranges/ltr.js"(exports, module) {
     "use strict";
     var outside = require_outside();
     var ltr = (version, range, options) => outside(version, range, "<", options);
@@ -1711,9 +1711,9 @@ var require_ltr = __commonJS({
   }
 });
 
-// node_modules/.pnpm/semver@7.8.5/node_modules/semver/ranges/intersects.js
+// ../dsh-prompt-assist/node_modules/.pnpm/semver@7.8.5/node_modules/semver/ranges/intersects.js
 var require_intersects = __commonJS({
-  "node_modules/.pnpm/semver@7.8.5/node_modules/semver/ranges/intersects.js"(exports, module) {
+  "../dsh-prompt-assist/node_modules/.pnpm/semver@7.8.5/node_modules/semver/ranges/intersects.js"(exports, module) {
     "use strict";
     var Range = require_range();
     var intersects = (r1, r2, options) => {
@@ -1725,9 +1725,9 @@ var require_intersects = __commonJS({
   }
 });
 
-// node_modules/.pnpm/semver@7.8.5/node_modules/semver/ranges/simplify.js
+// ../dsh-prompt-assist/node_modules/.pnpm/semver@7.8.5/node_modules/semver/ranges/simplify.js
 var require_simplify = __commonJS({
-  "node_modules/.pnpm/semver@7.8.5/node_modules/semver/ranges/simplify.js"(exports, module) {
+  "../dsh-prompt-assist/node_modules/.pnpm/semver@7.8.5/node_modules/semver/ranges/simplify.js"(exports, module) {
     "use strict";
     var satisfies = require_satisfies();
     var compare = require_compare();
@@ -1775,9 +1775,9 @@ var require_simplify = __commonJS({
   }
 });
 
-// node_modules/.pnpm/semver@7.8.5/node_modules/semver/ranges/subset.js
+// ../dsh-prompt-assist/node_modules/.pnpm/semver@7.8.5/node_modules/semver/ranges/subset.js
 var require_subset = __commonJS({
-  "node_modules/.pnpm/semver@7.8.5/node_modules/semver/ranges/subset.js"(exports, module) {
+  "../dsh-prompt-assist/node_modules/.pnpm/semver@7.8.5/node_modules/semver/ranges/subset.js"(exports, module) {
     "use strict";
     var Range = require_range();
     var Comparator = require_comparator();
@@ -1937,9 +1937,9 @@ var require_subset = __commonJS({
   }
 });
 
-// node_modules/.pnpm/semver@7.8.5/node_modules/semver/index.js
+// ../dsh-prompt-assist/node_modules/.pnpm/semver@7.8.5/node_modules/semver/index.js
 var require_semver2 = __commonJS({
-  "node_modules/.pnpm/semver@7.8.5/node_modules/semver/index.js"(exports, module) {
+  "../dsh-prompt-assist/node_modules/.pnpm/semver@7.8.5/node_modules/semver/index.js"(exports, module) {
     "use strict";
     var internalRe = require_re();
     var constants = require_constants();
@@ -2034,33 +2034,159 @@ var require_semver2 = __commonJS({
   }
 });
 
+// model-id.js
+function parseModelId(value) {
+  if (typeof value !== "string" || value.length === 0 || UNSAFE.test(value)) return null;
+  const segments = value.split("/");
+  if (segments.some((part) => part.length === 0 || part === "." || part === "..")) return null;
+  if (segments.slice(0, -1).some((part) => !NAMESPACE.test(part))) return null;
+  const last = segments[segments.length - 1];
+  const family = MODEL_FAMILIES.find((entry) => entry.test(last))?.id ?? "other";
+  return Object.freeze({ id: value, segments: Object.freeze(segments), last, family });
+}
+function modelFamily(model) {
+  return parseModelId(model)?.family ?? "other";
+}
+function isOpenAIModel(model) {
+  return modelFamily(model) === "openai";
+}
+function isGrokModel(model) {
+  return modelFamily(model) === "xai";
+}
+function isPriorityModel(model) {
+  const family = modelFamily(model);
+  return MODEL_FAMILIES.some((entry) => entry.id === family);
+}
+var NAMESPACE, UNSAFE, MODEL_FAMILIES;
+var init_model_id = __esm({
+  "model-id.js"() {
+    NAMESPACE = /^[\p{L}\p{M}\p{N}_.-]+$/u;
+    UNSAFE = /[\s\\?#\u0000-\u001f\u007f]/u;
+    MODEL_FAMILIES = Object.freeze([
+      Object.freeze({
+        id: "openai",
+        test: (last) => /^(?:gpt-|chatgpt-|codex(?:-|$)|o[1-9](?:-|$))/i.test(last)
+      }),
+      Object.freeze({
+        // Grok 4 and later; forward-compatible with future major versions. grok-1/2/3 are out of scope.
+        id: "xai",
+        test: (last) => /^grok-(?:[4-9]|[1-9]\d+)(?:[.-]|$)/i.test(last)
+      })
+    ]);
+  }
+});
+
+// fast-route.js
+function routeKey(provider, model) {
+  return provider + "\0" + model;
+}
+function normalizeGrants(value) {
+  const list = typeof value === "function" ? value() : value;
+  if (!Array.isArray(list)) return Object.freeze([]);
+  const grants = [];
+  for (const item of list) {
+    if (typeof item === "string") {
+      if (item) grants.push(grant(item, null, null));
+      continue;
+    }
+    if (!item || typeof item !== "object" || Array.isArray(item)) continue;
+    const provider = typeof item.provider === "string" ? item.provider : "";
+    if (!provider) continue;
+    const model = typeof item.model === "string" && item.model ? item.model : null;
+    const family = typeof item.family === "string" && item.family && item.family !== "other" ? item.family : null;
+    grants.push(grant(provider, model, family));
+  }
+  return Object.freeze(grants);
+}
+function matchGrant(value, route) {
+  if (!route) return null;
+  let family = null;
+  for (const candidate of normalizeGrants(value)) {
+    if (candidate.provider !== route.provider) continue;
+    if (candidate.model) {
+      if (candidate.model === route.model) return candidate;
+      continue;
+    }
+    if (candidate.family) {
+      if (candidate.family === route.family) family = family ?? candidate;
+      continue;
+    }
+    return candidate;
+  }
+  return family;
+}
+function resolveFastRoute(selection, policy = {}) {
+  const provider = selection && typeof selection.provider === "string" && selection.provider ? selection.provider : "";
+  const parsed = parseModelId(selection && selection.model);
+  const route = provider && parsed ? Object.freeze({
+    provider,
+    model: parsed.id,
+    family: parsed.family,
+    api: policy.apis?.[provider] ?? null
+  }) : null;
+  if (!route || route.family === "other") return result("not-candidate", route);
+  if (route.api && !SUPPORTED_APIS.has(route.api)) return result("api-incompatible", route);
+  const evidence = policy.routes?.[routeKey(route.provider, route.model)] ?? null;
+  const priority = evidence?.priority ?? "unknown";
+  if (priority === "rejected") return result("rejected", route, matchGrant(policy.grants, route), evidence);
+  const granted = matchGrant(policy.grants, route);
+  if (granted) return result("ready", route, granted, evidence);
+  if (priority === "verified") return result("grant-missing", route, null, evidence);
+  return result("needs-verification", route, null, evidence);
+}
+function routePolicy({ grants, routes, apis } = {}) {
+  return { grants: normalizeGrants(grants), routes: routes ?? null, apis: apis ?? null };
+}
+var SUPPORTED_APIS, FAST_ROUTE_STATES, ROUTE_EVIDENCE, grant, result;
+var init_fast_route = __esm({
+  "fast-route.js"() {
+    init_model_id();
+    SUPPORTED_APIS = /* @__PURE__ */ new Set(["openai-responses", "openai-completions", "openai-codex-responses"]);
+    FAST_ROUTE_STATES = Object.freeze([
+      "ready",
+      "needs-verification",
+      "grant-missing",
+      "rejected",
+      "api-incompatible",
+      "not-candidate"
+    ]);
+    ROUTE_EVIDENCE = Object.freeze(["verified", "declared", "unknown", "rejected"]);
+    grant = (provider, model, family) => Object.freeze({ provider, model, family });
+    result = (state, route, grant2, evidence) => Object.freeze({
+      state,
+      visible: state === "ready" || state === "needs-verification" || state === "grant-missing" || state === "rejected",
+      eligible: state === "ready",
+      route,
+      grant: grant2 ?? null,
+      evidence: evidence ?? null
+    });
+  }
+});
+
 // policy.js
 var policy_exports = {};
 __export(policy_exports, {
   DEFAULT_PROVIDERS: () => DEFAULT_PROVIDERS,
+  FAST_ROUTE_STATES: () => FAST_ROUTE_STATES,
+  MODEL_FAMILIES: () => MODEL_FAMILIES,
+  ROUTE_EVIDENCE: () => ROUTE_EVIDENCE,
   SUPPORTED_APIS: () => SUPPORTED_APIS,
   isGrokModel: () => isGrokModel,
   isOpenAIModel: () => isOpenAIModel,
   isOpenAISelection: () => isOpenAISelection,
   isPriorityModel: () => isPriorityModel,
+  matchGrant: () => matchGrant,
   mergeProviders: () => mergeProviders,
-  priorityPayload: () => priorityPayload
+  modelFamily: () => modelFamily,
+  normalizeGrants: () => normalizeGrants,
+  parseModelId: () => parseModelId,
+  priorityPayload: () => priorityPayload,
+  resolveFastRoute: () => resolveFastRoute,
+  routeKey: () => routeKey,
+  routePolicy: () => routePolicy
 });
-function isOpenAIModel(model) {
-  return typeof model === "string" && /^(?:gpt-|chatgpt-|codex(?:-|$)|o[1-9](?:-|$))/i.test(model);
-}
-function isGrokModel(model) {
-  if (typeof model !== "string" || /[\s\\?#\u0000-\u001f\u007f]/u.test(model)) return false;
-  const segments = model.split("/");
-  if (segments.some((part) => !part || part === "." || part === "..") || segments.slice(0, -1).some((part) => !/^[\p{L}\p{M}\p{N}_.-]+$/u.test(part))) return false;
-  return /^grok-(?:[4-9]|[1-9]\d+)(?:[.-]|$)/i.test(segments.at(-1));
-}
-function isPriorityModel(model) {
-  return isOpenAIModel(model) || isGrokModel(model);
-}
 function isOpenAISelection(selection, providers = DEFAULT_PROVIDERS) {
-  const allowed = typeof providers === "function" ? providers() : providers;
-  return Boolean(selection && Array.isArray(allowed) && allowed.includes(selection.provider) && isPriorityModel(selection.model));
+  return resolveFastRoute(selection, { grants: providers }).eligible;
 }
 function mergeProviders(configured, authorized) {
   const merged = [];
@@ -2075,15 +2201,12 @@ function priorityPayload(body) {
   }
   return { ...body, service_tier: "priority" };
 }
-var DEFAULT_PROVIDERS, SUPPORTED_APIS;
+var DEFAULT_PROVIDERS;
 var init_policy = __esm({
   "policy.js"() {
+    init_model_id();
+    init_fast_route();
     DEFAULT_PROVIDERS = Object.freeze(["openai", "openai-codex"]);
-    SUPPORTED_APIS = /* @__PURE__ */ new Set([
-      "openai-responses",
-      "openai-completions",
-      "openai-codex-responses"
-    ]);
   }
 });
 
@@ -2471,9 +2594,9 @@ var OnlineUpdateService = class {
   }
   async run(plan, control, publish, cancelled) {
     let mutated = false, primaryError = null;
-    const fail = (code, result) => {
+    const fail = (code, result2) => {
       const error = onlineError(code);
-      error.result = result;
+      error.result = result2;
       throw error;
     };
     const inspect = async (version, spec) => {
@@ -2484,14 +2607,14 @@ var OnlineUpdateService = class {
     const install = async (spec, version, recovery = false) => {
       control.recovery = recovery;
       control.requestId = this.token();
-      let result;
+      let result2;
       try {
-        result = await this.manager.installBundle(spec, { enabled: false, requestId: control.requestId });
+        result2 = await this.manager.installBundle(spec, { enabled: false, requestId: control.requestId });
       } finally {
         control.requestId = null;
       }
-      if (!ok(result) || result.bundle !== BUNDLE_NAME || result.version !== version) fail("install-failed", result);
-      let restart = result.application === "restart-required";
+      if (!ok(result2) || result2.bundle !== BUNDLE_NAME || result2.version !== version) fail("install-failed", result2);
+      let restart = result2.application === "restart-required";
       await inspect(version, spec);
       if (!recovery && cancelled()) fail("cancelled");
       if (!recovery) publish("activating");
@@ -2685,7 +2808,8 @@ var package_default = {
     test: "node --test tests/*.test.js",
     build: "node build.mjs",
     "release:stable": "node scripts/publish-stable.mjs",
-    "eval:enhancement": "node evals/enhancement/cli.mjs"
+    "eval:enhancement": "node evals/enhancement/cli.mjs",
+    "fast:truth-table": "node scripts/fast-route-truth-table.mjs"
   },
   dsh: {
     bundle: {
@@ -2934,7 +3058,7 @@ function createFastProjection(z, providers = DEFAULT_PROVIDERS) {
 }
 
 // service-v2.js
-init_policy();
+init_fast_route();
 
 // fast-scope.js
 function resolveFastPreference(agent, registry2, readState) {
@@ -2976,9 +3100,14 @@ var OpenAIFastService = class {
   enabled(agent) {
     return this.preference(agent).enabled;
   }
+  /** One resolver call answers both "may we inject?" and "why not?" for every call site. */
+  resolution(selection) {
+    return resolveFastRoute(selection, { grants: this.providers });
+  }
   status(agent) {
     const selection = this.selection(agent);
-    const eligible = isOpenAISelection(selection, this.providers);
+    const resolution = this.resolution(selection);
+    const eligible = resolution.eligible;
     const preference = this.preference(agent);
     return {
       enabled: eligible && preference.enabled,
@@ -2986,7 +3115,13 @@ var OpenAIFastService = class {
       inherited: preference.inherited,
       provider: selection.provider,
       model: selection.model,
-      reasoningEffort: selection.reasoningEffort ?? null
+      reasoningEffort: selection.reasoningEffort ?? null,
+      // Evidence travels with the answer so a caller never has to re-derive authorization.
+      state: resolution.state,
+      family: resolution.route?.family ?? null,
+      api: resolution.route?.api ?? null,
+      grant: resolution.grant,
+      evidence: resolution.evidence
     };
   }
   command({ agent, rawInput }) {
@@ -3004,14 +3139,15 @@ var OpenAIFastService = class {
     if (!agent) throw new Error("OpenAI Fast requires the current session");
     if (action === "status") return this.status(agent);
     if (action !== "on" && action !== "off") throw new Error(this.t("fast.invalid"));
-    const result = await this.ctx.commands.execute(agent, `/${COMMAND_NAME} ${action}`, [], signal);
-    if (result?.result.kind !== "success") throw new Error(result?.result.text ?? this.t("fast.error"));
+    const result2 = await this.ctx.commands.execute(agent, `/${COMMAND_NAME} ${action}`, [], signal);
+    if (result2?.result.kind !== "success") throw new Error(result2?.result.text ?? this.t("fast.error"));
     return this.status(agent);
   }
 };
 
 // bridge-v2.js
 init_policy();
+init_fast_route();
 
 // assist/priority-scope.js
 import { AsyncLocalStorage } from "node:async_hooks";
@@ -3036,8 +3172,8 @@ function priorityModels(models) {
         return value.call(models, model, context, {
           ...options,
           async onPayload(body, resolvedModel) {
-            const result = previous ? await previous(body, resolvedModel) : void 0;
-            return priorityPayload(result === void 0 ? body : result);
+            const result2 = previous ? await previous(body, resolvedModel) : void 0;
+            return priorityPayload(result2 === void 0 ? body : result2);
           }
         });
       };
@@ -3052,7 +3188,8 @@ function installFastBridge(Adapter, enabledFor, providers) {
   if (missing) throw new Error("OpenAI Fast: incompatible pi-ai adapter; required capability unavailable: " + missing);
   let active = true;
   function streamWithFast(options, snapshot) {
-    if (!active || options.purpose || !options.sessionId || !isOpenAISelection(options, providers)) {
+    const admitted = () => resolveFastRoute(options, { grants: providers }).eligible;
+    if (!active || options.purpose || !options.sessionId || !admitted()) {
       return original.call(this, options, snapshot);
     }
     const override = priorityOverride(options.sessionId);
@@ -3076,26 +3213,26 @@ var atPath = (value, path) => path.reduce((current, key) => current?.[key], valu
 async function applyModelCapabilities(ctx, specifications = []) {
   const results = [];
   for (const spec of specifications) {
-    const result = { provider: spec.provider, model: spec.model, status: "failed" };
+    const result2 = { provider: spec.provider, model: spec.model, status: "failed" };
     try {
       if (!spec.provider || !spec.model || !Array.isArray(spec.efforts) || !spec.efforts.length || spec.efforts.some((effort) => !EFFORTS.has(effort))) throw new Error("invalid specification");
       const route = ctx.llm.listConfigurableProviders().find((entry) => entry.provider === spec.provider);
       if (!route) {
-        results.push({ ...result, status: "not-configured" });
+        results.push({ ...result2, status: "not-configured" });
         continue;
       }
       const descriptor = ctx.settings.describe({ redactSecrets: true }).find((entry) => entry.ns === route.settingsNs);
       const models = atPath(descriptor?.value, route.settingsPath)?.models;
       const index = Array.isArray(models) ? models.findIndex((model) => model.id === spec.model) : -1;
       if (!descriptor || index < 0) {
-        results.push({ ...result, status: "not-configured" });
+        results.push({ ...result2, status: "not-configured" });
         continue;
       }
       const expected = Object.fromEntries(spec.efforts.map((effort) => [effort, effort]));
       const previous = models[index].reasoningEfforts;
       const equal = previous && Object.keys(previous).length === Object.keys(expected).length && Object.entries(expected).every(([key, value]) => previous[key] === value);
       if (equal) {
-        results.push({ ...result, status: "unchanged" });
+        results.push({ ...result2, status: "unchanged" });
         continue;
       }
       await ctx.settings.mutate(route.settingsNs, [{
@@ -3103,9 +3240,9 @@ async function applyModelCapabilities(ctx, specifications = []) {
         path: [...route.settingsPath, "models", String(index), "reasoningEfforts"],
         value: expected
       }], descriptor.revision);
-      results.push({ ...result, status: "updated" });
+      results.push({ ...result2, status: "updated" });
     } catch {
-      results.push(result);
+      results.push(result2);
     }
   }
   return results;
@@ -3149,7 +3286,7 @@ async function apply(ctx, config = {}) {
   });
   ctx.tools.register({
     name: "openai_fast",
-    description: "Read or change Fast (request-level Priority) for this session. It applies to authorized OpenAI gpt/o and xAI Grok 4+ routes; Priority may incur extra charges. Root sessions start off; local subagents inherit their parent unless explicitly overridden.",
+    description: "Read or change Fast (request-level Priority) for this session. It applies to authorized OpenAI gpt/o and xAI Grok 4+ routes; Priority may incur extra charges. Root sessions start off; local subagents inherit their parent unless explicitly overridden. status also reports the route state: ready (injecting), needs-verification, grant-missing, rejected, api-incompatible or not-candidate.",
     parameters: {
       type: "object",
       properties: {
@@ -3169,9 +3306,30 @@ async function apply(ctx, config = {}) {
           model: { type: "string" },
           reasoningEffort: { oneOf: [{ type: "string" }, { type: "null" }] },
           supportedReasoningEfforts: { oneOf: [{ type: "array", items: { type: "string" } }, { type: "null" }] },
-          modelCapabilityFix: { type: "string", enum: ["updated", "unchanged", "not-configured", "failed", "not-requested"] }
+          modelCapabilityFix: { type: "string", enum: ["updated", "unchanged", "not-configured", "failed", "not-requested"] },
+          // Resolver output: authorization evidence for this route, not just a boolean.
+          state: { type: "string", enum: ["ready", "needs-verification", "grant-missing", "rejected", "api-incompatible", "not-candidate"] },
+          family: { oneOf: [{ type: "string", enum: ["openai", "xai", "other"] }, { type: "null" }] },
+          api: { oneOf: [{ type: "string" }, { type: "null" }] },
+          grant: { oneOf: [
+            { type: "object", properties: {
+              provider: { type: "string" },
+              model: { oneOf: [{ type: "string" }, { type: "null" }] },
+              family: { oneOf: [{ type: "string" }, { type: "null" }] }
+            }, required: ["provider", "model", "family"], additionalProperties: false },
+            { type: "null" }
+          ] },
+          evidence: { oneOf: [
+            {
+              type: "object",
+              properties: { priority: { type: "string", enum: ["verified", "declared", "unknown", "rejected"] } },
+              required: ["priority"],
+              additionalProperties: false
+            },
+            { type: "null" }
+          ] }
         },
-        required: ["enabled", "eligible", "inherited", "provider", "model", "reasoningEffort", "supportedReasoningEfforts", "modelCapabilityFix"],
+        required: ["enabled", "eligible", "inherited", "provider", "model", "reasoningEffort", "supportedReasoningEfforts", "modelCapabilityFix", "state", "family", "api", "grant", "evidence"],
         additionalProperties: false
       },
       render: (_args, value) => [{ type: "text", text: JSON.stringify(value) }]
@@ -3516,7 +3674,7 @@ function combine(flags, controls) {
         stopFlags();
         stopControls();
         listeners.clear();
-        if (results.some((result) => result.status === "rejected")) throw unavailable2();
+        if (results.some((result2) => result2.status === "rejected")) throw unavailable2();
       });
       return disposal;
     }
@@ -4155,9 +4313,9 @@ async function callAssistModel(ctx, agent, route, prompt, feature, signal, creat
     }
     if (!completed || !text.trim()) throw failure7("empty-result");
     if (signal?.aborted) throw abortFailure(signal);
-    const result = feature === "suggest" ? parseSuggestionOutput(text) : { text: text.trim() };
+    const result2 = feature === "suggest" ? parseSuggestionOutput(text) : { text: text.trim() };
     return {
-      ...result,
+      ...result2,
       outputBudgetTokens: outputBudget ?? null,
       contextWindowTokens: available,
       inputTokensEstimate,
@@ -4508,8 +4666,8 @@ function installAssistRpc(ctx, service) {
         return reply({ error: "invalid-request" }, 400);
       }
       if (envelope?.type !== "client-request" || typeof envelope.rpcId !== "string" || envelope.rpcId.length > 200 || envelope.method !== ASSIST_ENDPOINT) return reply({ error: "invalid-request" }, 400);
-      const result = await handle(envelope.method, envelope.payload, request.signal);
-      return reply({ type: "server-response", rpcId: envelope.rpcId, result });
+      const result2 = await handle(envelope.method, envelope.payload, request.signal);
+      return reply({ type: "server-response", rpcId: envelope.rpcId, result: result2 });
     }
   });
 }

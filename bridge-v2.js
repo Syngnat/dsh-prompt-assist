@@ -1,4 +1,5 @@
-import { isOpenAISelection, priorityPayload, SUPPORTED_APIS } from './policy.js';
+import { priorityPayload, SUPPORTED_APIS } from './policy.js';
+import { resolveFastRoute } from './fast-route.js';
 import { priorityOverride } from './assist/priority-scope.js';
 const OWNER = Symbol.for('@local/dsh-openai-fast/bridge/v1');
 
@@ -32,7 +33,10 @@ export function installFastBridge(Adapter, enabledFor, providers) {
   if (missing) throw new Error('OpenAI Fast: incompatible pi-ai adapter; required capability unavailable: ' + missing);
   let active = true;
   function streamWithFast(options, snapshot) {
-    if (!active || options.purpose || !options.sessionId || !isOpenAISelection(options, providers)) {
+    // Admission is the resolver's ready state: an authorized route of a Priority family. The API
+    // shape is checked below, once the adapter has resolved the model.
+    const admitted = () => resolveFastRoute(options, { grants: providers }).eligible;
+    if (!active || options.purpose || !options.sessionId || !admitted()) {
       return original.call(this, options, snapshot);
     }
     const override = priorityOverride(options.sessionId);

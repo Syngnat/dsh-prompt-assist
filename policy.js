@@ -1,40 +1,23 @@
-/** Explicit route allowlist: OpenAI-compatible protocol alone never opts a route in. */
-export const DEFAULT_PROVIDERS = Object.freeze(['openai', 'openai-codex']);
-export const SUPPORTED_APIS = new Set([
-  'openai-responses', 'openai-completions', 'openai-codex-responses',
-]);
-
-/** Model-family recognition never grants provider authorization. */
-export function isOpenAIModel(model) {
-  return typeof model === 'string' && /^(?:gpt-|chatgpt-|codex(?:-|$)|o[1-9](?:-|$))/i.test(model);
-}
+import { MODEL_FAMILIES, parseModelId, modelFamily, isOpenAIModel, isGrokModel, isPriorityModel } from './model-id.js';
+import { SUPPORTED_APIS, FAST_ROUTE_STATES, ROUTE_EVIDENCE, normalizeGrants, matchGrant, resolveFastRoute, routeKey, routePolicy } from './fast-route.js';
 
 /**
- * xAI Grok 4 and later. Forward-compatible by design: a future `grok-4.8` (or a later major
- * version) stays eligible without a plugin release. This is a local recognition policy,
- * not a guarantee of upstream Priority availability. Legacy grok-1/2/3 are out of scope.
+ * Public policy surface. Model-ID grammar lives in model-id.js and authorization decisions in
+ * fast-route.js; this module keeps the names every Host/Client call site already imports.
  */
-export function isGrokModel(model) {
-  if (typeof model !== 'string' || /[\s\\?#\u0000-\u001f\u007f]/u.test(model)) return false;
-  const segments = model.split('/');
-  // Proxy catalogs can namespace IDs (e.g. 安和桥/grok-4.7). Only inspect the final
-  // model segment; never rewrite the actual ID or infer authorization from its prefix.
-  if (segments.some(part => !part || part === '.' || part === '..')
-    || segments.slice(0, -1).some(part => !/^[\p{L}\p{M}\p{N}_.-]+$/u.test(part))) return false;
-  return /^grok-(?:[4-9]|[1-9]\d+)(?:[.-]|$)/i.test(segments.at(-1));
-}
+export {
+  MODEL_FAMILIES, parseModelId, modelFamily, isOpenAIModel, isGrokModel, isPriorityModel,
+  SUPPORTED_APIS, FAST_ROUTE_STATES, ROUTE_EVIDENCE, normalizeGrants, matchGrant, resolveFastRoute,
+  routeKey, routePolicy,
+};
 
-/** Every family whose provider exposes a request-level Priority service tier. */
-export function isPriorityModel(model) {
-  return isOpenAIModel(model) || isGrokModel(model);
-}
+/** Explicit route allowlist: OpenAI-compatible protocol alone never opts a route in. */
+export const DEFAULT_PROVIDERS = Object.freeze(['openai', 'openai-codex']);
 
-/** Family matching is deliberately secondary to an explicit provider allowlist. */
+/** Family matching is deliberately secondary to an explicit authorization. */
 export function isOpenAISelection(selection, providers = DEFAULT_PROVIDERS) {
   // The list may be a live getter, so profile-authorized providers apply without rebuilding units.
-  const allowed = typeof providers === 'function' ? providers() : providers;
-  return Boolean(selection && Array.isArray(allowed) && allowed.includes(selection.provider)
-    && isPriorityModel(selection.model));
+  return resolveFastRoute(selection, { grants: providers }).eligible;
 }
 
 /** One order-preserving union: package configuration first, profile authorizations after it. */
