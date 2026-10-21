@@ -12,7 +12,7 @@ English / 中文
 
 ## Prepare and verify
 
-1. Branch from stable main; implement changes and tests. Update package version, versioned Host export/files and the Host shim; generate artifacts with `pnpm run build`.
+1. Branch from stable main; implement changes and tests. Update package version, versioned Host export/files and the Host shim; generate artifacts with `pnpm run build`. Install dependencies inside the candidate checkout (`pnpm install --frozen-lockfile --ignore-scripts`); built artifacts embed module paths relative to it, so a shared or linked dependency tree from another repository makes the committed bytes unreproducible and fails CI.
 2. Run offline tests, inspect the diff and package contents, and verify the actual user-facing capability in an isolated DSH profile. Use no real paid model request for release checks.
 3. Update both READMEs, security data flows and changelog. They must advertise the unversioned install target. Keep metadata, package identity and stored settings compatible.
 4. Commit source and generated artifacts on the candidate branch, push that branch, and wait for successful **Build and test** CI for the exact candidate commit. CI includes three operating systems and both current DSH adapter-contract targets.
