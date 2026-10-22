@@ -52,3 +52,6 @@ test('suggest outcome protocol is separate from plain enhancement output',()=>{
  const suggestion=buildAssistPrompt('suggest','').system;assert.notEqual(suggestion,ENHANCE_ROLE_PROMPT);
  assert.match(suggestion,/"kind":"none"/);assert.match(ENHANCE_ROLE_PROMPT,/不输出 JSON/);
 });
+test('colloquial complaints are upgraded into professional structured feedback and near-verbatim output is a failure',()=>{
+ for(const rule of ['把口语评价升级为规范的专业表述','可发现性差','需要额外一次操作','交互设计存在明显问题','把不满落成清楚的问题反馈','结尾落成明确的改进诉求','不替用户发明改法','几乎逐字相同','这设计的就有很大问题','这个设计需要改进'])assert.ok(ENHANCE_ROLE_PROMPT.includes(rule),rule);
+});

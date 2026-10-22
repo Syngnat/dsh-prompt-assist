@@ -1,1 +1,1 @@
-export {apply,inject} from './host-v1.2.42.js';
+export {apply,inject} from './host-v1.2.43.js';

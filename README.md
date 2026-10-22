@@ -82,6 +82,8 @@ Version 1.2.26 explicitly distinguishes missing QA history from unclear draft in
 
 Enhancement instructions require real line breaks, short paragraphs or lists for independent points, and a complete replacement draft rather than appended commentary. Clear short requests need not be expanded. A finalized exact echo (ignoring outer whitespace and line-ending encoding only) shows a no-rewrite notice and cannot be applied again. This is not a semantic quality score: light paraphrases are not automatically rejected. Lists and code line breaks are preserved; no punctuation-based autoformatter or automatic paid retry is added.
 
+From v1.2.43, professional polish is a hard rule: colloquial evaluations are upgraded to standard terminology ("hard to find" becomes poor discoverability, "one more click" becomes an extra interaction step, "terrible design" becomes a clear interaction-design problem), and complaints are rewritten as structured problem feedback that names the object, organizes the causes and closes with the improvement demand. When the original proposes no concrete fix, none is invented. Output that is nearly identical to the draft (differing only in punctuation, quotes or a few particles) is declared unfinished at the prompt level.
+
 ### Suggest the next question
 
 Automatic suggestions use the latest selected complete Q&A pairs. They run only after a **new** complete Q&A becomes available, while the conversation is idle and the draft contains no text, references, or attachments. Mounting or reopening the UI establishes a baseline; it does not replay an old Q&A. The toolbar suggestion button can request a suggestion from existing complete Q&A when eligible.
