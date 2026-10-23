@@ -2,6 +2,10 @@
 
 [English](<README.md>) | [简体中文](<README.zh-CN.md>)
 
+## 1.2.45 — 设置并入 Harness 设置导航 / Settings in the settings dialog（2026-10-23）
+
+- 提示词辅助的设置现在也出现在 Harness 设置弹窗的左侧导航里（设置 → 提示词辅助与 Fast 加速），不用再从插件页绕。插件页里的「打开设置」入口保留。
+
 ## 1.2.44 — 在线更新不再被网络抖动打断 / Retried update metadata（2026-10-23）
 
 - 有用户反馈（macOS 15 Intel）点「安装更新」经常失败，安全错误码 `metadata-unavailable`。根因是安装前的版本解析对 GitHub 只发一次请求：直连不稳或代理冷启动时一次失败就整体失败。

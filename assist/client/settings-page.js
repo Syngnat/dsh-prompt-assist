@@ -60,7 +60,7 @@ export function SettingsPage(p){
  return h('section',{className:'lpa lpa-settings-page','aria-label':p.t('title')},
   h('header',{className:'lpa-settings-header'},
    h('div',{className:'lpa-settings-heading'},h('h1',null,p.t('title')),h('p',{className:'lpa-note lpa-settings-subtitle'},p.t('settings.subtitle'))),
-   h('button',{type:'button',className:'lpa-button',onClick:p.returnToConversation},p.t('returnConversation'))),
+   p.returnToConversation?h('button',{type:'button',className:'lpa-button',onClick:p.returnToConversation},p.t('returnConversation')):null),
   h('div',{className:'lpa-settings-sections'},
    h(EnablementPanel,{globalSource:source,t:p.t}),
    h('section',{className:'lpa-session-panel lpa-card','aria-label':p.t('settings.profileSection')},

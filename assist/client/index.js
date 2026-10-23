@@ -62,6 +62,8 @@ export function installAssist(ctx){
  // sidebar keeps one row for the app instead of one row per plugin.
  ctx.slots.inject('plugins.detail.actions',()=>ctx.slots.register({name:'plugins.detail.actions',id:'local-prompt-assist-open',order:100,label,locale:NS},
   ({subject,t})=>{if(!isOwnPage(subject))return null;return h('button',{type:'button',className:'lpa-button',onClick:()=>ctx.layout.selectPanel('local-prompt-assist')},t('settings.open'));}));
+ // The same page also opens from the settings dialog's own nav.
+ ctx.slots.inject('settings.section',()=>ctx.slots.register({name:'settings.section',id:'local-prompt-assist',order:95,label,locale:NS,inject:()=>({assistSend,globalSource,targetSource,connection:ctx.connection,refreshAssist:id=>ctx.sessions.refreshProjections(id)})},SettingsSurface));
  ctx.slots.inject('main',()=>ctx.slots.register({name:'main',key:'local-prompt-assist',locale:NS,inject:()=>({assistSend,globalSource,targetSource,connection:ctx.connection,returnToConversation:()=>ctx.layout.selectPanel(null),refreshAssist:id=>ctx.sessions.refreshProjections(id)})},SettingsSurface));
  ctx.slots.inject('conversation.input.right',()=>ctx.slots.register({name:'conversation.input.right',id:'local-prompt-enhance-action',order:1005,label:dictionaries.en.enhance,locale:NS,inject},EnhanceButton));
  ctx.slots.inject('conversation.input.right',()=>ctx.slots.register({name:'conversation.input.right',id:'local-next-question-action',order:1010,label:dictionaries.en.suggest,locale:NS,inject},SuggestButton));

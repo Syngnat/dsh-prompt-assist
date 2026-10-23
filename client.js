@@ -3480,7 +3480,7 @@ function SettingsPage(p) {
       "header",
       { className: "lpa-settings-header" },
       h12("div", { className: "lpa-settings-heading" }, h12("h1", null, p.t("title")), h12("p", { className: "lpa-note lpa-settings-subtitle" }, p.t("settings.subtitle"))),
-      h12("button", { type: "button", className: "lpa-button", onClick: p.returnToConversation }, p.t("returnConversation"))
+      p.returnToConversation ? h12("button", { type: "button", className: "lpa-button", onClick: p.returnToConversation }, p.t("returnConversation")) : null
     ),
     h12(
       "div",
@@ -5637,6 +5637,7 @@ function installAssist(ctx) {
       return h15("button", { type: "button", className: "lpa-button", onClick: () => ctx.layout.selectPanel("local-prompt-assist") }, t("settings.open"));
     }
   ));
+  ctx.slots.inject("settings.section", () => ctx.slots.register({ name: "settings.section", id: "local-prompt-assist", order: 95, label, locale: NS, inject: () => ({ assistSend, globalSource, targetSource, connection: ctx.connection, refreshAssist: (id2) => ctx.sessions.refreshProjections(id2) }) }, SettingsSurface));
   ctx.slots.inject("main", () => ctx.slots.register({ name: "main", key: "local-prompt-assist", locale: NS, inject: () => ({ assistSend, globalSource, targetSource, connection: ctx.connection, returnToConversation: () => ctx.layout.selectPanel(null), refreshAssist: (id2) => ctx.sessions.refreshProjections(id2) }) }, SettingsSurface));
   ctx.slots.inject("conversation.input.right", () => ctx.slots.register({ name: "conversation.input.right", id: "local-prompt-enhance-action", order: 1005, label: dictionaries.en.enhance, locale: NS, inject: inject2 }, EnhanceButton));
   ctx.slots.inject("conversation.input.right", () => ctx.slots.register({ name: "conversation.input.right", id: "local-next-question-action", order: 1010, label: dictionaries.en.suggest, locale: NS, inject: inject2 }, SuggestButton));
