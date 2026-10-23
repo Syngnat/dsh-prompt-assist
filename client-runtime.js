@@ -821,9 +821,9 @@ var init_messages = __esm({
         "picker.models": "\u6309\u4F9B\u5E94\u5546\u5206\u7EC4\u7684\u6A21\u578B",
         "picker.account": "DeepSeek \u8D26\u6237",
         "picker.saving": "\u6B63\u5728\u5207\u6362\u2026",
-        "picker.allProviders": "\u6240\u6709\u4F9B\u5E94\u5546",
-        "picker.providerRow": "{name}\uFF1A{count} \u4E2A\u6A21\u578B",
-        "picker.pin": "\u5E38\u9A7B\u663E\u793A\uFF0C\u53EF\u540C\u65F6\u5E38\u9A7B\u591A\u4E2A\uFF0C\u5176\u4F59\u6536\u8D77",
+        "picker.otherModels": "\u5176\u4F59\u6A21\u578B",
+        "picker.otherRow": "\u5176\u4F59\u6A21\u578B\uFF1A{count} \u4E2A",
+        "picker.pin": "\u5E38\u9A7B\u663E\u793A\uFF0C\u53EF\u540C\u65F6\u5E38\u9A7B\u591A\u4E2A\uFF0C\u5176\u4F59\u6536\u8FDB\u540C\u4E00\u5206\u7EC4",
         "picker.unpin": "\u53D6\u6D88\u5E38\u9A7B",
         "picker.pinMark": "\u5E38\u9A7B",
         "picker.pinnedMark": "\u5DF2\u5E38\u9A7B",
@@ -1124,9 +1124,9 @@ var init_messages = __esm({
         "picker.models": "Models grouped by provider",
         "picker.account": "DeepSeek Account",
         "picker.saving": "Switching\u2026",
-        "picker.allProviders": "All providers",
-        "picker.providerRow": "{name}: {count} models",
-        "picker.pin": "Pin to the quick list. Several providers can stay pinned; the rest collapse",
+        "picker.otherModels": "Other models",
+        "picker.otherRow": "Other models: {count}",
+        "picker.pin": "Pin to the quick list. Several providers can stay pinned; the rest share one group",
         "picker.unpin": "Remove from quick list",
         "picker.pinMark": "Pin",
         "picker.pinnedMark": "Pinned",
@@ -4275,8 +4275,15 @@ var init_model_picker_style = __esm({
 .lpa-model-retry{margin:2px 8px 6px;padding:3px 8px;border:1px solid var(--dsw-alias-border-l1,#80808066);border-radius:5px;background:transparent;color:var(--dsw-alias-label-primary);font:inherit;cursor:pointer}
 .lpa-effort-frame{flex:none;padding:10px 8px;border-top:1px solid var(--dsw-alias-border-l1,#80808066)}
 .lpa-model-more{display:grid;gap:1px;padding:2px 0 6px}
-.lpa-model-provider-line{display:flex;align-items:center;gap:6px;min-width:0}
-.lpa-model-provider-line>.lpa-model-provider-row{flex:1;min-width:0;width:auto}
+.lpa-model-other-provider{padding:2px 0 4px}
+.lpa-model-other-provider--divided{border-top:1px solid var(--dsw-alias-border-l1,#80808066);margin-top:2px;padding-top:4px}
+.lpa-model-provider-row--open{background:var(--dsw-alias-interactive-bg-hover,var(--dsw-alias-bg-layer-2,rgba(127,127,127,.18)))}
+.lpa-model-flyout{position:fixed;z-index:1201;display:flex;flex-direction:column;box-sizing:border-box;width:300px;max-width:calc(100vw - 16px);max-height:min(520px,calc(100vh - 16px));padding:6px;border:1px solid var(--dsw-alias-border-l1,#80808066);border-radius:12px;background-color:var(--lpa-menu-base,transparent);background-image:linear-gradient(var(--dsw-alias-bg-overlay,transparent),var(--dsw-alias-bg-overlay,transparent));color:var(--dsw-alias-label-primary);box-shadow:0 8px 24px color-mix(in srgb,var(--dsw-alias-label-primary) 10%,transparent);font:13px/1.4 system-ui,-apple-system,"Segoe UI",sans-serif;text-align:start;overflow:hidden}
+.lpa-model-flyout-head{display:flex;align-items:center;gap:6px;margin:2px 4px 4px;font-size:11px;letter-spacing:.02em;line-height:14px;color:var(--dsw-alias-label-caption,var(--lpa-menu-fore,#a6a094))}
+.lpa-model-flyout-head>span:first-child{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lpa-model-flyout-scroll{min-height:0;overflow-y:auto;overscroll-behavior:contain;flex:1 1 auto}
+.lpa-model-other-label{display:flex;align-items:center;gap:6px;margin:2px 11px 0;font-size:11px;line-height:14px;color:var(--dsw-alias-label-caption,var(--lpa-menu-fore,#a6a094))}
+.lpa-model-other-label>span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .lpa-model-provider-row{display:flex;align-items:center;gap:8px;width:100%;min-height:30px;box-sizing:border-box;padding:4px 7px;border:0;border-radius:6px;background:transparent;color:inherit;font:inherit;text-align:inherit;cursor:pointer}
 .lpa-model-provider-row:hover:not(:disabled){background:var(--dsw-alias-interactive-bg-hover,var(--dsw-alias-bg-layer-2,rgba(127,127,127,.18)))}
 .lpa-model-provider-row:focus-visible{outline:2px solid var(--dsw-alias-brand-primary);outline-offset:-2px}
@@ -4287,11 +4294,6 @@ var init_model_picker_style = __esm({
 .lpa-model-provider-count{font-size:10px;line-height:14px;letter-spacing:.02em;color:var(--dsw-alias-label-tertiary,var(--dsw-alias-label-secondary))}
 .lpa-model-provider-chevron{flex:none;font-size:13px;line-height:1;color:var(--dsw-alias-label-tertiary,var(--dsw-alias-label-secondary))}
 .lpa-model-provider-row--current .lpa-model-provider-name,.lpa-model-provider-row--current .lpa-model-provider-chevron{color:var(--dsw-alias-brand-primary)}
-.lpa-model-back-row{display:flex;align-items:center;gap:5px;width:100%;min-height:26px;box-sizing:border-box;padding:4px 7px 2px;border:0;border-radius:6px;background:transparent;color:var(--dsw-alias-label-secondary,var(--dsw-alias-label-primary));font:inherit;font-size:11.5px;text-align:inherit;cursor:pointer}
-.lpa-model-back-row:hover:not(:disabled){background:var(--dsw-alias-interactive-bg-hover,var(--dsw-alias-bg-layer-2,rgba(127,127,127,.18)))}
-.lpa-model-back-row:focus-visible{outline:2px solid var(--dsw-alias-brand-primary);outline-offset:-2px}
-.lpa-model-back-row:disabled{opacity:.45;cursor:default}
-.lpa-model-back-chevron{flex:none;font-size:13px;line-height:1}
 .lpa-model-pin{flex:none;display:inline-flex;align-items:center;justify-content:center;box-sizing:border-box;height:auto;padding:0;border:0;border-radius:0;background:transparent;color:inherit;font-size:11px;font-weight:400;letter-spacing:0;line-height:14px;cursor:pointer}
 .lpa-model-pin:hover:not(:disabled){color:var(--dsw-alias-label-primary,var(--lpa-menu-fore,#141413))}
 .lpa-model-pin:focus-visible{outline:2px solid var(--dsw-alias-brand-primary);outline-offset:2px}
@@ -4990,14 +4992,15 @@ function splitSections(state, rawPins) {
   const pinnedSet = new Set(pins);
   return { hero: pins.map((id2) => sections.find((g) => g.id === id2)), collapsed: sections.filter((g) => !pinnedSet.has(g.id)), pins };
 }
+function otherModelsOf(collapsed) {
+  return (collapsed ?? []).flatMap((group) => modelsOf(group).map((model) => ({ group, model })));
+}
 function focusOrderFor(state, pins, view) {
   if (busyState(state)) return [];
   const { hero, collapsed } = splitSections(state, pins);
-  if (view !== null && view !== void 0) {
-    const group = [hero, collapsed].flat().find((g) => g?.id === view);
-    return group ? ["back", ...modelsOf(group).map((m) => modelRowId(group, m))] : [];
-  }
-  return [...hero.flatMap((g) => modelsOf(g).map((m) => modelRowId(g, m))), ...collapsed.map((g) => providerRowKey(g.id))];
+  if (view === OTHER_MODELS) return collapsed.length ? otherModelsOf(collapsed).map(({ group, model }) => modelRowId(group, model)) : [];
+  if (view !== null && view !== void 0) return [];
+  return [...hero.flatMap((g) => modelsOf(g).map((m) => modelRowId(g, m))), ...collapsed.length ? [providerRowKey(OTHER_MODELS)] : []];
 }
 function orderModelProviders(groups) {
   const rank = (id2) => id2 === "deepseek-account" ? 0 : id2 === "deepseek-official" ? 1 : 2;
@@ -5090,6 +5093,43 @@ function usePlacement(trigger, panel, open) {
       window.removeEventListener("scroll", place, true);
     };
   }, [open, trigger, panel]);
+  return position;
+}
+function useFlyout(rowRef, panelRef, open) {
+  const [position, setPosition] = import_react15.default.useState(null);
+  import_react15.default.useLayoutEffect(() => {
+    if (!open) {
+      setPosition(null);
+      return;
+    }
+    const place = () => {
+      const anchor = rowRef.current, node = panelRef.current;
+      if (!anchor || !node) return;
+      const rect = anchor.getBoundingClientRect();
+      if (!rect.width || !rect.height) {
+        setPosition(null);
+        return;
+      }
+      const margin = 8, gap = 6;
+      const width = node.offsetWidth, height = node.offsetHeight;
+      const menu = rowRef.current?.closest(".lpa-model-menu")?.getBoundingClientRect();
+      const beside = rect.right + gap + width <= innerWidth - margin;
+      const left = beside ? rect.right + gap : menu && menu.right + gap + width <= innerWidth - margin ? menu.right + gap : Math.max(margin, Math.min(rect.left - gap - width, menu ? menu.left - gap - width : rect.left - gap - width));
+      const top = Math.max(margin, Math.min(rect.top, innerHeight - height - margin));
+      setPosition((old) => old?.left === left && old?.top === top ? old : { left, top });
+    };
+    place();
+    const observer = typeof ResizeObserver === "function" ? new ResizeObserver(place) : null;
+    if (panelRef.current) observer?.observe(panelRef.current);
+    if (rowRef.current) observer?.observe(rowRef.current);
+    window.addEventListener("resize", place);
+    window.addEventListener("scroll", place, true);
+    return () => {
+      observer?.disconnect();
+      window.removeEventListener("resize", place);
+      window.removeEventListener("scroll", place, true);
+    };
+  }, [open, rowRef, panelRef]);
   return position;
 }
 function EffortSlider({ state, entry, disabled, t, submit, sliderRef }) {
@@ -5203,10 +5243,11 @@ function ModelPicker({ locked, available, directory, load, select, t, getLocale 
   const state = import_react15.default.useSyncExternalStore(import_react15.default.useCallback((fn) => directory.subscribe(fn), [directory]), () => directory.getSnapshot(), () => directory.getSnapshot());
   const [open, setOpen] = import_react15.default.useState(false), [error, setError] = import_react15.default.useState(null), [submitting, setSubmitting] = import_react15.default.useState(false);
   const [pinsStored, setPinsStored] = import_react15.default.useState(() => readPinnedProviders(safeStorage()));
-  const [view, setView] = import_react15.default.useState(null);
+  const [otherOpen, setOtherOpen] = import_react15.default.useState(false);
   const [styleTick, refreshStyleTick] = import_react15.default.useState(0);
   import_react15.default.useEffect(() => onModelStyleChange(() => refreshStyleTick((v) => v + 1)), []);
   const trigger = import_react15.default.useRef(null), panel = import_react15.default.useRef(null), slider = import_react15.default.useRef(null), rowRefs = import_react15.default.useRef(/* @__PURE__ */ new Map());
+  const otherRowRef = import_react15.default.useRef(null), flyoutRef = import_react15.default.useRef(null), closeTimer = import_react15.default.useRef(null);
   const lifecycle = import_react15.default.useRef({ alive: true, source: directory, epoch: 0, open: false, operation: 0, inflight: false });
   const focusRequest = import_react15.default.useRef(null), focusRecovery = import_react15.default.useRef(null), modelFocus = import_react15.default.useRef(null), id2 = import_react15.default.useId();
   const life = lifecycle.current;
@@ -5237,16 +5278,8 @@ function ModelPicker({ locked, available, directory, load, select, t, getLocale 
     life.epoch++;
     setOpen(false);
     focusRequest.current = null;
-    setView(null);
+    setOtherOpen(false);
     if (restore) trigger.current?.focus();
-  };
-  const openProvider = (id3) => {
-    setView(id3);
-    focusRequest.current = "back";
-  };
-  const exitProvider = () => {
-    focusRequest.current = view !== null ? providerRowKey(view) : null;
-    setView(null);
   };
   const togglePin = (id3) => {
     const { pins: pins2 } = splitSections(state, pinsStored);
@@ -5254,6 +5287,20 @@ function ModelPicker({ locked, available, directory, load, select, t, getLocale 
     setPinsStored(next);
     writePinnedProviders(next, safeStorage());
   };
+  const cancelClose = () => {
+    if (closeTimer.current) {
+      clearTimeout(closeTimer.current);
+      closeTimer.current = null;
+    }
+  };
+  const scheduleClose = () => {
+    cancelClose();
+    closeTimer.current = setTimeout(() => {
+      closeTimer.current = null;
+      setOtherOpen(false);
+    }, 160);
+  };
+  import_react15.default.useEffect(() => () => cancelClose(), []);
   const { hero, collapsed, pins } = splitSections(state, pinsStored);
   const focusRow = (key) => {
     const node = rowRefs.current.get(key);
@@ -5276,7 +5323,7 @@ function ModelPicker({ locked, available, directory, load, select, t, getLocale 
   }, [busy, visible, directory, life]);
   import_react15.default.useLayoutEffect(() => {
     if (!visible || !position || !focusRequest.current) return;
-    const order = focusOrderFor(state, pins, view), wanted = focusRequest.current === "last" ? order.at(-1) : order[0];
+    const order = focusOrderFor(state, pins, null), wanted = focusRequest.current === "last" ? order.at(-1) : order[0];
     if (focusRow(wanted)) {
       focusRequest.current = null;
       return;
@@ -5285,17 +5332,17 @@ function ModelPicker({ locked, available, directory, load, select, t, getLocale 
       panel.current?.querySelector("button:not(:disabled),input:not(:disabled)")?.focus();
       focusRequest.current = null;
     }
-  }, [visible, position, state, view, pins]);
+  }, [visible, position, state, pins]);
   import_react15.default.useLayoutEffect(() => {
-    panel.current?.querySelector(".lpa-model-scroll")?.scrollTo?.(0, 0);
-  }, [view]);
-  import_react15.default.useLayoutEffect(() => {
-    if (view !== null && ![...sectionsOf(state)].some((g) => g.id === view)) setView(null);
-  }, [view, state]);
+    if (!collapsed.length) setOtherOpen(false);
+  }, [collapsed.length]);
   import_react15.default.useEffect(() => {
     if (!visible) return;
     const outside = (e) => {
-      if (!trigger.current?.contains(e.target) && !panel.current?.contains(e.target)) hide();
+      if (!trigger.current?.contains(e.target) && !panel.current?.contains(e.target) && !flyoutRef.current?.contains(e.target)) {
+        setOtherOpen(false);
+        hide();
+      }
     };
     document.addEventListener("pointerdown", outside, true);
     document.addEventListener("focusin", outside);
@@ -5357,12 +5404,6 @@ function ModelPicker({ locked, available, directory, load, select, t, getLocale 
   };
   const onKeyDown = (e) => {
     if (e.nativeEvent.isComposing) return;
-    if (view !== null && (e.key === "Escape" || e.key === "ArrowLeft" || e.key === "Backspace") && e.target !== slider.current) {
-      e.preventDefault();
-      e.stopPropagation();
-      exitProvider();
-      return;
-    }
     if (e.key === "Escape") {
       e.preventDefault();
       e.stopPropagation();
@@ -5383,9 +5424,9 @@ function ModelPicker({ locked, available, directory, load, select, t, getLocale 
         extras[at - 1].focus();
         return;
       }
-      if (e.shiftKey && at === 0 && focusOrderFor(state, pins, view).length) {
+      if (e.shiftKey && at === 0 && focusOrderFor(state, pins, null).length) {
         e.preventDefault();
-        if (!focusRow(modelFocus.current)) focusRow(focusOrderFor(state, pins, view)[0]);
+        if (!focusRow(modelFocus.current)) focusRow(focusOrderFor(state, pins, null)[0]);
         return;
       }
       hide(true);
@@ -5395,7 +5436,7 @@ function ModelPicker({ locked, available, directory, load, select, t, getLocale 
     if (["ArrowDown", "ArrowUp", "Home", "End"].includes(e.key)) {
       e.preventDefault();
       e.stopPropagation();
-      const order = focusOrderFor(state, pins, view);
+      const order = focusOrderFor(state, pins, null);
       if (busy || !order.length) return;
       const key = document.activeElement?.getAttribute("data-picker-row"), at = order.indexOf(key);
       const next = e.key === "Home" ? 0 : e.key === "End" ? order.length - 1 : at < 0 ? e.key === "ArrowUp" ? order.length - 1 : 0 : (at + (e.key === "ArrowDown" ? 1 : -1) + order.length) % order.length;
@@ -5403,7 +5444,7 @@ function ModelPicker({ locked, available, directory, load, select, t, getLocale 
     }
   };
   if (!available) return null;
-  if (readModelStylePref() === "dsh") return h14(
+  if (styleTick >= 0 && readModelStylePref() === "dsh") return h14(
     "div",
     { className: "lpa-model-root" },
     h14("style", null, ".lpa-model-native{font:inherit;font-size:13px;max-width:min(320px,52cqw);height:28px;color:var(--dsw-alias-label-primary,inherit);background:var(--dsw-alias-bg-layer-1,ButtonFace);border:1px solid var(--dsw-alias-border-l1,#80808066);border-radius:7px;padding:0 4px;cursor:pointer}"),
@@ -5433,8 +5474,10 @@ function ModelPicker({ locked, available, directory, load, select, t, getLocale 
   const rows = effortRows(entry, state.current, t("picker.providerDefault"), t);
   const effort = triggerEffortLabel(state, entry, rows);
   const caption = entry?.model.name || entry?.model.id || state.current?.model || (loadingState(state) ? t("picker.loading") : t("picker.fallback"));
-  const viewGroup = view !== null ? [...hero, ...collapsed].find((g) => g.id === view) : null;
-  const renderModels = (group) => modelsOf(group).map((model) => {
+  const otherCount = otherModelsOf(collapsed).length;
+  const flyout = useFlyout(otherRowRef, flyoutRef, otherOpen && collapsed.length > 0);
+  const renderModels = (group) => modelsOf(group).map((model) => renderModel(group, model));
+  const renderModel = (group, model) => {
     const key = modelRowId(group, model), checked = isCurrentModel(state.current, { provider: group.id, model: model.id });
     const description = modelDescription(group.id, model, getLocale());
     return h14(
@@ -5462,7 +5505,7 @@ function ModelPicker({ locked, available, directory, load, select, t, getLocale 
       h14("span", { className: "lpa-model-copy" }, h14("span", { className: "lpa-model-name" }, model.name || model.id), description ? h14("span", { className: "lpa-model-desc" }, description) : null),
       checked ? h14("span", { className: "lpa-model-check", "aria-hidden": true }, "\u2713") : null
     );
-  });
+  };
   const groupHeader = (group) => h14(
     "div",
     { className: "lpa-model-group-name", title: group.id },
@@ -5481,91 +5524,99 @@ function ModelPicker({ locked, available, directory, load, select, t, getLocale 
       h14("span", { "aria-hidden": true }, pins.includes(group.id) ? t("picker.pinnedMark") : t("picker.pinMark"))
     )
   );
-  const backRow = h14(
-    "button",
-    {
-      key: "back",
-      type: "button",
-      role: "menuitem",
-      "data-picker-row": "back",
-      "aria-label": t("picker.allProviders"),
-      tabIndex: -1,
-      ref: (node) => {
-        if (node) rowRefs.current.set("back", node);
-        else rowRefs.current.delete("back");
-      },
-      className: "lpa-model-back-row",
-      onClick: exitProvider,
-      disabled: busy || locked
-    },
-    h14("span", { className: "lpa-model-back-chevron", "aria-hidden": true }, "\u2039"),
-    h14("span", null, t("picker.allProviders"))
-  );
-  const providerRow = (group) => {
-    const key = providerRowKey(group.id), current = state.current?.provider === group.id;
-    const pinned = pins.includes(group.id);
+  const otherRow = () => {
+    const key = providerRowKey(OTHER_MODELS), current = collapsed.some((group) => state.current?.provider === group.id);
     return h14(
-      "div",
-      { key, className: "lpa-model-provider-line", "data-provider-id": group.id },
-      h14(
-        "button",
-        {
-          type: "button",
-          role: "menuitem",
-          "aria-label": t("picker.providerRow", { name: group.name || group.id, count: modelsOf(group).length }),
-          tabIndex: -1,
-          disabled: busy || locked,
-          "data-picker-row": key,
-          "data-provider-id": group.id,
-          ref: (node) => {
-            if (node) rowRefs.current.set(key, node);
-            else rowRefs.current.delete(key);
-          },
-          className: "lpa-model-provider-row" + (current ? " lpa-model-provider-row--current" : ""),
-          onFocus: () => {
-            modelFocus.current = key;
-          },
-          onClick: () => {
-            if (!busy && !locked) openProvider(group.id);
-          },
-          onKeyDown: (e) => {
-            if (e.nativeEvent.isComposing) return;
-            if (e.key === "ArrowRight") {
-              e.preventDefault();
-              e.stopPropagation();
-              openProvider(group.id);
-            }
-          }
+      "button",
+      {
+        key,
+        type: "button",
+        role: "menuitem",
+        "aria-label": t("picker.otherRow", { count: otherCount }),
+        tabIndex: -1,
+        disabled: busy || locked,
+        "data-picker-row": key,
+        "data-provider-id": OTHER_MODELS,
+        "aria-haspopup": "true",
+        "aria-expanded": otherOpen && collapsed.length > 0,
+        ref: (node) => {
+          otherRowRef.current = node;
+          if (node) rowRefs.current.set(key, node);
+          else rowRefs.current.delete(key);
         },
-        h14("span", { className: "lpa-model-provider-copy" }, h14("span", { className: "lpa-model-provider-name" }, group.name || group.id)),
-        h14(
-          "span",
-          { className: "lpa-model-provider-meta" },
-          current ? h14("span", { className: "lpa-model-check", "aria-hidden": true }, "\u2713") : null,
-          h14("span", { className: "lpa-model-provider-count" }, String(modelsOf(group).length)),
-          h14("span", { className: "lpa-model-provider-chevron", "aria-hidden": true }, "\u203A")
-        )
-      ),
-      h14(
-        "button",
-        {
-          type: "button",
-          className: "lpa-model-pin lpa-model-provider-pin",
-          "data-provider-id": group.id,
-          title: pinned ? t("picker.unpin") : t("picker.pin"),
-          "aria-pressed": pinned,
-          "aria-label": pinned ? t("picker.unpin") : t("picker.pin"),
-          disabled: busy || locked,
-          onClick: (e) => {
+        className: "lpa-model-provider-row" + (current ? " lpa-model-provider-row--current" : "") + (otherOpen && collapsed.length ? " lpa-model-provider-row--open" : ""),
+        onFocus: () => {
+          modelFocus.current = key;
+        },
+        onPointerEnter: () => {
+          cancelClose();
+          if (!busy && !locked) setOtherOpen(true);
+        },
+        onPointerLeave: scheduleClose,
+        onClick: () => {
+          if (!busy && !locked) setOtherOpen((old) => !old);
+        },
+        onKeyDown: (e) => {
+          if (e.nativeEvent.isComposing) return;
+          if (e.key === "ArrowRight") {
             e.preventDefault();
             e.stopPropagation();
-            if (!busy && !locked) togglePin(group.id);
+            setOtherOpen(true);
           }
-        },
-        h14("span", { "aria-hidden": true }, pinned ? t("picker.pinnedMark") : t("picker.pinMark"))
+        }
+      },
+      h14("span", { className: "lpa-model-provider-copy" }, h14("span", { className: "lpa-model-provider-name" }, t("picker.otherModels"))),
+      h14(
+        "span",
+        { className: "lpa-model-provider-meta" },
+        current ? h14("span", { className: "lpa-model-check", "aria-hidden": true }, "\u2713") : null,
+        h14("span", { className: "lpa-model-provider-count" }, String(otherCount)),
+        h14("span", { className: "lpa-model-provider-chevron", "aria-hidden": true }, "\u203A")
       )
     );
   };
+  const flyoutPanel = otherOpen && collapsed.length ? h14(
+    "div",
+    {
+      ref: flyoutRef,
+      className: "lpa-model-flyout",
+      role: "menu",
+      "aria-label": t("picker.otherModels"),
+      style: flyout ?? { left: 0, top: 0, visibility: "hidden" },
+      onPointerEnter: cancelClose,
+      onPointerLeave: scheduleClose
+    },
+    h14(
+      "div",
+      { className: "lpa-model-flyout-head" },
+      h14("span", null, t("picker.otherModels")),
+      h14("span", { className: "lpa-model-provider-count" }, String(otherCount))
+    ),
+    h14("div", { className: "lpa-model-flyout-scroll" }, collapsed.map((group, index) => h14(
+      "div",
+      { key: group.id, className: "lpa-model-other-provider" + (index ? " lpa-model-other-provider--divided" : "") },
+      h14(
+        "div",
+        { className: "lpa-model-other-label" },
+        h14("span", null, group.id === "deepseek-account" ? t("picker.account") : group.name || group.id),
+        h14(
+          "button",
+          {
+            type: "button",
+            className: "lpa-model-pin",
+            "data-provider-id": group.id,
+            title: t("picker.pin"),
+            "aria-pressed": false,
+            "aria-label": t("picker.pin"),
+            disabled: busy || locked,
+            onClick: () => togglePin(group.id)
+          },
+          h14("span", { "aria-hidden": true }, t("picker.pinMark"))
+        )
+      ),
+      modelsOf(group).map((model) => renderModel(group, model))
+    )))
+  ) : null;
   const menu = visible ? h14(
     "div",
     {
@@ -5581,9 +5632,9 @@ function ModelPicker({ locked, available, directory, load, select, t, getLocale 
     h14(
       "div",
       { className: "lpa-model-scroll", role: "menu", "aria-label": t("picker.models") },
-      viewGroup ? [backRow, h14("section", { key: viewGroup.id, className: "lpa-model-group", role: "group", "aria-label": viewGroup.name || viewGroup.id }, groupHeader(viewGroup), renderModels(viewGroup))] : [
+      [
         ...hero.map((group) => h14("section", { key: group.id, className: "lpa-model-group", role: "group", "aria-label": group.name || group.id }, groupHeader(group), renderModels(group))),
-        collapsed.length ? h14("div", { key: "more", className: "lpa-model-more" }, collapsed.map((group) => providerRow(group))) : null
+        collapsed.length ? h14("div", { key: "more", className: "lpa-model-more" }, otherRow()) : null
       ],
       !hero.length && !collapsed.length ? h14("p", { className: "lpa-model-status", role: "status" }, loadingState(state) ? t("picker.loading") : t("picker.empty")) : null
     ),
@@ -5631,10 +5682,11 @@ function ModelPicker({ locked, available, directory, load, select, t, getLocale 
       effort ? h14("span", { className: "lpa-model-trigger-effort" }, effort) : null,
       h14("svg", { className: "lpa-model-chevron", viewBox: "0 0 16 16", width: 12, height: 12, fill: "none", stroke: "currentColor", strokeWidth: 1.5, strokeLinecap: "round", strokeLinejoin: "round", "aria-hidden": true, focusable: "false" }, h14("path", { d: "M4 6l4 4 4-4" }))
     )),
-    menu ? (0, import_react_dom.createPortal)(menu, document.body) : null
+    menu ? (0, import_react_dom.createPortal)(menu, document.body) : null,
+    flyoutPanel && visible ? (0, import_react_dom.createPortal)(flyoutPanel, document.body) : null
   );
 }
-var import_react15, import_react_dom, h14, MODEL_SLOT, MODEL_PICKER_PRIORITY, modelRowId, providerRowKey, EFFORT_SCALE, gestureKeys, safeStorage, menuSurfaceVars;
+var import_react15, import_react_dom, h14, MODEL_SLOT, MODEL_PICKER_PRIORITY, modelRowId, OTHER_MODELS, providerRowKey, EFFORT_SCALE, gestureKeys, safeStorage, menuSurfaceVars;
 var init_model_picker = __esm({
   "assist/client/model-picker.js"() {
     import_react15 = __toESM(require("react"), 1);
@@ -5648,6 +5700,7 @@ var init_model_picker = __esm({
     MODEL_SLOT = "conversation.input.model";
     MODEL_PICKER_PRIORITY = -1;
     modelRowId = (group, model) => JSON.stringify([group.id, model.id]);
+    OTHER_MODELS = "other-models";
     providerRowKey = (id2) => "provider:" + id2;
     EFFORT_SCALE = ["none", "off", "minimal", "low", "medium", "high", "xhigh", "max"];
     gestureKeys = ["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "Home", "End", "PageUp", "PageDown"];

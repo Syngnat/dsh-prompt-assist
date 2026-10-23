@@ -10,23 +10,26 @@ const h=React.createElement;
 export const MODEL_SLOT='conversation.input.model';
 export const MODEL_PICKER_PRIORITY=-1;
 export const modelRowId=(group,model)=>JSON.stringify([group.id,model.id]);
+export const OTHER_MODELS='other-models';
 export const providerRowKey=id=>'provider:'+id;
-/** Quick providers stay expanded on top; the rest collapse behind provider rows. */
+/** Quick providers stay expanded on top. Unpinned providers fold into one other-models group. */
 export function splitSections(state,rawPins){
  const sections=sectionsOf(state),pins=pinIdsForSections(rawPins,sections);
  if(!pins.length)return {hero:sections,collapsed:[],pins};
  const pinnedSet=new Set(pins);
  return {hero:pins.map(id=>sections.find(g=>g.id===id)),collapsed:sections.filter(g=>!pinnedSet.has(g.id)),pins};
 }
-/** Focus order is view-aware: quick top level, or one provider submenu with its back row first. */
+/** Models inside the other-models group, in the catalog's provider order. */
+export function otherModelsOf(collapsed){
+ return (collapsed??[]).flatMap(group=>modelsOf(group).map(model=>({group,model})));
+}
+/** Focus order is view-aware: quick top level, or the other-models list with its back row first. */
 export function focusOrderFor(state,pins,view){
  if(busyState(state))return [];
  const {hero,collapsed}=splitSections(state,pins);
- if(view!==null&&view!==undefined){
-  const group=[hero,collapsed].flat().find(g=>g?.id===view);
-  return group?['back',...modelsOf(group).map(m=>modelRowId(group,m))]:[];
- }
- return [...hero.flatMap(g=>modelsOf(g).map(m=>modelRowId(g,m))),...collapsed.map(g=>providerRowKey(g.id))];
+ if(view===OTHER_MODELS)return collapsed.length?otherModelsOf(collapsed).map(({group,model})=>modelRowId(group,model)):[];
+ if(view!==null&&view!==undefined)return [];
+ return [...hero.flatMap(g=>modelsOf(g).map(m=>modelRowId(g,m))),...(collapsed.length?[providerRowKey(OTHER_MODELS)]:[])];
 }
 export function orderModelProviders(groups){
  const rank=id=>id==='deepseek-account'?0:id==='deepseek-official'?1:2;
@@ -100,6 +103,33 @@ function usePlacement(trigger,panel,open){
   return ()=>{observer?.disconnect();window.removeEventListener('resize',place);window.removeEventListener('scroll',place,true);};
  },[open,trigger,panel]);return position;
 }
+/** The other-models flyout hugs the row on its right, flipping left only when there is no room. */
+function useFlyout(rowRef,panelRef,open){
+ const [position,setPosition]=React.useState(null);
+ React.useLayoutEffect(()=>{
+  if(!open){setPosition(null);return;}
+  const place=()=>{
+   const anchor=rowRef.current,node=panelRef.current;if(!anchor||!node)return;
+   const rect=anchor.getBoundingClientRect();
+   if(!rect.width||!rect.height){setPosition(null);return;}
+   const margin=8,gap=6;
+   const width=node.offsetWidth,height=node.offsetHeight;
+   const menu=rowRef.current?.closest('.lpa-model-menu')?.getBoundingClientRect();
+   // Prefer the row's right edge; when the menu itself is pinned to the viewport edge,
+   // fall back to hugging the menu and only then mirror to its left.
+   const beside=rect.right+gap+width<=innerWidth-margin;
+   const left=beside?rect.right+gap
+    :menu&&menu.right+gap+width<=innerWidth-margin?menu.right+gap
+    :Math.max(margin,Math.min(rect.left-gap-width,menu?menu.left-gap-width:rect.left-gap-width));
+   const top=Math.max(margin,Math.min(rect.top,innerHeight-height-margin));
+   setPosition(old=>old?.left===left&&old?.top===top?old:{left,top});
+  };
+  place();const observer=typeof ResizeObserver==='function'?new ResizeObserver(place):null;
+  if(panelRef.current)observer?.observe(panelRef.current);if(rowRef.current)observer?.observe(rowRef.current);
+  window.addEventListener('resize',place);window.addEventListener('scroll',place,true);
+  return ()=>{observer?.disconnect();window.removeEventListener('resize',place);window.removeEventListener('scroll',place,true);};
+ },[open,rowRef,panelRef]);return position;
+}
 const gestureKeys=['ArrowLeft','ArrowRight','ArrowUp','ArrowDown','Home','End','PageUp','PageDown'];
 /** Preview while dragging; submit once on release. A changed model/catalog/selection cancels the gesture. */
 export function EffortSlider({state,entry,disabled,t,submit,sliderRef}){
@@ -151,10 +181,11 @@ export function ModelPicker({locked,available,directory,load,select,t,getLocale=
  const state=React.useSyncExternalStore(React.useCallback(fn=>directory.subscribe(fn),[directory]),()=>directory.getSnapshot(),()=>directory.getSnapshot());
  const [open,setOpen]=React.useState(false),[error,setError]=React.useState(null),[submitting,setSubmitting]=React.useState(false);
  const [pinsStored,setPinsStored]=React.useState(()=>readPinnedProviders(safeStorage()));
- const [view,setView]=React.useState(null);
+ const [otherOpen,setOtherOpen]=React.useState(false);
  const [styleTick,refreshStyleTick]=React.useState(0);
  React.useEffect(()=>onModelStyleChange(()=>refreshStyleTick(v=>v+1)),[]);
  const trigger=React.useRef(null),panel=React.useRef(null),slider=React.useRef(null),rowRefs=React.useRef(new Map());
+ const otherRowRef=React.useRef(null),flyoutRef=React.useRef(null),closeTimer=React.useRef(null);
  const lifecycle=React.useRef({alive:true,source:directory,epoch:0,open:false,operation:0,inflight:false});
  const focusRequest=React.useRef(null),focusRecovery=React.useRef(null),modelFocus=React.useRef(null),id=React.useId();
  const life=lifecycle.current;life.source=directory;
@@ -162,10 +193,12 @@ export function ModelPicker({locked,available,directory,load,select,t,getLocale=
  const busy=busyState(state)||submitting,position=usePlacement(trigger,panel,visible);
  React.useEffect(()=>{life.alive=true;setOpen(false);setError(null);setSubmitting(false);life.inflight=false;life.epoch++;return()=>{life.alive=false;life.epoch++;};},[directory,life]);
  React.useEffect(()=>{if(!available||locked){life.open=false;life.epoch++;setOpen(false);}},[available,locked,life]);
- const hide=(restore=false)=>{life.open=false;life.epoch++;setOpen(false);focusRequest.current=null;setView(null);if(restore)trigger.current?.focus();};
- const openProvider=id=>{setView(id);focusRequest.current='back';};
- const exitProvider=()=>{focusRequest.current=view!==null?providerRowKey(view):null;setView(null);};
+ const hide=(restore=false)=>{life.open=false;life.epoch++;setOpen(false);focusRequest.current=null;setOtherOpen(false);if(restore)trigger.current?.focus();};
  const togglePin=id=>{const {pins}=splitSections(state,pinsStored);const next=togglePinnedProvider(id,pins);setPinsStored(next);writePinnedProviders(next,safeStorage());};
+ /** A short grace period lets the pointer travel from the row into the panel without flicker. */
+ const cancelClose=()=>{if(closeTimer.current){clearTimeout(closeTimer.current);closeTimer.current=null;}};
+ const scheduleClose=()=>{cancelClose();closeTimer.current=setTimeout(()=>{closeTimer.current=null;setOtherOpen(false);},160);};
+ React.useEffect(()=>()=>cancelClose(),[]);
  const {hero,collapsed,pins}=splitSections(state,pinsStored);
  const focusRow=key=>{const node=rowRefs.current.get(key);if(node&&!node.disabled){modelFocus.current=key;node.focus({preventScroll:true});node.scrollIntoView({block:'nearest'});return true;}return false;};
  React.useLayoutEffect(()=>{
@@ -177,15 +210,14 @@ export function ModelPicker({locked,available,directory,load,select,t,getLocale=
  },[busy,visible,directory,life]);
  React.useLayoutEffect(()=>{
   if(!visible||!position||!focusRequest.current)return;
-  const order=focusOrderFor(state,pins,view),wanted=focusRequest.current==='last'?order.at(-1):order[0];
+  const order=focusOrderFor(state,pins,null),wanted=focusRequest.current==='last'?order.at(-1):order[0];
   if(focusRow(wanted)){focusRequest.current=null;return;}
   if(!loadingState(state)){panel.current?.querySelector('button:not(:disabled),input:not(:disabled)')?.focus();focusRequest.current=null;}
- },[visible,position,state,view,pins]);
- React.useLayoutEffect(()=>{panel.current?.querySelector('.lpa-model-scroll')?.scrollTo?.(0,0);},[view]);
- React.useLayoutEffect(()=>{if(view!==null&&![...sectionsOf(state)].some(g=>g.id===view))setView(null);},[view,state]);
+ },[visible,position,state,pins]);
+ React.useLayoutEffect(()=>{if(!collapsed.length)setOtherOpen(false);},[collapsed.length]);
  React.useEffect(()=>{
   if(!visible)return;
-  const outside=e=>{if(!trigger.current?.contains(e.target)&&!panel.current?.contains(e.target))hide();};
+  const outside=e=>{if(!trigger.current?.contains(e.target)&&!panel.current?.contains(e.target)&&!flyoutRef.current?.contains(e.target)){setOtherOpen(false);hide();}};
   document.addEventListener('pointerdown',outside,true);document.addEventListener('focusin',outside);
   return()=>{document.removeEventListener('pointerdown',outside,true);document.removeEventListener('focusin',outside);};
  },[visible]);
@@ -214,7 +246,6 @@ export function ModelPicker({locked,available,directory,load,select,t,getLocale=
  };
  const onKeyDown=e=>{
   if(e.nativeEvent.isComposing)return;
-  if(view!==null&&(e.key==='Escape'||e.key==='ArrowLeft'||e.key==='Backspace')&&e.target!==slider.current){e.preventDefault();e.stopPropagation();exitProvider();return;}
   if(e.key==='Escape'){e.preventDefault();e.stopPropagation();hide(true);return;}
   if(e.key==='Tab'){
    const retry=panel.current?.querySelector('.lpa-model-retry:not(:disabled)');
@@ -222,19 +253,19 @@ export function ModelPicker({locked,available,directory,load,select,t,getLocale=
    const at=extras.indexOf(e.target);
    if(!e.shiftKey&&at+1<extras.length){e.preventDefault();extras[at+1].focus();return;}
    if(e.shiftKey&&at>0){e.preventDefault();extras[at-1].focus();return;}
-   if(e.shiftKey&&at===0&&focusOrderFor(state,pins,view).length){e.preventDefault();if(!focusRow(modelFocus.current))focusRow(focusOrderFor(state,pins,view)[0]);return;}
+   if(e.shiftKey&&at===0&&focusOrderFor(state,pins,null).length){e.preventDefault();if(!focusRow(modelFocus.current))focusRow(focusOrderFor(state,pins,null)[0]);return;}
    hide(true);return;
   }
   if(e.target===slider.current)return;
   if(['ArrowDown','ArrowUp','Home','End'].includes(e.key)){
-   e.preventDefault();e.stopPropagation();const order=focusOrderFor(state,pins,view);if(busy||!order.length)return;
+   e.preventDefault();e.stopPropagation();const order=focusOrderFor(state,pins,null);if(busy||!order.length)return;
    const key=document.activeElement?.getAttribute('data-picker-row'),at=order.indexOf(key);
    const next=e.key==='Home'?0:e.key==='End'?order.length-1:at<0?(e.key==='ArrowUp'?order.length-1:0):(at+(e.key==='ArrowDown'?1:-1)+order.length)%order.length;
    focusRow(order[next]);
   }
  };
  if(!available)return null;
- if(readModelStylePref()==='dsh')return h('div',{className:'lpa-model-root'},
+ if(styleTick>=0&&readModelStylePref()==='dsh')return h('div',{className:'lpa-model-root'},
   h('style',null,'.lpa-model-native{font:inherit;font-size:13px;max-width:min(320px,52cqw);height:28px;color:var(--dsw-alias-label-primary,inherit);background:var(--dsw-alias-bg-layer-1,ButtonFace);border:1px solid var(--dsw-alias-border-l1,#80808066);border-radius:7px;padding:0 4px;cursor:pointer}'),
   h('select',{className:'lpa-model-native',disabled:busy||locked||loadingState(state),'aria-label':t('picker.aria'),
    value:modelRowId({id:state.current?.provider??''},{id:state.current?.model??''}),
@@ -244,8 +275,10 @@ export function ModelPicker({locked,available,directory,load,select,t,getLocale=
  const rows=effortRows(entry,state.current,t('picker.providerDefault'),t);
  const effort=triggerEffortLabel(state,entry,rows);
  const caption=entry?.model.name||entry?.model.id||state.current?.model||(loadingState(state)?t('picker.loading'):t('picker.fallback'));
- const viewGroup=view!==null?[...hero,...collapsed].find(g=>g.id===view):null;
- const renderModels=group=>modelsOf(group).map(model=>{
+ const otherCount=otherModelsOf(collapsed).length;
+ const flyout=useFlyout(otherRowRef,flyoutRef,otherOpen&&collapsed.length>0);
+ const renderModels=group=>modelsOf(group).map(model=>renderModel(group,model));
+ const renderModel=(group,model)=>{
   const key=modelRowId(group,model),checked=isCurrentModel(state.current,{provider:group.id,model:model.id});
   const description=modelDescription(group.id,model,getLocale());
   return h('button',{key,type:'button',role:'menuitemradio','aria-checked':checked,tabIndex:-1,disabled:busy||locked,
@@ -254,43 +287,47 @@ export function ModelPicker({locked,available,directory,load,select,t,getLocale=
    className:'lpa-model-option'+(checked?' lpa-model-option--current':''),onFocus:()=>{modelFocus.current=key;},onClick:()=>pick(group,model)},
    h('span',{className:'lpa-model-copy'},h('span',{className:'lpa-model-name'},model.name||model.id),description?h('span',{className:'lpa-model-desc'},description):null),
    checked?h('span',{className:'lpa-model-check','aria-hidden':true},'✓'):null);
- });
+ };
  const groupHeader=group=>h('div',{className:'lpa-model-group-name',title:group.id},
   h('span',null,group.id==='deepseek-account'?t('picker.account'):group.name||group.id),
   h('button',{type:'button',className:'lpa-model-pin','data-provider-id':group.id,title:pins.includes(group.id)?t('picker.unpin'):t('picker.pin'),'aria-pressed':pins.includes(group.id),
    'aria-label':pins.includes(group.id)?t('picker.unpin'):t('picker.pin'),onClick:()=>togglePin(group.id)},
    h('span',{'aria-hidden':true},pins.includes(group.id)?t('picker.pinnedMark'):t('picker.pinMark'))));
- const backRow=h('button',{key:'back',type:'button',role:'menuitem','data-picker-row':'back','aria-label':t('picker.allProviders'),tabIndex:-1,
-  ref:node=>{if(node)rowRefs.current.set('back',node);else rowRefs.current.delete('back');},
-  className:'lpa-model-back-row',onClick:exitProvider,disabled:busy||locked},
-  h('span',{className:'lpa-model-back-chevron','aria-hidden':true},'‹'),h('span',null,t('picker.allProviders')));
- const providerRow=group=>{
-  const key=providerRowKey(group.id),current=state.current?.provider===group.id;
-  const pinned=pins.includes(group.id);
-  return h('div',{key,className:'lpa-model-provider-line','data-provider-id':group.id},
-   h('button',{type:'button',role:'menuitem','aria-label':t('picker.providerRow',{name:group.name||group.id,count:modelsOf(group).length}),
-   tabIndex:-1,disabled:busy||locked,'data-picker-row':key,'data-provider-id':group.id,
-   ref:node=>{if(node)rowRefs.current.set(key,node);else rowRefs.current.delete(key);},
-   className:'lpa-model-provider-row'+(current?' lpa-model-provider-row--current':''),
-   onFocus:()=>{modelFocus.current=key;},onClick:()=>{if(!busy&&!locked)openProvider(group.id);},
-   onKeyDown:e=>{if(e.nativeEvent.isComposing)return;if(e.key==='ArrowRight'){e.preventDefault();e.stopPropagation();openProvider(group.id);}}},
-   h('span',{className:'lpa-model-provider-copy'},h('span',{className:'lpa-model-provider-name'},group.name||group.id)),
+
+ const otherRow=()=>{
+  const key=providerRowKey(OTHER_MODELS),current=collapsed.some(group=>state.current?.provider===group.id);
+  return h('button',{key,type:'button',role:'menuitem','aria-label':t('picker.otherRow',{count:otherCount}),
+   tabIndex:-1,disabled:busy||locked,'data-picker-row':key,'data-provider-id':OTHER_MODELS,
+   'aria-haspopup':'true','aria-expanded':otherOpen&&collapsed.length>0,
+   ref:node=>{otherRowRef.current=node;if(node)rowRefs.current.set(key,node);else rowRefs.current.delete(key);},
+   className:'lpa-model-provider-row'+(current?' lpa-model-provider-row--current':'')+(otherOpen&&collapsed.length?' lpa-model-provider-row--open':''),
+   onFocus:()=>{modelFocus.current=key;},onPointerEnter:()=>{cancelClose();if(!busy&&!locked)setOtherOpen(true);},onPointerLeave:scheduleClose,
+   onClick:()=>{if(!busy&&!locked)setOtherOpen(old=>!old);},
+   onKeyDown:e=>{if(e.nativeEvent.isComposing)return;if(e.key==='ArrowRight'){e.preventDefault();e.stopPropagation();setOtherOpen(true);}}},
+   h('span',{className:'lpa-model-provider-copy'},h('span',{className:'lpa-model-provider-name'},t('picker.otherModels'))),
    h('span',{className:'lpa-model-provider-meta'},
     current?h('span',{className:'lpa-model-check','aria-hidden':true},'✓'):null,
-    h('span',{className:'lpa-model-provider-count'},String(modelsOf(group).length)),
-    h('span',{className:'lpa-model-provider-chevron','aria-hidden':true},'›'))),
-  h('button',{type:'button',className:'lpa-model-pin lpa-model-provider-pin','data-provider-id':group.id,
-   title:pinned?t('picker.unpin'):t('picker.pin'),'aria-pressed':pinned,
-   'aria-label':pinned?t('picker.unpin'):t('picker.pin'),disabled:busy||locked,
-   onClick:e=>{e.preventDefault();e.stopPropagation();if(!busy&&!locked)togglePin(group.id);}},
-   h('span',{'aria-hidden':true},pinned?t('picker.pinnedMark'):t('picker.pinMark'))));
+    h('span',{className:'lpa-model-provider-count'},String(otherCount)),
+    h('span',{className:'lpa-model-provider-chevron','aria-hidden':true},'›')));
  };
+ /** Hover panel: the same option rows as a pinned group, separated by provider dividers. */
+ const flyoutPanel=otherOpen&&collapsed.length?h('div',{ref:flyoutRef,className:'lpa-model-flyout',role:'menu','aria-label':t('picker.otherModels'),
+  style:flyout??{left:0,top:0,visibility:'hidden'},
+  onPointerEnter:cancelClose,onPointerLeave:scheduleClose},
+  h('div',{className:'lpa-model-flyout-head'},h('span',null,t('picker.otherModels')),
+   h('span',{className:'lpa-model-provider-count'},String(otherCount))),
+  h('div',{className:'lpa-model-flyout-scroll'},collapsed.map((group,index)=>h('div',{key:group.id,className:'lpa-model-other-provider'+(index?' lpa-model-other-provider--divided':'')},
+   h('div',{className:'lpa-model-other-label'},
+    h('span',null,group.id==='deepseek-account'?t('picker.account'):group.name||group.id),
+    h('button',{type:'button',className:'lpa-model-pin','data-provider-id':group.id,title:t('picker.pin'),'aria-pressed':false,
+     'aria-label':t('picker.pin'),disabled:busy||locked,onClick:()=>togglePin(group.id)},
+     h('span',{'aria-hidden':true},t('picker.pinMark')))),
+   modelsOf(group).map(model=>renderModel(group,model)))))) : null;
  const menu=visible?h('div',{ref:panel,id:id+'-panel',className:'lpa-model-menu',role:'dialog','aria-label':t('picker.aria'),'aria-busy':busy||loadingState(state),
   style:{...(position??{left:0,top:0,visibility:'hidden'}),...menuSurfaceVars()},onKeyDown},
   h('div',{className:'lpa-model-scroll',role:'menu','aria-label':t('picker.models')},
-   viewGroup?[backRow,h('section',{key:viewGroup.id,className:'lpa-model-group',role:'group','aria-label':viewGroup.name||viewGroup.id},groupHeader(viewGroup),renderModels(viewGroup))]:
-    [...hero.map(group=>h('section',{key:group.id,className:'lpa-model-group',role:'group','aria-label':group.name||group.id},groupHeader(group),renderModels(group))),
-     collapsed.length?h('div',{key:'more',className:'lpa-model-more'},collapsed.map(group=>providerRow(group))):null],
+   [...hero.map(group=>h('section',{key:group.id,className:'lpa-model-group',role:'group','aria-label':group.name||group.id},groupHeader(group),renderModels(group))),
+    collapsed.length?h('div',{key:'more',className:'lpa-model-more'},otherRow()):null],
    !hero.length&&!collapsed.length?h('p',{className:'lpa-model-status',role:'status'},loadingState(state)?t('picker.loading'):t('picker.empty')):null),
   failures.length?h('div',{className:'lpa-model-failures'},failures.map(f=>h('p',{key:f.id,className:'lpa-model-status',role:'status'},t(f.key,f.params))),
    h('button',{type:'button',className:'lpa-model-retry',onClick:reload,disabled:busy||loadingState(state)},t('picker.retry'))):null,
@@ -304,5 +341,6 @@ export function ModelPicker({locked,available,directory,load,select,t,getLocale=
    onClick:()=>visible?hide(true):show(),onKeyDown:e=>{if(visible){onKeyDown(e);return;}if(e.key==='ArrowDown'||e.key==='ArrowUp'){e.preventDefault();show(e.key==='ArrowUp'?'last':'first');}}},
    h('span',{className:'lpa-model-trigger-icon','aria-hidden':true},'◇'),h('span',{className:'lpa-model-trigger-label'},caption),
    effort?h('span',{className:'lpa-model-trigger-effort'},effort):null,h('svg',{className:'lpa-model-chevron',viewBox:'0 0 16 16',width:12,height:12,fill:'none',stroke:'currentColor',strokeWidth:1.5,strokeLinecap:'round',strokeLinejoin:'round','aria-hidden':true,focusable:'false'},h('path',{d:'M4 6l4 4 4-4'})))),
-  menu?createPortal(menu,document.body):null);
+  menu?createPortal(menu,document.body):null,
+ flyoutPanel&&visible?createPortal(flyoutPanel,document.body):null);
 }
