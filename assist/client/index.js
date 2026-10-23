@@ -11,6 +11,7 @@ import {css} from './style.js';
 import {createSettingsTarget} from './settings-target.js';
 import {createEnablementSource} from './enablement-source.js';
 import {ModelPicker, MODEL_SLOT, MODEL_PICKER_PRIORITY} from './model-picker.js';
+import {readModelStylePref} from './model-style-pref.js';
 const h=React.createElement;
 /** The package and row this plugin owns in the Plugins page. */
 const PACKAGE_NAME='@local/dsh-openai-fast',ROW_ID='local-openai-fast';
@@ -43,7 +44,11 @@ export function installAssist(ctx){
  // keeps ownership of scope, permissions and the directory, and resumes it on unload.
  ctx.inject(['slots','sessions','modelDirectories'],scope=>{
   const models=scope.modelDirectories,sessions=scope.sessions;
-  scope.slots.inject(MODEL_SLOT,()=>scope.slots.register({
+  scope.slots.inject(MODEL_SLOT,()=>{
+  // The style switch: with the DSH picker chosen, this plugin never shadows the
+  // shipped seat, so the host's own model selector renders unchanged.
+  if(readModelStylePref()==='dsh')return ()=>{};
+  return scope.slots.register({
    name:MODEL_SLOT,priority:MODEL_PICKER_PRIORITY,locale:NS,
    inject:sessionId=>{
     const directory=models.directoryFor(sessionId);
@@ -56,7 +61,7 @@ export function installAssist(ctx){
      select:selection=>available?directory.select(selection):Promise.resolve(undefined),
     };
    },
-  },ModelPicker));
+  },ModelPicker);});
  });
  // The settings live on this plugin's own page in the Plugins page, so the
  // sidebar keeps one row for the app instead of one row per plugin.

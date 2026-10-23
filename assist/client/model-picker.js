@@ -3,6 +3,7 @@ import {createPortal} from 'react-dom';
 import {modelDescription} from './model-descriptions.js';
 import {pinIdsForSections,readPinnedProviders,togglePinnedProvider,writePinnedProviders} from './model-pin-store.js';
 import {pickerCss} from './model-picker-style.js';
+import {readModelStylePref,onModelStyleChange} from './model-style-pref.js';
 import {ClaudeEffortVisual} from './claude-effort-visual.js';
 
 const h=React.createElement;
@@ -141,6 +142,9 @@ export function EffortSlider({state,entry,disabled,t,submit,sliderRef}){
 
 /** Sandboxed documents may deny the localStorage property itself; pins degrade to session state. */
 const safeStorage=()=>{try{return globalThis.localStorage;}catch{return undefined;}};
+/** Opaque fallbacks derived from the host's own body paint: the menu never goes transparent, even when a theme plugin removes or translucifies the surface tokens. */
+const menuSurfaceVars=()=>{try{const paint=getComputedStyle(document.body),bg=paint.backgroundColor,fore=paint.color;
+ if(bg&&bg!=='transparent'&&bg!=='rgba(0, 0, 0, 0)')return {'--lpa-menu-base':bg,'--lpa-menu-fore':fore};}catch{}return {};};
 
 /** One session-owned slot component. No document scanning, foreign DOM mutation or private model RPC. */
 export function ModelPicker({locked,available,directory,load,select,t,getLocale=()=> 'en'}){
@@ -148,6 +152,8 @@ export function ModelPicker({locked,available,directory,load,select,t,getLocale=
  const [open,setOpen]=React.useState(false),[error,setError]=React.useState(null),[submitting,setSubmitting]=React.useState(false);
  const [pinsStored,setPinsStored]=React.useState(()=>readPinnedProviders(safeStorage()));
  const [view,setView]=React.useState(null);
+ const [styleTick,refreshStyleTick]=React.useState(0);
+ React.useEffect(()=>onModelStyleChange(()=>refreshStyleTick(v=>v+1)),[]);
  const trigger=React.useRef(null),panel=React.useRef(null),slider=React.useRef(null),rowRefs=React.useRef(new Map());
  const lifecycle=React.useRef({alive:true,source:directory,epoch:0,open:false,operation:0,inflight:false});
  const focusRequest=React.useRef(null),focusRecovery=React.useRef(null),modelFocus=React.useRef(null),id=React.useId();
@@ -228,6 +234,13 @@ export function ModelPicker({locked,available,directory,load,select,t,getLocale=
   }
  };
  if(!available)return null;
+ if(readModelStylePref()==='dsh')return h('div',{className:'lpa-model-root'},
+  h('style',null,'.lpa-model-native{font:inherit;font-size:13px;max-width:min(320px,52cqw);height:28px;color:var(--dsw-alias-label-primary,inherit);background:var(--dsw-alias-bg-layer-1,ButtonFace);border:1px solid var(--dsw-alias-border-l1,#80808066);border-radius:7px;padding:0 4px;cursor:pointer}'),
+  h('select',{className:'lpa-model-native',disabled:busy||locked||loadingState(state),'aria-label':t('picker.aria'),
+   value:modelRowId({id:state.current?.provider??''},{id:state.current?.model??''}),
+   onChange:e=>{let picked;try{picked=JSON.parse(e.target.value);}catch{return;}const group=sectionsOf(state).find(g=>g.id===picked[0]);const model=group?modelsOf(group).find(m=>m.id===picked[1]):null;if(group&&model)pick(group,model);}},
+   sectionsOf(state).length===0?h('option',{value:''},loadingState(state)?t('picker.loading'):t('picker.empty')):null,
+   sectionsOf(state).map(group=>h('optgroup',{key:group.id,label:group.name||group.id},modelsOf(group).map(model=>h('option',{key:modelRowId(group,model),value:modelRowId(group,model)},model.name||model.id))))));
  const rows=effortRows(entry,state.current,t('picker.providerDefault'),t);
  const effort=triggerEffortLabel(state,entry,rows);
  const caption=entry?.model.name||entry?.model.id||state.current?.model||(loadingState(state)?t('picker.loading'):t('picker.fallback'));
@@ -273,7 +286,7 @@ export function ModelPicker({locked,available,directory,load,select,t,getLocale=
    h('span',{'aria-hidden':true},pinned?t('picker.pinnedMark'):t('picker.pinMark'))));
  };
  const menu=visible?h('div',{ref:panel,id:id+'-panel',className:'lpa-model-menu',role:'dialog','aria-label':t('picker.aria'),'aria-busy':busy||loadingState(state),
-  style:position??{left:0,top:0,visibility:'hidden'},onKeyDown},
+  style:{...(position??{left:0,top:0,visibility:'hidden'}),...menuSurfaceVars()},onKeyDown},
   h('div',{className:'lpa-model-scroll',role:'menu','aria-label':t('picker.models')},
    viewGroup?[backRow,h('section',{key:viewGroup.id,className:'lpa-model-group',role:'group','aria-label':viewGroup.name||viewGroup.id},groupHeader(viewGroup),renderModels(viewGroup))]:
     [...hero.map(group=>h('section',{key:group.id,className:'lpa-model-group',role:'group','aria-label':group.name||group.id},groupHeader(group),renderModels(group))),

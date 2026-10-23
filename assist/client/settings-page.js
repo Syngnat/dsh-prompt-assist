@@ -1,4 +1,5 @@
 import {UpdatePanel} from "./update-panel.js";
+import {readModelStylePref,writeModelStylePref} from './model-style-pref.js';
 import React from 'react';
 import {Settings} from './settings.js';
 import {useModelOptions} from './runtime.js';
@@ -53,6 +54,13 @@ function FeatureSettings({feature,global,source,p}){
    noticeValue?h('p',{role:'status',className:noticeValue==='saved'?'lpa-note':'lpa-error'},noticeValue==='saved'?p.t('saved'):errorText(noticeValue,p.t)):null)}));
 }
 
+function ModelStyleCard({t}){
+ const [claude,setClaude]=React.useState(readModelStylePref()==='claude');
+ return h('section',{className:'lpa-feature lpa-card','aria-label':t('settings.modelStyleSection')},
+  h('header',{className:'lpa-card-header'},h('h2',{className:'lpa-feature-title lpa-card-title'},t('settings.modelStyleSection')),h('p',{className:'lpa-note'},t('settings.modelStyleHint'))),
+  h('label',{className:'lpa-check lpa-switch-row'},h('span',{className:'lpa-switch-copy'},h('strong',null,t('settings.modelStyleClaude')),h('span',{className:'lpa-note'},t('settings.modelStyleNote'))),
+   h('input',{className:'lpa-switch',type:'checkbox',checked:claude,onChange:e=>{setClaude(e.target.checked);writeModelStylePref(e.target.checked?'claude':'dsh');}})));
+}
 export function SettingsPage(p){
  const target=React.useSyncExternalStore(p.targetSource.subscribe,p.targetSource.getSnapshot,p.targetSource.getSnapshot);
  const source=p.globalSource??EMPTY_ENABLEMENT_SOURCE;
@@ -71,5 +79,6 @@ export function SettingsPage(p){
     global.data&&!Number.isSafeInteger(global.data.settingsRevision)?h('p',{className:'lpa-error',role:'alert'},p.t('settings.hostUpgrade')):null,
     global.data?h('div',{className:'lpa-settings-cards'},['suggest','enhance'].map(feature=>h(FeatureSettings,{key:feature,feature,global,source,p}))):h('p',{className:'lpa-note lpa-empty-state'},p.t('settings.profileEmpty'))),
    p.connection?h(PriorityPanel,{connection:p.connection,t:p.t,onChanged:()=>{if(target.sessionId)void p.refreshAssist(target.sessionId).catch(()=>{});}}):null,
+   h(ModelStyleCard,{t:p.t}),
    h(UpdatePanel,{t:p.t})));
 }

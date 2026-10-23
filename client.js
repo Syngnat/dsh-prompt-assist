@@ -634,6 +634,10 @@ var init_messages = __esm({
         "settings.updatesSection": "\u7248\u672C\u4E0E\u66F4\u65B0",
         "settings.sessionEmpty": "\u65E0\u9700\u9009\u62E9\u4F1A\u8BDD\uFF1B\u5168\u5C40\u5F00\u5173\u3001\u6A21\u578B\u53C2\u6570\u4E0E Priority \u6388\u6743\u53EF\u76F4\u63A5\u914D\u7F6E\u3002",
         "settings.advanced": "\u9690\u79C1\u4E0E\u9650\u5236\u8BF4\u660E",
+        "settings.modelStyleSection": "\u6A21\u578B\u9009\u62E9\u5668\u6837\u5F0F",
+        "settings.modelStyleHint": "Claude Style \u662F\u672C\u63D2\u4EF6\u81EA\u5E26\u7684\u81EA\u5B9A\u4E49\u9009\u62E9\u5668\uFF1B\u5173\u95ED\u540E\u4F7F\u7528 DSH \u81EA\u5E26\u7684\u6A21\u578B\u9009\u62E9\u5668\uFF0C\u7ACB\u5373\u751F\u6548\u3002",
+        "settings.modelStyleClaude": "\u4F7F\u7528 Claude Style \u6837\u5F0F",
+        "settings.modelStyleNote": "\u5173\u95ED\u53EF\u89E3\u51B3\u4E0E\u4E3B\u9898\u63D2\u4EF6\u7684\u6837\u5F0F\u51B2\u7A81\uFF0C\u6216\u6062\u590D DSH \u9ED8\u8BA4\u5916\u89C2\u3002",
         "global.migration": "\u4FDD\u7559\u5DF2\u6709\u5168\u5C40\u5F00\u5173\uFF0C\u4F46\u4E0D\u8FC1\u79FB\u4EFB\u4E00\u65E7\u4F1A\u8BDD\u7684\u53C2\u6570\u3002\u5168\u65B0 profile \u5DF2\u5E26\u9ED8\u8BA4\u53C2\u6570\uFF08\u8DDF\u968F\u4F1A\u8BDD\u6A21\u578B\u4E0E\u63A8\u7406\u6863\uFF09\uFF0C\u5F00\u5173\u5373\u5F00\u5373\u7528\uFF1B\u65E7 profile \u82E5\u63D0\u793A\u672A\u4FDD\u5B58\u53C2\u6570\uFF0C\u8BF7\u6838\u5BF9\u5E76\u4FDD\u5B58\u4E00\u6B21\u3002\u65B0\u65E7\u4F1A\u8BDD\u5171\u540C\u4F7F\u7528\uFF1B\u4FDD\u5B58\u3001\u5F00\u542F\u6216\u91CD\u8FDE\u5747\u4E0D\u8FFD\u6EAF\u5386\u53F2\u95EE\u7B54\u3002",
         "global.loading": "\u6B63\u5728\u8BFB\u53D6\u5168\u5C40\u5F00\u5173\u5E76\u8FDE\u63A5\u540C\u6B65\u2026",
         "global.disconnected": "\u5168\u5C40\u540C\u6B65\u6682\u4E0D\u53EF\u7528\uFF1B\u4E0B\u65B9\u53EF\u80FD\u663E\u793A\u4E0A\u6B21\u786E\u8BA4\u503C\uFF0C\u4F46\u5404\u4F1A\u8BDD\u6682\u4E0D\u542F\u7528\u8F85\u52A9\u8BF7\u6C42\u3002\u6062\u590D\u8FDE\u63A5\u53EA\u91CD\u8BFB\u72B6\u6001\uFF0C\u4E0D\u4F1A\u81EA\u52A8\u91CD\u53D1\u4FDD\u5B58\u3002",
@@ -933,6 +937,10 @@ var init_messages = __esm({
         "settings.updatesSection": "Version and updates",
         "settings.sessionEmpty": "No session selection is needed. Configure global switches, model settings and Priority authorization here.",
         "settings.advanced": "Privacy and limits",
+        "settings.modelStyleSection": "Model picker style",
+        "settings.modelStyleHint": "Claude Style is the custom picker shipped with this plugin. Turn it off to use DSH's own model picker; the change applies immediately.",
+        "settings.modelStyleClaude": "Use the Claude Style picker",
+        "settings.modelStyleNote": "Turn this off to resolve style conflicts with theme plugins or to restore the DSH default look.",
         "global.migration": "Existing global switches are retained, but no old session\u2019s settings are migrated. A fresh profile ships with working defaults (follow the session\u2019s model and effort), so its switches work right away; an older profile that still reports unsaved settings needs one review and save. Saving, enabling or reconnecting never replays historical Q&A.",
         "global.loading": "Reading global switches and connecting live updates\u2026",
         "global.disconnected": "Global sync is unavailable. The last confirmed values may remain visible, but auxiliary requests are temporarily disabled in sessions. Reconnection only reads status; it never resends a save.",
@@ -2904,6 +2912,41 @@ var init_update_panel = __esm({
   }
 });
 
+// assist/client/model-style-pref.js
+function readModelStylePref() {
+  try {
+    return localStorage.getItem(KEY) === "dsh" ? "dsh" : "claude";
+  } catch {
+    return "claude";
+  }
+}
+function writeModelStylePref(value) {
+  try {
+    localStorage.setItem(KEY, value === "dsh" ? "dsh" : "claude");
+  } catch {
+  }
+  try {
+    window.dispatchEvent(new Event(MODEL_STYLE_EVENT));
+  } catch {
+  }
+}
+function onModelStyleChange(listener) {
+  try {
+    window.addEventListener(MODEL_STYLE_EVENT, listener);
+    return () => window.removeEventListener(MODEL_STYLE_EVENT, listener);
+  } catch {
+    return () => {
+    };
+  }
+}
+var KEY, MODEL_STYLE_EVENT;
+var init_model_style_pref = __esm({
+  "assist/client/model-style-pref.js"() {
+    KEY = "lpa_model_picker_style";
+    MODEL_STYLE_EVENT = "lpa-model-style-change";
+  }
+});
+
 // assist/client/settings.js
 function Settings(p) {
   const { t, config: v, catalog: c, capabilities: cap } = p;
@@ -3469,6 +3512,23 @@ function FeatureSettings({ feature, global, source, p }) {
     })
   );
 }
+function ModelStyleCard({ t }) {
+  const [claude, setClaude] = import_react13.default.useState(readModelStylePref() === "claude");
+  return h12(
+    "section",
+    { className: "lpa-feature lpa-card", "aria-label": t("settings.modelStyleSection") },
+    h12("header", { className: "lpa-card-header" }, h12("h2", { className: "lpa-feature-title lpa-card-title" }, t("settings.modelStyleSection")), h12("p", { className: "lpa-note" }, t("settings.modelStyleHint"))),
+    h12(
+      "label",
+      { className: "lpa-check lpa-switch-row" },
+      h12("span", { className: "lpa-switch-copy" }, h12("strong", null, t("settings.modelStyleClaude")), h12("span", { className: "lpa-note" }, t("settings.modelStyleNote"))),
+      h12("input", { className: "lpa-switch", type: "checkbox", checked: claude, onChange: (e) => {
+        setClaude(e.target.checked);
+        writeModelStylePref(e.target.checked ? "claude" : "dsh");
+      } })
+    )
+  );
+}
 function SettingsPage(p) {
   const target = import_react13.default.useSyncExternalStore(p.targetSource.subscribe, p.targetSource.getSnapshot, p.targetSource.getSnapshot);
   const source = p.globalSource ?? EMPTY_ENABLEMENT_SOURCE;
@@ -3500,6 +3560,7 @@ function SettingsPage(p) {
         if (target.sessionId) void p.refreshAssist(target.sessionId).catch(() => {
         });
       } }) : null,
+      h12(ModelStyleCard, { t: p.t }),
       h12(UpdatePanel, { t: p.t })
     )
   );
@@ -3508,6 +3569,7 @@ var import_react13, h12;
 var init_settings_page = __esm({
   "assist/client/settings-page.js"() {
     init_update_panel();
+    init_model_style_pref();
     import_react13 = __toESM(require("react"), 1);
     init_settings();
     init_runtime();
@@ -4186,52 +4248,52 @@ var init_model_picker_style = __esm({
     pickerCss = `
 .lpa-model-root{display:inline-flex;min-width:0}
 .lpa-model-trigger{display:inline-flex;align-items:center;gap:5px;height:28px;max-width:min(320px,52cqw);min-width:0;padding:0 7px;border:0;border-radius:7px;background:transparent;color:var(--dsw-alias-label-secondary);font:inherit;font-size:13px;cursor:pointer}
-.lpa-model-trigger:hover:not(:disabled){background:var(--dsw-alias-interactive-bg-hover,var(--dsw-alias-bg-layer-2))}
+.lpa-model-trigger:hover:not(:disabled){background:var(--dsw-alias-interactive-bg-hover,var(--dsw-alias-bg-layer-2,rgba(127,127,127,.18)))}
 .lpa-model-trigger:disabled{opacity:.5;cursor:default}
 .lpa-model-trigger-label{display:var(--dsh-composer-model-text-display,block);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;line-height:1}
 .lpa-model-trigger-icon{display:var(--dsh-composer-model-icon-display,none)}
 .lpa-model-trigger-effort{display:var(--dsh-composer-model-text-display,block);font-size:13px;line-height:1;color:var(--dsw-alias-label-tertiary,var(--dsw-alias-label-secondary))}
-.lpa-model-chevron{flex:none;display:block;width:12px;height:12px;color:var(--dsw-alias-label-caption,#a6a094)}
-.lpa-model-menu{position:fixed;z-index:1200;display:flex;flex-direction:column;box-sizing:border-box;width:344px;max-width:calc(100vw - 16px);max-height:min(660px,calc(100vh - 16px));padding:6px;border:1px solid var(--dsw-alias-border-l1);border-radius:12px;background:var(--dsw-alias-bg-overlay,var(--dsw-alias-bg-layer-1));color:var(--dsw-alias-label-primary);box-shadow:0 8px 24px color-mix(in srgb,var(--dsw-alias-label-primary) 10%,transparent);font:13px/1.4 system-ui,-apple-system,"Segoe UI",sans-serif;text-align:start;overflow:hidden}
+.lpa-model-chevron{flex:none;display:block;width:12px;height:12px;color:var(--dsw-alias-label-caption,var(--lpa-menu-fore,#a6a094))}
+.lpa-model-menu{position:fixed;z-index:1200;display:flex;flex-direction:column;box-sizing:border-box;width:344px;max-width:calc(100vw - 16px);max-height:min(660px,calc(100vh - 16px));padding:6px;border:1px solid var(--dsw-alias-border-l1,#80808066);border-radius:12px;background-color:var(--lpa-menu-base,transparent);background-image:linear-gradient(var(--dsw-alias-bg-overlay,transparent),var(--dsw-alias-bg-overlay,transparent));color:var(--dsw-alias-label-primary);box-shadow:0 8px 24px color-mix(in srgb,var(--dsw-alias-label-primary) 10%,transparent);font:13px/1.4 system-ui,-apple-system,"Segoe UI",sans-serif;text-align:start;overflow:hidden}
 .lpa-model-scroll{min-height:40px;overflow-y:auto;overscroll-behavior:contain;scroll-padding-block:26px;flex:1 1 auto}
 .lpa-model-group{padding:0 0 4px}
-.lpa-model-group-name{position:sticky;top:0;z-index:1;display:flex;align-items:center;gap:6px;min-height:0;box-sizing:border-box;margin:2px 4px;padding:0;background:var(--dsw-alias-bg-overlay,var(--dsw-alias-bg-layer-1));font-size:11px;letter-spacing:.02em;font-weight:400;line-height:14px;color:var(--dsw-alias-label-caption,#a6a094)}
+.lpa-model-group-name{position:sticky;top:0;z-index:1;display:flex;align-items:center;gap:6px;min-height:0;box-sizing:border-box;margin:2px 4px;padding:0;background-color:var(--lpa-menu-base,transparent);background-image:linear-gradient(var(--dsw-alias-bg-overlay,transparent),var(--dsw-alias-bg-overlay,transparent));font-size:11px;letter-spacing:.02em;font-weight:400;line-height:14px;color:var(--dsw-alias-label-caption,var(--lpa-menu-fore,#a6a094))}
 .lpa-model-group-name>span{flex:none;min-width:0;max-width:70%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .lpa-model-group-name::after{content:"";height:0;flex:1;border-top:.5px solid var(--dsw-alias-border-l2,#dedcd2);background:none}
 .lpa-model-option{display:flex;align-items:center;gap:8px;width:100%;min-height:32px;box-sizing:border-box;padding:5px 7px;border:0;border-radius:6px;background:transparent;color:inherit;font:inherit;text-align:inherit;cursor:pointer}
-.lpa-model-option:hover:not(:disabled){background:var(--dsw-alias-interactive-bg-hover,var(--dsw-alias-bg-layer-2))}
+.lpa-model-option:hover:not(:disabled){background:var(--dsw-alias-interactive-bg-hover,var(--dsw-alias-bg-layer-2,rgba(127,127,127,.18)))}
 .lpa-model-option:focus-visible,.lpa-model-trigger:focus-visible,.lpa-model-retry:focus-visible{outline:2px solid var(--dsw-alias-brand-primary);outline-offset:-2px}
 .lpa-model-option:disabled{opacity:.45;cursor:default}
 .lpa-model-copy{display:flex;flex:1;flex-direction:column;gap:1px;min-width:0}
-.lpa-model-name{font-size:13px;font-weight:500;line-height:16px;overflow-wrap:anywhere;color:var(--dsw-alias-label-primary,#141413)}
-.lpa-model-desc{font-size:11px;font-weight:400;line-height:14px;white-space:normal;overflow-wrap:anywhere;color:var(--dsw-alias-label-tertiary,#8f8d84)}
+.lpa-model-name{font-size:13px;font-weight:500;line-height:16px;overflow-wrap:anywhere;color:var(--dsw-alias-label-primary,var(--lpa-menu-fore,#141413))}
+.lpa-model-desc{font-size:11px;font-weight:400;line-height:14px;white-space:normal;overflow-wrap:anywhere;color:var(--dsw-alias-label-tertiary,var(--lpa-menu-fore,#8f8d84))}
 .lpa-model-check{flex:none;align-self:flex-start;margin-top:2px;font-size:13px;color:var(--dsw-alias-brand-primary)}
 .lpa-model-status,.lpa-model-error{margin:0;padding:6px 8px;font-size:11px;line-height:16px;overflow-wrap:anywhere}
 .lpa-model-status{color:var(--dsw-alias-label-secondary)}
 .lpa-model-error{color:var(--dsw-alias-state-error-primary)}
-.lpa-model-failures{flex:0 1 auto;max-height:100px;overflow:auto;border-top:1px solid var(--dsw-alias-border-l1)}
-.lpa-model-retry{margin:2px 8px 6px;padding:3px 8px;border:1px solid var(--dsw-alias-border-l1);border-radius:5px;background:transparent;color:var(--dsw-alias-label-primary);font:inherit;cursor:pointer}
-.lpa-effort-frame{flex:none;padding:10px 8px;border-top:1px solid var(--dsw-alias-border-l1)}
+.lpa-model-failures{flex:0 1 auto;max-height:100px;overflow:auto;border-top:1px solid var(--dsw-alias-border-l1,#80808066)}
+.lpa-model-retry{margin:2px 8px 6px;padding:3px 8px;border:1px solid var(--dsw-alias-border-l1,#80808066);border-radius:5px;background:transparent;color:var(--dsw-alias-label-primary);font:inherit;cursor:pointer}
+.lpa-effort-frame{flex:none;padding:10px 8px;border-top:1px solid var(--dsw-alias-border-l1,#80808066)}
 .lpa-model-more{display:grid;gap:1px;padding:2px 0 6px}
 .lpa-model-provider-line{display:flex;align-items:center;gap:6px;min-width:0}
 .lpa-model-provider-line>.lpa-model-provider-row{flex:1;min-width:0;width:auto}
 .lpa-model-provider-row{display:flex;align-items:center;gap:8px;width:100%;min-height:30px;box-sizing:border-box;padding:4px 7px;border:0;border-radius:6px;background:transparent;color:inherit;font:inherit;text-align:inherit;cursor:pointer}
-.lpa-model-provider-row:hover:not(:disabled){background:var(--dsw-alias-interactive-bg-hover,var(--dsw-alias-bg-layer-2))}
+.lpa-model-provider-row:hover:not(:disabled){background:var(--dsw-alias-interactive-bg-hover,var(--dsw-alias-bg-layer-2,rgba(127,127,127,.18)))}
 .lpa-model-provider-row:focus-visible{outline:2px solid var(--dsw-alias-brand-primary);outline-offset:-2px}
 .lpa-model-provider-row:disabled{opacity:.45;cursor:default}
 .lpa-model-provider-copy{display:flex;align-items:center;gap:6px;flex:1;min-width:0}
-.lpa-model-provider-name{font-size:13px;font-weight:500;letter-spacing:0;line-height:16px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--dsw-alias-label-primary,#141413)}
+.lpa-model-provider-name{font-size:13px;font-weight:500;letter-spacing:0;line-height:16px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--dsw-alias-label-primary,var(--lpa-menu-fore,#141413))}
 .lpa-model-provider-meta{flex:none;display:inline-flex;align-items:center;gap:7px}
 .lpa-model-provider-count{font-size:10px;line-height:14px;letter-spacing:.02em;color:var(--dsw-alias-label-tertiary,var(--dsw-alias-label-secondary))}
 .lpa-model-provider-chevron{flex:none;font-size:13px;line-height:1;color:var(--dsw-alias-label-tertiary,var(--dsw-alias-label-secondary))}
 .lpa-model-provider-row--current .lpa-model-provider-name,.lpa-model-provider-row--current .lpa-model-provider-chevron{color:var(--dsw-alias-brand-primary)}
 .lpa-model-back-row{display:flex;align-items:center;gap:5px;width:100%;min-height:26px;box-sizing:border-box;padding:4px 7px 2px;border:0;border-radius:6px;background:transparent;color:var(--dsw-alias-label-secondary,var(--dsw-alias-label-primary));font:inherit;font-size:11.5px;text-align:inherit;cursor:pointer}
-.lpa-model-back-row:hover:not(:disabled){background:var(--dsw-alias-interactive-bg-hover,var(--dsw-alias-bg-layer-2))}
+.lpa-model-back-row:hover:not(:disabled){background:var(--dsw-alias-interactive-bg-hover,var(--dsw-alias-bg-layer-2,rgba(127,127,127,.18)))}
 .lpa-model-back-row:focus-visible{outline:2px solid var(--dsw-alias-brand-primary);outline-offset:-2px}
 .lpa-model-back-row:disabled{opacity:.45;cursor:default}
 .lpa-model-back-chevron{flex:none;font-size:13px;line-height:1}
 .lpa-model-pin{flex:none;display:inline-flex;align-items:center;justify-content:center;box-sizing:border-box;height:auto;padding:0;border:0;border-radius:0;background:transparent;color:inherit;font-size:11px;font-weight:400;letter-spacing:0;line-height:14px;cursor:pointer}
-.lpa-model-pin:hover:not(:disabled){color:var(--dsw-alias-label-primary,#141413)}
+.lpa-model-pin:hover:not(:disabled){color:var(--dsw-alias-label-primary,var(--lpa-menu-fore,#141413))}
 .lpa-model-pin:focus-visible{outline:2px solid var(--dsw-alias-brand-primary);outline-offset:2px}
 .lpa-model-pin[aria-pressed="true"]{color:var(--dsw-alias-brand-primary)}
 `;
@@ -5142,6 +5204,8 @@ function ModelPicker({ locked, available, directory, load, select, t, getLocale 
   const [open, setOpen] = import_react15.default.useState(false), [error, setError] = import_react15.default.useState(null), [submitting, setSubmitting] = import_react15.default.useState(false);
   const [pinsStored, setPinsStored] = import_react15.default.useState(() => readPinnedProviders(safeStorage()));
   const [view, setView] = import_react15.default.useState(null);
+  const [styleTick, refreshStyleTick] = import_react15.default.useState(0);
+  import_react15.default.useEffect(() => onModelStyleChange(() => refreshStyleTick((v) => v + 1)), []);
   const trigger = import_react15.default.useRef(null), panel = import_react15.default.useRef(null), slider = import_react15.default.useRef(null), rowRefs = import_react15.default.useRef(/* @__PURE__ */ new Map());
   const lifecycle = import_react15.default.useRef({ alive: true, source: directory, epoch: 0, open: false, operation: 0, inflight: false });
   const focusRequest = import_react15.default.useRef(null), focusRecovery = import_react15.default.useRef(null), modelFocus = import_react15.default.useRef(null), id2 = import_react15.default.useId();
@@ -5339,6 +5403,33 @@ function ModelPicker({ locked, available, directory, load, select, t, getLocale 
     }
   };
   if (!available) return null;
+  if (readModelStylePref() === "dsh") return h14(
+    "div",
+    { className: "lpa-model-root" },
+    h14("style", null, ".lpa-model-native{font:inherit;font-size:13px;max-width:min(320px,52cqw);height:28px;color:var(--dsw-alias-label-primary,inherit);background:var(--dsw-alias-bg-layer-1,ButtonFace);border:1px solid var(--dsw-alias-border-l1,#80808066);border-radius:7px;padding:0 4px;cursor:pointer}"),
+    h14(
+      "select",
+      {
+        className: "lpa-model-native",
+        disabled: busy || locked || loadingState(state),
+        "aria-label": t("picker.aria"),
+        value: modelRowId({ id: state.current?.provider ?? "" }, { id: state.current?.model ?? "" }),
+        onChange: (e) => {
+          let picked;
+          try {
+            picked = JSON.parse(e.target.value);
+          } catch {
+            return;
+          }
+          const group = sectionsOf(state).find((g) => g.id === picked[0]);
+          const model = group ? modelsOf(group).find((m) => m.id === picked[1]) : null;
+          if (group && model) pick(group, model);
+        }
+      },
+      sectionsOf(state).length === 0 ? h14("option", { value: "" }, loadingState(state) ? t("picker.loading") : t("picker.empty")) : null,
+      sectionsOf(state).map((group) => h14("optgroup", { key: group.id, label: group.name || group.id }, modelsOf(group).map((model) => h14("option", { key: modelRowId(group, model), value: modelRowId(group, model) }, model.name || model.id))))
+    )
+  );
   const rows = effortRows(entry, state.current, t("picker.providerDefault"), t);
   const effort = triggerEffortLabel(state, entry, rows);
   const caption = entry?.model.name || entry?.model.id || state.current?.model || (loadingState(state) ? t("picker.loading") : t("picker.fallback"));
@@ -5484,7 +5575,7 @@ function ModelPicker({ locked, available, directory, load, select, t, getLocale 
       role: "dialog",
       "aria-label": t("picker.aria"),
       "aria-busy": busy || loadingState(state),
-      style: position ?? { left: 0, top: 0, visibility: "hidden" },
+      style: { ...position ?? { left: 0, top: 0, visibility: "hidden" }, ...menuSurfaceVars() },
       onKeyDown
     },
     h14(
@@ -5543,7 +5634,7 @@ function ModelPicker({ locked, available, directory, load, select, t, getLocale 
     menu ? (0, import_react_dom.createPortal)(menu, document.body) : null
   );
 }
-var import_react15, import_react_dom, h14, MODEL_SLOT, MODEL_PICKER_PRIORITY, modelRowId, providerRowKey, EFFORT_SCALE, gestureKeys, safeStorage;
+var import_react15, import_react_dom, h14, MODEL_SLOT, MODEL_PICKER_PRIORITY, modelRowId, providerRowKey, EFFORT_SCALE, gestureKeys, safeStorage, menuSurfaceVars;
 var init_model_picker = __esm({
   "assist/client/model-picker.js"() {
     import_react15 = __toESM(require("react"), 1);
@@ -5551,6 +5642,7 @@ var init_model_picker = __esm({
     init_model_descriptions();
     init_model_pin_store();
     init_model_picker_style();
+    init_model_style_pref();
     init_claude_effort_visual();
     h14 = import_react15.default.createElement;
     MODEL_SLOT = "conversation.input.model";
@@ -5565,6 +5657,14 @@ var init_model_picker = __esm({
       } catch {
         return void 0;
       }
+    };
+    menuSurfaceVars = () => {
+      try {
+        const paint = getComputedStyle(document.body), bg = paint.backgroundColor, fore = paint.color;
+        if (bg && bg !== "transparent" && bg !== "rgba(0, 0, 0, 0)") return { "--lpa-menu-base": bg, "--lpa-menu-fore": fore };
+      } catch {
+      }
+      return {};
     };
   }
 });
@@ -5613,22 +5713,26 @@ function installAssist(ctx) {
   };
   ctx.inject(["slots", "sessions", "modelDirectories"], (scope) => {
     const models = scope.modelDirectories, sessions = scope.sessions;
-    scope.slots.inject(MODEL_SLOT, () => scope.slots.register({
-      name: MODEL_SLOT,
-      priority: MODEL_PICKER_PRIORITY,
-      locale: NS,
-      inject: (sessionId) => {
-        const directory = models.directoryFor(sessionId);
-        const available = sessions.subagentAddress(sessionId) === void 0;
-        return {
-          available,
-          directory: directory.store,
-          load: () => available ? directory.load() : Promise.resolve(void 0),
-          getLocale: () => ctx.locale.getLocale().active,
-          select: (selection) => available ? directory.select(selection) : Promise.resolve(void 0)
-        };
-      }
-    }, ModelPicker));
+    scope.slots.inject(MODEL_SLOT, () => {
+      if (readModelStylePref() === "dsh") return () => {
+      };
+      return scope.slots.register({
+        name: MODEL_SLOT,
+        priority: MODEL_PICKER_PRIORITY,
+        locale: NS,
+        inject: (sessionId) => {
+          const directory = models.directoryFor(sessionId);
+          const available = sessions.subagentAddress(sessionId) === void 0;
+          return {
+            available,
+            directory: directory.store,
+            load: () => available ? directory.load() : Promise.resolve(void 0),
+            getLocale: () => ctx.locale.getLocale().active,
+            select: (selection) => available ? directory.select(selection) : Promise.resolve(void 0)
+          };
+        }
+      }, ModelPicker);
+    });
   });
   ctx.slots.inject("plugins.detail.actions", () => ctx.slots.register(
     { name: "plugins.detail.actions", id: "local-prompt-assist-open", order: 100, label, locale: NS },
@@ -5659,6 +5763,7 @@ var init_client = __esm({
     init_settings_target();
     init_enablement_source();
     init_model_picker();
+    init_model_style_pref();
     h15 = import_react16.default.createElement;
     PACKAGE_NAME = "@local/dsh-openai-fast";
     ROW_ID = "local-openai-fast";
