@@ -4,7 +4,7 @@ import {
   normalizePinIds, pinIdsForSections, togglePinnedProvider,
   readPinnedProviders, writePinnedProviders,
 } from '../assist/client/model-pin-store.js';
-import {OTHER_MODELS, focusOrderFor, modelRowId, otherModelsOf, providerRowKey, splitSections} from '../assist/client/model-picker.js';
+import {OTHER_MODELS, carriedEffort, focusOrderFor, modelRowId, otherModelsOf, providerRowKey, splitSections} from '../assist/client/model-picker.js';
 
 const snapshot = {
   status: 'ready', pending: null,
@@ -83,4 +83,14 @@ test('the flyout lists every unpinned model without a submenu level', () => {
   assert.deepEqual(focusOrderFor(snapshot, ['openai'], 'openai'), []);
   assert.deepEqual(focusOrderFor(snapshot, ['openai'], 'gone'), []);
   assert.deepEqual(focusOrderFor({...snapshot, pending: {provider: 'openai', model: 'gpt-6-astra'}}, ['openai'], OTHER_MODELS), []);
+});
+
+test('a model switch keeps the reasoning level only when the new model advertises it', () => {
+  const model = {reasoning: {defaultEffort: 'low', efforts: [{id: 'low'}, {id: 'high'}]}};
+  assert.equal(carriedEffort(model, {reasoningEffort: 'high'}), 'high');
+  assert.equal(carriedEffort(model, {reasoningEffort: 'xhigh'}), undefined, 'an unsupported level is not carried');
+  assert.equal(carriedEffort(model, {reasoningEffort: ''}), undefined);
+  assert.equal(carriedEffort(model, {}), undefined);
+  assert.equal(carriedEffort({}, {reasoningEffort: 'high'}), undefined, 'a model without reasoning keeps nothing');
+  assert.equal(carriedEffort({reasoning: {efforts: [{id: 'high'}]}}, {reasoningEffort: 'high'}), 'high');
 });

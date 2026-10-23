@@ -42,8 +42,11 @@ export async function runRegression(page){
  await open();assert.equal(await page.locator('.lpa-model-group').count(),3);assert.equal(await page.locator('.lpa-model-option').count(),8);assert.equal(await page.locator('.lpa-model-submenu').count(),0);assert.ok(await page.locator('.lpa-model-desc').count()>3);cases++;
  const bounds=await page.locator('.lpa-model-menu').boundingBox();assert.ok(bounds.x>=0&&bounds.y>=0&&bounds.x+bounds.width<=900&&bounds.y+bounds.height<=850);cases++;
  await current().click();assert.equal(await count(),0);assert.equal(await page.locator('.lpa-model-menu').count(),0);cases++;
- await open();await page.locator('[data-model-id="gpt-5.2"]').click();await settle(page);assert.deepEqual(await last(),{provider:'openai',model:'gpt-5.2',reasoningEffort:'low'});cases++;
+ await open();await page.locator('[data-model-id="gpt-5.2"]').click();await settle(page);assert.deepEqual(await last(),{provider:'openai',model:'gpt-5.2',reasoningEffort:'high'});cases++;
  await reset();await open();await page.keyboard.press('Home');await page.keyboard.press('ArrowDown');await page.keyboard.press('Enter');await settle(page);assert.equal(await count(),1);assert.equal((await last()).model,'mimo-v2.6-pro');cases++;
+ await reset({snapshot:{current:{provider:'openai',model:'gpt-6-astra',reasoningEffort:'xhigh'}}});await open();await page.locator('[data-model-id="gpt-5.2"]').click();await settle(page);
+ assert.deepEqual(await last(),{provider:'openai',model:'gpt-5.2'},'a level the new model does not advertise is not sent');
+ assert.equal(await page.locator('.lpa-model-menu').count(),0);cases++;
  await reset();await open();await page.keyboard.press('Tab');assert.equal(await range().evaluate(n=>n===document.activeElement),true);await page.keyboard.press('ArrowLeft');await settle(page);assert.equal(await count(),1);assert.equal((await last()).reasoningEffort,'medium');cases++;
  await reset();await open();await drag(0,false);assert.equal(await count(),0);await page.mouse.up();await settle(page);assert.equal(await count(),1);assert.equal((await last()).reasoningEffort,'low');cases++;
  await reset();await open();await drag(2/3);assert.equal(await count(),0);cases++;
@@ -102,7 +105,7 @@ export async function runRegression(page){
  await reset();await open();await page.setViewportSize({width:1900,height:900});await settle(page);
  await row.hover();await settle(page);
  await page.locator('.lpa-model-option[data-model-id="gpt-5.2"]').click();await settle(page);
- assert.deepEqual(await last(),{provider:'openai',model:'gpt-5.2',reasoningEffort:'low'});
+ assert.deepEqual(await last(),{provider:'openai',model:'gpt-5.2',reasoningEffort:'high'});
  assert.equal(await page.locator('.lpa-model-menu').count(),0);
  assert.equal(await flyout.count(),0);cases++;
  await open();await row.hover();await settle(page);

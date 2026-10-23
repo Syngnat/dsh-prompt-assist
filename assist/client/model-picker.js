@@ -45,6 +45,16 @@ export function currentEntry(state){
 export function busyState(state){return state?.pending!=null;}
 export function loadingState(state){return state?.status==='loading'||state?.status==='idle';}
 export function effectiveEffort(entry,current){return current?.reasoningEffort??entry?.model?.reasoning?.defaultEffort;}
+/**
+ * A model switch keeps the current reasoning level only when the new model
+ * advertises it. Otherwise the field stays out of the selection, so the Host
+ * falls back to that model's own default instead of this plugin guessing one.
+ */
+export function carriedEffort(model,current){
+ const effort=current?.reasoningEffort;
+ if(!effort)return undefined;
+ return (model?.reasoning?.efforts??[]).some(level=>level?.id===effort)?effort:undefined;
+}
 /** Fastest to strongest. A provider's advertised scale may arrive in either direction. */
 const EFFORT_SCALE=['none','off','minimal','low','medium','high','xhigh','max'];
 /**
@@ -242,7 +252,8 @@ export function ModelPicker({locked,available,directory,load,select,t,getLocale=
   if(locked||busy||life.inflight)return;
   const current=directory.getSnapshot().current;
   if(isCurrentModel(current,{provider:group.id,model:model.id})){hide(true);return;}
-  submit({provider:group.id,model:model.id,...(model.reasoning?.defaultEffort===undefined?{}:{reasoningEffort:model.reasoning.defaultEffort})});
+  const effort=carriedEffort(model,current);
+  submit({provider:group.id,model:model.id,...(effort===undefined?{}:{reasoningEffort:effort})});
  };
  const onKeyDown=e=>{
   if(e.nativeEvent.isComposing)return;

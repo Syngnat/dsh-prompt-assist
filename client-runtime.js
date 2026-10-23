@@ -5028,6 +5028,11 @@ function loadingState(state) {
 function effectiveEffort(entry, current) {
   return current?.reasoningEffort ?? entry?.model?.reasoning?.defaultEffort;
 }
+function carriedEffort(model, current) {
+  const effort = current?.reasoningEffort;
+  if (!effort) return void 0;
+  return (model?.reasoning?.efforts ?? []).some((level) => level?.id === effort) ? effort : void 0;
+}
 function orderedEfforts(efforts) {
   const list = (efforts ?? []).filter((item) => item && typeof item.id === "string");
   const ranks = list.map((item) => EFFORT_SCALE.indexOf(item.id.toLowerCase()));
@@ -5400,7 +5405,8 @@ function ModelPicker({ locked, available, directory, load, select, t, getLocale 
       hide(true);
       return;
     }
-    submit({ provider: group.id, model: model.id, ...model.reasoning?.defaultEffort === void 0 ? {} : { reasoningEffort: model.reasoning.defaultEffort } });
+    const effort2 = carriedEffort(model, current);
+    submit({ provider: group.id, model: model.id, ...effort2 === void 0 ? {} : { reasoningEffort: effort2 } });
   };
   const onKeyDown = (e) => {
     if (e.nativeEvent.isComposing) return;
