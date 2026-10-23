@@ -4,7 +4,7 @@ import {
   normalizePinIds, pinIdsForSections, togglePinnedProvider,
   readPinnedProviders, writePinnedProviders,
 } from '../assist/client/model-pin-store.js';
-import {focusOrderFor, modelRowId, providerRowKey, splitSections} from '../assist/client/model-picker.js';
+import {OTHER_MODELS, carriedEffort, focusOrderFor, modelRowId, otherModelsOf, providerRowKey, splitSections} from '../assist/client/model-picker.js';
 
 const snapshot = {
   status: 'ready', pending: null,
@@ -56,9 +56,9 @@ test('pin storage round-trips through an injected storage and survives bad data'
   assert.deepEqual(readPinnedProviders(undefined), []);
 });
 
-test('the top-level focus order lists quick models then collapsed provider rows', () => {
+test('the top-level focus order lists quick models then one other-models row', () => {
   const order = focusOrderFor(snapshot, ['openai'], null);
-  assert.deepEqual(order, [modelRowId({id: 'openai'}, snapshot.groups[1].models[0]), providerRowKey('opencode-cpa'), providerRowKey('xiaomi-token-plan-cn')]);
+  assert.deepEqual(order, [modelRowId({id: 'openai'}, snapshot.groups[1].models[0]), providerRowKey(OTHER_MODELS)]);
   assert.deepEqual(focusOrderFor(snapshot, [], null), [
     modelRowId({id: 'opencode-cpa'}, snapshot.groups[0].models[0]),
     modelRowId({id: 'opencode-cpa'}, snapshot.groups[0].models[1]),
@@ -68,15 +68,29 @@ test('the top-level focus order lists quick models then collapsed provider rows'
   ]);
 });
 
-test('the submenu focus order opens with the back row and only that provider', () => {
-  const order = focusOrderFor(snapshot, ['openai'], 'openai');
-  assert.deepEqual(order, ['back', modelRowId({id: 'openai'}, snapshot.groups[1].models[0])]);
-  assert.deepEqual(focusOrderFor(snapshot, ['openai'], 'opencode-cpa'), [
-    'back',
+test('the flyout lists every unpinned model without a submenu level', () => {
+  const split = splitSections(snapshot, ['openai']);
+  assert.deepEqual(otherModelsOf(split.collapsed).map(({group, model}) => [group.id, model.id]), [
+    ['opencode-cpa', 'a'], ['opencode-cpa', 'b'], ['opencode-cpa', 'c'],
+    ['xiaomi-token-plan-cn', 'mimo'],
+  ]);
+  assert.deepEqual(focusOrderFor(snapshot, ['openai'], OTHER_MODELS), [
     modelRowId({id: 'opencode-cpa'}, snapshot.groups[0].models[0]),
     modelRowId({id: 'opencode-cpa'}, snapshot.groups[0].models[1]),
     modelRowId({id: 'opencode-cpa'}, snapshot.groups[0].models[2]),
+    modelRowId({id: 'xiaomi-token-plan-cn'}, snapshot.groups[2].models[0]),
   ]);
+  assert.deepEqual(focusOrderFor(snapshot, ['openai'], 'openai'), []);
   assert.deepEqual(focusOrderFor(snapshot, ['openai'], 'gone'), []);
-  assert.deepEqual(focusOrderFor({...snapshot, pending: {provider: 'openai', model: 'gpt-6-astra'}}, ['openai'], 'openai'), []);
+  assert.deepEqual(focusOrderFor({...snapshot, pending: {provider: 'openai', model: 'gpt-6-astra'}}, ['openai'], OTHER_MODELS), []);
+});
+
+test('a model switch keeps the reasoning level only when the new model advertises it', () => {
+  const model = {reasoning: {defaultEffort: 'low', efforts: [{id: 'low'}, {id: 'high'}]}};
+  assert.equal(carriedEffort(model, {reasoningEffort: 'high'}), 'high');
+  assert.equal(carriedEffort(model, {reasoningEffort: 'xhigh'}), undefined, 'an unsupported level is not carried');
+  assert.equal(carriedEffort(model, {reasoningEffort: ''}), undefined);
+  assert.equal(carriedEffort(model, {}), undefined);
+  assert.equal(carriedEffort({}, {reasoningEffort: 'high'}), undefined, 'a model without reasoning keeps nothing');
+  assert.equal(carriedEffort({reasoning: {efforts: [{id: 'high'}]}}, {reasoningEffort: 'high'}), 'high');
 });

@@ -1,5 +1,5 @@
 // Quick-provider pins for the composer model picker: which providers stay
-// expanded at the top level while everything else collapses behind a row.
+// expanded at the top level while everything else shares one other-models group.
 // Session-free, profile-local browser storage; no host contract is involved.
 const PIN_KEY='local-prompt-assist:model-pinned-providers';
 
