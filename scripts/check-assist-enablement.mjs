@@ -56,14 +56,14 @@ async function withStorage(run) {
 try {
   const persisted = await withStorage(async open => {
     const a = await open(profileA), b = await open(profileB);
-    assert.deepEqual(a.getSnapshot(), { scope: "profile", revision: 0, enabled: { suggest: false, enhance: false } });
+    assert.deepEqual(a.getSnapshot(), { scope: "profile", revision: 0, enabled: { suggest: true, enhance: true } });
     assert.strictEqual(a.getSnapshot(), a.getSnapshot()); assert.ok(Object.isFrozen(a.getSnapshot().enabled));
     const seen = []; a.subscribe(snapshot => seen.push(snapshot));
-    await Promise.all([a.set("suggest", true), a.set("enhance", true)]);
-    assert.deepEqual(a.getSnapshot().enabled, { suggest: true, enhance: true }); assert.equal(a.getSnapshot().revision, 2);
-    assert.deepEqual(b.getSnapshot().enabled, { suggest: false, enhance: false });
-    await b.set("enhance", true);
-    assert.equal(seen.length, 2); assert.deepEqual(a.getSnapshot().enabled, { suggest: true, enhance: true });
+    await Promise.all([a.set("suggest", false), a.set("enhance", false)]);
+    assert.deepEqual(a.getSnapshot().enabled, { suggest: false, enhance: false }); assert.equal(a.getSnapshot().revision, 2);
+    assert.deepEqual(b.getSnapshot().enabled, { suggest: true, enhance: true });
+    await b.set("enhance", false);
+    assert.equal(seen.length, 2); assert.deepEqual(a.getSnapshot().enabled, { suggest: false, enhance: false });
     const value = { a: a.getSnapshot(), b: b.getSnapshot() };
     await a.close();
     const alias = profileA + sep + ".." + sep + basename(profileA) + sep;
@@ -78,8 +78,8 @@ try {
     await assert.rejects(a.set("suggest", false, { expectedRevision: before.revision - 1 }), { code: "stale-enablement" });
     assert.strictEqual(a.getSnapshot(), before);
     const neverUsed = await open(join(temporary, "profiles", "Fresh"));
-    assert.deepEqual(neverUsed.getSnapshot().enabled, { suggest: false, enhance: false });
-    await a.set("suggest", false, { expectedRevision: before.revision });
+    assert.deepEqual(neverUsed.getSnapshot().enabled, { suggest: true, enhance: true });
+    await a.set("suggest", true, { expectedRevision: before.revision });
     assert.deepEqual(b.getSnapshot(), persisted.b);
   });
   const files = await readdir(storageRoot); assert.equal(files.length, 2);
@@ -94,7 +94,7 @@ try {
   const controls = await withStorage(async open => {
     const a = await open(profileA, true), b = await open(profileB, true);
     const before = a.getSnapshot();
-    assert.deepEqual(before.enabled, { suggest: false, enhance: true }, 'existing flags survive without migration writes');
+    assert.deepEqual(before.enabled, { suggest: true, enhance: false }, 'existing flags survive without migration writes');
     assert.deepEqual(before.configured, { suggest: false, enhance: false });
     assert.equal(before.settingsRevision, 0);
     const input = { followSession: false, provider: 'offline', model: 'gpt-fixture', reasoningEffort: '', fast: false, rounds: 5 };
