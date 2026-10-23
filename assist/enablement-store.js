@@ -29,7 +29,7 @@ export async function openEnablement(ctx, z) {
     const facility = optional(ctx, "storageDomain"), profile = optional(ctx, "profileContext");
     if (typeof facility?.open !== "function") throw unavailable();
     const name = profileDomain(profile?.dir), schema = schemaOf(z);
-    const initial = freezeRecord({ revision: 0, enabled: { suggest: false, enhance: false } });
+    const initial = freezeRecord({ revision: 0, enabled: { suggest: true, enhance: true } });
     domain = await facility.open({ name, version: 1, global: { schema, initial }, tables: {} });
     const global = domain?.global;
     if (typeof global?.get !== "function" || typeof global?.set !== "function" || typeof domain.close !== "function") throw unavailable();

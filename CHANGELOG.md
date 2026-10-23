@@ -2,6 +2,10 @@
 
 [English](<README.md>) | [简体中文](<README.zh-CN.md>)
 
+## 1.2.46 — 全局开关默认开启 / Global switches on by default（2026-10-23）
+
+- 「全局启用下一问建议」与「全局启用提示词增强」两个开关的默认值改为开启，只影响全新 profile；已有 profile 的持久化设置不变。注意：下一问建议会在新的完整问答结束后自动请求模型并产生费用。
+
 ## 1.2.45 — 设置并入 Harness 设置导航 / Settings in the settings dialog（2026-10-23）
 
 - 提示词辅助的设置现在也出现在 Harness 设置弹窗的左侧导航里（设置 → 提示词辅助与 Fast 加速），不用再从插件页绕。插件页里的「打开设置」入口保留。
