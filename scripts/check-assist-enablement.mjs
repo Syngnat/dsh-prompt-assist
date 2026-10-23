@@ -95,7 +95,7 @@ try {
     const a = await open(profileA, true), b = await open(profileB, true);
     const before = a.getSnapshot();
     assert.deepEqual(before.enabled, { suggest: true, enhance: false }, 'existing flags survive without migration writes');
-    assert.deepEqual(before.configured, { suggest: false, enhance: false });
+    assert.deepEqual(before.configured, { suggest: true, enhance: true });
     assert.equal(before.settingsRevision, 0);
     const input = { followSession: false, provider: 'offline', model: 'gpt-fixture', reasoningEffort: '', fast: false, rounds: 5 };
     const seen = []; a.subscribe(value => seen.push(value));
@@ -105,7 +105,7 @@ try {
     assert.equal(saved.settingsRevision, 1); assert.equal(saved.configured.enhance, true);
     assert.deepEqual(saved.settings.enhance, input); assert.equal(Object.hasOwn(saved.settings.enhance, 'enabled'), false);
     assert.equal(seen.length, 1); assert.strictEqual(seen[0], saved);
-    assert.equal(b.getSnapshot().configured.enhance, false);
+    assert.equal(b.getSnapshot().configured.enhance, true);
     await b.configure('suggest', { ...input, followSession: true, provider: '', model: '', rounds: 3 }, { expectedRevision: 0 });
     await assert.rejects(a.configure('enhance', { ...input, rounds: 9 }, { expectedRevision: 0 }), { code: 'stale-global-settings' });
     assert.strictEqual(a.getSnapshot(), saved);
