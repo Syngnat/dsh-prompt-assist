@@ -4,6 +4,8 @@ export const stableVersion=v=>typeof v==='string'&&v.length<=80&&/^(0|[1-9]\d*)\
 export const onlineError=code=>Object.assign(new Error(code),{code});
 const sha=value=>typeof value==='string'&&/^[a-f0-9]{7,40}$/i.test(value);
 const OFFICIAL='syngnat/dsh-prompt-assist';
+/** Direct GitHub connections fail often on some networks; each fetch retries before giving up. */
+const MAX_FETCH_ATTEMPTS=3,ATTEMPT_TIMEOUT_MS=3500;
 /** The bundle manager may record the same official repository in several equivalent spellings. */
 function normalizeBase(base){
  return String(base).trim().toLowerCase().replace(/\.git$/,'').replace(/\/+$/,'')
@@ -24,14 +26,41 @@ export function observedSource(value){
 }
 /** Fixed-origin read-only metadata, not a package installer. Never accepts a caller URL. */
 export class ReleasePins {
- constructor({fetch:fetcher=(...args)=>globalThis.fetch(...args)}={}){this.fetch=fetcher;}
+ constructor({fetch:fetcher=(...args)=>globalThis.fetch(...args),wait=ms=>new Promise(resolve=>setTimeout(resolve,ms))}={}){
+  if(typeof fetcher!=='function'||typeof wait!=='function')throw new Error('Invalid release-pins dependencies');
+  this.fetch=fetcher;this.wait=wait;
+ }
+ /** Read one already-open response, still bounded and still abortable by the caller. */
+ async read(response,signal){
+  const guard=AbortSignal.timeout(CHECK_TIMEOUT_MS);
+  try{return await boundedJSON(response,signal?AbortSignal.any([signal,guard]):guard);}
+  finally{try{await response.body?.cancel();}catch{}}
+ }
+ /**
+  * One metadata document. Each attempt carries its own short deadline, so a
+  * cold proxy or a stalled connection is retried instead of failing the whole
+  * preparation; classified failures (rate limit, missing document, invalid
+  * body) are final, and a caller abort is always rethrown as-is.
+  */
  async json(url,signal){
-  const timeout=AbortSignal.timeout(CHECK_TIMEOUT_MS),combined=signal?AbortSignal.any([signal,timeout]):timeout;
-  try{
-   const response=await this.fetch(url,{signal:combined,redirect:'error',headers:{Accept:'application/vnd.github+json','User-Agent':'dsh-prompt-assist-online-update'}});
-   if(!response.ok){try{await response.body?.cancel();}catch{}throw onlineError([403,429].includes(response.status)?'rate-limited':'metadata-unavailable');}
-   return await boundedJSON(response,combined);
-  }catch(error){if(['rate-limited','metadata-unavailable'].includes(error?.code))throw error;throw onlineError(combined.aborted?'timeout':'metadata-unavailable');}
+  let last='metadata-unavailable';
+  for(let attempt=1;attempt<=MAX_FETCH_ATTEMPTS;attempt++){
+   const timeout=AbortSignal.timeout(ATTEMPT_TIMEOUT_MS),combined=signal?AbortSignal.any([signal,timeout]):timeout;
+   let response=null;
+   try{
+    response=await this.fetch(url,{signal:combined,redirect:'error',headers:{Accept:'application/vnd.github+json','User-Agent':'dsh-prompt-assist-online-update'}});
+    if(response.ok)return await this.read(response,signal);
+    try{await response.body?.cancel();}catch{}
+    last='metadata-unavailable';
+    if([403,429].includes(response.status))throw onlineError('rate-limited');
+    if(response.status===404)throw onlineError('metadata-unavailable');
+   }catch(error){
+    if(signal?.aborted||error?.code)throw error;
+    last=combined.aborted?'timeout':'metadata-unavailable';
+   }
+   if(attempt<MAX_FETCH_ATTEMPTS)await this.wait(attempt===1?150:400);
+  }
+  throw onlineError(last);
  }
  async resolve(version,signal,source){
   if(!stableVersion(version))throw onlineError('unsupported-version');
