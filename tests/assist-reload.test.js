@@ -18,7 +18,7 @@ import { foldContextState } from '../assist/context.js';
 import { normalizeConfig } from '../assist/config.js';
 test('retired handler sees only disabled tombstone; its config command is reject-only',async()=>{
  const routes=new Map([['/local-openai-fast/assist',{retired:true}]]), units=new Map(), commands=new Map();
- let registeredTool;const ctx=scope(routes);ctx.on=()=>{};ctx.tools={register(value){registeredTool=value;}};ctx.profileContext={dir:process.cwd()};ctx.get=name=>ctx[name];ctx.storageDomain={async open(spec){let value=spec.global.initial;return {global:{get:()=>value,set:async next=>{value=next;}},close:async()=>{}};}};
+ let registeredTool;const ctx=scope(routes);ctx.on=()=>{};ctx.tools={register(value){registeredTool=value;}};ctx.profileContext={dir:process.cwd()};ctx.get=name=>ctx[name];ctx.storageDomain={async open(spec){let value=spec.name.startsWith('local_prompt_assist_controls')?{...spec.global.initial,configured:{suggest:false,enhance:false}}:spec.global.initial;return {global:{get:()=>value,set:async next=>{value=next;}},close:async()=>{}};}};
  ctx.connection.fetch={register(route){return ctx.effect(()=>{routes.set(route.path,route);return()=>routes.delete(route.path);});}};
  ctx.sessionProjections={register(unit){ctx.effect(()=>{units.set(unit.key,unit);return()=>units.delete(unit.key);});}};
  ctx.commands={register(command){ctx.effect(()=>{commands.set(command.name,command);return()=>commands.delete(command.name);});}};

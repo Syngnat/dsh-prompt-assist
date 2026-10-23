@@ -45,7 +45,7 @@ function FeatureSettings({feature,global,source,p}){
  return h('section',{className:'lpa-feature lpa-card','aria-label':p.t(feature)},
   h('h2',{className:'lpa-feature-title'},p.t(feature)),
   h('p',{className:'lpa-note'},p.t(feature==='suggest'?'suggestContext':'enhanceOriginal')),
-  !host.configured[feature]?h('p',{className:'lpa-note',role:'status'},p.t('settings.unconfigured')):null,
+  h('p',{className:'lpa-note',role:'status'},host.configured[feature]?null:p.t('settings.unconfigured')),
   h(Settings,{t:p.t,config:draft.config,catalog:options.catalog,capabilities:options.capabilities,allowed:allowed&&!stale,saving,onChange:edit,save,
    feedback:h('div',{className:'lpa-settings-feedback'},draft.dirty?h('p',{className:'lpa-note'},p.t('settingsChanged')):null,
    stale?h('p',{className:'lpa-error',role:'alert'},p.t('settings.stale')):null,

@@ -38,7 +38,7 @@ export async function openProfileStore(ctx,z) {
   try {
     flags = await openEnablement(ctx,z);
     const facility = optional(ctx,'storageDomain'), schema = schemaOf(z);
-    const initial = freezeRecord({revision:0,settings:{suggest:configOf({},false),enhance:configOf({},false)},configured:{suggest:false,enhance:false}});
+    const initial = freezeRecord({revision:0,settings:{suggest:configOf({},false),enhance:configOf({},false)},configured:{suggest:true,enhance:true}});
     domain = await facility.open({name:domainName(optional(ctx,'profileContext')?.dir),version:1,global:{schema,initial},tables:{}});
     if (typeof domain?.global?.get !== 'function' || typeof domain?.global?.set !== 'function' || typeof domain?.close !== 'function') throw unavailable();
     controls = controlsStore(domain,freezeRecord(schema.parse(domain.global.get())));
