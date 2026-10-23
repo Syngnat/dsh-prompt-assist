@@ -5674,11 +5674,6 @@ var client_exports = {};
 __export(client_exports, {
   installAssist: () => installAssist
 });
-function isOwnPage(subject) {
-  if (subject?.kind === "bundle") return subject.pkg?.name === PACKAGE_NAME;
-  if (subject?.kind === "row") return subject.row?.rowId === ROW_ID;
-  return false;
-}
 function SettingsSurface(p) {
   return h15(import_react16.default.Fragment, null, h15("style", null, css), h15(SettingsPage, p));
 }
@@ -5734,20 +5729,13 @@ function installAssist(ctx) {
       }, ModelPicker);
     });
   });
-  ctx.slots.inject("plugins.detail.actions", () => ctx.slots.register(
-    { name: "plugins.detail.actions", id: "local-prompt-assist-open", order: 100, label, locale: NS },
-    ({ subject, t }) => {
-      if (!isOwnPage(subject)) return null;
-      return h15("button", { type: "button", className: "lpa-button", onClick: () => ctx.layout.selectPanel("local-prompt-assist") }, t("settings.open"));
-    }
-  ));
   ctx.slots.inject("settings.section", () => ctx.slots.register({ name: "settings.section", id: "local-prompt-assist", order: 95, label, locale: NS, inject: () => ({ assistSend, globalSource, targetSource, connection: ctx.connection, refreshAssist: (id2) => ctx.sessions.refreshProjections(id2) }) }, SettingsSurface));
   ctx.slots.inject("main", () => ctx.slots.register({ name: "main", key: "local-prompt-assist", locale: NS, inject: () => ({ assistSend, globalSource, targetSource, connection: ctx.connection, returnToConversation: () => ctx.layout.selectPanel(null), refreshAssist: (id2) => ctx.sessions.refreshProjections(id2) }) }, SettingsSurface));
   ctx.slots.inject("conversation.input.right", () => ctx.slots.register({ name: "conversation.input.right", id: "local-prompt-enhance-action", order: 1005, label: dictionaries.en.enhance, locale: NS, inject: inject2 }, EnhanceButton));
   ctx.slots.inject("conversation.input.right", () => ctx.slots.register({ name: "conversation.input.right", id: "local-next-question-action", order: 1010, label: dictionaries.en.suggest, locale: NS, inject: inject2 }, SuggestButton));
   ctx.slots.inject("conversation.input.overlay", () => ctx.slots.register({ name: "conversation.input.overlay", id: "local-prompt-assist-results", order: 50, label, locale: NS, inject: inject2 }, AssistPanel));
 }
-var import_react16, h15, PACKAGE_NAME, ROW_ID;
+var import_react16, h15;
 var init_client = __esm({
   "assist/client/index.js"() {
     import_react16 = __toESM(require("react"), 1);
@@ -5765,8 +5753,6 @@ var init_client = __esm({
     init_model_picker();
     init_model_style_pref();
     h15 = import_react16.default.createElement;
-    PACKAGE_NAME = "@local/dsh-openai-fast";
-    ROW_ID = "local-openai-fast";
   }
 });
 

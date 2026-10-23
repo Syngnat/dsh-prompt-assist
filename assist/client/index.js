@@ -13,18 +13,6 @@ import {createEnablementSource} from './enablement-source.js';
 import {ModelPicker, MODEL_SLOT, MODEL_PICKER_PRIORITY} from './model-picker.js';
 import {readModelStylePref} from './model-style-pref.js';
 const h=React.createElement;
-/** The package and row this plugin owns in the Plugins page. */
-const PACKAGE_NAME='@local/dsh-openai-fast',ROW_ID='local-openai-fast';
-/**
- * Whether the open detail page belongs to this plugin.
- * @param subject - The page's subject.
- * @returns True for this plugin's own bundle and row pages.
- */
-function isOwnPage(subject){
- if(subject?.kind==='bundle')return subject.pkg?.name===PACKAGE_NAME;
- if(subject?.kind==='row')return subject.row?.rowId===ROW_ID;
- return false;
-}
 function SettingsSurface(p){return h(React.Fragment,null,h('style',null,css),h(SettingsPage,p));}
 export function installAssist(ctx){
  ctx.effect(()=>ctx.locale.register(NS,dictionaries));
@@ -63,10 +51,6 @@ export function installAssist(ctx){
    },
   },ModelPicker);});
  });
- // The settings live on this plugin's own page in the Plugins page, so the
- // sidebar keeps one row for the app instead of one row per plugin.
- ctx.slots.inject('plugins.detail.actions',()=>ctx.slots.register({name:'plugins.detail.actions',id:'local-prompt-assist-open',order:100,label,locale:NS},
-  ({subject,t})=>{if(!isOwnPage(subject))return null;return h('button',{type:'button',className:'lpa-button',onClick:()=>ctx.layout.selectPanel('local-prompt-assist')},t('settings.open'));}));
  // The same page also opens from the settings dialog's own nav.
  ctx.slots.inject('settings.section',()=>ctx.slots.register({name:'settings.section',id:'local-prompt-assist',order:95,label,locale:NS,inject:()=>({assistSend,globalSource,targetSource,connection:ctx.connection,refreshAssist:id=>ctx.sessions.refreshProjections(id)})},SettingsSurface));
  ctx.slots.inject('main',()=>ctx.slots.register({name:'main',key:'local-prompt-assist',locale:NS,inject:()=>({assistSend,globalSource,targetSource,connection:ctx.connection,returnToConversation:()=>ctx.layout.selectPanel(null),refreshAssist:id=>ctx.sessions.refreshProjections(id)})},SettingsSurface));
