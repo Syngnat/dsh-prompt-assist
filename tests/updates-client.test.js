@@ -259,3 +259,30 @@ test("one explicit install action gates on the consent checkbox", async () => {
   assert.ok(!/<button[^>]*disabled=""[^>]*>online\.installNow<\/button>/.test(allowed));
   assert.match(allowed, />online\.installNow</);
 });
+
+test("an available release moves the install action into the version card", () => {
+  const install = {pending: false, onAcknowledge() {}, onInstall() {}};
+  const copy = dictionaries.en;
+  const blocked = render(snapshot("update-available"), "en", {install, acknowledged: false});
+  assert.ok(blocked.includes(copy["updates.installConsent"]));
+  assert.match(blocked, new RegExp('<button[^>]*disabled=""[^>]*>' + copy["updates.installNow"] + "</button>"));
+  assert.ok(!new RegExp("<button[^>]*>" + copy["updates.checkButton"] + "</button>").test(blocked), "the check button gives way to the install action");
+  const allowed = render(snapshot("update-available"), "en", {install, acknowledged: true});
+  assert.ok(!new RegExp('<button[^>]*disabled=""[^>]*>' + copy["updates.installNow"] + "</button>").test(allowed));
+  const running = render(snapshot("update-available"), "en", {install: {...install, pending: true}, acknowledged: true});
+  assert.ok(running.includes(copy["updates.installing"]));
+  // Without an available release the card keeps the plain check action.
+  assert.ok(new RegExp("<button[^>]*>" + copy["updates.checkButton"] + "</button>").test(render(snapshot("idle"), "en", {install, acknowledged: false})));
+});
+
+test("the online subsection does not repeat the install action", async () => {
+  const React2 = await import("react");
+  const {renderToStaticMarkup: render2} = await import("react-dom/server");
+  const {OnlineUpdatePanelContent} = await import("../assist/client/online-update-panel.js");
+  const online = {data: {available: true, reason: null, source: null, operation: null}, preparation: null, consent: false, pending: null,
+    localError: null, uncertain: false, recordLost: false, confirmationRejected: false, recoveryAcknowledged: false, markerCleared: false};
+  const html = render2(React2.createElement(OnlineUpdatePanelContent, {snapshot: online, updateAvailable: true, showInstall: false,
+    t: tFor("en"), onReload() {}}));
+  assert.ok(!html.includes(dictionaries.en["online.installNow"]));
+  assert.ok(!html.includes(dictionaries.en["online.installConsent"]));
+});

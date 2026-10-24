@@ -476,7 +476,8 @@ var init_style = __esm({
 .lpa-footnote-details{font-size:12px;color:var(--dsw-alias-label-secondary)}.lpa-footnote-details summary{cursor:pointer;width:fit-content}.lpa-footnote-details .lpa-note{margin-top:8px}
 .lpa-chip-list{display:flex;flex-wrap:wrap;align-items:flex-start;gap:8px 12px;min-width:0}.lpa-provider-item{display:flex;align-items:center;flex-wrap:wrap;gap:6px;min-width:0;max-width:100%}
 .lpa-chip{box-sizing:border-box;display:inline-flex;align-items:center;gap:8px;min-height:28px;max-width:100%;min-width:0;padding:4px 8px;border:1px solid var(--dsw-alias-border-l1);border-radius:7px;background:var(--dsw-alias-bg-layer-2);font-size:12px}.lpa-chip--readonly{color:var(--dsw-alias-label-secondary)}.lpa-chip code{overflow-wrap:anywhere}.lpa-card .lpa-chip-models{font-size:11px;overflow-wrap:anywhere}.lpa-chip .lpa-chip-action{min-height:24px;padding:2px 6px;border-color:transparent;border-radius:4px;font-size:11px}
-.lpa-card-actions{display:flex;align-items:center;flex-wrap:wrap;gap:10px;min-width:0}.lpa-card-actions>.lpa-button:not(.lpa-button--primary){min-height:32px;padding:6px 10px}
+.lpa-card-actions{display:flex;align-items:center;flex-wrap:wrap;gap:10px;min-width:0}
+.lpa-update-consent-inline{display:flex;align-items:center;gap:8px;flex:1 1 260px;min-width:0;font-size:13px;line-height:1.5;color:var(--dsw-alias-label-secondary)}.lpa-card-actions>.lpa-button:not(.lpa-button--primary){min-height:32px;padding:6px 10px}
 .lpa-priority-actions{display:grid;gap:12px;padding-top:16px;border-top:1px solid var(--dsw-alias-border-l1)}.lpa-priority-actions .lpa-action-buttons{justify-content:flex-end}.lpa-priority-actions .lpa-check{align-items:flex-start;gap:10px;font-size:12px}.lpa-priority-actions .lpa-check input{flex:none;margin-top:3px}.lpa-card .lpa-field select{min-height:34px;padding:6px 8px}
 .lpa-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}.lpa-stat{min-width:0;padding:14px 16px;border:1px solid var(--dsw-alias-border-l1);border-radius:9px;background:var(--dsw-alias-bg-layer-2)}.lpa-stat dt{margin-bottom:6px;color:var(--dsw-alias-label-secondary)}.lpa-stat dd{font-size:18px;font-weight:650;line-height:1.5;color:var(--dsw-alias-label-primary)}.lpa-stat time{font-size:12px;font-weight:400;color:var(--dsw-alias-label-secondary)}.lpa-stat.lpa-stat--highlight{border-color:var(--dsw-alias-brand-primary)}.lpa-stat.lpa-stat--highlight dd{color:var(--dsw-alias-brand-primary)}
 .lpa-divider{height:0;min-width:0;margin-top:6px;border-top:1px solid var(--dsw-alias-border-l1)}.lpa-subsection{display:grid;gap:12px;min-width:0;padding:0;margin:0;border:0;background:none}.lpa-subsection-title{font:inherit;font-size:15px;font-weight:650;line-height:1.5;margin:0;color:var(--dsw-alias-label-primary)}
@@ -678,7 +679,7 @@ var init_messages = __esm({
         "online.installNow": "\u68C0\u67E5\u5E76\u5B89\u88C5\u66F4\u65B0",
         "online.installing": "\u6B63\u5728\u5B89\u88C5\u2026",
         "online.installConsent": "\u6211\u5DF2\u77E5\u6653\uFF1A\u5728\u7EBF\u66F4\u65B0\u4F1A\u4FEE\u6539\u672C profile\uFF0C\u53EF\u80FD\u8981\u6C42\u91CD\u542F\uFF1B\u5931\u8D25\u65F6\u9700\u6309\u8BB0\u5F55\u4EBA\u5DE5\u6062\u590D\u3002",
-        "online.userOnly": "\u68C0\u67E5\u7248\u672C\u4E0D\u4F1A\u5B89\u88C5\u3002\u53EA\u6709\u51C6\u5907\u540E\u52FE\u9009\u98CE\u9669\u786E\u8BA4\u5E76\u70B9\u51FB\u201C\u786E\u8BA4\u66F4\u65B0\u201D\uFF0C\u624D\u4F1A\u542F\u52A8\u5BBF\u4E3B\u66F4\u65B0\u4EFB\u52A1\u3002\u4E0D\u4F1A\u81EA\u52A8\u66F4\u65B0\u3002",
+        "online.userOnly": "\u68C0\u67E5\u7248\u672C\u4E0D\u4F1A\u5B89\u88C5\u3002\u52FE\u9009\u98CE\u9669\u786E\u8BA4\u540E\u70B9\u51FB\u201C\u4E0B\u8F7D\u5E76\u5B89\u88C5\u201D\uFF08\u6216\u4E0B\u65B9\u7684\u4E00\u6B21\u6027\u6309\u94AE\uFF09\u624D\u4F1A\u542F\u52A8\u5BBF\u4E3B\u66F4\u65B0\u4EFB\u52A1\uFF0C\u5185\u90E8\u5148\u51C6\u5907\u518D\u63D0\u4EA4\u5B89\u88C5\u3002\u4E0D\u4F1A\u81EA\u52A8\u66F4\u65B0\u3002",
         "online.continuity": "\u66F4\u65B0\u671F\u95F4\u672C\u9875\u9762\u53EF\u80FD\u6D88\u5931\u6216\u77ED\u6682\u4E0D\u53EF\u7528\uFF1B\u5173\u95ED\u9875\u9762\u4E0D\u4F1A\u53D6\u6D88\u5BBF\u4E3B\u4EFB\u52A1\u3002\u91CD\u65B0\u6253\u5F00\u540E\u53EF\u8BFB\u53D6\u7ED3\u679C\u3002\u9000\u51FA DSH \u4F1A\u4E2D\u65AD\u4EFB\u52A1\uFF0C\u8BF7\u7B49\u5F85\u7ED3\u679C\u540E\u518D\u6309\u63D0\u793A\u91CD\u542F\u3002\u8BF7\u5148\u4FDD\u5B58\u8349\u7A3F\u5E76\u5907\u4EFD\u914D\u7F6E\u3002",
         "online.loading": "\u6B63\u5728\u8BFB\u53D6\u5BBF\u4E3B\u66F4\u65B0\u72B6\u6001\u2026",
         "online.noRecord": "\u6CA1\u6709\u53EF\u8BFB\u53D6\u7684\u5728\u7EBF\u66F4\u65B0\u4EFB\u52A1\u8BB0\u5F55\uFF1B\u8FD9\u4E0D\u4EE3\u8868\u66F4\u65B0\u6210\u529F\u3002",
@@ -732,7 +733,7 @@ var init_messages = __esm({
         "online.phase.cancelled": "\u5BBF\u4E3B\u62A5\u544A\u4EFB\u52A1\u5DF2\u53D6\u6D88\uFF1B\u8BF7\u6838\u5BF9\u5F53\u524D\u63D2\u4EF6\u72B6\u6001\u3002",
         "online.phase.unknown": "\u4EFB\u52A1\u7ED3\u679C\u672A\u77E5\uFF0C\u4E0D\u80FD\u89C6\u4E3A\u66F4\u65B0\u6210\u529F\u3002",
         "updates.title": "\u7248\u672C\u4E0E\u66F4\u65B0",
-        "updates.readOnly": "\u7248\u672C\u68C0\u67E5\u53EA\u8BFB\u53D6\u516C\u5F00\u4FE1\u606F\uFF0C\u4E0D\u4E0B\u8F7D\u6216\u5B89\u88C5\u3002\u5728\u7EBF\u66F4\u65B0\u9700\u5728\u4E0B\u65B9\u5355\u72EC\u51C6\u5907\u5E76\u660E\u786E\u786E\u8BA4\uFF1B\u4E0D\u4F1A\u81EA\u52A8\u5347\u7EA7\u3002",
+        "updates.readOnly": "\u7248\u672C\u68C0\u67E5\u53EA\u8BFB\u53D6\u516C\u5F00\u4FE1\u606F\uFF0C\u4E0D\u4E0B\u8F7D\u6216\u5B89\u88C5\u3002\u68C0\u6D4B\u5230\u65B0\u7248\u540E\u53EF\u5728\u6B64\u52FE\u9009\u98CE\u9669\u786E\u8BA4\u5E76\u76F4\u63A5\u5B89\u88C5\uFF1B\u4E0D\u4F1A\u81EA\u52A8\u5347\u7EA7\u3002",
         "updates.installedVersion": "\u5F53\u524D\u8FD0\u884C\u7248\u672C",
         "updates.latestVersion": "\u6700\u65B0\u7A33\u5B9A\u7248",
         "updates.checkedAt": "\u4E0A\u6B21\u68C0\u67E5\u65F6\u95F4\uFF08UTC\uFF09",
@@ -776,6 +777,9 @@ var init_messages = __esm({
         "updates.error.rate-limited": "GitHub \u6682\u65F6\u9650\u5236\u8BF7\u6C42\uFF0C\u8BF7\u7A0D\u540E\u624B\u52A8\u91CD\u8BD5\u3002",
         "updates.error.not-found": "\u672A\u627E\u5230\u516C\u5F00\u7A33\u5B9A\u7248\uFF0C\u8BF7\u6838\u5BF9\u53D1\u5E03\u72B6\u6001\u540E\u91CD\u8BD5\u3002",
         "updates.error.invalid-response": "\u7248\u672C\u54CD\u5E94\u65E0\u6548\uFF0C\u672A\u5C06\u5B83\u4F5C\u4E3A\u6709\u6548\u66F4\u65B0\u7ED3\u679C\u3002",
+        "updates.installNow": "\u4E0B\u8F7D\u5E76\u5B89\u88C5",
+        "updates.installing": "\u6B63\u5728\u5B89\u88C5\u2026",
+        "updates.installConsent": "\u6211\u5DF2\u77E5\u6653\uFF1A\u5728\u7EBF\u66F4\u65B0\u4F1A\u4FEE\u6539\u672C profile\uFF0C\u53EF\u80FD\u8981\u6C42\u91CD\u542F",
         "updates.checkButton": "\u68C0\u67E5\u66F4\u65B0",
         "updates.checkingButton": "\u6B63\u5728\u68C0\u67E5\u2026",
         "updates.cancel": "\u53D6\u6D88",
@@ -996,7 +1000,7 @@ var init_messages = __esm({
         "online.installNow": "Check and install update",
         "online.installing": "Installing\u2026",
         "online.installConsent": "I understand the online update modifies this profile, may require a restart, and a failed install needs manual recovery from the record.",
-        "online.userOnly": "Checking versions never installs anything. Only preparing, checking the risk confirmation, and clicking Confirm update starts a Host update job. Updates are never automatic.",
+        "online.userOnly": "Checking versions never installs anything. Ticking the risk confirmation and clicking Download and install (or the one-click button below) starts a Host update job, which prepares first and then submits the install. Updates are never automatic.",
         "online.continuity": "This page may disappear or become temporarily unavailable during the update. Closing it does not cancel the Host job. Reopen it to read the result. Quitting DSH interrupts the job; wait for its outcome before restarting as instructed. Save drafts and back up configuration first.",
         "online.loading": "Reading Host update status\u2026",
         "online.noRecord": "No online update job record is available. This does not mean an update succeeded.",
@@ -1050,7 +1054,7 @@ var init_messages = __esm({
         "online.phase.cancelled": "The Host reports cancellation. Verify the current plugin state.",
         "online.phase.unknown": "The job outcome is unknown, not a successful update.",
         "updates.title": "Version and updates",
-        "updates.readOnly": "Version checks only read public information; they never download or install. Online updates require separate preparation and explicit confirmation below. Nothing upgrades automatically.",
+        "updates.readOnly": "Version checks only read public information; they never download or install. When a newer stable release is found you can tick the risk confirmation here and install directly. Nothing upgrades automatically.",
         "updates.installedVersion": "Running version",
         "updates.latestVersion": "Latest stable release",
         "updates.checkedAt": "Last check (UTC)",
@@ -1094,6 +1098,9 @@ var init_messages = __esm({
         "updates.error.rate-limited": "GitHub temporarily limited requests. Retry manually later.",
         "updates.error.not-found": "No public stable release was found. Check the release status and retry.",
         "updates.error.invalid-response": "The version response was invalid and was not accepted as an update result.",
+        "updates.installNow": "Download and install",
+        "updates.installing": "Installing\u2026",
+        "updates.installConsent": "I understand the online update modifies this profile and may require a restart",
         "updates.checkButton": "Check for updates",
         "updates.checkingButton": "Checking\u2026",
         "updates.cancel": "Cancel",
@@ -2655,7 +2662,7 @@ var init_online_update_state = __esm({
 });
 
 // assist/client/online-update-panel.js
-function OnlineUpdatePanelContent({ snapshot = initialOnlineSnapshot(), updateAvailable = false, currentVersion = null, showAvailability = true, t, acknowledged = false, onAcknowledge, onInstall, onConfirm, onConsent, onDismiss, onReload, onRecoveryAcknowledged, onForgetMarker }) {
+function OnlineUpdatePanelContent({ snapshot = initialOnlineSnapshot(), updateAvailable = false, currentVersion = null, showAvailability = true, showInstall = true, t, acknowledged = false, onAcknowledge, onInstall, onConfirm, onConsent, onDismiss, onReload, onRecoveryAcknowledged, onForgetMarker }) {
   const { data, preparation, pending, consent, localError, uncertain, recordLost, confirmationRejected, recoveryAcknowledged, markerCleared } = snapshot;
   const operation = data?.operation;
   const canForget = canForgetOnlineMarker(snapshot);
@@ -2770,7 +2777,7 @@ function OnlineUpdatePanelContent({ snapshot = initialOnlineSnapshot(), updateAv
     h7(
       "div",
       { className: "lpa-row lpa-card-actions" },
-      !preparation && updateAvailable && data?.available && !active ? h7(
+      showInstall && !preparation && updateAvailable && data?.available && !active ? h7(
         import_react8.default.Fragment,
         null,
         h7("p", { className: "lpa-note" }, t("online.risks")),
@@ -2787,14 +2794,15 @@ function OnlineUpdatePanelContent({ snapshot = initialOnlineSnapshot(), updateAv
     pending === "confirm" ? h7("p", { role: "status" }, t("online.submitting")) : null
   );
 }
-function OnlineUpdatePanel({ t, updateAvailable, currentVersion = null, showAvailability = true, fetcher = globalThis.fetch }) {
-  const controller = import_react8.default.useMemo(() => createOnlineUpdateController(fetcher), [fetcher]);
+function OnlineUpdatePanel({ t, updateAvailable, currentVersion = null, showAvailability = true, showInstall = true, fetcher = globalThis.fetch, controller: external = null }) {
+  const controller = import_react8.default.useMemo(() => external ?? createOnlineUpdateController(fetcher), [external, fetcher]);
   const snapshot = import_react8.default.useSyncExternalStore(controller.subscribe, controller.getSnapshot, controller.getSnapshot);
   const [acknowledged, setAcknowledged] = import_react8.default.useState(false);
   import_react8.default.useEffect(() => {
+    if (external) return;
     void controller.start();
     return () => controller.dispose();
-  }, [controller]);
+  }, [controller, external]);
   const install = async () => {
     await controller.prepare();
     const live = controller.getSnapshot();
@@ -2808,6 +2816,7 @@ function OnlineUpdatePanel({ t, updateAvailable, currentVersion = null, showAvai
     updateAvailable,
     currentVersion,
     showAvailability,
+    showInstall,
     acknowledged,
     onAcknowledge: setAcknowledged,
     onInstall: () => {
@@ -2836,7 +2845,7 @@ var init_online_update_panel = __esm({
 });
 
 // assist/client/update-panel.js
-function UpdatePanelContent({ snapshot = initialUpdateSnapshot(), t, onCheck, onReload, onCancel, onCopy, copyStatus, children }) {
+function UpdatePanelContent({ snapshot = initialUpdateSnapshot(), t, onCheck, onReload, onCancel, onCopy, copyStatus, install = null, acknowledged = false, children }) {
   const view = updateDisplay(snapshot);
   const data = snapshot.data;
   const available = view.status === "update-available";
@@ -2883,7 +2892,24 @@ function UpdatePanelContent({ snapshot = initialUpdateSnapshot(), t, onCheck, on
     h8(
       "div",
       { className: "lpa-row lpa-card-actions" },
-      button(snapshot.pending === "check" ? "updates.checkingButton" : "updates.checkButton", onCheck, snapshot.pending === "check"),
+      // Once a newer stable release is known the primary action belongs here: installing from the
+      // card avoids scrolling down to the online section just to start the same job.
+      available && install ? h8(
+        import_react9.default.Fragment,
+        null,
+        h8(
+          "label",
+          { className: "lpa-row lpa-update-consent-inline" },
+          h8("input", { type: "checkbox", checked: acknowledged === true, disabled: install.pending, onChange: (event) => install.onAcknowledge(event.target.checked) }),
+          t("updates.installConsent")
+        ),
+        h8("button", {
+          type: "button",
+          className: "lpa-button lpa-button--primary",
+          onClick: install.onInstall,
+          disabled: !acknowledged || install.pending
+        }, t(install.pending ? "updates.installing" : "updates.installNow"))
+      ) : button(snapshot.pending === "check" ? "updates.checkingButton" : "updates.checkButton", onCheck, snapshot.pending === "check"),
       snapshot.pending ? button("updates.cancel", onCancel) : null,
       snapshot.localError ? button("updates.reloadStatus", onReload) : null,
       view.releaseUrl ? h8("a", { className: "lpa-button", href: view.releaseUrl, target: "_blank", rel: "noopener noreferrer" }, t("updates.releaseLink")) : null
@@ -2923,16 +2949,21 @@ function UpdatePanelContent({ snapshot = initialUpdateSnapshot(), t, onCheck, on
 }
 function UpdatePanel({ t, fetcher = globalThis.fetch }) {
   const controller = import_react9.default.useMemo(() => createUpdateController(fetcher), [fetcher]);
+  const online = import_react9.default.useMemo(() => createOnlineUpdateController(fetcher), [fetcher]);
   const snapshot = import_react9.default.useSyncExternalStore(controller.subscribe, controller.getSnapshot, controller.getSnapshot);
+  const onlineSnapshot = import_react9.default.useSyncExternalStore(online.subscribe, online.getSnapshot, online.getSnapshot);
   const [copyStatus, setCopyStatus] = import_react9.default.useState(null);
+  const [acknowledged, setAcknowledged] = import_react9.default.useState(false);
   const copyEpoch = import_react9.default.useRef(0);
   import_react9.default.useEffect(() => {
     void controller.start();
+    void online.start();
     return () => {
       copyEpoch.current += 1;
       controller.dispose();
+      online.dispose();
     };
-  }, [controller]);
+  }, [controller, online]);
   async function copy() {
     const revision = ++copyEpoch.current;
     try {
@@ -2942,6 +2973,15 @@ function UpdatePanel({ t, fetcher = globalThis.fetch }) {
       if (copyEpoch.current === revision) setCopyStatus("copyFailed");
     }
   }
+  async function install() {
+    await online.prepare();
+    const live = online.getSnapshot();
+    if (!live.preparation || live.uncertain || live.localError) return;
+    online.setConsent(true);
+    await online.confirm();
+  }
+  const operation = onlineSnapshot.data?.operation;
+  const installPending = onlineSnapshot.pending !== null || Boolean(operation && !operation.terminal);
   return h8(
     UpdatePanelContent,
     {
@@ -2949,6 +2989,10 @@ function UpdatePanel({ t, fetcher = globalThis.fetch }) {
       t,
       copyStatus,
       onCopy: copy,
+      acknowledged,
+      install: { pending: installPending, onAcknowledge: setAcknowledged, onInstall: () => {
+        void install();
+      } },
       onCheck: () => {
         void controller.check();
       },
@@ -2960,9 +3004,12 @@ function UpdatePanel({ t, fetcher = globalThis.fetch }) {
     h8(OnlineUpdatePanel, {
       t,
       fetcher,
+      controller: online,
+      snapshot: onlineSnapshot,
       currentVersion: snapshot.data?.currentVersion ?? null,
-      // The enclosing card already announces the available release; the subsection must not repeat it.
+      // The enclosing card already announces the available release and carries the install action.
       showAvailability: false,
+      showInstall: false,
       updateAvailable: snapshot.data?.status === "update-available"
     })
   );
@@ -2973,6 +3020,7 @@ var init_update_panel = __esm({
     import_react9 = __toESM(require("react"), 1);
     init_update_state();
     init_online_update_panel();
+    init_online_update_state();
     h8 = import_react9.default.createElement;
   }
 });

@@ -3,7 +3,7 @@ import {createOnlineUpdateController, initialOnlineSnapshot, canForgetOnlineMark
 import {displayUtcTime} from "./update-state.js";
 const h = React.createElement;
 
-export function OnlineUpdatePanelContent({snapshot = initialOnlineSnapshot(), updateAvailable = false, currentVersion = null, showAvailability = true, t, acknowledged = false, onAcknowledge, onInstall, onConfirm, onConsent, onDismiss, onReload, onRecoveryAcknowledged, onForgetMarker}) {
+export function OnlineUpdatePanelContent({snapshot = initialOnlineSnapshot(), updateAvailable = false, currentVersion = null, showAvailability = true, showInstall = true, t, acknowledged = false, onAcknowledge, onInstall, onConfirm, onConsent, onDismiss, onReload, onRecoveryAcknowledged, onForgetMarker}) {
   const {data, preparation, pending, consent, localError, uncertain, recordLost, confirmationRejected, recoveryAcknowledged, markerCleared} = snapshot;
   const operation = data?.operation;
   const canForget = canForgetOnlineMarker(snapshot);
@@ -61,7 +61,7 @@ export function OnlineUpdatePanelContent({snapshot = initialOnlineSnapshot(), up
         h("label", {className: "lpa-row"}, h("input", {type: "checkbox", checked: consent, disabled: !!pending, onChange: event => onConsent?.(event.target.checked)}), t("online.consent"))),
       h("div", {className: "lpa-row lpa-card-actions"}, button("confirm", onConfirm, !consent || !!pending || uncertain, " lpa-button--primary lpa-button--danger"), button("dismiss", onDismiss, !!pending))) : null,
     h("div", {className: "lpa-row lpa-card-actions"},
-      !preparation && updateAvailable && data?.available && !active ? h(React.Fragment, null,
+      showInstall && !preparation && updateAvailable && data?.available && !active ? h(React.Fragment, null,
         h("p", {className: "lpa-note"}, t("online.risks")),
         h("label", {className: "lpa-row"}, h("input", {type: "checkbox", checked: acknowledged === true, disabled: !!pending,
           onChange: event => onAcknowledge?.(event.target.checked)}), t("online.installConsent")),
@@ -70,11 +70,16 @@ export function OnlineUpdatePanelContent({snapshot = initialOnlineSnapshot(), up
     pending === "confirm" ? h("p", {role: "status"}, t("online.submitting")) : null);
 }
 
-export function OnlineUpdatePanel({t, updateAvailable, currentVersion = null, showAvailability = true, fetcher = globalThis.fetch}) {
-  const controller = React.useMemo(() => createOnlineUpdateController(fetcher), [fetcher]);
+export function OnlineUpdatePanel({t, updateAvailable, currentVersion = null, showAvailability = true, showInstall = true, fetcher = globalThis.fetch, controller: external = null}) {
+  const controller = React.useMemo(() => external ?? createOnlineUpdateController(fetcher), [external, fetcher]);
   const snapshot = React.useSyncExternalStore(controller.subscribe, controller.getSnapshot, controller.getSnapshot);
   const [acknowledged, setAcknowledged] = React.useState(false);
-  React.useEffect(() => {void controller.start(); return () => controller.dispose();}, [controller]);
+  // An owning card starts and disposes the controller; a standalone mount owns its own.
+  React.useEffect(() => {
+    if (external) return;
+    void controller.start();
+    return () => controller.dispose();
+  }, [controller, external]);
   // One explicit submission: consent is the checkbox, and the click runs prepare -> consent -> confirm.
   // A failed prepare or confirm still lands in the review block, where the manual buttons remain.
   const install = async () => {
@@ -84,7 +89,7 @@ export function OnlineUpdatePanel({t, updateAvailable, currentVersion = null, sh
     controller.setConsent(true);
     await controller.confirm();
   };
-  return h(OnlineUpdatePanelContent, {t, snapshot, updateAvailable, currentVersion, showAvailability, acknowledged,
+  return h(OnlineUpdatePanelContent, {t, snapshot, updateAvailable, currentVersion, showAvailability, showInstall, acknowledged,
     onAcknowledge: setAcknowledged, onInstall: () => {void install();}, onConfirm: () => {void controller.confirm();},
     onRecoveryAcknowledged: value => controller.setRecoveryAcknowledged(value), onForgetMarker: () => controller.forgetMarker(),
     onConsent: value => controller.setConsent(value), onDismiss: () => controller.dismiss(), onReload: () => {void controller.load();}});

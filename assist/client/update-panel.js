@@ -1,10 +1,11 @@
 import React from "react";
 import {createUpdateController, initialUpdateSnapshot, updateDisplay, INSTALL_SPEC, copyInstallSpec, displayCheckedAt} from "./update-state.js";
 import {OnlineUpdatePanel} from "./online-update-panel.js";
+import {createOnlineUpdateController} from "./online-update-state.js";
 const h = React.createElement;
 
 /** Pure render surface, exercised with ReactDOMServer rather than a fake DOM. */
-export function UpdatePanelContent({snapshot = initialUpdateSnapshot(), t, onCheck, onReload, onCancel, onCopy, copyStatus, children}) {
+export function UpdatePanelContent({snapshot = initialUpdateSnapshot(), t, onCheck, onReload, onCancel, onCopy, copyStatus, install = null, acknowledged = false, children}) {
   const view = updateDisplay(snapshot);
   const data = snapshot.data;
   const available = view.status === "update-available";
@@ -24,7 +25,15 @@ export function UpdatePanelContent({snapshot = initialUpdateSnapshot(), t, onChe
       role: view.status === "error" ? "alert" : "status", "aria-live": "polite", "aria-atomic": true},
       t(view.message), view.status === "error" && view.error ? " " + t("updates.error." + view.error) : null),
     h("div", {className: "lpa-row lpa-card-actions"},
-      button(snapshot.pending === "check" ? "updates.checkingButton" : "updates.checkButton", onCheck, snapshot.pending === "check"),
+      // Once a newer stable release is known the primary action belongs here: installing from the
+      // card avoids scrolling down to the online section just to start the same job.
+      available && install ? h(React.Fragment, null,
+        h("label", {className: "lpa-row lpa-update-consent-inline"},
+          h("input", {type: "checkbox", checked: acknowledged === true, disabled: install.pending, onChange: event => install.onAcknowledge(event.target.checked)}),
+          t("updates.installConsent")),
+        h("button", {type: "button", className: "lpa-button lpa-button--primary", onClick: install.onInstall,
+          disabled: !acknowledged || install.pending}, t(install.pending ? "updates.installing" : "updates.installNow"))) :
+        button(snapshot.pending === "check" ? "updates.checkingButton" : "updates.checkButton", onCheck, snapshot.pending === "check"),
       snapshot.pending ? button("updates.cancel", onCancel) : null,
       snapshot.localError ? button("updates.reloadStatus", onReload) : null,
       view.releaseUrl ? h("a", {className: "lpa-button", href: view.releaseUrl, target: "_blank", rel: "noopener noreferrer"}, t("updates.releaseLink")) : null),
@@ -47,13 +56,17 @@ export function UpdatePanelContent({snapshot = initialUpdateSnapshot(), t, onChe
 
 export function UpdatePanel({t, fetcher = globalThis.fetch}) {
   const controller = React.useMemo(() => createUpdateController(fetcher), [fetcher]);
+  const online = React.useMemo(() => createOnlineUpdateController(fetcher), [fetcher]);
   const snapshot = React.useSyncExternalStore(controller.subscribe, controller.getSnapshot, controller.getSnapshot);
+  const onlineSnapshot = React.useSyncExternalStore(online.subscribe, online.getSnapshot, online.getSnapshot);
   const [copyStatus, setCopyStatus] = React.useState(null);
+  const [acknowledged, setAcknowledged] = React.useState(false);
   const copyEpoch = React.useRef(0);
   React.useEffect(() => {
     void controller.start();
-    return () => {copyEpoch.current += 1; controller.dispose();};
-  }, [controller]);
+    void online.start();
+    return () => {copyEpoch.current += 1; controller.dispose(); online.dispose();};
+  }, [controller, online]);
   async function copy() {
     const revision = ++copyEpoch.current;
     try {
@@ -63,10 +76,22 @@ export function UpdatePanel({t, fetcher = globalThis.fetch}) {
       if (copyEpoch.current === revision) setCopyStatus("copyFailed");
     }
   }
-  return h(UpdatePanelContent, {snapshot, t, copyStatus, onCopy: copy,
+  // The card runs the same prepare -> consent -> confirm sequence as the online section.
+  async function install() {
+    await online.prepare();
+    const live = online.getSnapshot();
+    if (!live.preparation || live.uncertain || live.localError) return;
+    online.setConsent(true);
+    await online.confirm();
+  }
+  const operation = onlineSnapshot.data?.operation;
+  const installPending = onlineSnapshot.pending !== null || Boolean(operation && !operation.terminal);
+  return h(UpdatePanelContent, {snapshot, t, copyStatus, onCopy: copy, acknowledged,
+    install: {pending: installPending, onAcknowledge: setAcknowledged, onInstall: () => {void install();}},
     onCheck: () => {void controller.check();}, onReload: () => {void controller.load();}, onCancel: () => controller.cancel()},
-    h(OnlineUpdatePanel, {t, fetcher, currentVersion: snapshot.data?.currentVersion ?? null,
-      // The enclosing card already announces the available release; the subsection must not repeat it.
-      showAvailability: false,
+    h(OnlineUpdatePanel, {t, fetcher, controller: online, snapshot: onlineSnapshot,
+      currentVersion: snapshot.data?.currentVersion ?? null,
+      // The enclosing card already announces the available release and carries the install action.
+      showAvailability: false, showInstall: false,
       updateAvailable: snapshot.data?.status === "update-available"}));
 }
