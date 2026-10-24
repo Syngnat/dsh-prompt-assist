@@ -5,6 +5,7 @@ import {renderToStaticMarkup} from 'react-dom/server';
 import {readModelStylePref,writeModelStylePref,MODEL_STYLES} from '../assist/client/model-style-pref.js';
 import {ZcodeEffortVisual,isGlmHighspeedModel,EFFORT_BUBBLES,highspeedBubbles} from '../assist/client/zcode-effort-visual.js';
 import {zcodeEffortCss} from '../assist/client/zcode-effort-style.js';
+import {pickerCss} from '../assist/client/model-picker-style.js';
 
 test('style preference round-trips three values and defaults unknown ones to claude',()=>{
  const store=new Map();
@@ -106,4 +107,13 @@ test('zcode-style provenance ships with pinned sources and license', async()=>{
  assert.equal(slider.slider.keptVerbatim.length,7);
  const pkg=JSON.parse(await readText('package.json'));
  for(const file of ['third-party/zcode-style/LICENSE','third-party/zcode-style/PROVENANCE.json','third-party/zcode-style/SLIDER-PROVENANCE.json'])assert.ok(pkg.files.includes(file),file);
+});
+
+test('menu surface follows the DSH theme token and never scrolls horizontally',()=>{
+ assert.match(pickerCss,/\.lpa-model-menu\{[^}]*background-color:var\(--dsw-alias-bg-layer-1,var\(--lpa-menu-base,transparent\)\)/);
+ assert.match(pickerCss,/\.lpa-model-group-name\{[^}]*background-color:var\(--dsw-alias-bg-layer-1/);
+ assert.match(pickerCss,/\.lpa-model-flyout\{[^}]*background-color:var\(--dsw-alias-bg-layer-1/);
+ assert.match(pickerCss,/\.lpa-model-scroll\{[^}]*overflow-x:hidden/);
+ assert.match(pickerCss,/\.lpa-model-menu\[data-style='zcode'\] \.lpa-model-option\{[^}]*width:calc\(100% - 4px\)/);
+ assert.doesNotMatch(pickerCss,/lpa-model-menu\{[^}]*bg-overlay/);
 });

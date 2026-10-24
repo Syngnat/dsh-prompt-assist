@@ -2,6 +2,12 @@
 
 [English](<README.md>) | [简体中文](<README.zh-CN.md>)
 
+## 1.2.53 — 选择器背景跟随主题并去掉横向滚动条 / Theme surface（2026-10-24）
+
+- 修复模型菜单（Claude Style 与 ZCode 都受影响）的背景：不再用「body 底色 + bg-overlay 渐变」自行调色，改为优先使用 DSH 主题的面板表面 token `--dsw-alias-bg-layer-1`，菜单、分组吸顶标题与其余模型浮层直接跟随当前主题；主题插件破坏该 token 时仍回退到既有的防透明兜底（body 底色），不会变透明。
+- 修复 ZCode 菜单底部的横向滚动条：模型行基础样式宽度为 100%，ZCode 覆盖又加了 2px 左右外边距，每行溢出 4px；行宽改为 `calc(100% - 4px)`，滚动区加 `overflow-x:hidden` 兜底。
+- 菜单表面新增契约断言（bg-layer-1 优先、兜底链完整、overflow-x:hidden、ZCode 行宽）；全套 1092 项离线测试通过，真实 Chromium 选择器检查通过。
+
 ## 1.2.52 — 新增 ZCode 模型选择器样式 / ZCode picker style（2026-10-24）
 
 - 设置页的「模型选择器样式」从开关改为三选一：DSH 默认 / Claude Style / ZCode，偏好仍存本机（localStorage），切换立即生效。
