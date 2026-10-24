@@ -67,15 +67,18 @@ function ModelStyleCard({t}){
     onClick:()=>{setStyle(value);writeModelStylePref(value);}},
     h('span',{className:'lpa-style-option-name'},t(nameKey)),h('span',{className:'lpa-note'},t(noteKey))))));
 }
+const SECTION_KEY='lpa_settings_section';
+const readSection=()=>{try{return localStorage.getItem(SECTION_KEY)||'assist';}catch{return 'assist';}};
+const writeSection=value=>{try{localStorage.setItem(SECTION_KEY,value);}catch{}};
 export function SettingsPage(p){
  const target=React.useSyncExternalStore(p.targetSource.subscribe,p.targetSource.getSnapshot,p.targetSource.getSnapshot);
  const source=p.globalSource??EMPTY_ENABLEMENT_SOURCE;
  const global=React.useSyncExternalStore(source.subscribe,source.getSnapshot,source.getSnapshot);
- return h('section',{className:'lpa lpa-settings-page','aria-label':p.t('title')},
-  h('header',{className:'lpa-settings-header'},
-   h('div',{className:'lpa-settings-heading'},h('h1',null,p.t('title')),h('p',{className:'lpa-note lpa-settings-subtitle'},p.t('settings.subtitle'))),
-   p.returnToConversation?h('button',{type:'button',className:'lpa-button',onClick:p.returnToConversation},p.t('returnConversation')):null),
-  h('div',{className:'lpa-settings-sections'},
+ const [stored,setStored]=React.useState(readSection),nav=React.useRef(null);
+ // Sections are a tab list, not one long column: the profile panel used to sit under every
+ // other card and the update controls at the very bottom, so finding one needed a full scroll.
+ const sections=[
+  {key:'assist',label:'settings.nav.assist',render:()=>h(React.Fragment,null,
    h(EnablementPanel,{globalSource:source,t:p.t}),
    h('section',{className:'lpa-session-panel lpa-card','aria-label':p.t('settings.profileSection')},
     h('header',{className:'lpa-card-header'},h('h2',{className:'lpa-card-title'},p.t('settings.profileSection')),h('p',{className:'lpa-note'},p.t('profileScope'))),
@@ -83,8 +86,29 @@ export function SettingsPage(p){
     !global.connected?h('p',{className:'lpa-note',role:'status'},p.t('global.disconnected')):null,
     global.readError?h('p',{className:'lpa-error',role:'alert'},errorText(global.readError,p.t)):null,
     global.data&&!Number.isSafeInteger(global.data.settingsRevision)?h('p',{className:'lpa-error',role:'alert'},p.t('settings.hostUpgrade')):null,
-    global.data?h('div',{className:'lpa-settings-cards'},['suggest','enhance'].map(feature=>h(FeatureSettings,{key:feature,feature,global,source,p}))):h('p',{className:'lpa-note lpa-empty-state'},p.t('settings.profileEmpty'))),
-   p.connection?h(PriorityPanel,{connection:p.connection,t:p.t,onChanged:()=>{if(target.sessionId)void p.refreshAssist(target.sessionId).catch(()=>{});}}):null,
-   h(ModelStyleCard,{t:p.t}),
-   h(UpdatePanel,{t:p.t})));
+    global.data?h('div',{className:'lpa-settings-cards'},['suggest','enhance'].map(feature=>h(FeatureSettings,{key:feature,feature,global,source,p}))):h('p',{className:'lpa-note lpa-empty-state'},p.t('settings.profileEmpty'))))},
+  p.connection?{key:'priority',label:'settings.nav.priority',render:()=>h(PriorityPanel,{connection:p.connection,t:p.t,onChanged:()=>{if(target.sessionId)void p.refreshAssist(target.sessionId).catch(()=>{});}})}:null,
+  {key:'style',label:'settings.nav.style',render:()=>h(ModelStyleCard,{t:p.t})},
+  {key:'update',label:'settings.nav.update',render:()=>h(UpdatePanel,{t:p.t})}].filter(Boolean);
+ const active=sections.some(section=>section.key===stored)?stored:sections[0].key;
+ const select=key=>{setStored(key);writeSection(key);};
+ const moveFocus=event=>{
+  const keys=sections.map(section=>section.key),index=keys.indexOf(active);
+  const next=event.key==='Home'?0:event.key==='End'?keys.length-1:event.key==='ArrowDown'?Math.min(keys.length-1,index+1):event.key==='ArrowUp'?Math.max(0,index-1):-1;
+  if(next<0||next===index)return;
+  event.preventDefault();select(keys[next]);
+  const buttons=nav.current?.querySelectorAll('[role=tab]');buttons?.[next]?.focus();
+ };
+ return h('section',{className:'lpa lpa-settings-page','aria-label':p.t('title')},
+  h('header',{className:'lpa-settings-header'},
+   h('div',{className:'lpa-settings-heading'},h('h1',null,p.t('title')),h('p',{className:'lpa-note lpa-settings-subtitle'},p.t('settings.subtitle'))),
+   p.returnToConversation?h('button',{type:'button',className:'lpa-button',onClick:p.returnToConversation},p.t('returnConversation')):null),
+  h('div',{className:'lpa-settings-layout'},
+   h('nav',{ref:nav,className:'lpa-settings-nav',role:'tablist','aria-orientation':'vertical','aria-label':p.t('settings.sectionNav'),onKeyDown:moveFocus},
+    sections.map(section=>h('button',{key:section.key,type:'button',role:'tab',id:'lpa-tab-'+section.key,'aria-selected':active===section.key,
+     'aria-controls':'lpa-panel-'+section.key,tabIndex:active===section.key?0:-1,
+     className:'lpa-nav-item'+(active===section.key?' lpa-nav-item--active':''),onClick:()=>select(section.key)},p.t(section.label)))),
+   h('div',{className:'lpa-settings-panels'},
+    sections.map(section=>h('div',{key:section.key,role:'tabpanel',id:'lpa-panel-'+section.key,'aria-labelledby':'lpa-tab-'+section.key,
+     hidden:active!==section.key,className:'lpa-settings-panel'},section.render())))));
 }

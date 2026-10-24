@@ -457,6 +457,14 @@ var init_style = __esm({
 .lpa-settings-header{align-items:flex-start;gap:20px;margin-bottom:24px}.lpa-settings-heading{display:grid;gap:8px;flex:1 1 520px;min-width:0}.lpa-settings-header h1{font-size:24px;font-weight:650;line-height:1.3;letter-spacing:-.02em}.lpa-settings-header>.lpa-button{flex:none;align-self:flex-start;min-height:32px;padding:6px 10px}
 .lpa-settings-header .lpa-settings-subtitle{font-size:12px;color:var(--dsw-alias-label-secondary);max-width:80ch}
 .lpa-settings-sections{display:grid;gap:16px;min-width:0}
+.lpa-settings-layout{display:grid;grid-template-columns:196px minmax(0,1fr);gap:20px;align-items:start;min-width:0}
+.lpa-settings-nav{display:grid;gap:2px;align-content:start;position:sticky;top:0;min-width:0}
+.lpa-nav-item{display:flex;align-items:center;box-sizing:border-box;width:100%;min-height:34px;padding:7px 10px;border:0;border-radius:8px;background:transparent;color:var(--dsw-alias-label-secondary);font:inherit;font-size:13px;line-height:18px;text-align:start;cursor:pointer}
+.lpa-nav-item:hover{background:var(--dsw-alias-interactive-bg-hover)}
+.lpa-nav-item:focus-visible{outline:2px solid var(--dsw-alias-brand-primary);outline-offset:1px}
+.lpa-nav-item--active{background:var(--dsw-alias-bg-layer-2);color:var(--dsw-alias-label-primary);font-weight:500}
+.lpa-settings-panels{display:grid;gap:16px;min-width:0}
+.lpa-settings-panel{display:grid;gap:16px;min-width:0}
 .lpa-card{box-sizing:border-box;display:grid;gap:16px;min-width:0;margin:0;padding:20px;border:1px solid var(--dsw-alias-border-l1);border-radius:12px;background:var(--dsw-alias-bg-layer-1)}
 .lpa-card-header{display:grid;gap:6px;min-width:0}.lpa-card-title{font:inherit;font-size:16px;font-weight:650;line-height:1.4;color:var(--dsw-alias-label-primary);margin:0}
 .lpa-card .lpa-note{font-size:12px;line-height:1.6;color:var(--dsw-alias-label-secondary)}.lpa-card .lpa-field>strong{font-size:12px;font-weight:600;color:var(--dsw-alias-label-secondary)}
@@ -474,7 +482,7 @@ var init_style = __esm({
 .lpa-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}.lpa-stat{min-width:0;padding:14px 16px;border:1px solid var(--dsw-alias-border-l1);border-radius:9px;background:var(--dsw-alias-bg-layer-2)}.lpa-stat dt{margin-bottom:6px;color:var(--dsw-alias-label-secondary)}.lpa-stat dd{font-size:18px;font-weight:650;line-height:1.5;color:var(--dsw-alias-label-primary)}.lpa-stat time{font-size:12px;font-weight:400;color:var(--dsw-alias-label-secondary)}.lpa-stat.lpa-stat--highlight{border-color:var(--dsw-alias-brand-primary)}.lpa-stat.lpa-stat--highlight dd{color:var(--dsw-alias-brand-primary)}
 .lpa-divider{height:0;min-width:0;margin-top:6px;border-top:1px solid var(--dsw-alias-border-l1)}.lpa-subsection{display:grid;gap:12px;min-width:0;padding:0;margin:0;border:0;background:none}.lpa-subsection-title{font:inherit;font-size:15px;font-weight:650;line-height:1.5;margin:0;color:var(--dsw-alias-label-primary)}
 .lpa-install-row{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:8px 12px;padding-top:8px;min-width:0}.lpa-install-row>span:first-child{grid-column:1/-1;font-size:11px;color:var(--dsw-alias-label-secondary)}.lpa-install-row code{box-sizing:border-box;min-width:0;max-width:100%;padding:8px 10px;border:1px solid var(--dsw-alias-border-l1);border-radius:6px;background:var(--dsw-alias-bg-layer-2);white-space:nowrap;overflow-x:auto;user-select:text;font-size:12px}.lpa-install-row>.lpa-button{white-space:nowrap;min-height:32px}.lpa-install-row>[role=status]{grid-column:1/-1}
-@media(max-width:720px){.lpa.lpa-settings-page{padding:16px}.lpa-settings-header{flex-direction:column;align-items:stretch;gap:12px}.lpa-settings-heading{flex-basis:auto}.lpa-settings-header>.lpa-button{max-width:100%}.lpa-card{padding:18px}.lpa-stats,.lpa-settings-cards{grid-template-columns:minmax(0,1fr)}.lpa-card-actions{align-items:stretch}.lpa-card-actions>.lpa-button,.lpa-card-actions>.lpa-row>.lpa-button{flex:1 1 160px}.lpa-provider-item{flex-basis:100%}.lpa-settings-cards{margin-top:8px}}
+@media(max-width:720px){.lpa.lpa-settings-page{padding:16px}.lpa-settings-header{flex-direction:column;align-items:stretch;gap:12px}.lpa-settings-heading{flex-basis:auto}.lpa-settings-header>.lpa-button{max-width:100%}.lpa-card{padding:18px}.lpa-stats,.lpa-settings-cards{grid-template-columns:minmax(0,1fr)}.lpa-card-actions{align-items:stretch}.lpa-card-actions>.lpa-button,.lpa-card-actions>.lpa-row>.lpa-button{flex:1 1 160px}.lpa-provider-item{flex-basis:100%}.lpa-settings-cards{margin-top:8px}.lpa-settings-layout{grid-template-columns:minmax(0,1fr);gap:12px}.lpa-settings-nav{position:static;grid-auto-flow:column;grid-auto-columns:max-content;overflow-x:auto;padding-bottom:2px}.lpa-nav-item{width:auto;white-space:nowrap}}
 @media(forced-colors:active){.lpa-switch{appearance:auto;-webkit-appearance:auto}.lpa-switch::before{display:none}}
 .lpa-style-options{display:grid;gap:8px;min-width:0}
 .lpa-style-option{display:grid;gap:2px;box-sizing:border-box;width:100%;min-height:0;padding:10px 12px;border:1px solid var(--dsw-alias-border-l1);border-radius:10px;background:transparent;color:var(--dsw-alias-label-primary);font:inherit;text-align:start;cursor:pointer}
@@ -641,6 +649,11 @@ var init_messages = __esm({
         "settings.updatesSection": "\u7248\u672C\u4E0E\u66F4\u65B0",
         "settings.sessionEmpty": "\u65E0\u9700\u9009\u62E9\u4F1A\u8BDD\uFF1B\u5168\u5C40\u5F00\u5173\u3001\u6A21\u578B\u53C2\u6570\u4E0E Priority \u6388\u6743\u53EF\u76F4\u63A5\u914D\u7F6E\u3002",
         "settings.advanced": "\u9690\u79C1\u4E0E\u9650\u5236\u8BF4\u660E",
+        "settings.sectionNav": "\u8BBE\u7F6E\u5206\u533A",
+        "settings.nav.assist": "\u8F85\u52A9\u53C2\u6570",
+        "settings.nav.priority": "Priority \u6388\u6743",
+        "settings.nav.style": "\u6A21\u578B\u9009\u62E9\u5668",
+        "settings.nav.update": "\u7248\u672C\u4E0E\u66F4\u65B0",
         "settings.modelStyleSection": "\u6A21\u578B\u9009\u62E9\u5668\u6837\u5F0F",
         "settings.modelStyleHint": "\u9009\u62E9\u8F93\u5165\u6846\u6A21\u578B\u9009\u62E9\u5668\u7684\u5916\u89C2\uFF1ADSH \u9ED8\u8BA4\u3001Claude Style \u6216 ZCode\uFF0C\u5207\u6362\u7ACB\u5373\u751F\u6548\u3002",
         "settings.modelStyleDsh": "DSH \u9ED8\u8BA4",
@@ -663,6 +676,9 @@ var init_messages = __esm({
         "online.forgetMarker": "\u4EC5\u6E05\u9664\u672C\u5730\u8DDF\u8E2A\u6807\u8BB0",
         "online.markerCleared": "\u672C\u5730\u8DDF\u8E2A\u6807\u8BB0\u5DF2\u6E05\u9664\uFF0C\u5BBF\u4E3B\u4EFB\u52A1\u672A\u88AB\u66F4\u6539\uFF0C\u66F4\u65B0\u6210\u529F\u4E0E\u5426\u4ECD\u4E0D\u7531\u6B64\u786E\u5B9A\u3002\u8BF7\u91CD\u8BFB\u72B6\u6001\uFF1B\u5982\u9700\u66F4\u65B0\uFF0C\u5FC5\u987B\u91CD\u65B0\u51C6\u5907\u3001\u52FE\u9009\u98CE\u9669\u786E\u8BA4\u5E76\u63D0\u4EA4\u3002",
         "online.title": "\u5728\u7EBF\u66F4\u65B0",
+        "online.installNow": "\u68C0\u67E5\u5E76\u5B89\u88C5\u66F4\u65B0",
+        "online.installing": "\u6B63\u5728\u5B89\u88C5\u2026",
+        "online.installConsent": "\u6211\u5DF2\u77E5\u6653\uFF1A\u5728\u7EBF\u66F4\u65B0\u4F1A\u4FEE\u6539\u672C profile\uFF0C\u53EF\u80FD\u8981\u6C42\u91CD\u542F\uFF1B\u5931\u8D25\u65F6\u9700\u6309\u8BB0\u5F55\u4EBA\u5DE5\u6062\u590D\u3002",
         "online.userOnly": "\u68C0\u67E5\u7248\u672C\u4E0D\u4F1A\u5B89\u88C5\u3002\u53EA\u6709\u51C6\u5907\u540E\u52FE\u9009\u98CE\u9669\u786E\u8BA4\u5E76\u70B9\u51FB\u201C\u786E\u8BA4\u66F4\u65B0\u201D\uFF0C\u624D\u4F1A\u542F\u52A8\u5BBF\u4E3B\u66F4\u65B0\u4EFB\u52A1\u3002\u4E0D\u4F1A\u81EA\u52A8\u66F4\u65B0\u3002",
         "online.continuity": "\u66F4\u65B0\u671F\u95F4\u672C\u9875\u9762\u53EF\u80FD\u6D88\u5931\u6216\u77ED\u6682\u4E0D\u53EF\u7528\uFF1B\u5173\u95ED\u9875\u9762\u4E0D\u4F1A\u53D6\u6D88\u5BBF\u4E3B\u4EFB\u52A1\u3002\u91CD\u65B0\u6253\u5F00\u540E\u53EF\u8BFB\u53D6\u7ED3\u679C\u3002\u9000\u51FA DSH \u4F1A\u4E2D\u65AD\u4EFB\u52A1\uFF0C\u8BF7\u7B49\u5F85\u7ED3\u679C\u540E\u518D\u6309\u63D0\u793A\u91CD\u542F\u3002\u8BF7\u5148\u4FDD\u5B58\u8349\u7A3F\u5E76\u5907\u4EFD\u914D\u7F6E\u3002",
         "online.loading": "\u6B63\u5728\u8BFB\u53D6\u5BBF\u4E3B\u66F4\u65B0\u72B6\u6001\u2026",
@@ -951,6 +967,11 @@ var init_messages = __esm({
         "settings.updatesSection": "Version and updates",
         "settings.sessionEmpty": "No session selection is needed. Configure global switches, model settings and Priority authorization here.",
         "settings.advanced": "Privacy and limits",
+        "settings.sectionNav": "Settings sections",
+        "settings.nav.assist": "Assist settings",
+        "settings.nav.priority": "Priority",
+        "settings.nav.style": "Model picker",
+        "settings.nav.update": "Version and updates",
         "settings.modelStyleSection": "Model picker style",
         "settings.modelStyleHint": "Pick the composer model picker look: DSH default, Claude Style or ZCode; the change applies immediately.",
         "settings.modelStyleDsh": "DSH default",
@@ -973,6 +994,9 @@ var init_messages = __esm({
         "online.forgetMarker": "Clear local tracking marker only",
         "online.markerCleared": "The local tracking marker was cleared. No Host job was changed, and this does not establish success. Reload status; any update still requires fresh preparation, risk consent, and confirmation.",
         "online.title": "Online update",
+        "online.installNow": "Check and install update",
+        "online.installing": "Installing\u2026",
+        "online.installConsent": "I understand the online update modifies this profile, may require a restart, and a failed install needs manual recovery from the record.",
         "online.userOnly": "Checking versions never installs anything. Only preparing, checking the risk confirmation, and clicking Confirm update starts a Host update job. Updates are never automatic.",
         "online.continuity": "This page may disappear or become temporarily unavailable during the update. Closing it does not cancel the Host job. Reopen it to read the result. Quitting DSH interrupts the job; wait for its outcome before restarting as instructed. Save drafts and back up configuration first.",
         "online.loading": "Reading Host update status\u2026",
@@ -2632,7 +2656,7 @@ var init_online_update_state = __esm({
 });
 
 // assist/client/online-update-panel.js
-function OnlineUpdatePanelContent({ snapshot = initialOnlineSnapshot(), updateAvailable = false, currentVersion = null, showAvailability = true, t, onPrepare, onConfirm, onConsent, onDismiss, onReload, onRecoveryAcknowledged, onForgetMarker }) {
+function OnlineUpdatePanelContent({ snapshot = initialOnlineSnapshot(), updateAvailable = false, currentVersion = null, showAvailability = true, t, acknowledged = false, onAcknowledge, onInstall, onConfirm, onConsent, onDismiss, onReload, onRecoveryAcknowledged, onForgetMarker }) {
   const { data, preparation, pending, consent, localError, uncertain, recordLost, confirmationRejected, recoveryAcknowledged, markerCleared } = snapshot;
   const operation = data?.operation;
   const canForget = canForgetOnlineMarker(snapshot);
@@ -2747,7 +2771,18 @@ function OnlineUpdatePanelContent({ snapshot = initialOnlineSnapshot(), updateAv
     h7(
       "div",
       { className: "lpa-row lpa-card-actions" },
-      !preparation && updateAvailable ? button(pending === "prepare" ? "preparing" : "prepare", onPrepare, !!pending || !data?.available || !!active || uncertain, " lpa-button--primary") : null,
+      !preparation && updateAvailable && data?.available && !active ? h7(
+        import_react8.default.Fragment,
+        null,
+        h7("p", { className: "lpa-note" }, t("online.risks")),
+        h7("label", { className: "lpa-row" }, h7("input", {
+          type: "checkbox",
+          checked: acknowledged === true,
+          disabled: !!pending,
+          onChange: (event) => onAcknowledge?.(event.target.checked)
+        }), t("online.installConsent")),
+        button(pending ? "installing" : "installNow", onInstall, !!pending || !acknowledged || uncertain, " lpa-button--primary")
+      ) : null,
       button("reload", onReload, !!pending)
     ),
     pending === "confirm" ? h7("p", { role: "status" }, t("online.submitting")) : null
@@ -2756,18 +2791,28 @@ function OnlineUpdatePanelContent({ snapshot = initialOnlineSnapshot(), updateAv
 function OnlineUpdatePanel({ t, updateAvailable, currentVersion = null, showAvailability = true, fetcher = globalThis.fetch }) {
   const controller = import_react8.default.useMemo(() => createOnlineUpdateController(fetcher), [fetcher]);
   const snapshot = import_react8.default.useSyncExternalStore(controller.subscribe, controller.getSnapshot, controller.getSnapshot);
+  const [acknowledged, setAcknowledged] = import_react8.default.useState(false);
   import_react8.default.useEffect(() => {
     void controller.start();
     return () => controller.dispose();
   }, [controller]);
+  const install = async () => {
+    await controller.prepare();
+    const live = controller.getSnapshot();
+    if (!live.preparation || live.uncertain || live.localError) return;
+    controller.setConsent(true);
+    await controller.confirm();
+  };
   return h7(OnlineUpdatePanelContent, {
     t,
     snapshot,
     updateAvailable,
     currentVersion,
     showAvailability,
-    onPrepare: () => {
-      void controller.prepare();
+    acknowledged,
+    onAcknowledge: setAcknowledged,
+    onInstall: () => {
+      void install();
     },
     onConfirm: () => {
       void controller.confirm();
@@ -3572,6 +3617,44 @@ function SettingsPage(p) {
   const target = import_react13.default.useSyncExternalStore(p.targetSource.subscribe, p.targetSource.getSnapshot, p.targetSource.getSnapshot);
   const source = p.globalSource ?? EMPTY_ENABLEMENT_SOURCE;
   const global = import_react13.default.useSyncExternalStore(source.subscribe, source.getSnapshot, source.getSnapshot);
+  const [stored, setStored] = import_react13.default.useState(readSection), nav = import_react13.default.useRef(null);
+  const sections = [
+    { key: "assist", label: "settings.nav.assist", render: () => h12(
+      import_react13.default.Fragment,
+      null,
+      h12(EnablementPanel, { globalSource: source, t: p.t }),
+      h12(
+        "section",
+        { className: "lpa-session-panel lpa-card", "aria-label": p.t("settings.profileSection") },
+        h12("header", { className: "lpa-card-header" }, h12("h2", { className: "lpa-card-title" }, p.t("settings.profileSection")), h12("p", { className: "lpa-note" }, p.t("profileScope"))),
+        global.loading ? h12("p", { role: "status" }, p.t("global.loading")) : null,
+        !global.connected ? h12("p", { className: "lpa-note", role: "status" }, p.t("global.disconnected")) : null,
+        global.readError ? h12("p", { className: "lpa-error", role: "alert" }, errorText(global.readError, p.t)) : null,
+        global.data && !Number.isSafeInteger(global.data.settingsRevision) ? h12("p", { className: "lpa-error", role: "alert" }, p.t("settings.hostUpgrade")) : null,
+        global.data ? h12("div", { className: "lpa-settings-cards" }, ["suggest", "enhance"].map((feature) => h12(FeatureSettings, { key: feature, feature, global, source, p }))) : h12("p", { className: "lpa-note lpa-empty-state" }, p.t("settings.profileEmpty"))
+      )
+    ) },
+    p.connection ? { key: "priority", label: "settings.nav.priority", render: () => h12(PriorityPanel, { connection: p.connection, t: p.t, onChanged: () => {
+      if (target.sessionId) void p.refreshAssist(target.sessionId).catch(() => {
+      });
+    } }) } : null,
+    { key: "style", label: "settings.nav.style", render: () => h12(ModelStyleCard, { t: p.t }) },
+    { key: "update", label: "settings.nav.update", render: () => h12(UpdatePanel, { t: p.t }) }
+  ].filter(Boolean);
+  const active = sections.some((section) => section.key === stored) ? stored : sections[0].key;
+  const select = (key) => {
+    setStored(key);
+    writeSection(key);
+  };
+  const moveFocus = (event) => {
+    const keys = sections.map((section) => section.key), index = keys.indexOf(active);
+    const next = event.key === "Home" ? 0 : event.key === "End" ? keys.length - 1 : event.key === "ArrowDown" ? Math.min(keys.length - 1, index + 1) : event.key === "ArrowUp" ? Math.max(0, index - 1) : -1;
+    if (next < 0 || next === index) return;
+    event.preventDefault();
+    select(keys[next]);
+    const buttons = nav.current?.querySelectorAll("[role=tab]");
+    buttons?.[next]?.focus();
+  };
   return h12(
     "section",
     { className: "lpa lpa-settings-page", "aria-label": p.t("title") },
@@ -3583,28 +3666,38 @@ function SettingsPage(p) {
     ),
     h12(
       "div",
-      { className: "lpa-settings-sections" },
-      h12(EnablementPanel, { globalSource: source, t: p.t }),
+      { className: "lpa-settings-layout" },
       h12(
-        "section",
-        { className: "lpa-session-panel lpa-card", "aria-label": p.t("settings.profileSection") },
-        h12("header", { className: "lpa-card-header" }, h12("h2", { className: "lpa-card-title" }, p.t("settings.profileSection")), h12("p", { className: "lpa-note" }, p.t("profileScope"))),
-        global.loading ? h12("p", { role: "status" }, p.t("global.loading")) : null,
-        !global.connected ? h12("p", { className: "lpa-note", role: "status" }, p.t("global.disconnected")) : null,
-        global.readError ? h12("p", { className: "lpa-error", role: "alert" }, errorText(global.readError, p.t)) : null,
-        global.data && !Number.isSafeInteger(global.data.settingsRevision) ? h12("p", { className: "lpa-error", role: "alert" }, p.t("settings.hostUpgrade")) : null,
-        global.data ? h12("div", { className: "lpa-settings-cards" }, ["suggest", "enhance"].map((feature) => h12(FeatureSettings, { key: feature, feature, global, source, p }))) : h12("p", { className: "lpa-note lpa-empty-state" }, p.t("settings.profileEmpty"))
+        "nav",
+        { ref: nav, className: "lpa-settings-nav", role: "tablist", "aria-orientation": "vertical", "aria-label": p.t("settings.sectionNav"), onKeyDown: moveFocus },
+        sections.map((section) => h12("button", {
+          key: section.key,
+          type: "button",
+          role: "tab",
+          id: "lpa-tab-" + section.key,
+          "aria-selected": active === section.key,
+          "aria-controls": "lpa-panel-" + section.key,
+          tabIndex: active === section.key ? 0 : -1,
+          className: "lpa-nav-item" + (active === section.key ? " lpa-nav-item--active" : ""),
+          onClick: () => select(section.key)
+        }, p.t(section.label)))
       ),
-      p.connection ? h12(PriorityPanel, { connection: p.connection, t: p.t, onChanged: () => {
-        if (target.sessionId) void p.refreshAssist(target.sessionId).catch(() => {
-        });
-      } }) : null,
-      h12(ModelStyleCard, { t: p.t }),
-      h12(UpdatePanel, { t: p.t })
+      h12(
+        "div",
+        { className: "lpa-settings-panels" },
+        sections.map((section) => h12("div", {
+          key: section.key,
+          role: "tabpanel",
+          id: "lpa-panel-" + section.key,
+          "aria-labelledby": "lpa-tab-" + section.key,
+          hidden: active !== section.key,
+          className: "lpa-settings-panel"
+        }, section.render()))
+      )
     )
   );
 }
-var import_react13, h12;
+var import_react13, h12, SECTION_KEY, readSection, writeSection;
 var init_settings_page = __esm({
   "assist/client/settings-page.js"() {
     init_update_panel();
@@ -3618,6 +3711,20 @@ var init_settings_page = __esm({
     init_priority_panel();
     init_settings_page_state();
     h12 = import_react13.default.createElement;
+    SECTION_KEY = "lpa_settings_section";
+    readSection = () => {
+      try {
+        return localStorage.getItem(SECTION_KEY) || "assist";
+      } catch {
+        return "assist";
+      }
+    };
+    writeSection = (value) => {
+      try {
+        localStorage.setItem(SECTION_KEY, value);
+      } catch {
+      }
+    };
   }
 });
 

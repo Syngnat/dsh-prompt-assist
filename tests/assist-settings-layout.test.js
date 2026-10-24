@@ -96,3 +96,19 @@ test("card CSS uses theme tokens, keyboard-visible real switches and a 720px sin
   const cardRules = css.slice(css.indexOf("/* Settings card system"));
   assert.doesNotMatch(cardRules, /#[a-fA-F0-9]{3,8}\b|rgba?\(/);
 });
+
+test("sections render as a tab list with one visible panel", async () => {
+  const React = await import("react");
+  const {renderToStaticMarkup} = await import("react-dom/server");
+  const {SettingsPage} = await import("../assist/client/settings-page.js");
+  const target = {sessionId: null};
+  const html = renderToStaticMarkup(React.createElement(SettingsPage, {t: key => key,
+    targetSource: {getSnapshot: () => target, subscribe: () => () => {}}, returnToConversation() {}}));
+  assert.match(html, /<nav class="lpa-settings-nav" role="tablist" aria-orientation="vertical"/);
+  assert.equal((html.match(/role="tab"/g) ?? []).length, 3, "assist, style and update tabs without a Priority connection");
+  assert.equal((html.match(/aria-selected="true"/g) ?? []).length, 1);
+  assert.equal((html.match(/role="tabpanel"/g) ?? []).length, 3);
+  // Exactly one panel is visible; the rest stay mounted but hidden so switching is instant.
+  assert.equal((html.match(/role="tabpanel"[^>]*hidden=""/g) ?? []).length, 2);
+  assert.match(html, /id="lpa-panel-assist"[^>]*>(?![sS]*hidden)/);
+});

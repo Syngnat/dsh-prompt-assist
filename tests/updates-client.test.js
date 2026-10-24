@@ -242,3 +242,20 @@ for(const lang of ['en','zh'])test('SSR '+lang+' highlights an available release
  assert.ok(html.includes(dictionaries[lang]['updates.availableTitle']));assert.ok(html.includes(dictionaries[lang]['updates.availableHint']));
  for(const patch of [{pending:'check'},{cancelled:true},{localError:'network'}]){const stale=render(snapshot('update-available',patch),lang);assert.doesNotMatch(stale,/lpa-update-summary--available|lpa-update-field--highlight/);}
 });
+
+test("one explicit install action gates on the consent checkbox", async () => {
+  const React = await import("react");
+  const {renderToStaticMarkup} = await import("react-dom/server");
+  const {OnlineUpdatePanelContent} = await import("../assist/client/online-update-panel.js");
+  const snapshot = {data: {available: true, reason: null, source: null, operation: null}, preparation: null, consent: false, pending: null,
+    localError: null, uncertain: false, recordLost: false, confirmationRejected: false, recoveryAcknowledged: false, markerCleared: false};
+  const html = acknowledged => renderToStaticMarkup(React.createElement(OnlineUpdatePanelContent,
+    {snapshot, updateAvailable: true, t: key => key, acknowledged, onInstall() {}, onReload() {}}));
+  const blocked = html(false);
+  assert.match(blocked, /online\.installConsent/);
+  assert.match(blocked, /<button[^>]*disabled=""[^>]*>online\.installNow<\/button>/);
+  assert.doesNotMatch(blocked, /online\.prepare/);
+  const allowed = html(true);
+  assert.ok(!/<button[^>]*disabled=""[^>]*>online\.installNow<\/button>/.test(allowed));
+  assert.match(allowed, />online\.installNow</);
+});
