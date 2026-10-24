@@ -476,6 +476,13 @@ var init_style = __esm({
 .lpa-install-row{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:8px 12px;padding-top:8px;min-width:0}.lpa-install-row>span:first-child{grid-column:1/-1;font-size:11px;color:var(--dsw-alias-label-secondary)}.lpa-install-row code{box-sizing:border-box;min-width:0;max-width:100%;padding:8px 10px;border:1px solid var(--dsw-alias-border-l1);border-radius:6px;background:var(--dsw-alias-bg-layer-2);white-space:nowrap;overflow-x:auto;user-select:text;font-size:12px}.lpa-install-row>.lpa-button{white-space:nowrap;min-height:32px}.lpa-install-row>[role=status]{grid-column:1/-1}
 @media(max-width:720px){.lpa.lpa-settings-page{padding:16px}.lpa-settings-header{flex-direction:column;align-items:stretch;gap:12px}.lpa-settings-heading{flex-basis:auto}.lpa-settings-header>.lpa-button{max-width:100%}.lpa-card{padding:18px}.lpa-stats,.lpa-settings-cards{grid-template-columns:minmax(0,1fr)}.lpa-card-actions{align-items:stretch}.lpa-card-actions>.lpa-button,.lpa-card-actions>.lpa-row>.lpa-button{flex:1 1 160px}.lpa-provider-item{flex-basis:100%}.lpa-settings-cards{margin-top:8px}}
 @media(forced-colors:active){.lpa-switch{appearance:auto;-webkit-appearance:auto}.lpa-switch::before{display:none}}
+.lpa-style-options{display:grid;gap:8px;min-width:0}
+.lpa-style-option{display:grid;gap:2px;box-sizing:border-box;width:100%;min-height:0;padding:10px 12px;border:1px solid var(--dsw-alias-border-l1);border-radius:10px;background:transparent;color:var(--dsw-alias-label-primary);font:inherit;text-align:start;cursor:pointer}
+.lpa-style-option:hover{background:var(--dsw-alias-interactive-bg-hover)}
+.lpa-style-option:focus-visible{outline:2px solid var(--dsw-alias-brand-primary);outline-offset:1px}
+.lpa-style-option--active{border-color:var(--dsw-alias-brand-primary)}
+.lpa-style-option--active .lpa-style-option-name{color:var(--dsw-alias-brand-primary)}
+.lpa-style-option-name{font-size:13px;font-weight:500;line-height:18px}
 `;
   }
 });
@@ -635,9 +642,13 @@ var init_messages = __esm({
         "settings.sessionEmpty": "\u65E0\u9700\u9009\u62E9\u4F1A\u8BDD\uFF1B\u5168\u5C40\u5F00\u5173\u3001\u6A21\u578B\u53C2\u6570\u4E0E Priority \u6388\u6743\u53EF\u76F4\u63A5\u914D\u7F6E\u3002",
         "settings.advanced": "\u9690\u79C1\u4E0E\u9650\u5236\u8BF4\u660E",
         "settings.modelStyleSection": "\u6A21\u578B\u9009\u62E9\u5668\u6837\u5F0F",
-        "settings.modelStyleHint": "Claude Style \u662F\u672C\u63D2\u4EF6\u81EA\u5E26\u7684\u81EA\u5B9A\u4E49\u9009\u62E9\u5668\uFF1B\u5173\u95ED\u540E\u4F7F\u7528 DSH \u81EA\u5E26\u7684\u6A21\u578B\u9009\u62E9\u5668\uFF0C\u7ACB\u5373\u751F\u6548\u3002",
-        "settings.modelStyleClaude": "\u4F7F\u7528 Claude Style \u6837\u5F0F",
-        "settings.modelStyleNote": "\u5173\u95ED\u53EF\u89E3\u51B3\u4E0E\u4E3B\u9898\u63D2\u4EF6\u7684\u6837\u5F0F\u51B2\u7A81\uFF0C\u6216\u6062\u590D DSH \u9ED8\u8BA4\u5916\u89C2\u3002",
+        "settings.modelStyleHint": "\u9009\u62E9\u8F93\u5165\u6846\u6A21\u578B\u9009\u62E9\u5668\u7684\u5916\u89C2\uFF1ADSH \u9ED8\u8BA4\u3001Claude Style \u6216 ZCode\uFF0C\u5207\u6362\u7ACB\u5373\u751F\u6548\u3002",
+        "settings.modelStyleDsh": "DSH \u9ED8\u8BA4",
+        "settings.modelStyleDshNote": "\u4F7F\u7528\u5BBF\u4E3B\u81EA\u5E26\u7684\u6A21\u578B\u9009\u62E9\u5668\uFF0C\u53EF\u89E3\u51B3\u4E0E\u4E3B\u9898\u63D2\u4EF6\u7684\u6837\u5F0F\u51B2\u7A81\u3002",
+        "settings.modelStyleClaude": "Claude Style",
+        "settings.modelStyleClaudeNote": "\u672C\u63D2\u4EF6\u81EA\u5E26\u7684\u81EA\u5B9A\u4E49\u9009\u62E9\u5668\uFF1A\u6309\u4F9B\u5E94\u5546\u5206\u7EC4\u3001\u53EF\u5E38\u9A7B\uFF0C\u5E95\u90E8\u4E3A\u63A8\u7406\u5F3A\u5EA6\u6ED1\u5757\u3002",
+        "settings.modelStyleZcode": "ZCode",
+        "settings.modelStyleZcodeNote": "\u6309 zai-org/ZCode \u79FB\u690D\uFF1A\u83DC\u5355\u5728\u6309\u94AE\u4E0A\u65B9\u5C55\u5F00\uFF0C\u4F9B\u5E94\u5546\u5B50\u83DC\u5355\u5BFC\u822A\uFF0C\u5E95\u90E8\u4E3A\u601D\u8003\u6863\u6ED1\u5757\uFF08\u6700\u9AD8\u6863\u6C14\u6CE1\u6D41\u52A8\u52A8\u6548\uFF09\u3002",
         "global.migration": "\u4FDD\u7559\u5DF2\u6709\u5168\u5C40\u5F00\u5173\uFF0C\u4F46\u4E0D\u8FC1\u79FB\u4EFB\u4E00\u65E7\u4F1A\u8BDD\u7684\u53C2\u6570\u3002\u5168\u65B0 profile \u5DF2\u5E26\u9ED8\u8BA4\u53C2\u6570\uFF08\u8DDF\u968F\u4F1A\u8BDD\u6A21\u578B\u4E0E\u63A8\u7406\u6863\uFF09\uFF0C\u5F00\u5173\u5373\u5F00\u5373\u7528\uFF1B\u65E7 profile \u82E5\u63D0\u793A\u672A\u4FDD\u5B58\u53C2\u6570\uFF0C\u8BF7\u6838\u5BF9\u5E76\u4FDD\u5B58\u4E00\u6B21\u3002\u65B0\u65E7\u4F1A\u8BDD\u5171\u540C\u4F7F\u7528\uFF1B\u4FDD\u5B58\u3001\u5F00\u542F\u6216\u91CD\u8FDE\u5747\u4E0D\u8FFD\u6EAF\u5386\u53F2\u95EE\u7B54\u3002",
         "global.loading": "\u6B63\u5728\u8BFB\u53D6\u5168\u5C40\u5F00\u5173\u5E76\u8FDE\u63A5\u540C\u6B65\u2026",
         "global.disconnected": "\u5168\u5C40\u540C\u6B65\u6682\u4E0D\u53EF\u7528\uFF1B\u4E0B\u65B9\u53EF\u80FD\u663E\u793A\u4E0A\u6B21\u786E\u8BA4\u503C\uFF0C\u4F46\u5404\u4F1A\u8BDD\u6682\u4E0D\u542F\u7528\u8F85\u52A9\u8BF7\u6C42\u3002\u6062\u590D\u8FDE\u63A5\u53EA\u91CD\u8BFB\u72B6\u6001\uFF0C\u4E0D\u4F1A\u81EA\u52A8\u91CD\u53D1\u4FDD\u5B58\u3002",
@@ -833,6 +844,9 @@ var init_messages = __esm({
         "picker.effortUnavailable": "\u5F53\u524D\u6863\u4F4D\u4E0D\u5728\u53EF\u9009\u5217\u8868\u4E2D",
         "picker.level.none": "\u5173\u95ED",
         "picker.level.minimal": "\u6700\u4F4E",
+        "picker.back": "\u8FD4\u56DE",
+        "picker.providerSwitch": "\u5207\u6362\u4F9B\u5E94\u5546",
+        "picker.providerModels": "{count} \u4E2A\u6A21\u578B",
         "picker.level.low": "\u4F4E",
         "picker.level.medium": "\u4E2D",
         "picker.level.high": "\u9AD8",
@@ -938,9 +952,13 @@ var init_messages = __esm({
         "settings.sessionEmpty": "No session selection is needed. Configure global switches, model settings and Priority authorization here.",
         "settings.advanced": "Privacy and limits",
         "settings.modelStyleSection": "Model picker style",
-        "settings.modelStyleHint": "Claude Style is the custom picker shipped with this plugin. Turn it off to use DSH's own model picker; the change applies immediately.",
-        "settings.modelStyleClaude": "Use the Claude Style picker",
-        "settings.modelStyleNote": "Turn this off to resolve style conflicts with theme plugins or to restore the DSH default look.",
+        "settings.modelStyleHint": "Pick the composer model picker look: DSH default, Claude Style or ZCode; the change applies immediately.",
+        "settings.modelStyleDsh": "DSH default",
+        "settings.modelStyleDshNote": "Use the host's own model picker; resolves style conflicts with theme plugins.",
+        "settings.modelStyleClaude": "Claude Style",
+        "settings.modelStyleClaudeNote": "The custom picker shipped with this plugin: providers grouped and pinnable, reasoning slider at the bottom.",
+        "settings.modelStyleZcode": "ZCode",
+        "settings.modelStyleZcodeNote": "Ported from zai-org/ZCode: the menu opens above the button with provider navigation and a thought-effort slider (flowing bubbles at the strongest level).",
         "global.migration": "Existing global switches are retained, but no old session\u2019s settings are migrated. A fresh profile ships with working defaults (follow the session\u2019s model and effort), so its switches work right away; an older profile that still reports unsaved settings needs one review and save. Saving, enabling or reconnecting never replays historical Q&A.",
         "global.loading": "Reading global switches and connecting live updates\u2026",
         "global.disconnected": "Global sync is unavailable. The last confirmed values may remain visible, but auxiliary requests are temporarily disabled in sessions. Reconnection only reads status; it never resends a save.",
@@ -1136,6 +1154,9 @@ var init_messages = __esm({
         "picker.effortUnavailable": "Current effort is not in the available list",
         "picker.level.none": "Off",
         "picker.level.minimal": "Minimal",
+        "picker.back": "Back",
+        "picker.providerSwitch": "Switch provider",
+        "picker.providerModels": "{count} models",
         "picker.level.low": "Low",
         "picker.level.medium": "Medium",
         "picker.level.high": "High",
@@ -2915,14 +2936,15 @@ var init_update_panel = __esm({
 // assist/client/model-style-pref.js
 function readModelStylePref() {
   try {
-    return localStorage.getItem(KEY) === "dsh" ? "dsh" : "claude";
+    const value = localStorage.getItem(KEY);
+    return MODEL_STYLES.includes(value) ? value : "claude";
   } catch {
     return "claude";
   }
 }
 function writeModelStylePref(value) {
   try {
-    localStorage.setItem(KEY, value === "dsh" ? "dsh" : "claude");
+    localStorage.setItem(KEY, MODEL_STYLES.includes(value) ? value : "claude");
   } catch {
   }
   try {
@@ -2939,11 +2961,12 @@ function onModelStyleChange(listener) {
     };
   }
 }
-var KEY, MODEL_STYLE_EVENT;
+var KEY, MODEL_STYLE_EVENT, MODEL_STYLES;
 var init_model_style_pref = __esm({
   "assist/client/model-style-pref.js"() {
     KEY = "lpa_model_picker_style";
     MODEL_STYLE_EVENT = "lpa-model-style-change";
+    MODEL_STYLES = ["dsh", "claude", "zcode"];
   }
 });
 
@@ -3513,19 +3536,35 @@ function FeatureSettings({ feature, global, source, p }) {
   );
 }
 function ModelStyleCard({ t }) {
-  const [claude, setClaude] = import_react13.default.useState(readModelStylePref() === "claude");
+  const [style, setStyle] = import_react13.default.useState(readModelStylePref());
+  const options = [
+    ["dsh", "settings.modelStyleDsh", "settings.modelStyleDshNote"],
+    ["claude", "settings.modelStyleClaude", "settings.modelStyleClaudeNote"],
+    ["zcode", "settings.modelStyleZcode", "settings.modelStyleZcodeNote"]
+  ];
   return h12(
     "section",
     { className: "lpa-feature lpa-card", "aria-label": t("settings.modelStyleSection") },
     h12("header", { className: "lpa-card-header" }, h12("h2", { className: "lpa-feature-title lpa-card-title" }, t("settings.modelStyleSection")), h12("p", { className: "lpa-note" }, t("settings.modelStyleHint"))),
     h12(
-      "label",
-      { className: "lpa-check lpa-switch-row" },
-      h12("span", { className: "lpa-switch-copy" }, h12("strong", null, t("settings.modelStyleClaude")), h12("span", { className: "lpa-note" }, t("settings.modelStyleNote"))),
-      h12("input", { className: "lpa-switch", type: "checkbox", checked: claude, onChange: (e) => {
-        setClaude(e.target.checked);
-        writeModelStylePref(e.target.checked ? "claude" : "dsh");
-      } })
+      "div",
+      { className: "lpa-style-options", role: "radiogroup", "aria-label": t("settings.modelStyleSection") },
+      options.map(([value, nameKey, noteKey]) => h12(
+        "button",
+        {
+          key: value,
+          type: "button",
+          role: "radio",
+          "aria-checked": style === value,
+          className: "lpa-style-option" + (style === value ? " lpa-style-option--active" : ""),
+          onClick: () => {
+            setStyle(value);
+            writeModelStylePref(value);
+          }
+        },
+        h12("span", { className: "lpa-style-option-name" }, t(nameKey)),
+        h12("span", { className: "lpa-note" }, t(noteKey))
+      ))
     )
   );
 }
@@ -4298,6 +4337,21 @@ var init_model_picker_style = __esm({
 .lpa-model-pin:hover:not(:disabled){color:var(--dsw-alias-label-primary,var(--lpa-menu-fore,#141413))}
 .lpa-model-pin:focus-visible{outline:2px solid var(--dsw-alias-brand-primary);outline-offset:2px}
 .lpa-model-pin[aria-pressed="true"]{color:var(--dsw-alias-brand-primary)}
+/* ZCode style (zai-org/ZCode, Apache-2.0): provider navigation replaces pinned groups;
+   the other-models flyout stays Claude Style only. */
+.lpa-model-menu[data-style='zcode']{width:320px}
+.lpa-model-menu[data-style='zcode'] .lpa-model-desc{display:none}
+.lpa-model-menu[data-style='zcode'] .lpa-model-option{min-height:32px;margin:0 2px;padding:0 8px;border-radius:8px}
+.lpa-model-menu[data-style='zcode'] .lpa-model-option:hover:not(:disabled){background:color-mix(in srgb,var(--dsw-alias-label-primary) 6%,transparent)}
+.lpa-model-menu[data-style='zcode'] .lpa-model-option--current{background:color-mix(in srgb,var(--dsw-alias-label-primary) 8%,transparent)}
+.lpa-zt-row{display:flex;align-items:center;gap:8px;box-sizing:border-box;width:calc(100% - 4px);min-height:32px;margin:0 2px 2px;padding:0 8px;border:0;border-radius:8px;background:transparent;color:var(--dsw-alias-label-primary);font:inherit;font-size:13px;cursor:pointer;text-align:start}
+.lpa-zt-row:hover:not(:disabled){background:color-mix(in srgb,var(--dsw-alias-label-primary) 6%,transparent)}
+.lpa-zt-row:focus-visible{outline:2px solid var(--dsw-alias-brand-primary);outline-offset:1px}
+.lpa-zt-row:disabled{opacity:.5;cursor:default}
+.lpa-zt-provider-name{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:start}
+.lpa-zt-provider-count{flex:none;font-size:11px;line-height:14px;color:var(--dsw-alias-label-caption,var(--lpa-menu-fore,#a6a094))}
+.lpa-zt-provider-chevron,.lpa-zt-back-chevron{flex:none;font-size:12px;line-height:1;color:var(--dsw-alias-label-caption,var(--lpa-menu-fore,#a6a094))}
+.lpa-zt-provider-option--current .lpa-zt-provider-name{color:var(--dsw-alias-brand-primary)}
 `;
   }
 });
@@ -4985,6 +5039,181 @@ var init_claude_effort_visual = __esm({
   }
 });
 
+// assist/client/zcode-effort-style.js
+var zcodeEffortCss;
+var init_zcode_effort_style = __esm({
+  "assist/client/zcode-effort-style.js"() {
+    zcodeEffortCss = `
+.lpa-effort.lpa-zt{
+  --lpa-zt-success:#16a34a;
+  --lpa-zt-accent:#3b82f6;
+  --lpa-zt-accent-alt:#a855f7;
+  --lpa-zt-ink:var(--dsw-alias-label-primary,#171717);
+  --lpa-zt-muted:var(--dsw-alias-label-secondary,var(--lpa-zt-ink));
+  --lpa-zt-track:color-mix(in srgb,var(--lpa-zt-ink) 10%,transparent);
+  box-sizing:border-box;flex:none;margin:0;border:0;font-weight:400;
+}
+[data-ds-dark-theme] .lpa-effort.lpa-zt{--lpa-zt-success:#22c55e}
+.lpa-effort.lpa-zt{display:flex;flex-direction:column;gap:6px;padding:8px 8px 10px;min-width:0;user-select:none;-webkit-user-select:none}
+.lpa-zt-head{display:flex;align-items:baseline;gap:8px;min-width:0;padding:0 6px}
+.lpa-zt-label{flex:none;font-size:13px;line-height:16px;color:var(--lpa-zt-muted)}
+.lpa-zt-value{flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px;line-height:16px;color:var(--lpa-zt-ink)}
+.lpa-zt-slider{position:relative;height:32px;border-radius:9999px}
+.lpa-effort.lpa-zt[data-disabled] .lpa-zt-slider{opacity:.5}
+.lpa-effort.lpa-zt[data-disabled] .lpa-zt-input{cursor:default}
+.lpa-zt-track{position:absolute;left:0;right:0;top:4px;height:24px;border-radius:9999px;background:var(--lpa-zt-track);overflow:hidden}
+.lpa-zt-track::before{content:"";position:absolute;inset:0;border-radius:inherit;border:1px solid var(--lpa-zt-track)}
+.lpa-zt-fill{position:absolute;top:0;bottom:0;left:0;border-radius:9999px;background:var(--lpa-zt-success);transition:width 120ms ease-out;overflow:hidden;pointer-events:none}
+.lpa-zt-fill::before{content:"";position:absolute;inset:0;border-radius:inherit;opacity:0;transition:opacity 200ms ease-out;background:linear-gradient(270deg in oklch shorter hue,var(--lpa-zt-accent) 0%,var(--lpa-zt-success) 100%)}
+.lpa-effort.lpa-zt[data-max] .lpa-zt-fill::before{opacity:1}
+.lpa-effort.lpa-zt[data-highspeed] .lpa-zt-fill{background:var(--lpa-zt-accent)}
+.lpa-effort.lpa-zt[data-highspeed][data-max] .lpa-zt-fill::before{background:linear-gradient(90deg in oklab,var(--lpa-zt-accent) 0%,var(--lpa-zt-accent-alt) 100%)}
+.lpa-zt-bubbles{position:absolute;inset:0;pointer-events:none}
+.lpa-zt-bubble{position:absolute;left:0;right:0;opacity:0;animation:lpa-zt-bubble-flow linear infinite}
+.lpa-zt-bubble>span{display:block;border-radius:9999px;background:#fff}
+@keyframes lpa-zt-bubble-flow{0%{transform:translateX(104%);opacity:0}15%,80%{opacity:.4}100%{transform:translateX(-4%);opacity:0}}
+.lpa-zt-stops{position:absolute;left:14px;right:14px;top:0;bottom:0;display:flex;align-items:center;justify-content:space-between;pointer-events:none}
+.lpa-zt-stop{flex:none;width:4px;height:4px;border-radius:9999px;background:color-mix(in srgb,var(--lpa-zt-ink) 40%,transparent);transition:scale 120ms ease-out,opacity 120ms ease-out,background-color 120ms ease-out}
+.lpa-zt-stop[data-filled]{background:#fff;opacity:.3}
+.lpa-zt-stop[data-hovered]{scale:1.75;opacity:1}
+.lpa-zt-thumb{position:absolute;top:2px;width:28px;height:28px;border-radius:9999px;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.3);transition:left 120ms ease-out;pointer-events:none}
+.lpa-zt-input{position:absolute;inset:0;margin:0;width:100%;height:32px;cursor:pointer;appearance:none;-webkit-appearance:none;background:transparent;outline:none;font:inherit}
+.lpa-zt-input:focus-visible{outline:2px solid color-mix(in srgb,var(--lpa-zt-ink) 40%,transparent);outline-offset:2px}
+.lpa-zt-input::-webkit-slider-runnable-track{height:32px;background:transparent}
+.lpa-zt-input::-webkit-slider-thumb{appearance:none;-webkit-appearance:none;width:28px;height:28px;margin-top:2px;border:0;border-radius:50%;background:transparent}
+.lpa-zt-input::-moz-range-track{height:32px;background:transparent}
+.lpa-zt-input::-moz-range-thumb{width:28px;height:28px;border:0;border-radius:50%;background:transparent}
+.lpa-zt-input::-moz-range-progress{background:transparent}
+@media (prefers-reduced-motion:reduce){
+  .lpa-zt-bubbles{display:none}
+  .lpa-zt-bubble{animation:none}
+  .lpa-zt-stop,.lpa-zt-thumb,.lpa-zt-fill,.lpa-zt-fill::before{transition:none}
+}
+`;
+  }
+});
+
+// assist/client/zcode-effort-visual.js
+function isGlmHighspeedModel(name) {
+  return /glm/i.test(name) && /highspeed|flashx/i.test(name);
+}
+function highspeedBubbles(count = 32) {
+  return Array.from({ length: count }, (_, index) => ({
+    ...EFFORT_BUBBLES[index % EFFORT_BUBBLES.length],
+    duration: (8 + index % 5) / 10,
+    delay: -index * 0.137
+  }));
+}
+function ZcodeEffortVisual({
+  rows = [],
+  index = 0,
+  position = null,
+  dragging = false,
+  disabled = false,
+  unknown = false,
+  highspeed = false,
+  label = "",
+  t,
+  children
+}) {
+  const count = rows.length;
+  const at = Math.max(0, Math.min(Math.max(0, count - 1), Number.isInteger(index) ? index : 0));
+  const ratio = position === null ? count < 2 ? 1 : at / (count - 1) : Math.max(0, Math.min(1, position));
+  const atMax = count > 1 && at === count - 1 && !unknown && !disabled;
+  const hovered = dragging && count > 1 ? Math.round(ratio * (count - 1)) : null;
+  const bubbles = highspeed ? highspeedBubbles() : EFFORT_BUBBLES;
+  return h14(
+    import_react15.default.Fragment,
+    null,
+    h14("style", { "data-lpa-zt-style": "" }, zcodeEffortCss),
+    h14(
+      "section",
+      {
+        className: "lpa-effort lpa-zt",
+        "aria-label": t("picker.effort"),
+        "data-max": atMax ? "" : void 0,
+        "data-highspeed": highspeed ? "" : void 0,
+        "data-dragging": dragging && !disabled ? "" : void 0,
+        "data-disabled": disabled ? "" : void 0,
+        "data-unknown": unknown ? "true" : void 0
+      },
+      h14(
+        "div",
+        { className: "lpa-zt-head" },
+        h14("span", { className: "lpa-zt-label" }, t("picker.effort")),
+        h14("span", { className: "lpa-zt-value", "aria-live": "polite", "aria-atomic": true }, label)
+      ),
+      h14(
+        "div",
+        { className: "lpa-zt-slider" },
+        h14(
+          "div",
+          { className: "lpa-zt-track", "aria-hidden": true },
+          h14(
+            "div",
+            {
+              className: "lpa-zt-fill",
+              "aria-hidden": true,
+              style: { width: "calc(14px + (100% - 28px) * " + ratio + ")" }
+            },
+            atMax ? h14(
+              "div",
+              { className: "lpa-zt-bubbles", "aria-hidden": true },
+              bubbles.map((bubble, i) => h14(
+                "span",
+                {
+                  key: i,
+                  className: "lpa-zt-bubble",
+                  style: {
+                    top: bubble.top + "px",
+                    animationDuration: bubble.duration + "s",
+                    animationDelay: bubble.delay + "s"
+                  }
+                },
+                h14("span", { style: { width: bubble.size + "px", height: bubble.size + "px" } })
+              ))
+            ) : null
+          )
+        ),
+        h14("div", { className: "lpa-zt-stops", "aria-hidden": true }, rows.map((row, i) => h14("span", {
+          key: row.id,
+          className: "lpa-zt-stop",
+          "data-filled": count > 1 && i <= at ? "" : void 0,
+          "data-hovered": i === hovered ? "" : void 0
+        }))),
+        h14("div", {
+          className: "lpa-zt-thumb",
+          "aria-hidden": true,
+          style: { left: "calc((100% - 28px) * " + ratio + ")" }
+        }),
+        children
+      )
+    )
+  );
+}
+var import_react15, h14, EFFORT_BUBBLES;
+var init_zcode_effort_visual = __esm({
+  "assist/client/zcode-effort-visual.js"() {
+    import_react15 = __toESM(require("react"), 1);
+    init_zcode_effort_style();
+    h14 = import_react15.default.createElement;
+    EFFORT_BUBBLES = [
+      { top: 4, size: 2, duration: 2.6, delay: -0.4 },
+      { top: 14, size: 3, duration: 3.2, delay: -2.1 },
+      { top: 8, size: 4, duration: 2.8, delay: -1.1 },
+      { top: 18, size: 2, duration: 3.6, delay: -0.8 },
+      { top: 3, size: 3, duration: 3, delay: -2.5 },
+      { top: 12, size: 2, duration: 3.4, delay: -1.7 },
+      { top: 6, size: 3, duration: 3.1, delay: -0.9 },
+      { top: 17, size: 4, duration: 2.9, delay: -2.3 },
+      { top: 10, size: 2, duration: 3.5, delay: -0.2 },
+      { top: 2, size: 2, duration: 2.7, delay: -1.8 },
+      { top: 15, size: 3, duration: 3.3, delay: -1.2 },
+      { top: 7, size: 4, duration: 3.6, delay: -3.1 }
+    ];
+  }
+});
+
 // assist/client/model-picker.js
 function splitSections(state, rawPins) {
   const sections = sectionsOf(state), pins = pinIdsForSections(rawPins, sections);
@@ -5070,8 +5299,8 @@ function menuGeometry(trigger, size, viewport) {
   };
 }
 function usePlacement(trigger, panel, open) {
-  const [position, setPosition] = import_react15.default.useState(null);
-  import_react15.default.useLayoutEffect(() => {
+  const [position, setPosition] = import_react16.default.useState(null);
+  import_react16.default.useLayoutEffect(() => {
     if (!open) {
       setPosition(null);
       return;
@@ -5102,8 +5331,8 @@ function usePlacement(trigger, panel, open) {
   return position;
 }
 function useFlyout(rowRef, panelRef, open) {
-  const [position, setPosition] = import_react15.default.useState(null);
-  import_react15.default.useLayoutEffect(() => {
+  const [position, setPosition] = import_react16.default.useState(null);
+  import_react16.default.useLayoutEffect(() => {
     if (!open) {
       setPosition(null);
       return;
@@ -5138,28 +5367,28 @@ function useFlyout(rowRef, panelRef, open) {
   }, [open, rowRef, panelRef]);
   return position;
 }
-function EffortSlider({ state, entry, disabled, t, submit, sliderRef }) {
+function EffortSlider({ state, entry, disabled, t, submit, sliderRef, Visual = ClaudeEffortVisual, inputClass = "lpa-ce-input", highspeed = false }) {
   const rows = effortRows(entry, state.current, t("picker.providerDefault"), t);
   const active = rows.findIndex((r) => r.active);
   const token = JSON.stringify([state.current, rows.map((r) => r.effort)]);
-  const tokenRef = import_react15.default.useRef(token);
+  const tokenRef = import_react16.default.useRef(token);
   tokenRef.current = token;
-  const gesture = import_react15.default.useRef(null), interaction = import_react15.default.useRef({ mode: null, token: null, cancelled: false });
-  const [draft, setDraft] = import_react15.default.useState(null), [pointerPosition, setPointerPosition] = import_react15.default.useState(null), [landing, setLanding] = import_react15.default.useState(null);
-  const alive = import_react15.default.useRef(true);
-  import_react15.default.useEffect(() => {
+  const gesture = import_react16.default.useRef(null), interaction = import_react16.default.useRef({ mode: null, token: null, cancelled: false });
+  const [draft, setDraft] = import_react16.default.useState(null), [pointerPosition, setPointerPosition] = import_react16.default.useState(null), [landing, setLanding] = import_react16.default.useState(null);
+  const alive = import_react16.default.useRef(true);
+  import_react16.default.useEffect(() => {
     alive.current = true;
     return () => {
       alive.current = false;
     };
   }, []);
-  import_react15.default.useEffect(() => {
+  import_react16.default.useEffect(() => {
     if (interaction.current.mode) interaction.current.cancelled = true;
     gesture.current = null;
     setDraft(null);
     setPointerPosition(null);
   }, [token, disabled]);
-  import_react15.default.useEffect(() => {
+  import_react16.default.useEffect(() => {
     setLanding(null);
   }, [token]);
   const clear = () => {
@@ -5194,13 +5423,13 @@ function EffortSlider({ state, entry, disabled, t, submit, sliderRef }) {
   const index = preview ?? Math.max(0, active), max = Math.max(0, rows.length - 1);
   const position = interaction.current.token === token && !interaction.current.cancelled ? pointerPosition : null;
   const label = preview !== null ? rows[index]?.label : active < 0 ? t("picker.effortUnavailable") : rows[active].label;
-  return h14(
-    ClaudeEffortVisual,
-    { rows, index, position, dragging: position !== null, disabled: disabled || rows.length < 2, unknown: active < 0 && preview === null, label, t },
-    h14("input", {
+  return h15(
+    Visual,
+    { rows, index, position, dragging: position !== null, disabled: disabled || rows.length < 2, unknown: active < 0 && preview === null, highspeed, label, t },
+    h15("input", {
       ref: sliderRef,
       type: "range",
-      className: "lpa-ce-input",
+      className: inputClass,
       min: 0,
       max,
       step: 1,
@@ -5246,21 +5475,22 @@ function EffortSlider({ state, entry, disabled, t, submit, sliderRef }) {
   );
 }
 function ModelPicker({ locked, available, directory, load, select, t, getLocale = () => "en" }) {
-  const state = import_react15.default.useSyncExternalStore(import_react15.default.useCallback((fn) => directory.subscribe(fn), [directory]), () => directory.getSnapshot(), () => directory.getSnapshot());
-  const [open, setOpen] = import_react15.default.useState(false), [error, setError] = import_react15.default.useState(null), [submitting, setSubmitting] = import_react15.default.useState(false);
-  const [pinsStored, setPinsStored] = import_react15.default.useState(() => readPinnedProviders(safeStorage()));
-  const [otherOpen, setOtherOpen] = import_react15.default.useState(false);
-  const [styleTick, refreshStyleTick] = import_react15.default.useState(0);
-  import_react15.default.useEffect(() => onModelStyleChange(() => refreshStyleTick((v) => v + 1)), []);
-  const trigger = import_react15.default.useRef(null), panel = import_react15.default.useRef(null), slider = import_react15.default.useRef(null), rowRefs = import_react15.default.useRef(/* @__PURE__ */ new Map());
-  const otherRowRef = import_react15.default.useRef(null), flyoutRef = import_react15.default.useRef(null), closeTimer = import_react15.default.useRef(null);
-  const lifecycle = import_react15.default.useRef({ alive: true, source: directory, epoch: 0, open: false, operation: 0, inflight: false });
-  const focusRequest = import_react15.default.useRef(null), focusRecovery = import_react15.default.useRef(null), modelFocus = import_react15.default.useRef(null), id2 = import_react15.default.useId();
+  const state = import_react16.default.useSyncExternalStore(import_react16.default.useCallback((fn) => directory.subscribe(fn), [directory]), () => directory.getSnapshot(), () => directory.getSnapshot());
+  const [open, setOpen] = import_react16.default.useState(false), [error, setError] = import_react16.default.useState(null), [submitting, setSubmitting] = import_react16.default.useState(false);
+  const [pinsStored, setPinsStored] = import_react16.default.useState(() => readPinnedProviders(safeStorage()));
+  const [otherOpen, setOtherOpen] = import_react16.default.useState(false);
+  const [providerView, setProviderView] = import_react16.default.useState(null);
+  const [styleTick, refreshStyleTick] = import_react16.default.useState(0);
+  import_react16.default.useEffect(() => onModelStyleChange(() => refreshStyleTick((v) => v + 1)), []);
+  const trigger = import_react16.default.useRef(null), panel = import_react16.default.useRef(null), slider = import_react16.default.useRef(null), rowRefs = import_react16.default.useRef(/* @__PURE__ */ new Map());
+  const otherRowRef = import_react16.default.useRef(null), flyoutRef = import_react16.default.useRef(null), closeTimer = import_react16.default.useRef(null);
+  const lifecycle = import_react16.default.useRef({ alive: true, source: directory, epoch: 0, open: false, operation: 0, inflight: false });
+  const focusRequest = import_react16.default.useRef(null), focusRecovery = import_react16.default.useRef(null), modelFocus = import_react16.default.useRef(null), id2 = import_react16.default.useId();
   const life = lifecycle.current;
   life.source = directory;
   const visible = open && available && !locked, entry = currentEntry(state), failures = failureRows(state);
   const busy = busyState(state) || submitting, position = usePlacement(trigger, panel, visible);
-  import_react15.default.useEffect(() => {
+  import_react16.default.useEffect(() => {
     life.alive = true;
     setOpen(false);
     setError(null);
@@ -5272,7 +5502,7 @@ function ModelPicker({ locked, available, directory, load, select, t, getLocale 
       life.epoch++;
     };
   }, [directory, life]);
-  import_react15.default.useEffect(() => {
+  import_react16.default.useEffect(() => {
     if (!available || locked) {
       life.open = false;
       life.epoch++;
@@ -5285,6 +5515,7 @@ function ModelPicker({ locked, available, directory, load, select, t, getLocale 
     setOpen(false);
     focusRequest.current = null;
     setOtherOpen(false);
+    setProviderView(null);
     if (restore) trigger.current?.focus();
   };
   const togglePin = (id3) => {
@@ -5306,8 +5537,14 @@ function ModelPicker({ locked, available, directory, load, select, t, getLocale 
       setOtherOpen(false);
     }, 160);
   };
-  import_react15.default.useEffect(() => () => cancelClose(), []);
+  import_react16.default.useEffect(() => () => cancelClose(), []);
   const { hero, collapsed, pins } = splitSections(state, pinsStored);
+  const style = readModelStylePref(), zcode = style === "zcode";
+  const zcSections = sectionsOf(state);
+  const zcGroup = zcSections.find((g) => entry && g.id === entry.group?.id) ?? zcSections[0] ?? null;
+  const zcCurrentKey = zcGroup ? providerRowKey(zcGroup.id) : null;
+  const zcFocusOrder = () => providerView ? ["zc-back", ...zcSections.map((g) => providerRowKey(g.id))] : zcGroup && zcCurrentKey ? [zcCurrentKey, ...modelsOf(zcGroup).map((m) => modelRowId(zcGroup, m))] : [];
+  const orderForFocus = () => zcode ? zcFocusOrder() : focusOrderFor(state, pins, null);
   const focusRow = (key) => {
     const node = rowRefs.current.get(key);
     if (node && !node.disabled) {
@@ -5318,7 +5555,7 @@ function ModelPicker({ locked, available, directory, load, select, t, getLocale 
     }
     return false;
   };
-  import_react15.default.useLayoutEffect(() => {
+  import_react16.default.useLayoutEffect(() => {
     const saved = focusRecovery.current;
     if (!saved || busy) return;
     focusRecovery.current = null;
@@ -5327,9 +5564,9 @@ function ModelPicker({ locked, available, directory, load, select, t, getLocale 
     if (saved.node?.isConnected && !saved.node.disabled) saved.node.focus({ preventScroll: true });
     else if (!focusRow(modelFocus.current)) panel.current?.querySelector("button:not(:disabled),input:not(:disabled)")?.focus();
   }, [busy, visible, directory, life]);
-  import_react15.default.useLayoutEffect(() => {
+  import_react16.default.useLayoutEffect(() => {
     if (!visible || !position || !focusRequest.current) return;
-    const order = focusOrderFor(state, pins, null), wanted = focusRequest.current === "last" ? order.at(-1) : order[0];
+    const order = orderForFocus(), wanted = focusRequest.current === "last" ? order.at(-1) : order[0];
     if (focusRow(wanted)) {
       focusRequest.current = null;
       return;
@@ -5338,11 +5575,11 @@ function ModelPicker({ locked, available, directory, load, select, t, getLocale 
       panel.current?.querySelector("button:not(:disabled),input:not(:disabled)")?.focus();
       focusRequest.current = null;
     }
-  }, [visible, position, state, pins]);
-  import_react15.default.useLayoutEffect(() => {
+  }, [visible, position, state, pins, providerView, zcode]);
+  import_react16.default.useLayoutEffect(() => {
     if (!collapsed.length) setOtherOpen(false);
   }, [collapsed.length]);
-  import_react15.default.useEffect(() => {
+  import_react16.default.useEffect(() => {
     if (!visible) return;
     const outside = (e) => {
       if (!trigger.current?.contains(e.target) && !panel.current?.contains(e.target) && !flyoutRef.current?.contains(e.target)) {
@@ -5431,9 +5668,9 @@ function ModelPicker({ locked, available, directory, load, select, t, getLocale 
         extras[at - 1].focus();
         return;
       }
-      if (e.shiftKey && at === 0 && focusOrderFor(state, pins, null).length) {
+      if (e.shiftKey && at === 0 && orderForFocus().length) {
         e.preventDefault();
-        if (!focusRow(modelFocus.current)) focusRow(focusOrderFor(state, pins, null)[0]);
+        if (!focusRow(modelFocus.current)) focusRow(orderForFocus()[0]);
         return;
       }
       hide(true);
@@ -5443,7 +5680,7 @@ function ModelPicker({ locked, available, directory, load, select, t, getLocale 
     if (["ArrowDown", "ArrowUp", "Home", "End"].includes(e.key)) {
       e.preventDefault();
       e.stopPropagation();
-      const order = focusOrderFor(state, pins, null);
+      const order = orderForFocus();
       if (busy || !order.length) return;
       const key = document.activeElement?.getAttribute("data-picker-row"), at = order.indexOf(key);
       const next = e.key === "Home" ? 0 : e.key === "End" ? order.length - 1 : at < 0 ? e.key === "ArrowUp" ? order.length - 1 : 0 : (at + (e.key === "ArrowDown" ? 1 : -1) + order.length) % order.length;
@@ -5451,11 +5688,11 @@ function ModelPicker({ locked, available, directory, load, select, t, getLocale 
     }
   };
   if (!available) return null;
-  if (styleTick >= 0 && readModelStylePref() === "dsh") return h14(
+  if (styleTick >= 0 && readModelStylePref() === "dsh") return h15(
     "div",
     { className: "lpa-model-root" },
-    h14("style", null, ".lpa-model-native{font:inherit;font-size:13px;max-width:min(320px,52cqw);height:28px;color:var(--dsw-alias-label-primary,inherit);background:var(--dsw-alias-bg-layer-1,ButtonFace);border:1px solid var(--dsw-alias-border-l1,#80808066);border-radius:7px;padding:0 4px;cursor:pointer}"),
-    h14(
+    h15("style", null, ".lpa-model-native{font:inherit;font-size:13px;max-width:min(320px,52cqw);height:28px;color:var(--dsw-alias-label-primary,inherit);background:var(--dsw-alias-bg-layer-1,ButtonFace);border:1px solid var(--dsw-alias-border-l1,#80808066);border-radius:7px;padding:0 4px;cursor:pointer}"),
+    h15(
       "select",
       {
         className: "lpa-model-native",
@@ -5474,8 +5711,8 @@ function ModelPicker({ locked, available, directory, load, select, t, getLocale 
           if (group && model) pick(group, model);
         }
       },
-      sectionsOf(state).length === 0 ? h14("option", { value: "" }, loadingState(state) ? t("picker.loading") : t("picker.empty")) : null,
-      sectionsOf(state).map((group) => h14("optgroup", { key: group.id, label: group.name || group.id }, modelsOf(group).map((model) => h14("option", { key: modelRowId(group, model), value: modelRowId(group, model) }, model.name || model.id))))
+      sectionsOf(state).length === 0 ? h15("option", { value: "" }, loadingState(state) ? t("picker.loading") : t("picker.empty")) : null,
+      sectionsOf(state).map((group) => h15("optgroup", { key: group.id, label: group.name || group.id }, modelsOf(group).map((model) => h15("option", { key: modelRowId(group, model), value: modelRowId(group, model) }, model.name || model.id))))
     )
   );
   const rows = effortRows(entry, state.current, t("picker.providerDefault"), t);
@@ -5487,7 +5724,7 @@ function ModelPicker({ locked, available, directory, load, select, t, getLocale 
   const renderModel = (group, model) => {
     const key = modelRowId(group, model), checked = isCurrentModel(state.current, { provider: group.id, model: model.id });
     const description = modelDescription(group.id, model, getLocale());
-    return h14(
+    return h15(
       "button",
       {
         key,
@@ -5509,15 +5746,15 @@ function ModelPicker({ locked, available, directory, load, select, t, getLocale 
         },
         onClick: () => pick(group, model)
       },
-      h14("span", { className: "lpa-model-copy" }, h14("span", { className: "lpa-model-name" }, model.name || model.id), description ? h14("span", { className: "lpa-model-desc" }, description) : null),
-      checked ? h14("span", { className: "lpa-model-check", "aria-hidden": true }, "\u2713") : null
+      h15("span", { className: "lpa-model-copy" }, h15("span", { className: "lpa-model-name" }, model.name || model.id), description ? h15("span", { className: "lpa-model-desc" }, description) : null),
+      checked ? h15("span", { className: "lpa-model-check", "aria-hidden": true }, "\u2713") : null
     );
   };
-  const groupHeader = (group) => h14(
+  const groupHeader = (group) => h15(
     "div",
     { className: "lpa-model-group-name", title: group.id },
-    h14("span", null, group.id === "deepseek-account" ? t("picker.account") : group.name || group.id),
-    h14(
+    h15("span", null, group.id === "deepseek-account" ? t("picker.account") : group.name || group.id),
+    h15(
       "button",
       {
         type: "button",
@@ -5528,12 +5765,119 @@ function ModelPicker({ locked, available, directory, load, select, t, getLocale 
         "aria-label": pins.includes(group.id) ? t("picker.unpin") : t("picker.pin"),
         onClick: () => togglePin(group.id)
       },
-      h14("span", { "aria-hidden": true }, pins.includes(group.id) ? t("picker.pinnedMark") : t("picker.pinMark"))
+      h15("span", { "aria-hidden": true }, pins.includes(group.id) ? t("picker.pinnedMark") : t("picker.pinMark"))
     )
+  );
+  const effortFrame = rows.length ? h15("div", { className: "lpa-effort-frame" }, h15(EffortSlider, {
+    key: JSON.stringify([state.current?.provider, state.current?.model]),
+    state,
+    entry,
+    disabled: busy || locked,
+    t,
+    submit,
+    sliderRef: slider,
+    Visual: zcode ? ZcodeEffortVisual : ClaudeEffortVisual,
+    inputClass: zcode ? "lpa-zt-input" : "lpa-ce-input",
+    highspeed: zcode && isGlmHighspeedModel(entry?.model?.name || entry?.model?.id || "")
+  })) : null;
+  const zcProviderRow = zcGroup ? h15(
+    "button",
+    {
+      key: zcCurrentKey,
+      type: "button",
+      role: "menuitem",
+      "aria-haspopup": "true",
+      "aria-expanded": providerView,
+      tabIndex: -1,
+      disabled: busy || locked,
+      "data-picker-row": zcCurrentKey,
+      "data-provider-id": zcGroup.id,
+      "aria-label": t("picker.providerSwitch"),
+      ref: (node) => {
+        if (node) rowRefs.current.set(zcCurrentKey, node);
+        else rowRefs.current.delete(zcCurrentKey);
+      },
+      className: "lpa-zt-row lpa-zt-provider-row",
+      onFocus: () => {
+        modelFocus.current = zcCurrentKey;
+      },
+      onClick: () => setProviderView((open2) => !open2)
+    },
+    h15("span", { className: "lpa-zt-provider-name" }, zcGroup.id === "deepseek-account" ? t("picker.account") : zcGroup.name || zcGroup.id),
+    h15("span", { className: "lpa-zt-provider-count" }, t("picker.providerModels", { count: modelsOf(zcGroup).length })),
+    h15("span", { className: "lpa-zt-provider-chevron", "aria-hidden": true }, "\u203A")
+  ) : null;
+  const zcProviders = providerView ? h15(
+    import_react16.default.Fragment,
+    null,
+    h15(
+      "button",
+      {
+        key: "zc-back",
+        type: "button",
+        role: "menuitem",
+        tabIndex: -1,
+        disabled: busy || locked,
+        "data-picker-row": "zc-back",
+        className: "lpa-zt-row lpa-zt-back-row",
+        ref: (node) => {
+          if (node) rowRefs.current.set("zc-back", node);
+          else rowRefs.current.delete("zc-back");
+        },
+        onFocus: () => {
+          modelFocus.current = "zc-back";
+        },
+        onClick: () => setProviderView(null)
+      },
+      h15("span", { className: "lpa-zt-back-chevron", "aria-hidden": true }, "\u2039"),
+      h15("span", null, t("picker.back"))
+    ),
+    zcSections.map((group) => {
+      const key = providerRowKey(group.id), checked = !!zcGroup && group.id === zcGroup.id;
+      return h15(
+        "button",
+        {
+          key,
+          type: "button",
+          role: "menuitemradio",
+          "aria-checked": checked,
+          tabIndex: -1,
+          disabled: busy || locked,
+          "data-picker-row": key,
+          "data-provider-id": group.id,
+          ref: (node) => {
+            if (node) rowRefs.current.set(key, node);
+            else rowRefs.current.delete(key);
+          },
+          className: "lpa-zt-row lpa-zt-provider-option" + (checked ? " lpa-zt-provider-option--current" : ""),
+          onFocus: () => {
+            modelFocus.current = key;
+          },
+          onClick: () => setProviderView(null)
+        },
+        h15("span", { className: "lpa-zt-provider-name" }, group.id === "deepseek-account" ? t("picker.account") : group.name || group.id),
+        h15("span", { className: "lpa-zt-provider-count" }, t("picker.providerModels", { count: modelsOf(group).length })),
+        checked ? h15("span", { className: "lpa-model-check", "aria-hidden": true }, "\u2713") : null
+      );
+    })
+  ) : null;
+  const zcodeBody = h15(
+    import_react16.default.Fragment,
+    null,
+    zcProviderRow,
+    h15(
+      "div",
+      { className: "lpa-model-scroll", role: "menu", "aria-label": t("picker.models") },
+      providerView ? zcProviders : zcGroup ? renderModels(zcGroup) : h15("p", { className: "lpa-model-status", role: "status" }, loadingState(state) ? t("picker.loading") : t("picker.empty"))
+    ),
+    failures.length ? h15("div", { className: "lpa-model-failures" }, failures.map((f) => h15("p", { key: f.id, className: "lpa-model-status", role: "status" }, t(f.key, f.params)))) : null,
+    effortFrame,
+    error ? h15("p", { className: "lpa-model-error", role: "alert" }, t(error === "session/writer-held" ? "picker.sessionInUse" : "picker.failed")) : null,
+    busy ? h15("span", { className: "lpa-model-status", role: "status" }, t("picker.saving")) : null
   );
   const otherRow = () => {
     const key = providerRowKey(OTHER_MODELS), current = collapsed.some((group) => state.current?.provider === group.id);
-    return h14(
+    return h15(
       "button",
       {
         key,
@@ -5572,17 +5916,17 @@ function ModelPicker({ locked, available, directory, load, select, t, getLocale 
           }
         }
       },
-      h14("span", { className: "lpa-model-provider-copy" }, h14("span", { className: "lpa-model-provider-name" }, t("picker.otherModels"))),
-      h14(
+      h15("span", { className: "lpa-model-provider-copy" }, h15("span", { className: "lpa-model-provider-name" }, t("picker.otherModels"))),
+      h15(
         "span",
         { className: "lpa-model-provider-meta" },
-        current ? h14("span", { className: "lpa-model-check", "aria-hidden": true }, "\u2713") : null,
-        h14("span", { className: "lpa-model-provider-count" }, String(otherCount)),
-        h14("span", { className: "lpa-model-provider-chevron", "aria-hidden": true }, "\u203A")
+        current ? h15("span", { className: "lpa-model-check", "aria-hidden": true }, "\u2713") : null,
+        h15("span", { className: "lpa-model-provider-count" }, String(otherCount)),
+        h15("span", { className: "lpa-model-provider-chevron", "aria-hidden": true }, "\u203A")
       )
     );
   };
-  const flyoutPanel = otherOpen && collapsed.length ? h14(
+  const flyoutPanel = otherOpen && collapsed.length ? h15(
     "div",
     {
       ref: flyoutRef,
@@ -5593,20 +5937,20 @@ function ModelPicker({ locked, available, directory, load, select, t, getLocale 
       onPointerEnter: cancelClose,
       onPointerLeave: scheduleClose
     },
-    h14(
+    h15(
       "div",
       { className: "lpa-model-flyout-head" },
-      h14("span", null, t("picker.otherModels")),
-      h14("span", { className: "lpa-model-provider-count" }, String(otherCount))
+      h15("span", null, t("picker.otherModels")),
+      h15("span", { className: "lpa-model-provider-count" }, String(otherCount))
     ),
-    h14("div", { className: "lpa-model-flyout-scroll" }, collapsed.map((group, index) => h14(
+    h15("div", { className: "lpa-model-flyout-scroll" }, collapsed.map((group, index) => h15(
       "div",
       { key: group.id, className: "lpa-model-other-provider" + (index ? " lpa-model-other-provider--divided" : "") },
-      h14(
+      h15(
         "div",
         { className: "lpa-model-other-label" },
-        h14("span", null, group.id === "deepseek-account" ? t("picker.account") : group.name || group.id),
-        h14(
+        h15("span", null, group.id === "deepseek-account" ? t("picker.account") : group.name || group.id),
+        h15(
           "button",
           {
             type: "button",
@@ -5618,13 +5962,13 @@ function ModelPicker({ locked, available, directory, load, select, t, getLocale 
             disabled: busy || locked,
             onClick: () => togglePin(group.id)
           },
-          h14("span", { "aria-hidden": true }, t("picker.pinMark"))
+          h15("span", { "aria-hidden": true }, t("picker.pinMark"))
         )
       ),
       modelsOf(group).map((model) => renderModel(group, model))
     )))
   ) : null;
-  const menu = visible ? h14(
+  const menu = visible ? h15(
     "div",
     {
       ref: panel,
@@ -5633,33 +5977,38 @@ function ModelPicker({ locked, available, directory, load, select, t, getLocale 
       role: "dialog",
       "aria-label": t("picker.aria"),
       "aria-busy": busy || loadingState(state),
+      "data-style": style,
       style: { ...position ?? { left: 0, top: 0, visibility: "hidden" }, ...menuSurfaceVars() },
       onKeyDown
     },
-    h14(
-      "div",
-      { className: "lpa-model-scroll", role: "menu", "aria-label": t("picker.models") },
-      [
-        ...hero.map((group) => h14("section", { key: group.id, className: "lpa-model-group", role: "group", "aria-label": group.name || group.id }, groupHeader(group), renderModels(group))),
-        collapsed.length ? h14("div", { key: "more", className: "lpa-model-more" }, otherRow()) : null
-      ],
-      !hero.length && !collapsed.length ? h14("p", { className: "lpa-model-status", role: "status" }, loadingState(state) ? t("picker.loading") : t("picker.empty")) : null
-    ),
-    failures.length ? h14(
-      "div",
-      { className: "lpa-model-failures" },
-      failures.map((f) => h14("p", { key: f.id, className: "lpa-model-status", role: "status" }, t(f.key, f.params))),
-      h14("button", { type: "button", className: "lpa-model-retry", onClick: reload, disabled: busy || loadingState(state) }, t("picker.retry"))
-    ) : null,
-    rows.length ? h14("div", { className: "lpa-effort-frame" }, h14(EffortSlider, { key: JSON.stringify([state.current?.provider, state.current?.model]), state, entry, disabled: busy || locked, t, submit, sliderRef: slider })) : null,
-    error ? h14("p", { className: "lpa-model-error", role: "alert" }, t(error === "session/writer-held" ? "picker.sessionInUse" : "picker.failed")) : null,
-    busy ? h14("span", { className: "lpa-model-status", role: "status" }, t("picker.saving")) : null
+    zcode ? zcodeBody : h15(
+      import_react16.default.Fragment,
+      null,
+      h15(
+        "div",
+        { className: "lpa-model-scroll", role: "menu", "aria-label": t("picker.models") },
+        [
+          ...hero.map((group) => h15("section", { key: group.id, className: "lpa-model-group", role: "group", "aria-label": group.name || group.id }, groupHeader(group), renderModels(group))),
+          collapsed.length ? h15("div", { key: "more", className: "lpa-model-more" }, otherRow()) : null
+        ],
+        !hero.length && !collapsed.length ? h15("p", { className: "lpa-model-status", role: "status" }, loadingState(state) ? t("picker.loading") : t("picker.empty")) : null
+      ),
+      failures.length ? h15(
+        "div",
+        { className: "lpa-model-failures" },
+        failures.map((f) => h15("p", { key: f.id, className: "lpa-model-status", role: "status" }, t(f.key, f.params))),
+        h15("button", { type: "button", className: "lpa-model-retry", onClick: reload, disabled: busy || loadingState(state) }, t("picker.retry"))
+      ) : null,
+      effortFrame,
+      error ? h15("p", { className: "lpa-model-error", role: "alert" }, t(error === "session/writer-held" ? "picker.sessionInUse" : "picker.failed")) : null,
+      busy ? h15("span", { className: "lpa-model-status", role: "status" }, t("picker.saving")) : null
+    )
   ) : null;
-  return h14(
-    import_react15.default.Fragment,
+  return h15(
+    import_react16.default.Fragment,
     null,
-    h14("style", null, pickerCss),
-    h14("div", { className: "lpa-model-root" }, h14(
+    h15("style", null, pickerCss),
+    h15("div", { className: "lpa-model-root", "data-style": style }, h15(
       "button",
       {
         ref: trigger,
@@ -5684,26 +6033,27 @@ function ModelPicker({ locked, available, directory, load, select, t, getLocale 
           }
         }
       },
-      h14("span", { className: "lpa-model-trigger-icon", "aria-hidden": true }, "\u25C7"),
-      h14("span", { className: "lpa-model-trigger-label" }, caption),
-      effort ? h14("span", { className: "lpa-model-trigger-effort" }, effort) : null,
-      h14("svg", { className: "lpa-model-chevron", viewBox: "0 0 16 16", width: 12, height: 12, fill: "none", stroke: "currentColor", strokeWidth: 1.5, strokeLinecap: "round", strokeLinejoin: "round", "aria-hidden": true, focusable: "false" }, h14("path", { d: "M4 6l4 4 4-4" }))
+      h15("span", { className: "lpa-model-trigger-icon", "aria-hidden": true }, "\u25C7"),
+      h15("span", { className: "lpa-model-trigger-label" }, caption),
+      effort ? h15("span", { className: "lpa-model-trigger-effort" }, effort) : null,
+      h15("svg", { className: "lpa-model-chevron", viewBox: "0 0 16 16", width: 12, height: 12, fill: "none", stroke: "currentColor", strokeWidth: 1.5, strokeLinecap: "round", strokeLinejoin: "round", "aria-hidden": true, focusable: "false" }, h15("path", { d: "M4 6l4 4 4-4" }))
     )),
     menu ? (0, import_react_dom.createPortal)(menu, document.body) : null,
-    flyoutPanel && visible ? (0, import_react_dom.createPortal)(flyoutPanel, document.body) : null
+    flyoutPanel && visible && !zcode ? (0, import_react_dom.createPortal)(flyoutPanel, document.body) : null
   );
 }
-var import_react15, import_react_dom, h14, MODEL_SLOT, MODEL_PICKER_PRIORITY, modelRowId, OTHER_MODELS, providerRowKey, EFFORT_SCALE, gestureKeys, safeStorage, menuSurfaceVars;
+var import_react16, import_react_dom, h15, MODEL_SLOT, MODEL_PICKER_PRIORITY, modelRowId, OTHER_MODELS, providerRowKey, EFFORT_SCALE, gestureKeys, safeStorage, menuSurfaceVars;
 var init_model_picker = __esm({
   "assist/client/model-picker.js"() {
-    import_react15 = __toESM(require("react"), 1);
+    import_react16 = __toESM(require("react"), 1);
     import_react_dom = require("react-dom");
     init_model_descriptions();
     init_model_pin_store();
     init_model_picker_style();
     init_model_style_pref();
     init_claude_effort_visual();
-    h14 = import_react15.default.createElement;
+    init_zcode_effort_visual();
+    h15 = import_react16.default.createElement;
     MODEL_SLOT = "conversation.input.model";
     MODEL_PICKER_PRIORITY = -1;
     modelRowId = (group, model) => JSON.stringify([group.id, model.id]);
@@ -5735,7 +6085,7 @@ __export(client_exports, {
   installAssist: () => installAssist
 });
 function SettingsSurface(p) {
-  return h15(import_react16.default.Fragment, null, h15("style", null, css), h15(SettingsPage, p));
+  return h16(import_react17.default.Fragment, null, h16("style", null, css), h16(SettingsPage, p));
 }
 function installAssist(ctx) {
   ctx.effect(() => ctx.locale.register(NS, dictionaries));
@@ -5795,10 +6145,10 @@ function installAssist(ctx) {
   ctx.slots.inject("conversation.input.right", () => ctx.slots.register({ name: "conversation.input.right", id: "local-next-question-action", order: 1010, label: dictionaries.en.suggest, locale: NS, inject: inject2 }, SuggestButton));
   ctx.slots.inject("conversation.input.overlay", () => ctx.slots.register({ name: "conversation.input.overlay", id: "local-prompt-assist-results", order: 50, label, locale: NS, inject: inject2 }, AssistPanel));
 }
-var import_react16, h15;
+var import_react17, h16;
 var init_client = __esm({
   "assist/client/index.js"() {
-    import_react16 = __toESM(require("react"), 1);
+    import_react17 = __toESM(require("react"), 1);
     init_enhance_action();
     init_enhance_button();
     init_suggest_button();
@@ -5812,7 +6162,7 @@ var init_client = __esm({
     init_enablement_source();
     init_model_picker();
     init_model_style_pref();
-    h15 = import_react16.default.createElement;
+    h16 = import_react17.default.createElement;
   }
 });
 
@@ -5835,8 +6185,8 @@ init_model_id();
 init_fast_route();
 init_priority_source();
 function createFast(require2) {
-  let React17;
-  let h16;
+  let React18;
+  let h17;
   const NS2 = "local-openai-fast";
   const quietCommandNames2 = Object.freeze(["openai-fast", "openai-fast-ui-health"]);
   function HiddenFastCommand2() {
@@ -6038,8 +6388,8 @@ function createFast(require2) {
       .local-openai-fast__notice{position:absolute;bottom:34px;right:0;max-width:280px;width:max-content;padding:8px 10px;border:1px solid var(--dsw-alias-border-l2);border-radius:7px;background:var(--dsw-alias-bg-overlay);color:var(--dsw-alias-label-primary);font-size:12px;line-height:18px;z-index:20}
     `;
   function useDefaultSelection(remote) {
-    const [selection, setSelection] = React17.useState(null);
-    React17.useEffect(() => {
+    const [selection, setSelection] = React18.useState(null);
+    React18.useEffect(() => {
       let active = true;
       remote.session.modelCatalog().then((result2) => {
         if (active && result2.ok) setSelection(result2.value.default);
@@ -6052,12 +6402,12 @@ function createFast(require2) {
     return selection;
   }
   function FastToggle(props) {
-    const fastState = React17.useSyncExternalStore(props.fastSource.subscribe, props.fastSource.getSnapshot, props.fastSource.getSnapshot);
-    const modelState = React17.useSyncExternalStore(props.modelSource.subscribe, props.modelSource.getSnapshot, props.modelSource.getSnapshot);
-    const priorityState = props.prioritySource ? React17.useSyncExternalStore(props.prioritySource.subscribe, props.prioritySource.getSnapshot, props.prioritySource.getSnapshot) : null;
+    const fastState = React18.useSyncExternalStore(props.fastSource.subscribe, props.fastSource.getSnapshot, props.fastSource.getSnapshot);
+    const modelState = React18.useSyncExternalStore(props.modelSource.subscribe, props.modelSource.getSnapshot, props.modelSource.getSnapshot);
+    const priorityState = props.prioritySource ? React18.useSyncExternalStore(props.prioritySource.subscribe, props.prioritySource.getSnapshot, props.prioritySource.getSnapshot) : null;
     const selected = modelState?.next ?? null;
     const defaultSelection = useDefaultSelection(props.remote);
-    const sessionState = React17.useSyncExternalStore(props.sessionSource.subscribe, props.sessionSource.getSnapshot, props.sessionSource.getSnapshot);
+    const sessionState = React18.useSyncExternalStore(props.sessionSource.subscribe, props.sessionSource.getSnapshot, props.sessionSource.getSnapshot);
     const unavailable = Boolean(sessionState?.subagent) || sessionState?.removed === true;
     const allowed = props.useAccess("commands/execute");
     const wireProviders = Array.isArray(fastState?.providers) ? fastState.providers : [];
@@ -6066,8 +6416,8 @@ function createFast(require2) {
     const viewState = hasFastState(fastState) ? { enabled: fastState.enabled === true, providers } : priorityReady ? { enabled: false, providers } : fastState;
     const { visible, enabled, eligible, reason } = derivePresentation2(viewState, selected, defaultSelection);
     const ready = hasFastState(fastState);
-    const [loadFailed, setLoadFailed] = React17.useState(false);
-    React17.useEffect(() => {
+    const [loadFailed, setLoadFailed] = React18.useState(false);
+    React18.useEffect(() => {
       setLoadFailed(false);
       const retry = createHydrationRetry({
         attempt: props.ensureHydrated,
@@ -6077,17 +6427,17 @@ function createFast(require2) {
       void retry.start();
       return () => retry.dispose();
     }, [props.hydrationKey, props.sessionId, ready]);
-    const [interaction, setInteraction] = React17.useState({ enabled: null, pending: false });
-    const [error, setError] = React17.useState("");
-    const [notice, setNotice] = React17.useState("");
-    const alive = React17.useRef(true);
-    React17.useEffect(() => {
+    const [interaction, setInteraction] = React18.useState({ enabled: null, pending: false });
+    const [error, setError] = React18.useState("");
+    const [notice, setNotice] = React18.useState("");
+    const alive = React18.useRef(true);
+    React18.useEffect(() => {
       alive.current = true;
       return () => {
         alive.current = false;
       };
     }, []);
-    const controller = React17.useMemo(() => createToggleController2({
+    const controller = React18.useMemo(() => createToggleController2({
       initial: enabled,
       send: async (next) => {
         const result2 = await props.remote.commands.execute(
@@ -6109,13 +6459,13 @@ function createFast(require2) {
         });
       }
     }), [props.remote, props.sessionId]);
-    React17.useEffect(() => controller.sync(enabled), [controller, enabled]);
+    React18.useEffect(() => controller.sync(enabled), [controller, enabled]);
     const checked = eligible && (interaction.enabled ?? enabled);
     const provider = (selected ?? defaultSelection)?.provider ?? "";
     const providerName = priorityState?.names?.[provider];
     const providerLabel = typeof providerName === "string" && providerName && providerName !== provider ? providerName + " (" + provider + ")" : provider;
     const blocked = reason === "loading" ? props.t(loadFailed ? "loadError" : "loading") : reason === "needs-verification" ? props.t("unverified") + ": " + providerLabel : reason === "grant-missing" ? props.t("unsupportedProvider") + ": " + providerLabel : reason === "rejected" ? props.t("rejected") + ": " + providerLabel : !allowed ? props.t("access") : null;
-    React17.useEffect(() => {
+    React18.useEffect(() => {
       if (!blocked) setNotice("");
     }, [blocked]);
     if (!visible || unavailable) return null;
@@ -6129,11 +6479,11 @@ function createFast(require2) {
       controller.toggle().catch(() => {
       });
     }
-    return h16(
+    return h17(
       "span",
       { className: "local-openai-fast", title: blocked ?? props.t(checked ? "on" : "off") },
-      h16("style", null, css2),
-      h16("button", {
+      h17("style", null, css2),
+      h17("button", {
         type: "button",
         role: "switch",
         className: "local-openai-fast__button",
@@ -6142,10 +6492,10 @@ function createFast(require2) {
         "aria-busy": interaction.pending || reason === "loading" && !loadFailed,
         "aria-disabled": !allowed || !eligible,
         onClick: toggle
-      }, h16(
+      }, h17(
         "svg",
         { viewBox: "0 0 20 20", width: 14, height: 14, fill: "none", "aria-hidden": true },
-        h16("path", {
+        h17("path", {
           d: "M11.5 2 4 11h5l-.5 7L16 8h-5l.5-6Z",
           stroke: "currentColor",
           strokeWidth: 1.5,
@@ -6153,8 +6503,8 @@ function createFast(require2) {
           fill: checked ? "currentColor" : "none"
         })
       ), props.t("label")),
-      notice ? h16("span", { role: "status", className: "local-openai-fast__notice" }, notice) : null,
-      error ? h16("span", { role: "alert", className: "local-openai-fast__error" }, error) : null
+      notice ? h17("span", { role: "status", className: "local-openai-fast__notice" }, notice) : null,
+      error ? h17("span", { role: "alert", className: "local-openai-fast__error" }, error) : null
     );
   }
   return {
@@ -6166,8 +6516,8 @@ function createFast(require2) {
     HiddenFastCommand: HiddenFastCommand2,
     inject: ["slots", "locale", "sessions", "remote", "remote.commands", "remote.session"],
     apply(ctx) {
-      React17 = require2("react");
-      h16 = React17.createElement;
+      React18 = require2("react");
+      h17 = React18.createElement;
       ctx.effect(() => ctx.locale.register(NS2, dictionaries2));
       const prioritySource = createPrioritySource(ctx.connection);
       ctx.effect(() => {

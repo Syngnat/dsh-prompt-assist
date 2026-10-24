@@ -1,12 +1,13 @@
 /** Where the model-picker style preference lives: per-machine, applies immediately. */
 const KEY='lpa_model_picker_style';
 export const MODEL_STYLE_EVENT='lpa-model-style-change';
-/** 'claude' (this plugin's picker) or 'dsh' (the host's own picker). Anything else reads as claude. */
+/** 'dsh' (the host's own picker), 'claude' or 'zcode' (this plugin's pickers). Anything else reads as claude. */
+export const MODEL_STYLES=['dsh','claude','zcode'];
 export function readModelStylePref(){
- try{return localStorage.getItem(KEY)==='dsh'?'dsh':'claude';}catch{return 'claude';}
+ try{const value=localStorage.getItem(KEY);return MODEL_STYLES.includes(value)?value:'claude';}catch{return 'claude';}
 }
 export function writeModelStylePref(value){
- try{localStorage.setItem(KEY,value==='dsh'?'dsh':'claude');}catch{}
+ try{localStorage.setItem(KEY,MODEL_STYLES.includes(value)?value:'claude');}catch{}
  try{window.dispatchEvent(new Event(MODEL_STYLE_EVENT));}catch{}
 }
 export function onModelStyleChange(listener){

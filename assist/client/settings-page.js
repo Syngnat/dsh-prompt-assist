@@ -55,11 +55,17 @@ function FeatureSettings({feature,global,source,p}){
 }
 
 function ModelStyleCard({t}){
- const [claude,setClaude]=React.useState(readModelStylePref()==='claude');
+ const [style,setStyle]=React.useState(readModelStylePref());
+ const options=[['dsh','settings.modelStyleDsh','settings.modelStyleDshNote'],
+  ['claude','settings.modelStyleClaude','settings.modelStyleClaudeNote'],
+  ['zcode','settings.modelStyleZcode','settings.modelStyleZcodeNote']];
  return h('section',{className:'lpa-feature lpa-card','aria-label':t('settings.modelStyleSection')},
   h('header',{className:'lpa-card-header'},h('h2',{className:'lpa-feature-title lpa-card-title'},t('settings.modelStyleSection')),h('p',{className:'lpa-note'},t('settings.modelStyleHint'))),
-  h('label',{className:'lpa-check lpa-switch-row'},h('span',{className:'lpa-switch-copy'},h('strong',null,t('settings.modelStyleClaude')),h('span',{className:'lpa-note'},t('settings.modelStyleNote'))),
-   h('input',{className:'lpa-switch',type:'checkbox',checked:claude,onChange:e=>{setClaude(e.target.checked);writeModelStylePref(e.target.checked?'claude':'dsh');}})));
+  h('div',{className:'lpa-style-options',role:'radiogroup','aria-label':t('settings.modelStyleSection')},
+   options.map(([value,nameKey,noteKey])=>h('button',{key:value,type:'button',role:'radio','aria-checked':style===value,
+    className:'lpa-style-option'+(style===value?' lpa-style-option--active':''),
+    onClick:()=>{setStyle(value);writeModelStylePref(value);}},
+    h('span',{className:'lpa-style-option-name'},t(nameKey)),h('span',{className:'lpa-note'},t(noteKey))))));
 }
 export function SettingsPage(p){
  const target=React.useSyncExternalStore(p.targetSource.subscribe,p.targetSource.getSnapshot,p.targetSource.getSnapshot);

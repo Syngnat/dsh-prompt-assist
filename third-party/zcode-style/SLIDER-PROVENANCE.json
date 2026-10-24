@@ -1,0 +1,41 @@
+{
+  "package": "ZCode",
+  "version": "main @3c5b22764937",
+  "repository": "https://github.com/zai-org/ZCode",
+  "commit": "3c5b227649371507ddc4eb46ac5133afe6db1cab",
+  "retrievedOn": "2026-10-24",
+  "copyright": "Copyright 2026 Z.AI Co., Ltd",
+  "license": "Apache-2.0",
+  "licenseFile": "third-party/zcode-style/LICENSE",
+  "slider": {
+    "sourcePaths": [
+      "packages/ui/src/chat-input-toolbar/composer-thought-slider.css",
+      "packages/ui/src/chat-input-toolbar/ComposerModelMenu.tsx"
+    ],
+    "sources": [
+      {
+        "sourcePath": "packages/ui/src/chat-input-toolbar/ComposerModelMenu.tsx",
+        "gitBlobSha1": "a84c91e3f4c30141ee10e194f623ce8d90291962",
+        "sha256": "c69dc363e9a1e2d8d5ca4a7bf8a55652441fe17fc864ed20419c0e1ed31a4ba5",
+        "bytes": 17380
+      },
+      {
+        "sourcePath": "packages/ui/src/chat-input-toolbar/composer-thought-slider.css",
+        "gitBlobSha1": "13e1bea9c550cf5d0bdddf87bbe59348556315a4",
+        "sha256": "ff326ccc1acf1a113d508a595b2cd322a59be47d20fb59f9370c4b522086e598",
+        "bytes": 3699
+      }
+    ],
+    "vendoredPath": "assist/client/zcode-effort-style.js",
+    "visualPath": "assist/client/zcode-effort-visual.js",
+    "keptVerbatim": [
+      "EFFORT_BUBBLES seed table (12 bubbles)",
+      "HIGHSPEED_BUBBLES generation rule (32 items, duration (8+i%5)/10 s, delay -i*0.137 s)",
+      "isGlmHighspeedModel /glm/i + /highspeed|flashx/i display-name rule",
+      "fill width formula calc(14px + (100% - 28px) * progress)",
+      "120ms ease-out slider/fill transitions, 200ms gradient opacity",
+      "max-level oklch shorter-hue gradient and Highspeed oklab blue-to-purple gradient",
+      "prefers-reduced-motion block"
+    ]
+  }
+}

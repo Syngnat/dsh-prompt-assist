@@ -5,6 +5,7 @@ import {pinIdsForSections,readPinnedProviders,togglePinnedProvider,writePinnedPr
 import {pickerCss} from './model-picker-style.js';
 import {readModelStylePref,onModelStyleChange} from './model-style-pref.js';
 import {ClaudeEffortVisual} from './claude-effort-visual.js';
+import {ZcodeEffortVisual,isGlmHighspeedModel} from './zcode-effort-visual.js';
 
 const h=React.createElement;
 export const MODEL_SLOT='conversation.input.model';
@@ -148,7 +149,7 @@ function useFlyout(rowRef,panelRef,open){
 }
 const gestureKeys=['ArrowLeft','ArrowRight','ArrowUp','ArrowDown','Home','End','PageUp','PageDown'];
 /** Preview while dragging; submit once on release. A changed model/catalog/selection cancels the gesture. */
-export function EffortSlider({state,entry,disabled,t,submit,sliderRef}){
+export function EffortSlider({state,entry,disabled,t,submit,sliderRef,Visual=ClaudeEffortVisual,inputClass='lpa-ce-input',highspeed=false}){
  const rows=effortRows(entry,state.current,t('picker.providerDefault'),t);
  const active=rows.findIndex(r=>r.active);
  const token=JSON.stringify([state.current,rows.map(r=>r.effort)]);
@@ -174,8 +175,8 @@ export function EffortSlider({state,entry,disabled,t,submit,sliderRef}){
  const index=preview??Math.max(0,active),max=Math.max(0,rows.length-1);
  const position=interaction.current.token===token&&!interaction.current.cancelled?pointerPosition:null;
  const label=preview!==null?rows[index]?.label:active<0?t('picker.effortUnavailable'):rows[active].label;
- return h(ClaudeEffortVisual,{rows,index,position,dragging:position!==null,disabled:disabled||rows.length<2,unknown:active<0&&preview===null,label,t},
-  h('input',{ref:sliderRef,type:'range',className:'lpa-ce-input',min:0,max,step:1,value:index,disabled:disabled||rows.length<2,
+ return h(Visual,{rows,index,position,dragging:position!==null,disabled:disabled||rows.length<2,unknown:active<0&&preview===null,highspeed,label,t},
+  h('input',{ref:sliderRef,type:'range',className:inputClass,min:0,max,step:1,value:index,disabled:disabled||rows.length<2,
    'aria-label':t('picker.effort'),'aria-valuetext':label,
    onChange:e=>{const current=interaction.current;if(disabled||current.cancelled||(current.mode&&current.token!==token))return;const next=Number(e.currentTarget.value);gesture.current={token,index:next};setDraft(next);},
    onPointerDown:e=>{if(disabled||e.button!==0)return;interaction.current={mode:'pointer',token,cancelled:false};gesture.current={token,index:Number(e.currentTarget.value)};setPointerPosition(pointerRatio(e));e.currentTarget.setPointerCapture?.(e.pointerId);},
@@ -198,6 +199,7 @@ export function ModelPicker({locked,available,directory,load,select,t,getLocale=
  const [open,setOpen]=React.useState(false),[error,setError]=React.useState(null),[submitting,setSubmitting]=React.useState(false);
  const [pinsStored,setPinsStored]=React.useState(()=>readPinnedProviders(safeStorage()));
  const [otherOpen,setOtherOpen]=React.useState(false);
+ const [providerView,setProviderView]=React.useState(null);
  const [styleTick,refreshStyleTick]=React.useState(0);
  React.useEffect(()=>onModelStyleChange(()=>refreshStyleTick(v=>v+1)),[]);
  const trigger=React.useRef(null),panel=React.useRef(null),slider=React.useRef(null),rowRefs=React.useRef(new Map());
@@ -209,13 +211,20 @@ export function ModelPicker({locked,available,directory,load,select,t,getLocale=
  const busy=busyState(state)||submitting,position=usePlacement(trigger,panel,visible);
  React.useEffect(()=>{life.alive=true;setOpen(false);setError(null);setSubmitting(false);life.inflight=false;life.epoch++;return()=>{life.alive=false;life.epoch++;};},[directory,life]);
  React.useEffect(()=>{if(!available||locked){life.open=false;life.epoch++;setOpen(false);}},[available,locked,life]);
- const hide=(restore=false)=>{life.open=false;life.epoch++;setOpen(false);focusRequest.current=null;setOtherOpen(false);if(restore)trigger.current?.focus();};
+ const hide=(restore=false)=>{life.open=false;life.epoch++;setOpen(false);focusRequest.current=null;setOtherOpen(false);setProviderView(null);if(restore)trigger.current?.focus();};
  const togglePin=id=>{const {pins}=splitSections(state,pinsStored);const next=togglePinnedProvider(id,pins);setPinsStored(next);writePinnedProviders(next,safeStorage());};
  /** A short grace period lets the pointer travel from the row into the panel without flicker. */
  const cancelClose=()=>{if(closeTimer.current){clearTimeout(closeTimer.current);closeTimer.current=null;}};
  const scheduleClose=()=>{cancelClose();closeTimer.current=setTimeout(()=>{closeTimer.current=null;setOtherOpen(false);},160);};
  React.useEffect(()=>()=>cancelClose(),[]);
  const {hero,collapsed,pins}=splitSections(state,pinsStored);
+ const style=readModelStylePref(),zcode=style==='zcode';
+ const zcSections=sectionsOf(state);
+ const zcGroup=zcSections.find(g=>entry&&g.id===entry.group?.id)??zcSections[0]??null;
+ const zcCurrentKey=zcGroup?providerRowKey(zcGroup.id):null;
+ /** ZCode navigation is view-based: the provider list, or the viewed provider's models. */
+ const zcFocusOrder=()=>providerView?['zc-back',...zcSections.map(g=>providerRowKey(g.id))]:(zcGroup&&zcCurrentKey?[zcCurrentKey,...modelsOf(zcGroup).map(m=>modelRowId(zcGroup,m))]:[]);
+ const orderForFocus=()=>zcode?zcFocusOrder():focusOrderFor(state,pins,null);
  const focusRow=key=>{const node=rowRefs.current.get(key);if(node&&!node.disabled){modelFocus.current=key;node.focus({preventScroll:true});node.scrollIntoView({block:'nearest'});return true;}return false;};
  React.useLayoutEffect(()=>{
   const saved=focusRecovery.current;if(!saved||busy)return;focusRecovery.current=null;
@@ -226,10 +235,10 @@ export function ModelPicker({locked,available,directory,load,select,t,getLocale=
  },[busy,visible,directory,life]);
  React.useLayoutEffect(()=>{
   if(!visible||!position||!focusRequest.current)return;
-  const order=focusOrderFor(state,pins,null),wanted=focusRequest.current==='last'?order.at(-1):order[0];
+  const order=orderForFocus(),wanted=focusRequest.current==='last'?order.at(-1):order[0];
   if(focusRow(wanted)){focusRequest.current=null;return;}
   if(!loadingState(state)){panel.current?.querySelector('button:not(:disabled),input:not(:disabled)')?.focus();focusRequest.current=null;}
- },[visible,position,state,pins]);
+ },[visible,position,state,pins,providerView,zcode]);
  React.useLayoutEffect(()=>{if(!collapsed.length)setOtherOpen(false);},[collapsed.length]);
  React.useEffect(()=>{
   if(!visible)return;
@@ -270,12 +279,12 @@ export function ModelPicker({locked,available,directory,load,select,t,getLocale=
    const at=extras.indexOf(e.target);
    if(!e.shiftKey&&at+1<extras.length){e.preventDefault();extras[at+1].focus();return;}
    if(e.shiftKey&&at>0){e.preventDefault();extras[at-1].focus();return;}
-   if(e.shiftKey&&at===0&&focusOrderFor(state,pins,null).length){e.preventDefault();if(!focusRow(modelFocus.current))focusRow(focusOrderFor(state,pins,null)[0]);return;}
+   if(e.shiftKey&&at===0&&orderForFocus().length){e.preventDefault();if(!focusRow(modelFocus.current))focusRow(orderForFocus()[0]);return;}
    hide(true);return;
   }
   if(e.target===slider.current)return;
   if(['ArrowDown','ArrowUp','Home','End'].includes(e.key)){
-   e.preventDefault();e.stopPropagation();const order=focusOrderFor(state,pins,null);if(busy||!order.length)return;
+   e.preventDefault();e.stopPropagation();const order=orderForFocus();if(busy||!order.length)return;
    const key=document.activeElement?.getAttribute('data-picker-row'),at=order.indexOf(key);
    const next=e.key==='Home'?0:e.key==='End'?order.length-1:at<0?(e.key==='ArrowUp'?order.length-1:0):(at+(e.key==='ArrowDown'?1:-1)+order.length)%order.length;
    focusRow(order[next]);
@@ -310,6 +319,40 @@ export function ModelPicker({locked,available,directory,load,select,t,getLocale=
   h('button',{type:'button',className:'lpa-model-pin','data-provider-id':group.id,title:pins.includes(group.id)?t('picker.unpin'):t('picker.pin'),'aria-pressed':pins.includes(group.id),
    'aria-label':pins.includes(group.id)?t('picker.unpin'):t('picker.pin'),onClick:()=>togglePin(group.id)},
    h('span',{'aria-hidden':true},pins.includes(group.id)?t('picker.pinnedMark'):t('picker.pinMark'))));
+ const effortFrame=rows.length?h('div',{className:'lpa-effort-frame'},h(EffortSlider,{key:JSON.stringify([state.current?.provider,state.current?.model]),state,entry,disabled:busy||locked,t,submit,sliderRef:slider,
+  Visual:zcode?ZcodeEffortVisual:ClaudeEffortVisual,inputClass:zcode?'lpa-zt-input':'lpa-ce-input',
+  highspeed:zcode&&isGlmHighspeedModel(entry?.model?.name||entry?.model?.id||'')})):null;
+ const zcProviderRow=zcGroup?h('button',{key:zcCurrentKey,type:'button',role:'menuitem','aria-haspopup':'true','aria-expanded':providerView,
+  tabIndex:-1,disabled:busy||locked,'data-picker-row':zcCurrentKey,'data-provider-id':zcGroup.id,'aria-label':t('picker.providerSwitch'),
+  ref:node=>{if(node)rowRefs.current.set(zcCurrentKey,node);else rowRefs.current.delete(zcCurrentKey);},
+  className:'lpa-zt-row lpa-zt-provider-row',onFocus:()=>{modelFocus.current=zcCurrentKey;},
+  onClick:()=>setProviderView(open=>!open)},
+  h('span',{className:'lpa-zt-provider-name'},zcGroup.id==='deepseek-account'?t('picker.account'):zcGroup.name||zcGroup.id),
+  h('span',{className:'lpa-zt-provider-count'},t('picker.providerModels',{count:modelsOf(zcGroup).length})),
+  h('span',{className:'lpa-zt-provider-chevron','aria-hidden':true},'›')):null;
+ const zcProviders=providerView?h(React.Fragment,null,
+  h('button',{key:'zc-back',type:'button',role:'menuitem',tabIndex:-1,disabled:busy||locked,'data-picker-row':'zc-back',
+   className:'lpa-zt-row lpa-zt-back-row',
+   ref:node=>{if(node)rowRefs.current.set('zc-back',node);else rowRefs.current.delete('zc-back');},
+   onFocus:()=>{modelFocus.current='zc-back';},onClick:()=>setProviderView(null)},
+   h('span',{className:'lpa-zt-back-chevron','aria-hidden':true},'‹'),h('span',null,t('picker.back'))),
+  zcSections.map(group=>{const key=providerRowKey(group.id),checked=!!zcGroup&&group.id===zcGroup.id;
+   return h('button',{key,type:'button',role:'menuitemradio','aria-checked':checked,tabIndex:-1,disabled:busy||locked,
+    'data-picker-row':key,'data-provider-id':group.id,
+    ref:node=>{if(node)rowRefs.current.set(key,node);else rowRefs.current.delete(key);},
+    className:'lpa-zt-row lpa-zt-provider-option'+(checked?' lpa-zt-provider-option--current':''),
+    onFocus:()=>{modelFocus.current=key;},onClick:()=>setProviderView(null)},
+    h('span',{className:'lpa-zt-provider-name'},group.id==='deepseek-account'?t('picker.account'):group.name||group.id),
+    h('span',{className:'lpa-zt-provider-count'},t('picker.providerModels',{count:modelsOf(group).length})),
+    checked?h('span',{className:'lpa-model-check','aria-hidden':true},'✓'):null);})):null;
+ const zcodeBody=h(React.Fragment,null,
+  zcProviderRow,
+  h('div',{className:'lpa-model-scroll',role:'menu','aria-label':t('picker.models')},
+   providerView?zcProviders:(zcGroup?renderModels(zcGroup):h('p',{className:'lpa-model-status',role:'status'},loadingState(state)?t('picker.loading'):t('picker.empty')))),
+  failures.length?h('div',{className:'lpa-model-failures'},failures.map(f=>h('p',{key:f.id,className:'lpa-model-status',role:'status'},t(f.key,f.params)))):null,
+  effortFrame,
+  error?h('p',{className:'lpa-model-error',role:'alert'},t(error==='session/writer-held'?'picker.sessionInUse':'picker.failed')):null,
+  busy?h('span',{className:'lpa-model-status',role:'status'},t('picker.saving')):null);
 
  const otherRow=()=>{
   const key=providerRowKey(OTHER_MODELS),current=collapsed.some(group=>state.current?.provider===group.id);
@@ -340,24 +383,25 @@ export function ModelPicker({locked,available,directory,load,select,t,getLocale=
      'aria-label':t('picker.pin'),disabled:busy||locked,onClick:()=>togglePin(group.id)},
      h('span',{'aria-hidden':true},t('picker.pinMark')))),
    modelsOf(group).map(model=>renderModel(group,model)))))) : null;
- const menu=visible?h('div',{ref:panel,id:id+'-panel',className:'lpa-model-menu',role:'dialog','aria-label':t('picker.aria'),'aria-busy':busy||loadingState(state),
+ const menu=visible?h('div',{ref:panel,id:id+'-panel',className:'lpa-model-menu',role:'dialog','aria-label':t('picker.aria'),'aria-busy':busy||loadingState(state),'data-style':style,
   style:{...(position??{left:0,top:0,visibility:'hidden'}),...menuSurfaceVars()},onKeyDown},
+  zcode?zcodeBody:h(React.Fragment,null,
   h('div',{className:'lpa-model-scroll',role:'menu','aria-label':t('picker.models')},
    [...hero.map(group=>h('section',{key:group.id,className:'lpa-model-group',role:'group','aria-label':group.name||group.id},groupHeader(group),renderModels(group))),
     collapsed.length?h('div',{key:'more',className:'lpa-model-more'},otherRow()):null],
    !hero.length&&!collapsed.length?h('p',{className:'lpa-model-status',role:'status'},loadingState(state)?t('picker.loading'):t('picker.empty')):null),
   failures.length?h('div',{className:'lpa-model-failures'},failures.map(f=>h('p',{key:f.id,className:'lpa-model-status',role:'status'},t(f.key,f.params))),
    h('button',{type:'button',className:'lpa-model-retry',onClick:reload,disabled:busy||loadingState(state)},t('picker.retry'))):null,
-  rows.length?h('div',{className:'lpa-effort-frame'},h(EffortSlider,{key:JSON.stringify([state.current?.provider,state.current?.model]),state,entry,disabled:busy||locked,t,submit,sliderRef:slider})):null,
+  effortFrame,
   error?h('p',{className:'lpa-model-error',role:'alert'},t(error==='session/writer-held'?'picker.sessionInUse':'picker.failed')):null,
-  busy?h('span',{className:'lpa-model-status',role:'status'},t('picker.saving')):null):null;
+  busy?h('span',{className:'lpa-model-status',role:'status'},t('picker.saving')):null)):null;
  return h(React.Fragment,null,h('style',null,pickerCss),
-  h('div',{className:'lpa-model-root'},h('button',{ref:trigger,type:'button',className:'lpa-model-trigger',disabled:!!locked,
+  h('div',{className:'lpa-model-root','data-style':style},h('button',{ref:trigger,type:'button',className:'lpa-model-trigger',disabled:!!locked,
    'aria-haspopup':'dialog','aria-expanded':visible,'aria-controls':visible?id+'-panel':undefined,'aria-busy':busy,
    'aria-label':t('picker.ariaCurrent',{model:caption}),title:[caption,effort].filter(Boolean).join(' · '),
    onClick:()=>visible?hide(true):show(),onKeyDown:e=>{if(visible){onKeyDown(e);return;}if(e.key==='ArrowDown'||e.key==='ArrowUp'){e.preventDefault();show(e.key==='ArrowUp'?'last':'first');}}},
    h('span',{className:'lpa-model-trigger-icon','aria-hidden':true},'◇'),h('span',{className:'lpa-model-trigger-label'},caption),
    effort?h('span',{className:'lpa-model-trigger-effort'},effort):null,h('svg',{className:'lpa-model-chevron',viewBox:'0 0 16 16',width:12,height:12,fill:'none',stroke:'currentColor',strokeWidth:1.5,strokeLinecap:'round',strokeLinejoin:'round','aria-hidden':true,focusable:'false'},h('path',{d:'M4 6l4 4 4-4'})))),
   menu?createPortal(menu,document.body):null,
- flyoutPanel&&visible?createPortal(flyoutPanel,document.body):null);
+ flyoutPanel&&visible&&!zcode?createPortal(flyoutPanel,document.body):null);
 }

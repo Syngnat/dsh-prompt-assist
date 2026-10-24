@@ -30,6 +30,19 @@ node scripts/test-model-picker-motion.mjs
 node scripts/record-model-picker-motion.mjs
 ```
 
+## ZCode 样式（1.2.52）
+
+设置页的「模型选择器样式」从开关改为三选一：**DSH 默认**（宿主原生选择器）、**Claude Style**（上文的自定义选择器）、**ZCode**。偏好保存在浏览器 localStorage（键 lpa_model_picker_style），仅本机生效，切换立即生效。
+
+ZCode 样式按 [zai-org/ZCode](https://github.com/zai-org/ZCode)（Apache-2.0，固定提交 `3c5b227649371507ddc4eb46ac5133afe6db1cab`）移植：
+
+- 菜单在按钮上方展开（空间不足时回退到下方，与 Claude Style 相同的定位器）。
+- 供应商子菜单：菜单顶部一行显示当前供应商与模型数，点开（或按 Enter）后钻取到供应商列表；选择供应商只切换视图，**不会自动选中该供应商的任何模型**——这是与上游的有意差异，插件不允许替用户提交选择。Claude Style 的常驻与其余模型浮层仅属于 Claude Style，ZCode 用供应商导航替代。
+- 菜单底部为思考档滑块：24px 圆角轨道、绿色填充、28px 白色滑块头、逐档圆点；到达最强档时出现 oklch 最短色相路径的渐变与 12 颗白色气泡流动动效；GLM Highspeed/FlashX 模型（按显示名判定）改为蓝色填充与蓝→紫渐变、32 颗更快的气泡。原生 range 承担键盘与拖动，交互手势与 Claude Style 共用同一套实现。
+- `prefers-reduced-motion` 下隐藏气泡并去掉全部过渡。颜色使用 ZCode 的 Tailwind 色阶字面值（green-600/500、blue-500、purple-500），文字与表面沿用 DSH 的 `--dsw-alias-*` 主题 token，两套主题都可读。
+
+移植的逐文件来源、Git blob SHA-1、SHA-256 与改动清单见[来源记录](<../third-party/zcode-style/PROVENANCE.json>)与[滑块专项记录](<../third-party/zcode-style/SLIDER-PROVENANCE.json>)；完整 Apache-2.0 许可文本随包分发。
+
 ## 说明来源与范围
 
 内置说明原样取自 [Claude Style 0.16.3](https://github.com/Nwflower/dsh-claude-style/tree/33fc20b63d4cbd31cfec98d7952e3c53ec11c832)，固定提交 `33fc20b63d4cbd31cfec98d7952e3c53ec11c832`。数据文件 SHA-256 为 `d815694fb9540e60bc336939d5dc3f87121cc2ce102b14512f5c0492ea1cdd4b`；63 条模型家族规则、4 条档次规则及语言回退逻辑随客户端打包。完整 [MIT 许可](<../third-party/claude-style/LICENSE>)和[来源记录](<../third-party/claude-style/PROVENANCE.json>)随包分发。

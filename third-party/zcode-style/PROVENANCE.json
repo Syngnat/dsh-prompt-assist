@@ -1,0 +1,68 @@
+{
+  "package": "ZCode",
+  "version": "main @3c5b22764937",
+  "repository": "https://github.com/zai-org/ZCode",
+  "commit": "3c5b227649371507ddc4eb46ac5133afe6db1cab",
+  "retrievedOn": "2026-10-24",
+  "copyright": "Copyright 2026 Z.AI Co., Ltd",
+  "license": "Apache-2.0",
+  "licenseFile": "third-party/zcode-style/LICENSE",
+  "licenseSha256": "fa36dc312bc4946b1c22dba3c726ad8d3052b353f81424e7b997dbb3d9b40a49",
+  "sources": [
+    {
+      "sourcePath": "packages/ui/src/chat-input-toolbar/ComposerModelMenu.tsx",
+      "gitBlobSha1": "a84c91e3f4c30141ee10e194f623ce8d90291962",
+      "sha256": "c69dc363e9a1e2d8d5ca4a7bf8a55652441fe17fc864ed20419c0e1ed31a4ba5",
+      "bytes": 17380
+    },
+    {
+      "sourcePath": "packages/ui/src/chat-input-toolbar/composer-thought-slider.css",
+      "gitBlobSha1": "13e1bea9c550cf5d0bdddf87bbe59348556315a4",
+      "sha256": "ff326ccc1acf1a113d508a595b2cd322a59be47d20fb59f9370c4b522086e598",
+      "bytes": 3699
+    },
+    {
+      "sourcePath": "packages/ui/src/chat-input-toolbar/ComposerEffortHeading.tsx",
+      "gitBlobSha1": "f4446166d36d53f8a414e34c4be0cb2bd2510389",
+      "sha256": "260bf923ea462b5bdfbc6e7c5584d699e863567e296bf0aef8443bce2a6ec76f",
+      "bytes": 866
+    },
+    {
+      "sourcePath": "packages/ui/src/chat-input-toolbar/ComposerProviderMenu.tsx",
+      "gitBlobSha1": "37bc8043e3031c46af1e16530fb567a9dad9e116",
+      "sha256": "0e5dd600751fe3ccb902b756fc7bffefbeaaa7f7e822470c4f938ff8399a2660",
+      "bytes": 7461
+    },
+    {
+      "sourcePath": "packages/ui/src/ModelConfigSelect.tsx",
+      "gitBlobSha1": "7cce03e6eebfd0353322bdf94d1fb8106131a897",
+      "sha256": "d6e370414b7d7e13317315d710ee73a6bdc5b1fac42fc412463de21b83326629",
+      "bytes": 31462
+    }
+  ],
+  "vendored": [
+    {
+      "vendoredPath": "assist/client/zcode-effort-style.js",
+      "adaptedFrom": [
+        "packages/ui/src/chat-input-toolbar/composer-thought-slider.css"
+      ],
+      "modifications": "Class names renamed lpa-zt-*; Tailwind utilities rewritten as plain CSS; accent colors inlined as ZCode's Tailwind palette literals (green-600/500, blue-500, purple-500) with DSH --dsw-alias-* tokens for text/surface; structure, gradients, stops, thumb geometry, timings and the reduced-motion block are unchanged."
+    },
+    {
+      "vendoredPath": "assist/client/zcode-effort-visual.js",
+      "adaptedFrom": [
+        "packages/ui/src/chat-input-toolbar/ComposerModelMenu.tsx"
+      ],
+      "modifications": "EFFORT_BUBBLES seeds copied verbatim; HIGHSPEED_BUBBLES generator (32 items, /10s durations, -0.137s stagger) copied verbatim; isGlmHighspeedModel regex copied verbatim. Radix dropdown chrome replaced by the plugin's own picker chrome; per-stop hover uses the drag ratio instead of a separate pointermove listener; the effort heading drops the shortcut badge (the plugin defines none)."
+    },
+    {
+      "vendoredPath": "assist/client/model-picker.js",
+      "adaptedFrom": [
+        "packages/ui/src/chat-input-toolbar/ComposerModelMenu.tsx",
+        "packages/ui/src/chat-input-toolbar/ComposerProviderMenu.tsx",
+        "packages/ui/src/ModelConfigSelect.tsx"
+      ],
+      "modifications": "Menu-above placement, provider submenu (drill-down form of ComposerProviderMenu; wide-screen side submenu intentionally not ported) and the thought slider at the menu bottom. Provider selection navigates only; the plugin never auto-selects a model, unlike ZCode's onSelect."
+    }
+  ]
+}

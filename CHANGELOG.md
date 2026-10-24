@@ -2,6 +2,14 @@
 
 [English](<README.md>) | [简体中文](<README.zh-CN.md>)
 
+## 1.2.52 — 新增 ZCode 模型选择器样式 / ZCode picker style（2026-10-24）
+
+- 设置页的「模型选择器样式」从开关改为三选一：DSH 默认 / Claude Style / ZCode，偏好仍存本机（localStorage），切换立即生效。
+- 新增 ZCode 样式，按 zai-org/ZCode（Apache-2.0，固定提交 `3c5b227649371507ddc4eb46ac5133afe6db1cab`）移植：菜单在按钮上方展开；顶部供应商行点开钻取供应商列表（选择供应商只切换视图，不自动选中任何模型——与上游的有意差异）；菜单底部为思考档滑块：24px 圆角轨道、绿色填充、28px 白色滑块头、逐档圆点。
+- 推理强度动效完整移植：最强档 oklch 最短色相路径渐变 + 12 颗白色气泡流动（气泡种子逐项照搬）；GLM Highspeed/FlashX 按显示名判定改为蓝色填充、蓝→紫 oklab 渐变与 32 颗更快气泡；`prefers-reduced-motion` 下隐藏气泡、去掉过渡。思考档交互手势（拖拽/键盘/单次提交）与 Claude Style 共用同一实现。
+- 颜色使用 ZCode 的 Tailwind 色阶字面值，文字与表面沿用 DSH 的 `--dsw-alias-*` 主题 token，深浅两套主题都可读。第三方出处按 claude-style 先例随包分发：完整 Apache-2.0 许可、逐文件 Git blob SHA-1 与 SHA-256 的 [PROVENANCE](<third-party/zcode-style/PROVENANCE.json>) 与[滑块专项记录](<third-party/zcode-style/SLIDER-PROVENANCE.json>)。
+- 测试：新增 9 项 ZCode 契约断言（偏好三值往返、Highspeed 判定、气泡种子、视觉树状态属性、来源记录）；全套 1091 项离线测试通过；文档 `docs/model-picker.md` 增加 ZCode 章节。
+
 ## 1.2.51 — 修复空档位标签吞掉推理强度显示 / Effort label fallback（2026-10-24）
 
 - 修复触发器推理强度的标签回退：供应商目录可能给出无名自定义档位，语言包也可能把某个档位置空；此前活动行的空标签会因 `??` 不穿透空串而吞掉整个推理强度显示，即使会话还保存着可用档位。现在空标签被跳过，回退到会话保存的档位或目录元数据；目录里的空 id 档位项（`{id:""}`）也不再进入档位列表。
