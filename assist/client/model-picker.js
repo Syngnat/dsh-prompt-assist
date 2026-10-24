@@ -105,13 +105,21 @@ export function menuGeometry(trigger,size,viewport){
 }
 function usePlacement(trigger,panel,open){
  const [position,setPosition]=React.useState(null);
+ /** Frozen while open: a committed effort label widens the trigger and would otherwise move the menu. */
+ const frozen=React.useRef(null);
  React.useLayoutEffect(()=>{
-  if(!open){setPosition(null);return;}
+  if(!open){setPosition(null);frozen.current=null;return;}
   const place=()=>{
    const anchor=trigger.current,node=panel.current;if(!anchor||!node)return;
    const rect=anchor.getBoundingClientRect();
    if(!rect.width||!rect.height){setPosition(null);return;}
-   const next=menuGeometry(rect,{width:node.offsetWidth,height:node.offsetHeight},{width:innerWidth,height:innerHeight});
+   const live=frozen.current;
+   // Re-anchor only when the trigger really moved (scroll/resize). A width-only change from the
+   // effort label keeps the original anchor so the open menu does not jump sideways.
+   if(!live||Math.abs(rect.top-live.top)>.5||Math.abs(rect.bottom-live.bottom)>.5||Math.abs(rect.right-live.right)>.5)
+    frozen.current={top:rect.top,bottom:rect.bottom,right:rect.right,left:rect.left,width:rect.width,height:rect.height};
+   const placed=frozen.current;
+   const next=menuGeometry(placed,{width:node.offsetWidth,height:node.offsetHeight},{width:innerWidth,height:innerHeight});
    setPosition(old=>old?.left===next.left&&old?.top===next.top?old:next);
   };
   place();const observer=typeof ResizeObserver==='function'?new ResizeObserver(place):null;
@@ -166,8 +174,10 @@ export function EffortSlider({state,entry,disabled,t,submit,sliderRef,Visual=Cla
   if(disabled||cancelled||!g||g.token!==tokenRef.current||g.index===active)return;
   const selection=effortSelection(state.current,rows,g.index);if(!selection)return;
   const pending={index:g.index,token};setLanding(pending);
-  const settled=()=>{if(alive.current)setLanding(old=>old===pending?null:old);};
-  try{Promise.resolve(submit(selection,false)).then(settled,settled);}catch{settled();}
+  // Keep the target position until the committed state arrives: clearing it on acknowledgement
+  // snapped the visual back to the previous stop for the host round-trip (flicker + jump).
+  const settled=result=>{if(alive.current&&result?.ok!==true)setLanding(old=>old===pending?null:old);};
+  try{Promise.resolve(submit(selection,false,true)).then(settled,()=>settled({ok:false}));}catch{settled({ok:false});}
  };
  const pointerRatio=e=>{const node=e.currentTarget,rect=node.getBoundingClientRect(),scale=rect.width/Math.max(1,node.clientWidth);return Math.max(0,Math.min(1,(e.clientX-rect.left-8*scale)/Math.max(1,rect.width-16*scale)));};
  if(!rows.length)return null;
@@ -200,6 +210,8 @@ export function ModelPicker({locked,available,directory,load,select,t,getLocale=
  const [pinsStored,setPinsStored]=React.useState(()=>readPinnedProviders(safeStorage()));
  const [otherOpen,setOtherOpen]=React.useState(false);
  const [providerView,setProviderView]=React.useState(null);
+ /** True while an effort-only submit runs: the menu must not gain a progress row (it changed the popup height). */
+ const [silentSubmit,setSilentSubmit]=React.useState(false);
  const [styleTick,refreshStyleTick]=React.useState(0);
  React.useEffect(()=>onModelStyleChange(()=>refreshStyleTick(v=>v+1)),[]);
  const trigger=React.useRef(null),panel=React.useRef(null),slider=React.useRef(null),rowRefs=React.useRef(new Map());
@@ -248,9 +260,9 @@ export function ModelPicker({locked,available,directory,load,select,t,getLocale=
  },[visible]);
  const reload=()=>{const source=directory,epoch=life.epoch;const failed=()=>{if(life.alive&&life.source===source&&life.epoch===epoch&&life.open)setError('model-failed');};setError(null);try{Promise.resolve(load()).catch(failed);}catch{failed();}};
  const show=(focus='first')=>{if(locked||!available)return;life.epoch++;life.open=true;focusRequest.current=focus;setOpen(true);reload();};
- const submit=(selection,closeOnSuccess=true)=>{
+ const submit=(selection,closeOnSuccess=true,quiet=false)=>{
   if(locked||!available||life.inflight||busyState(directory.getSnapshot()))return;
-  life.inflight=true;setSubmitting(true);setError(null);
+  life.inflight=true;setSubmitting(true);setSilentSubmit(quiet);setError(null);
   const epoch=life.epoch,source=directory,operation=++life.operation;
   focusRecovery.current=panel.current?.contains(document.activeElement)?{source,epoch,node:document.activeElement}:null;
   return Promise.resolve().then(()=>select(selection)).then(result=>{
@@ -260,7 +272,7 @@ export function ModelPicker({locked,available,directory,load,select,t,getLocale=
     else if(closeOnSuccess)hide(true);
    }
   },()=>{if(life.alive&&life.source===source&&life.open&&life.epoch===epoch)setError('model-failed');}).finally(()=>{
-   if(life.alive&&life.source===source&&life.operation===operation){life.inflight=false;setSubmitting(false);}
+   if(life.alive&&life.source===source&&life.operation===operation){life.inflight=false;setSubmitting(false);setSilentSubmit(false);}
   });
  };
  const pick=(group,model)=>{
@@ -354,7 +366,7 @@ export function ModelPicker({locked,available,directory,load,select,t,getLocale=
   rows.length?zcDivider:null,
   effortFrame,
   error?h('p',{className:'lpa-model-error',role:'alert'},t(error==='session/writer-held'?'picker.sessionInUse':'picker.failed')):null,
-  busy?h('span',{className:'lpa-model-status',role:'status'},t('picker.saving')):null);
+  busy&&!silentSubmit?h('span',{className:'lpa-model-status',role:'status'},t('picker.saving')):null);
 
  const otherRow=()=>{
   const key=providerRowKey(OTHER_MODELS),current=collapsed.some(group=>state.current?.provider===group.id);
@@ -396,7 +408,7 @@ export function ModelPicker({locked,available,directory,load,select,t,getLocale=
    h('button',{type:'button',className:'lpa-model-retry',onClick:reload,disabled:busy||loadingState(state)},t('picker.retry'))):null,
   effortFrame,
   error?h('p',{className:'lpa-model-error',role:'alert'},t(error==='session/writer-held'?'picker.sessionInUse':'picker.failed')):null,
-  busy?h('span',{className:'lpa-model-status',role:'status'},t('picker.saving')):null)):null;
+  busy&&!silentSubmit?h('span',{className:'lpa-model-status',role:'status'},t('picker.saving')):null)):null;
  return h(React.Fragment,null,h('style',null,pickerCss),
   h('div',{className:'lpa-model-root','data-style':style},h('button',{ref:trigger,type:'button',className:'lpa-model-trigger',disabled:!!locked,
    'aria-haspopup':'dialog','aria-expanded':visible,'aria-controls':visible?id+'-panel':undefined,'aria-busy':busy,

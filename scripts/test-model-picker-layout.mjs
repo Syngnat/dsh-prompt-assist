@@ -157,6 +157,21 @@ export async function runRegression(page){
  await page.evaluate(()=>document.body.classList.remove('dark'));await settle(page);cases++;
  await page.evaluate(key=>window.__pinStorage.removeItem(key),PIN_KEY);
  await reset();await open();await page.evaluate(()=>window.fixture.unmount());await settle(page);assert.equal(await page.locator('.lpa-model-menu').count(),0);cases++;
+ // A committed effort level must not move the popup: the target stops immediately and the menu
+ // keeps its geometry while the deferred host acknowledgement arrives.
+ await reset({defer:true});await open();
+ const menuBox=async()=>page.evaluate(()=>{const r=document.querySelector('.lpa-model-menu').getBoundingClientRect();return {top:Math.round(r.top),left:Math.round(r.left)};});
+ const boxBefore=await menuBox(),rangeBox=await range().boundingBox();
+ await page.mouse.move(rangeBox.x+rangeBox.width*0.3,rangeBox.y+rangeBox.height/2);
+ await page.mouse.down();
+ await page.mouse.move(rangeBox.x+rangeBox.width-6,rangeBox.y+rangeBox.height/2,{steps:8});
+ await page.mouse.up();await settle(page);
+ const targetLevel=await range().inputValue();
+ assert.equal(targetLevel,'3','The slider must stop at the dragged level');cases++;
+ assert.deepEqual(await menuBox(),boxBefore,'The popup must not jump while the host acknowledges');cases++;
+ await page.evaluate(()=>window.fixture.resolve());await settle(page);
+ assert.equal(await range().inputValue(),targetLevel,'The slider must keep the committed level');cases++;
+ assert.deepEqual(await menuBox(),boxBefore,'The popup must not move after the acknowledgement');cases++;
  return {passed:true,cases,modelCalls:0};
 }
 if(process.argv[1]&&resolve(process.argv[1])===fileURLToPath(import.meta.url))console.log('Model picker fixture compiled:',fixtureBundle().length,'bytes; run scripts/run-model-picker-browser.mjs for real browser checks.');

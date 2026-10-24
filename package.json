@@ -1,6 +1,6 @@
 {
   "name": "@local/dsh-openai-fast",
-  "version": "1.2.55",
+  "version": "1.2.56",
   "private": true,
   "description": "Provides prompt enhancement, next-question suggestions, and Priority acceleration for authorized OpenAI and xAI routes, with profile-wide auxiliary model, reasoning, Fast and QA controls.",
   "type": "module",
@@ -10,13 +10,13 @@
     "node": ">=22"
   },
   "exports": {
-    ".": "./host-v1.2.55.js",
+    ".": "./host-v1.2.56.js",
     "./client": "./client-runtime.js",
     "./locale/*.json": "./locale/*.json",
     "./icon": "./icon.svg"
   },
   "files": [
-    "host-v1.2.55.js",
+    "host-v1.2.56.js",
     "client-runtime.js",
     "client.js",
     "cordis.patch.yml",

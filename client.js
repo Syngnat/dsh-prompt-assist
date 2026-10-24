@@ -5304,9 +5304,11 @@ function menuGeometry(trigger, size, viewport) {
 }
 function usePlacement(trigger, panel, open) {
   const [position, setPosition] = import_react16.default.useState(null);
+  const frozen = import_react16.default.useRef(null);
   import_react16.default.useLayoutEffect(() => {
     if (!open) {
       setPosition(null);
+      frozen.current = null;
       return;
     }
     const place = () => {
@@ -5317,7 +5319,11 @@ function usePlacement(trigger, panel, open) {
         setPosition(null);
         return;
       }
-      const next = menuGeometry(rect, { width: node.offsetWidth, height: node.offsetHeight }, { width: innerWidth, height: innerHeight });
+      const live = frozen.current;
+      if (!live || Math.abs(rect.top - live.top) > 0.5 || Math.abs(rect.bottom - live.bottom) > 0.5 || Math.abs(rect.right - live.right) > 0.5)
+        frozen.current = { top: rect.top, bottom: rect.bottom, right: rect.right, left: rect.left, width: rect.width, height: rect.height };
+      const placed = frozen.current;
+      const next = menuGeometry(placed, { width: node.offsetWidth, height: node.offsetHeight }, { width: innerWidth, height: innerHeight });
       setPosition((old) => old?.left === next.left && old?.top === next.top ? old : next);
     };
     place();
@@ -5409,13 +5415,13 @@ function EffortSlider({ state, entry, disabled, t, submit, sliderRef, Visual = C
     if (!selection) return;
     const pending = { index: g.index, token };
     setLanding(pending);
-    const settled = () => {
-      if (alive.current) setLanding((old) => old === pending ? null : old);
+    const settled = (result2) => {
+      if (alive.current && result2?.ok !== true) setLanding((old) => old === pending ? null : old);
     };
     try {
-      Promise.resolve(submit(selection, false)).then(settled, settled);
+      Promise.resolve(submit(selection, false, true)).then(settled, () => settled({ ok: false }));
     } catch {
-      settled();
+      settled({ ok: false });
     }
   };
   const pointerRatio = (e) => {
@@ -5484,6 +5490,7 @@ function ModelPicker({ locked, available, directory, load, select, t, getLocale 
   const [pinsStored, setPinsStored] = import_react16.default.useState(() => readPinnedProviders(safeStorage()));
   const [otherOpen, setOtherOpen] = import_react16.default.useState(false);
   const [providerView, setProviderView] = import_react16.default.useState(null);
+  const [silentSubmit, setSilentSubmit] = import_react16.default.useState(false);
   const [styleTick, refreshStyleTick] = import_react16.default.useState(0);
   import_react16.default.useEffect(() => onModelStyleChange(() => refreshStyleTick((v) => v + 1)), []);
   const trigger = import_react16.default.useRef(null), panel = import_react16.default.useRef(null), slider = import_react16.default.useRef(null), rowRefs = import_react16.default.useRef(/* @__PURE__ */ new Map());
@@ -5618,10 +5625,11 @@ function ModelPicker({ locked, available, directory, load, select, t, getLocale 
     setOpen(true);
     reload();
   };
-  const submit = (selection, closeOnSuccess = true) => {
+  const submit = (selection, closeOnSuccess = true, quiet = false) => {
     if (locked || !available || life.inflight || busyState(directory.getSnapshot())) return;
     life.inflight = true;
     setSubmitting(true);
+    setSilentSubmit(quiet);
     setError(null);
     const epoch = life.epoch, source = directory, operation = ++life.operation;
     focusRecovery.current = panel.current?.contains(document.activeElement) ? { source, epoch, node: document.activeElement } : null;
@@ -5637,6 +5645,7 @@ function ModelPicker({ locked, available, directory, load, select, t, getLocale 
       if (life.alive && life.source === source && life.operation === operation) {
         life.inflight = false;
         setSubmitting(false);
+        setSilentSubmit(false);
       }
     });
   };
@@ -5876,7 +5885,7 @@ function ModelPicker({ locked, available, directory, load, select, t, getLocale 
     rows.length ? zcDivider : null,
     effortFrame,
     error ? h15("p", { className: "lpa-model-error", role: "alert" }, t(error === "session/writer-held" ? "picker.sessionInUse" : "picker.failed")) : null,
-    busy ? h15("span", { className: "lpa-model-status", role: "status" }, t("picker.saving")) : null
+    busy && !silentSubmit ? h15("span", { className: "lpa-model-status", role: "status" }, t("picker.saving")) : null
   );
   const otherRow = () => {
     const key = providerRowKey(OTHER_MODELS), current = collapsed.some((group) => state.current?.provider === group.id);
@@ -6004,7 +6013,7 @@ function ModelPicker({ locked, available, directory, load, select, t, getLocale 
       ) : null,
       effortFrame,
       error ? h15("p", { className: "lpa-model-error", role: "alert" }, t(error === "session/writer-held" ? "picker.sessionInUse" : "picker.failed")) : null,
-      busy ? h15("span", { className: "lpa-model-status", role: "status" }, t("picker.saving")) : null
+      busy && !silentSubmit ? h15("span", { className: "lpa-model-status", role: "status" }, t("picker.saving")) : null
     )
   ) : null;
   return h15(
