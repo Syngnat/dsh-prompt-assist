@@ -112,3 +112,13 @@ test("sections render as a tab list with one visible panel", async () => {
   assert.equal((html.match(/role="tabpanel"[^>]*hidden=""/g) ?? []).length, 2);
   assert.match(html, /id="lpa-panel-assist"[^>]*>(?![sS]*hidden)/);
 });
+
+test("section tabs are bordered pills and keep token-only colours", async () => {
+  const {css} = await import("../assist/client/style.js");
+  // The built-in Computer use page draws each tab as an outlined pill; ours must match.
+  assert.match(css, /\.lpa-nav-item\{[^}]*border:1px solid var\(--dsw-alias-border-l2/);
+  assert.match(css, /\.lpa-nav-item\{[^}]*border-radius:10px/);
+  assert.match(css, /\.lpa-nav-item--active\{[^}]*background:var\(--dsw-alias-bg-layer-2\)/);
+  const navRules = css.slice(css.indexOf(".lpa-nav-item{"));
+  assert.doesNotMatch(navRules.slice(0, navRules.indexOf(".lpa-settings-panels")), /#[a-fA-F0-9]{3,8}\b|rgba?\(/);
+});
