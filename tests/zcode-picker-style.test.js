@@ -117,3 +117,14 @@ test('menu surface follows the DSH theme token and never scrolls horizontally',(
  assert.match(pickerCss,/\.lpa-model-menu\[data-style='zcode'\] \.lpa-model-option\{[^}]*width:calc\(100% - 4px\)/);
  assert.doesNotMatch(pickerCss,/lpa-model-menu\{[^}]*bg-overlay/);
 });
+
+test('zcode menu wires the ZCode-style region dividers',async()=>{
+ const fsp=await import('node:fs/promises');
+ const src=await fsp.readFile(new URL('../assist/client/model-picker.js',import.meta.url),'utf8');
+ assert.match(pickerCss,/\.lpa-model-menu\[data-style='zcode'\] \.lpa-zt-divider\{[^}]*height:1px/);
+ assert.match(pickerCss,/\.lpa-zt-divider\{[^}]*10%,transparent\)/);
+ // two literal divider elements (under the provider row and under the submenu back row);
+ // the pre-effort divider reuses one element, so the class string appears exactly twice.
+ assert.equal((src.match(/className:'lpa-zt-divider'/g)||[]).length,2);
+ assert.match(src,/rows\.length\?zcDivider:null/);
+});

@@ -330,13 +330,12 @@ export function ModelPicker({locked,available,directory,load,select,t,getLocale=
   h('span',{className:'lpa-zt-provider-name'},zcGroup.id==='deepseek-account'?t('picker.account'):zcGroup.name||zcGroup.id),
   h('span',{className:'lpa-zt-provider-count'},t('picker.providerModels',{count:modelsOf(zcGroup).length})),
   h('span',{className:'lpa-zt-provider-chevron','aria-hidden':true},'›')):null;
- const zcProviders=providerView?h(React.Fragment,null,
-  h('button',{key:'zc-back',type:'button',role:'menuitem',tabIndex:-1,disabled:busy||locked,'data-picker-row':'zc-back',
-   className:'lpa-zt-row lpa-zt-back-row',
-   ref:node=>{if(node)rowRefs.current.set('zc-back',node);else rowRefs.current.delete('zc-back');},
-   onFocus:()=>{modelFocus.current='zc-back';},onClick:()=>setProviderView(null)},
-   h('span',{className:'lpa-zt-back-chevron','aria-hidden':true},'‹'),h('span',null,t('picker.back'))),
-  zcSections.map(group=>{const key=providerRowKey(group.id),checked=!!zcGroup&&group.id===zcGroup.id;
+ const zcBackRow=h('button',{key:'zc-back',type:'button',role:'menuitem',tabIndex:-1,disabled:busy||locked,'data-picker-row':'zc-back',
+  className:'lpa-zt-row lpa-zt-back-row',
+  ref:node=>{if(node)rowRefs.current.set('zc-back',node);else rowRefs.current.delete('zc-back');},
+  onFocus:()=>{modelFocus.current='zc-back';},onClick:()=>setProviderView(null)},
+  h('span',{className:'lpa-zt-back-chevron','aria-hidden':true},'‹'),h('span',null,t('picker.back')));
+ const zcProviders=providerView?zcSections.map(group=>{const key=providerRowKey(group.id),checked=!!zcGroup&&group.id===zcGroup.id;
    return h('button',{key,type:'button',role:'menuitemradio','aria-checked':checked,tabIndex:-1,disabled:busy||locked,
     'data-picker-row':key,'data-provider-id':group.id,
     ref:node=>{if(node)rowRefs.current.set(key,node);else rowRefs.current.delete(key);},
@@ -344,12 +343,15 @@ export function ModelPicker({locked,available,directory,load,select,t,getLocale=
     onFocus:()=>{modelFocus.current=key;},onClick:()=>setProviderView(null)},
     h('span',{className:'lpa-zt-provider-name'},group.id==='deepseek-account'?t('picker.account'):group.name||group.id),
     h('span',{className:'lpa-zt-provider-count'},t('picker.providerModels',{count:modelsOf(group).length})),
-    checked?h('span',{className:'lpa-model-check','aria-hidden':true},'✓'):null);})):null;
+    checked?h('span',{className:'lpa-model-check','aria-hidden':true},'✓'):null);}):null;
+ const zcDivider=h('div',{className:'lpa-zt-divider','aria-hidden':true});
  const zcodeBody=h(React.Fragment,null,
   zcProviderRow,
+  zcDivider,
   h('div',{className:'lpa-model-scroll',role:'menu','aria-label':t('picker.models')},
-   providerView?zcProviders:(zcGroup?renderModels(zcGroup):h('p',{className:'lpa-model-status',role:'status'},loadingState(state)?t('picker.loading'):t('picker.empty')))),
+   providerView?h(React.Fragment,null,zcBackRow,h('div',{className:'lpa-zt-divider','aria-hidden':true}),zcProviders):(zcGroup?renderModels(zcGroup):h('p',{className:'lpa-model-status',role:'status'},loadingState(state)?t('picker.loading'):t('picker.empty')))),
   failures.length?h('div',{className:'lpa-model-failures'},failures.map(f=>h('p',{key:f.id,className:'lpa-model-status',role:'status'},t(f.key,f.params)))):null,
+  rows.length?zcDivider:null,
   effortFrame,
   error?h('p',{className:'lpa-model-error',role:'alert'},t(error==='session/writer-held'?'picker.sessionInUse':'picker.failed')):null,
   busy?h('span',{className:'lpa-model-status',role:'status'},t('picker.saving')):null);

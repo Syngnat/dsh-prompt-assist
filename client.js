@@ -4344,6 +4344,8 @@ var init_model_picker_style = __esm({
 .lpa-model-menu[data-style='zcode'] .lpa-model-option{min-height:32px;width:calc(100% - 4px);margin:0 2px;padding:0 8px;border-radius:8px}
 .lpa-model-menu[data-style='zcode'] .lpa-model-option:hover:not(:disabled){background:color-mix(in srgb,var(--dsw-alias-label-primary) 6%,transparent)}
 .lpa-model-menu[data-style='zcode'] .lpa-model-option--current{background:color-mix(in srgb,var(--dsw-alias-label-primary) 8%,transparent)}
+/* ZCode separates menu regions with a hairline of 10% foreground (--color-border); full-bleed like its DropdownMenuSeparator. */
+.lpa-model-menu[data-style='zcode'] .lpa-zt-divider{flex:none;height:1px;margin:4px -6px;background:color-mix(in srgb,var(--dsw-alias-label-primary) 10%,transparent)}
 .lpa-zt-row{display:flex;align-items:center;gap:8px;box-sizing:border-box;width:calc(100% - 4px);min-height:32px;margin:0 2px 2px;padding:0 8px;border:0;border-radius:8px;background:transparent;color:var(--dsw-alias-label-primary);font:inherit;font-size:13px;cursor:pointer;text-align:start}
 .lpa-zt-row:hover:not(:disabled){background:color-mix(in srgb,var(--dsw-alias-label-primary) 6%,transparent)}
 .lpa-zt-row:focus-visible{outline:2px solid var(--dsw-alias-brand-primary);outline-offset:1px}
@@ -5807,70 +5809,69 @@ function ModelPicker({ locked, available, directory, load, select, t, getLocale 
     h15("span", { className: "lpa-zt-provider-count" }, t("picker.providerModels", { count: modelsOf(zcGroup).length })),
     h15("span", { className: "lpa-zt-provider-chevron", "aria-hidden": true }, "\u203A")
   ) : null;
-  const zcProviders = providerView ? h15(
-    import_react16.default.Fragment,
-    null,
-    h15(
+  const zcBackRow = h15(
+    "button",
+    {
+      key: "zc-back",
+      type: "button",
+      role: "menuitem",
+      tabIndex: -1,
+      disabled: busy || locked,
+      "data-picker-row": "zc-back",
+      className: "lpa-zt-row lpa-zt-back-row",
+      ref: (node) => {
+        if (node) rowRefs.current.set("zc-back", node);
+        else rowRefs.current.delete("zc-back");
+      },
+      onFocus: () => {
+        modelFocus.current = "zc-back";
+      },
+      onClick: () => setProviderView(null)
+    },
+    h15("span", { className: "lpa-zt-back-chevron", "aria-hidden": true }, "\u2039"),
+    h15("span", null, t("picker.back"))
+  );
+  const zcProviders = providerView ? zcSections.map((group) => {
+    const key = providerRowKey(group.id), checked = !!zcGroup && group.id === zcGroup.id;
+    return h15(
       "button",
       {
-        key: "zc-back",
+        key,
         type: "button",
-        role: "menuitem",
+        role: "menuitemradio",
+        "aria-checked": checked,
         tabIndex: -1,
         disabled: busy || locked,
-        "data-picker-row": "zc-back",
-        className: "lpa-zt-row lpa-zt-back-row",
+        "data-picker-row": key,
+        "data-provider-id": group.id,
         ref: (node) => {
-          if (node) rowRefs.current.set("zc-back", node);
-          else rowRefs.current.delete("zc-back");
+          if (node) rowRefs.current.set(key, node);
+          else rowRefs.current.delete(key);
         },
+        className: "lpa-zt-row lpa-zt-provider-option" + (checked ? " lpa-zt-provider-option--current" : ""),
         onFocus: () => {
-          modelFocus.current = "zc-back";
+          modelFocus.current = key;
         },
         onClick: () => setProviderView(null)
       },
-      h15("span", { className: "lpa-zt-back-chevron", "aria-hidden": true }, "\u2039"),
-      h15("span", null, t("picker.back"))
-    ),
-    zcSections.map((group) => {
-      const key = providerRowKey(group.id), checked = !!zcGroup && group.id === zcGroup.id;
-      return h15(
-        "button",
-        {
-          key,
-          type: "button",
-          role: "menuitemradio",
-          "aria-checked": checked,
-          tabIndex: -1,
-          disabled: busy || locked,
-          "data-picker-row": key,
-          "data-provider-id": group.id,
-          ref: (node) => {
-            if (node) rowRefs.current.set(key, node);
-            else rowRefs.current.delete(key);
-          },
-          className: "lpa-zt-row lpa-zt-provider-option" + (checked ? " lpa-zt-provider-option--current" : ""),
-          onFocus: () => {
-            modelFocus.current = key;
-          },
-          onClick: () => setProviderView(null)
-        },
-        h15("span", { className: "lpa-zt-provider-name" }, group.id === "deepseek-account" ? t("picker.account") : group.name || group.id),
-        h15("span", { className: "lpa-zt-provider-count" }, t("picker.providerModels", { count: modelsOf(group).length })),
-        checked ? h15("span", { className: "lpa-model-check", "aria-hidden": true }, "\u2713") : null
-      );
-    })
-  ) : null;
+      h15("span", { className: "lpa-zt-provider-name" }, group.id === "deepseek-account" ? t("picker.account") : group.name || group.id),
+      h15("span", { className: "lpa-zt-provider-count" }, t("picker.providerModels", { count: modelsOf(group).length })),
+      checked ? h15("span", { className: "lpa-model-check", "aria-hidden": true }, "\u2713") : null
+    );
+  }) : null;
+  const zcDivider = h15("div", { className: "lpa-zt-divider", "aria-hidden": true });
   const zcodeBody = h15(
     import_react16.default.Fragment,
     null,
     zcProviderRow,
+    zcDivider,
     h15(
       "div",
       { className: "lpa-model-scroll", role: "menu", "aria-label": t("picker.models") },
-      providerView ? zcProviders : zcGroup ? renderModels(zcGroup) : h15("p", { className: "lpa-model-status", role: "status" }, loadingState(state) ? t("picker.loading") : t("picker.empty"))
+      providerView ? h15(import_react16.default.Fragment, null, zcBackRow, h15("div", { className: "lpa-zt-divider", "aria-hidden": true }), zcProviders) : zcGroup ? renderModels(zcGroup) : h15("p", { className: "lpa-model-status", role: "status" }, loadingState(state) ? t("picker.loading") : t("picker.empty"))
     ),
     failures.length ? h15("div", { className: "lpa-model-failures" }, failures.map((f) => h15("p", { key: f.id, className: "lpa-model-status", role: "status" }, t(f.key, f.params)))) : null,
+    rows.length ? zcDivider : null,
     effortFrame,
     error ? h15("p", { className: "lpa-model-error", role: "alert" }, t(error === "session/writer-held" ? "picker.sessionInUse" : "picker.failed")) : null,
     busy ? h15("span", { className: "lpa-model-status", role: "status" }, t("picker.saving")) : null
