@@ -2,6 +2,13 @@
 
 [English](<README.md>) | [简体中文](<README.zh-CN.md>)
 
+## 1.2.66 — Codex 式收尾契约注入 / Final-answer contract（2026-10-24）
+
+- 新增 `assist/final-answer-contract.js`：在 `agent/pre-step` 把 `decision.kind === 'enter'` 的步骤追加一条 `role:'user'` 的 durable `<system-reminder>` 消息，携带最终答复契约（只给结论、默认 ≤10 行、要点 4–6 条按重要性排序、结尾 ≤3 个下一步；过程进度压到 8–10 词）。这是「梁神模式」硬白名单过滤 system-prompt section 后唯一能到达模型的通道。
+- 每会话只注入一次（WeakMap 记 session 对象 + Set 记 sessionId）；`session/event` 的 `compaction/end` 清标记，压缩后自动重注；`kind !== 'enter'` 原样放行，空 decision 不注入。
+- 开关：`enablement` 记录新增可选 `finalAnswer`（schema 仍 version 1，旧记录缺省为开，无需迁移），`set-final-answer` 动作与设置页「全局功能开关」第三个开关走同一条 revision CAS；`host-source.js` 以活取值接入，切换下个 step 即生效。`config.finalAnswerContract === false` 仍是硬开关。
+- 测试：新增 5 项契约用例（契约原文、reject 放行、每会话一次、压缩后重注、空决策与开关）+ 存储开关用例；全套 1104 项离线测试通过。
+
 ## 1.2.65 — 分区标签点了没反应 / Hidden panels（2026-10-24）
 
 - 修复分区标签切换无效果、所有分区仍然平铺：面板以 `hidden` 属性隐藏，但作者样式 `.lpa-settings-panel{display:grid}` 覆盖了浏览器默认的 `[hidden]{display:none}`，于是四个面板始终同时可见，点标签只改了选中态。现在补上 `.lpa-settings-panel[hidden]{display:none}`，切换即刻生效。
