@@ -104,6 +104,7 @@ export const css = `
 .lpa-nav-item--active{background:var(--dsw-alias-bg-layer-2);color:var(--dsw-alias-label-primary);font-weight:500;border-color:var(--dsw-alias-border-l2,var(--dsw-alias-border-l1))}
 .lpa-settings-panels{display:grid;gap:16px;min-width:0}
 .lpa-settings-panel{display:grid;gap:16px;min-width:0}
+.lpa-settings-panel[hidden]{display:none}
 .lpa-card{box-sizing:border-box;display:grid;gap:16px;min-width:0;margin:0;padding:20px;border:1px solid var(--dsw-alias-border-l1);border-radius:12px;background:var(--dsw-alias-bg-layer-1)}
 .lpa-card-header{display:grid;gap:6px;min-width:0}.lpa-card-title{font:inherit;font-size:16px;font-weight:650;line-height:1.4;color:var(--dsw-alias-label-primary);margin:0}
 .lpa-card .lpa-note{font-size:12px;line-height:1.6;color:var(--dsw-alias-label-secondary)}.lpa-card .lpa-field>strong{font-size:12px;font-weight:600;color:var(--dsw-alias-label-secondary)}

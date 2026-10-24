@@ -2,6 +2,11 @@
 
 [English](<README.md>) | [简体中文](<README.zh-CN.md>)
 
+## 1.2.65 — 分区标签点了没反应 / Hidden panels（2026-10-24）
+
+- 修复分区标签切换无效果、所有分区仍然平铺：面板以 `hidden` 属性隐藏，但作者样式 `.lpa-settings-panel{display:grid}` 覆盖了浏览器默认的 `[hidden]{display:none}`，于是四个面板始终同时可见，点标签只改了选中态。现在补上 `.lpa-settings-panel[hidden]{display:none}`，切换即刻生效。
+- 测试：新增「隐藏面板必须有 display:none」与「assist 面板不带 hidden、update 面板带 hidden」断言；全套 1098 项离线测试通过。
+
 ## 1.2.64 — 新会话不再出现空白的模型触发器 / Trigger keeps its label（2026-10-24）
 
 - 修复新会话里模型触发器变成空方框、只显示占位菱形：触发器文字与推理强度的可见性原本跟随宿主的 `--dsh-composer-model-text-display` 与 `--dsh-composer-model-icon-display`，宿主在无当前模型时切到图标模式，于是模型名和档位一起被藏掉。现在触发器自己决定显示——模型名与推理强度始终可见，占位菱形始终隐藏。
