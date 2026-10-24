@@ -94,7 +94,8 @@ export function SettingsPage(p){
  const select=key=>{setStored(key);writeSection(key);};
  const moveFocus=event=>{
   const keys=sections.map(section=>section.key),index=keys.indexOf(active);
-  const next=event.key==='Home'?0:event.key==='End'?keys.length-1:event.key==='ArrowDown'?Math.min(keys.length-1,index+1):event.key==='ArrowUp'?Math.max(0,index-1):-1;
+  const forward=event.key==='ArrowRight'||event.key==='ArrowDown',back=event.key==='ArrowLeft'||event.key==='ArrowUp';
+  const next=event.key==='Home'?0:event.key==='End'?keys.length-1:forward?Math.min(keys.length-1,index+1):back?Math.max(0,index-1):-1;
   if(next<0||next===index)return;
   event.preventDefault();select(keys[next]);
   const buttons=nav.current?.querySelectorAll('[role=tab]');buttons?.[next]?.focus();
@@ -104,7 +105,7 @@ export function SettingsPage(p){
    h('div',{className:'lpa-settings-heading'},h('h1',null,p.t('title')),h('p',{className:'lpa-note lpa-settings-subtitle'},p.t('settings.subtitle'))),
    p.returnToConversation?h('button',{type:'button',className:'lpa-button',onClick:p.returnToConversation},p.t('returnConversation')):null),
   h('div',{className:'lpa-settings-layout'},
-   h('nav',{ref:nav,className:'lpa-settings-nav',role:'tablist','aria-orientation':'vertical','aria-label':p.t('settings.sectionNav'),onKeyDown:moveFocus},
+   h('nav',{ref:nav,className:'lpa-settings-nav',role:'tablist','aria-orientation':'horizontal','aria-label':p.t('settings.sectionNav'),onKeyDown:moveFocus},
     sections.map(section=>h('button',{key:section.key,type:'button',role:'tab',id:'lpa-tab-'+section.key,'aria-selected':active===section.key,
      'aria-controls':'lpa-panel-'+section.key,tabIndex:active===section.key?0:-1,
      className:'lpa-nav-item'+(active===section.key?' lpa-nav-item--active':''),onClick:()=>select(section.key)},p.t(section.label)))),

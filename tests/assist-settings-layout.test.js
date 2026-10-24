@@ -104,7 +104,7 @@ test("sections render as a tab list with one visible panel", async () => {
   const target = {sessionId: null};
   const html = renderToStaticMarkup(React.createElement(SettingsPage, {t: key => key,
     targetSource: {getSnapshot: () => target, subscribe: () => () => {}}, returnToConversation() {}}));
-  assert.match(html, /<nav class="lpa-settings-nav" role="tablist" aria-orientation="vertical"/);
+  assert.match(html, /<nav class="lpa-settings-nav" role="tablist" aria-orientation="horizontal"/);
   assert.equal((html.match(/role="tab"/g) ?? []).length, 3, "assist, style and update tabs without a Priority connection");
   assert.equal((html.match(/aria-selected="true"/g) ?? []).length, 1);
   assert.equal((html.match(/role="tabpanel"/g) ?? []).length, 3);
