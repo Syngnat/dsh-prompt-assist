@@ -183,6 +183,14 @@ export async function runRegression(page){
    textLeft(document.querySelector('.lpa-ce-label')),left(document.querySelector('.lpa-ce-track'))];
  });
  assert.equal(new Set(lefts).size,1,'All menu regions must share one left inset: '+JSON.stringify(lefts));cases++;
+ // The host can put its own model button into icon-only mode; this trigger must still show the
+ // model name instead of collapsing into an empty pill with just the placeholder glyph.
+ await reset();await page.evaluate(()=>document.documentElement.style.setProperty('--dsh-composer-model-text-display','none'));
+ await page.evaluate(()=>document.documentElement.style.setProperty('--dsh-composer-model-icon-display','inline'));await settle(page);
+ const labelWidth=await page.evaluate(()=>{const el=document.querySelector('.lpa-model-trigger-label');return el?Math.round(el.getBoundingClientRect().width):0;});
+ assert.ok(labelWidth>0,'The trigger label must stay visible in the host icon-only mode: '+labelWidth);cases++;
+ await page.evaluate(()=>{document.documentElement.style.removeProperty('--dsh-composer-model-text-display');
+  document.documentElement.style.removeProperty('--dsh-composer-model-icon-display');});await settle(page);
  return {passed:true,cases,modelCalls:0};
 }
 if(process.argv[1]&&resolve(process.argv[1])===fileURLToPath(import.meta.url))console.log('Model picker fixture compiled:',fixtureBundle().length,'bytes; run scripts/run-model-picker-browser.mjs for real browser checks.');

@@ -4441,9 +4441,9 @@ var init_model_picker_style = __esm({
 .lpa-model-trigger{display:inline-flex;align-items:center;gap:5px;height:28px;max-width:min(320px,52cqw);min-width:0;padding:0 7px;border:0;border-radius:7px;background:transparent;color:var(--dsw-alias-label-secondary);font:inherit;font-size:13px;cursor:pointer}
 .lpa-model-trigger:hover:not(:disabled){background:var(--dsw-alias-interactive-bg-hover,var(--dsw-alias-bg-layer-2,rgba(127,127,127,.18)))}
 .lpa-model-trigger:disabled{opacity:.5;cursor:default}
-.lpa-model-trigger-label{display:var(--dsh-composer-model-text-display,block);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;line-height:1}
-.lpa-model-trigger-icon{display:var(--dsh-composer-model-icon-display,none)}
-.lpa-model-trigger-effort{display:var(--dsh-composer-model-text-display,block);font-size:13px;line-height:1;color:var(--dsw-alias-label-tertiary,var(--dsw-alias-label-secondary))}
+.lpa-model-trigger-label{display:block;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;line-height:1}
+.lpa-model-trigger-icon{display:none}
+.lpa-model-trigger-effort{display:block;font-size:13px;line-height:1;color:var(--dsw-alias-label-tertiary,var(--dsw-alias-label-secondary))}
 .lpa-model-chevron{flex:none;display:block;width:12px;height:12px;color:var(--dsw-alias-label-caption,var(--lpa-menu-fore,#a6a094))}
 .lpa-model-menu{position:fixed;z-index:1200;display:flex;flex-direction:column;box-sizing:border-box;width:344px;max-width:calc(100vw - 16px);max-height:min(660px,calc(100vh - 16px));padding:6px;border:1px solid var(--dsw-alias-border-l1,#80808066);border-radius:12px;background-color:var(--dsw-alias-bg-layer-1,var(--lpa-menu-base,transparent));color:var(--dsw-alias-label-primary);box-shadow:0 8px 24px color-mix(in srgb,var(--dsw-alias-label-primary) 10%,transparent);font:13px/1.4 system-ui,-apple-system,"Segoe UI",sans-serif;text-align:start;overflow:hidden}
 .lpa-model-scroll{min-height:40px;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;scroll-padding-block:26px;flex:1 1 auto}
