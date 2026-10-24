@@ -4403,7 +4403,7 @@ var init_model_picker_style = __esm({
 .lpa-model-menu{position:fixed;z-index:1200;display:flex;flex-direction:column;box-sizing:border-box;width:344px;max-width:calc(100vw - 16px);max-height:min(660px,calc(100vh - 16px));padding:6px;border:1px solid var(--dsw-alias-border-l1,#80808066);border-radius:12px;background-color:var(--dsw-alias-bg-layer-1,var(--lpa-menu-base,transparent));color:var(--dsw-alias-label-primary);box-shadow:0 8px 24px color-mix(in srgb,var(--dsw-alias-label-primary) 10%,transparent);font:13px/1.4 system-ui,-apple-system,"Segoe UI",sans-serif;text-align:start;overflow:hidden}
 .lpa-model-scroll{min-height:40px;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;scroll-padding-block:26px;flex:1 1 auto}
 .lpa-model-group{padding:0 0 4px}
-.lpa-model-group-name{position:sticky;top:0;z-index:1;display:flex;align-items:center;gap:6px;min-height:0;box-sizing:border-box;margin:2px 4px;padding:0;background-color:var(--dsw-alias-bg-layer-1,var(--lpa-menu-base,transparent));font-size:11px;letter-spacing:.02em;font-weight:400;line-height:14px;color:var(--dsw-alias-label-caption,var(--lpa-menu-fore,#a6a094))}
+.lpa-model-group-name{position:sticky;top:0;z-index:1;display:flex;align-items:center;gap:6px;min-height:0;box-sizing:border-box;margin:2px 7px;padding:0;background-color:var(--dsw-alias-bg-layer-1,var(--lpa-menu-base,transparent));font-size:11px;letter-spacing:.02em;font-weight:400;line-height:14px;color:var(--dsw-alias-label-caption,var(--lpa-menu-fore,#a6a094))}
 .lpa-model-group-name>span{flex:none;min-width:0;max-width:70%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .lpa-model-group-name::after{content:"";height:0;flex:1;border-top:.5px solid var(--dsw-alias-border-l2,#dedcd2);background:none}
 .lpa-model-option{display:flex;align-items:center;gap:8px;width:100%;min-height:32px;box-sizing:border-box;padding:5px 7px;border:0;border-radius:6px;background:transparent;color:inherit;font:inherit;text-align:inherit;cursor:pointer}
@@ -4419,7 +4419,7 @@ var init_model_picker_style = __esm({
 .lpa-model-error{color:var(--dsw-alias-state-error-primary)}
 .lpa-model-failures{flex:0 1 auto;max-height:100px;overflow:auto;border-top:1px solid var(--dsw-alias-border-l1,#80808066)}
 .lpa-model-retry{margin:2px 8px 6px;padding:3px 8px;border:1px solid var(--dsw-alias-border-l1,#80808066);border-radius:5px;background:transparent;color:var(--dsw-alias-label-primary);font:inherit;cursor:pointer}
-.lpa-effort-frame{flex:none;padding:10px 8px;border-top:1px solid var(--dsw-alias-border-l1,#80808066)}
+.lpa-effort-frame{flex:none;padding:10px 0;border-top:1px solid var(--dsw-alias-border-l1,#80808066)}
 .lpa-model-more{display:grid;gap:1px;padding:2px 0 6px}
 .lpa-model-other-provider{padding:2px 0 4px}
 .lpa-model-other-provider--divided{border-top:1px solid var(--dsw-alias-border-l1,#80808066);margin-top:2px;padding-top:4px}
@@ -5170,7 +5170,7 @@ var init_zcode_effort_style = __esm({
   box-sizing:border-box;flex:none;margin:0;border:0;font-weight:400;
 }
 [data-ds-dark-theme] .lpa-effort.lpa-zt{--lpa-zt-success:#22c55e}
-.lpa-effort.lpa-zt{display:flex;flex-direction:column;gap:6px;padding:8px 8px 10px;min-width:0;user-select:none;-webkit-user-select:none}
+.lpa-effort.lpa-zt{display:flex;flex-direction:column;gap:6px;padding:8px 7px 10px;min-width:0;user-select:none;-webkit-user-select:none}
 .lpa-zt-head{display:flex;align-items:baseline;gap:8px;min-width:0;padding:0 6px}
 .lpa-zt-label{flex:none;font-size:13px;line-height:16px;color:var(--lpa-zt-muted)}
 .lpa-zt-value{flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px;line-height:16px;color:var(--lpa-zt-ink)}
@@ -5472,8 +5472,8 @@ function useFlyout(rowRef, panelRef, open) {
       const menu = rowRef.current?.closest(".lpa-model-menu")?.getBoundingClientRect();
       const beside = rect.right + gap + width <= innerWidth - margin;
       const left = beside ? rect.right + gap : menu && menu.right + gap + width <= innerWidth - margin ? menu.right + gap : Math.max(margin, Math.min(rect.left - gap - width, menu ? menu.left - gap - width : rect.left - gap - width));
-      const top = Math.max(margin, Math.min(rect.top, innerHeight - height - margin));
-      setPosition((old) => old?.left === left && old?.top === top ? old : { left, top });
+      const top = Math.max(margin, rect.top), maxHeight = Math.max(180, innerHeight - top - margin);
+      setPosition((old) => old?.left === left && old?.top === top && old?.maxHeight === maxHeight ? old : { left, top, maxHeight });
     };
     place();
     const observer = typeof ResizeObserver === "function" ? new ResizeObserver(place) : null;
@@ -6057,7 +6057,7 @@ function ModelPicker({ locked, available, directory, load, select, t, getLocale 
       className: "lpa-model-flyout",
       role: "menu",
       "aria-label": t("picker.otherModels"),
-      style: flyout ?? { left: 0, top: 0, visibility: "hidden" },
+      style: flyout ? { left: flyout.left, top: flyout.top, maxHeight: flyout.maxHeight } : { left: 0, top: 0, visibility: "hidden" },
       onPointerEnter: cancelClose,
       onPointerLeave: scheduleClose
     },

@@ -21,7 +21,7 @@ export const zcodeEffortCss = `
   box-sizing:border-box;flex:none;margin:0;border:0;font-weight:400;
 }
 [data-ds-dark-theme] .lpa-effort.lpa-zt{--lpa-zt-success:#22c55e}
-.lpa-effort.lpa-zt{display:flex;flex-direction:column;gap:6px;padding:8px 8px 10px;min-width:0;user-select:none;-webkit-user-select:none}
+.lpa-effort.lpa-zt{display:flex;flex-direction:column;gap:6px;padding:8px 7px 10px;min-width:0;user-select:none;-webkit-user-select:none}
 .lpa-zt-head{display:flex;align-items:baseline;gap:8px;min-width:0;padding:0 6px}
 .lpa-zt-label{flex:none;font-size:13px;line-height:16px;color:var(--lpa-zt-muted)}
 .lpa-zt-value{flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px;line-height:16px;color:var(--lpa-zt-ink)}

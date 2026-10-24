@@ -146,8 +146,8 @@ function useFlyout(rowRef,panelRef,open){
    const left=beside?rect.right+gap
     :menu&&menu.right+gap+width<=innerWidth-margin?menu.right+gap
     :Math.max(margin,Math.min(rect.left-gap-width,menu?menu.left-gap-width:rect.left-gap-width));
-   const top=Math.max(margin,Math.min(rect.top,innerHeight-height-margin));
-   setPosition(old=>old?.left===left&&old?.top===top?old:{left,top});
+   const top=Math.max(margin,rect.top),maxHeight=Math.max(180,innerHeight-top-margin);
+   setPosition(old=>old?.left===left&&old?.top===top&&old?.maxHeight===maxHeight?old:{left,top,maxHeight});
   };
   place();const observer=typeof ResizeObserver==='function'?new ResizeObserver(place):null;
   if(panelRef.current)observer?.observe(panelRef.current);if(rowRef.current)observer?.observe(rowRef.current);
@@ -386,7 +386,7 @@ export function ModelPicker({locked,available,directory,load,select,t,getLocale=
  };
  /** Hover panel: the same option rows as a pinned group, separated by provider dividers. */
  const flyoutPanel=otherOpen&&collapsed.length?h('div',{ref:flyoutRef,className:'lpa-model-flyout',role:'menu','aria-label':t('picker.otherModels'),
-  style:flyout??{left:0,top:0,visibility:'hidden'},
+  style:flyout?{left:flyout.left,top:flyout.top,maxHeight:flyout.maxHeight}:{left:0,top:0,visibility:'hidden'},
   onPointerEnter:cancelClose,onPointerLeave:scheduleClose},
   h('div',{className:'lpa-model-flyout-head'},h('span',null,t('picker.otherModels')),
    h('span',{className:'lpa-model-provider-count'},String(otherCount))),

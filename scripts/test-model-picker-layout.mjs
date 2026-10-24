@@ -173,6 +173,16 @@ export async function runRegression(page){
  await page.evaluate(()=>window.fixture.resolve());await settle(page);
  assert.equal(await range().inputValue(),targetLevel,'The slider must keep the committed level');cases++;
  assert.deepEqual(await menuBox(),boxBefore,'The popup must not move after the acknowledgement');cases++;
+ // Every menu region shares one left inset: the group header, model rows, the effort label and
+ // the slider track all used different paddings and read as misaligned.
+ await reset();await open();
+ const lefts=await page.evaluate(()=>{
+  const left=el=>el?Math.round(el.getBoundingClientRect().left):null;
+  const textLeft=el=>{if(!el)return null;const range=document.createRange();range.selectNodeContents(el);return Math.round(range.getBoundingClientRect().left);};
+  return [textLeft(document.querySelector('.lpa-model-group-name span')),textLeft(document.querySelector('.lpa-model-name')),
+   textLeft(document.querySelector('.lpa-ce-label')),left(document.querySelector('.lpa-ce-track'))];
+ });
+ assert.equal(new Set(lefts).size,1,'All menu regions must share one left inset: '+JSON.stringify(lefts));cases++;
  return {passed:true,cases,modelCalls:0};
 }
 if(process.argv[1]&&resolve(process.argv[1])===fileURLToPath(import.meta.url))console.log('Model picker fixture compiled:',fixtureBundle().length,'bytes; run scripts/run-model-picker-browser.mjs for real browser checks.');
