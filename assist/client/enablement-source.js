@@ -11,7 +11,8 @@ export function normalizeEnablement(value){
   const config=value.settings[feature];return typeof value.configured[feature]!=='boolean'||!config||typeof config.followSession!=='boolean'||typeof config.fast!=='boolean'||!Number.isInteger(config.rounds)||config.rounds<1||config.rounds>20||['provider','model','reasoningEffort'].some(key=>typeof config[key]!=='string');
  })))throw invalid();
  if(value.finalAnswer!==undefined&&typeof value.finalAnswer!=='boolean')throw invalid();
- return Object.freeze({scope:'profile',revision:value.revision,enabled:Object.freeze({suggest:value.enabled.suggest,enhance:value.enabled.enhance}),finalAnswer:value.finalAnswer!==false,
+ if(value.finalAnswerRevision!==undefined&&(!Number.isSafeInteger(value.finalAnswerRevision)||value.finalAnswerRevision<0))throw invalid();
+ return Object.freeze({scope:'profile',revision:value.revision,enabled:Object.freeze({suggest:value.enabled.suggest,enhance:value.enabled.enhance}),finalAnswer:value.finalAnswer!==false,finalAnswerRevision:value.finalAnswerRevision??0,
   settingsRevision:hasSettings?value.settingsRevision:null,
   settings:Object.freeze(Object.fromEntries(FEATURES.map(feature=>[feature,Object.freeze(sessionSettings(hasSettings?value.settings[feature]:undefined))]))),
   configured:Object.freeze(Object.fromEntries(FEATURES.map(feature=>[feature,hasSettings&&value.configured[feature]])))});
@@ -142,14 +143,14 @@ export function createEnablementSource({send,fetcher=(...args)=>globalThis.fetch
  }
  async function setFinalAnswer(enabled){
   if(disposed||state.pending||!state.connected||!state.data||typeof enabled!=='boolean')return false;
-  const owner=epoch,expectedRevision=state.data.revision,abort=new AbortController();writeAbort=abort;
+  const owner=epoch,expectedRevision=state.data.finalAnswerRevision??0,abort=new AbortController();writeAbort=abort;
   publish({pending:'final-answer',writeError:null,saved:null});
   try{
    const value=await send('set-final-answer',undefined,{enabled,expectedRevision},abort.signal);
    if(disposed||owner!==epoch||abort.signal.aborted||!state.connected)return false;
    accept(value);
    if(state.data.finalAnswer!==enabled){publish({writeError:'stale-enablement'});await load();return false;}
-   publish({saved:{feature:'final-answer',revision:state.data.revision}});return true;
+   publish({saved:{feature:'final-answer',revision:state.data.finalAnswerRevision}});return true;
   }catch(error){
    if(!disposed&&owner===epoch&&!abort.signal.aborted){
     const stale=error?.code==='stale-enablement';publish({writeError:stale?'stale-enablement':'global-save-failed'});
