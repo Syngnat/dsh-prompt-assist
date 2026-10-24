@@ -169,6 +169,7 @@ export async function runRegression(page){
  const targetLevel=await range().inputValue();
  assert.equal(targetLevel,'3','The slider must stop at the dragged level');cases++;
  assert.deepEqual(await menuBox(),boxBefore,'The popup must not jump while the host acknowledges');cases++;
+ assert.equal(await page.evaluate(()=>getComputedStyle(document.querySelector('.lpa-model-option')).opacity),'1','Rows must not dim while the effort is acknowledged');cases++;
  await page.evaluate(()=>window.fixture.resolve());await settle(page);
  assert.equal(await range().inputValue(),targetLevel,'The slider must keep the committed level');cases++;
  assert.deepEqual(await menuBox(),boxBefore,'The popup must not move after the acknowledgement');cases++;

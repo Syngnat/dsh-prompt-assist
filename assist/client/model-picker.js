@@ -397,7 +397,7 @@ export function ModelPicker({locked,available,directory,load,select,t,getLocale=
      'aria-label':t('picker.pin'),disabled:busy||locked,onClick:()=>togglePin(group.id)},
      h('span',{'aria-hidden':true},t('picker.pinMark')))),
    modelsOf(group).map(model=>renderModel(group,model)))))) : null;
- const menu=visible?h('div',{ref:panel,id:id+'-panel',className:'lpa-model-menu',role:'dialog','aria-label':t('picker.aria'),'aria-busy':busy||loadingState(state),'data-style':style,
+ const menu=visible?h('div',{ref:panel,id:id+'-panel',className:'lpa-model-menu',role:'dialog','aria-label':t('picker.aria'),'aria-busy':busy||loadingState(state),'data-style':style,'data-silent':silentSubmit?'':undefined,
   style:{...(position??{left:0,top:0,visibility:'hidden'}),...menuSurfaceVars()},onKeyDown},
   zcode?zcodeBody:h(React.Fragment,null,
   h('div',{className:'lpa-model-scroll',role:'menu','aria-label':t('picker.models')},
