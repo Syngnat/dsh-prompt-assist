@@ -28,6 +28,9 @@ test("settings page exposes four ordered card sections and a useful empty-sessio
   assert.match(html, /settings.subtitle/);
   assert.match(html, /settings.unconfigured/);
   assert.match(html, /settings.modelUnknown/);
+  const off = render(EnablementPanelContent, {snapshot: {...live, data: {...live.data, finalAnswer: false}}});
+  const offInputs = off.match(/<input[^>]+>/g) ?? [];
+  assert.doesNotMatch(offInputs[2], /checked=""/);
 });
 
 test("settings page does not render a model notes card", () => {
@@ -39,14 +42,16 @@ test("settings page does not render a model notes card", () => {
 test("global switches remain real checked/disabled checkboxes with labeled switch rows", () => {
   const html = render(EnablementPanelContent, {snapshot: live});
   const inputs = html.match(/<input[^>]+>/g) ?? [];
-  assert.equal(inputs.length, 2);
+  assert.equal(inputs.length, 3);
   assert.ok(inputs.every(input => /type="checkbox"/.test(input) && /class="lpa-switch"/.test(input)));
   assert.match(inputs[0], /checked=""/); assert.doesNotMatch(inputs[1], /checked=""/);
-  assert.equal((html.match(/lpa-switch-row/g) ?? []).length, 2);
-  assert.match(html, /global.suggestHint/); assert.match(html, /global.enhanceHint/);
+  // The closing-contract switch is on unless the profile record says otherwise.
+  assert.match(inputs[2], /checked=""/);
+  assert.equal((html.match(/lpa-switch-row/g) ?? []).length, 3);
+  assert.match(html, /global.suggestHint/); assert.match(html, /global.enhanceHint/); assert.match(html, /global.finalAnswerHint/);
   assert.match(html, /class="lpa-footnote"/);
   const blocked = render(EnablementPanelContent, {snapshot: {...live, connected: false}});
-  assert.equal((blocked.match(/<input[^>]*disabled=""/g) ?? []).length, 2);
+  assert.equal((blocked.match(/<input[^>]*disabled=""/g) ?? []).length, 3);
 });
 
 test("session selection does not gate or retarget global settings", () => {

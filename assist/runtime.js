@@ -11,7 +11,7 @@ import { isProviderFailureCode, providerFailureCode } from './provider-failure.j
 
 const FEATURES = ['suggest', 'enhance'];
 const CLOSED_CONFIG = Object.freeze({followSession:true,provider:'',model:'',reasoningEffort:'',fast:false,rounds:1});
-const CLOSED_ENABLEMENT = Object.freeze({scope:'profile',revision:0,enabled:Object.freeze({suggest:false,enhance:false}),settingsRevision:0,
+const CLOSED_ENABLEMENT = Object.freeze({scope:'profile',revision:0,enabled:Object.freeze({suggest:false,enhance:false}),finalAnswer:true,settingsRevision:0,
   settings:Object.freeze({suggest:CLOSED_CONFIG,enhance:CLOSED_CONFIG}),configured:Object.freeze({suggest:false,enhance:false})});
 const CODES = new Set(['invalid-config','invalid-enabled','invalid-follow-session','invalid-fast','invalid-provider','invalid-model','invalid-effort','model-required','invalid-reference','invalid-context','invalid-feature','invalid-draft','empty-draft','invalid-file-entry','invalid-file-path','invalid-file-bytes','file-reader-unavailable','file-read-failed','invalid-rounds','invalid-request','not-configured','disabled','unsupported-effort','fast-unsupported','no-context','context-overflow','context-unknown','file-type-unsupported','unsupported-file','file-too-large','total-too-large','files-too-large','sensitive-file','binary-file','invalid-file','model-failed','invalid-suggestion','empty-result','cancelled','stale-context','busy','forbidden','invalid-receipt','request-too-large','output-too-large','output-limit','timeout','save-failed','not-a-file','unknown-action','file-consent-required','global-settings-unavailable','stale-enablement','stale-global-settings','global-config-required']);
 
@@ -77,6 +77,14 @@ export class AssistRuntime {
     if (options.agent?.session?.header?.origin === 'subagent') throw failure('forbidden');
     if (!this.enablement) throw failure('global-settings-unavailable');
     await this.enablement.set(input.feature,input.enabled,{signal:options.signal,expectedRevision:input.expectedRevision});
+    return this.globalEnablement();
+  }
+
+  /** Profile-wide switch for the injected final-answer contract; prompts only, never a model call. */
+  async setFinalAnswer(input, options) {
+    if (options.agent?.session?.header?.origin === 'subagent') throw failure('forbidden');
+    if (!this.enablement) throw failure('global-settings-unavailable');
+    await this.enablement.setFinalAnswer(input.enabled,{signal:options.signal,expectedRevision:input.expectedRevision});
     return this.globalEnablement();
   }
 
@@ -146,6 +154,7 @@ export class AssistRuntime {
     if (!input || typeof input !== 'object' || Array.isArray(input)) throw failure('invalid-request');
     if (input.action === 'enablement') return this.globalEnablement();
     if (input.action === 'set-enabled') return this.setEnabled(input, options);
+    if (input.action === 'set-final-answer') return this.setFinalAnswer(input, options);
     if (input.action === 'save-global') return this.saveGlobal(input, options);
     if (input.action === 'save') throw failure('global-config-required');
     if (input.action === 'catalog') return this.catalog(input.provider);

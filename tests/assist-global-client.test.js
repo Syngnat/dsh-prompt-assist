@@ -24,11 +24,11 @@ test('shared source starts read-only and ignores late older RPC after a newer wa
  assert.equal(source.getSnapshot().data.revision,5);assert.equal(source.getSnapshot().data.enabled.suggest,true);assert.equal(calls.length,1);assert.equal(calls[0][0],'enablement');assert.equal(calls[0][1],undefined);source.dispose();
 });
 
-test('settings shows two profile switches even with no selected session',async()=>{
+test('settings shows three profile switches even with no selected session',async()=>{
  const React=await import('react');const {renderToStaticMarkup}=await import('react-dom/server');const {SettingsPage}=await import('../assist/client/settings-page.js');
  const target={sessionId:null},global={data:snapshot(1,true,false),connected:true,loading:false,pending:null,readError:null,writeError:null,saved:null};
  const html=renderToStaticMarkup(React.createElement(SettingsPage,{t:key=>key,targetSource:{getSnapshot:()=>target,subscribe:()=>()=>{}},globalSource:{getSnapshot:()=>global,subscribe:()=>()=>{},setEnabled(){}},returnToConversation(){}}));
- assert.ok(html.includes('global.title'));assert.equal((html.match(/type="checkbox"/g)||[]).length,6);assert.ok(html.includes('settings.profileSection'));assert.ok(html.includes('settings.modelStyleZcode'));assert.ok(!html.includes('settings.sessionEmpty'));
+ assert.ok(html.includes('global.title'));assert.equal((html.match(/type="checkbox"/g)||[]).length,7);assert.ok(html.includes('settings.profileSection'));assert.ok(html.includes('settings.modelStyleZcode'));assert.ok(!html.includes('settings.sessionEmpty'));
 });
 
 test('feature cards render the draft feedback inside the form so pointer events reach the controls',async()=>{
@@ -140,7 +140,7 @@ test('unknown or disconnected globals never inherit legacy wire/session controls
 for(const lang of ['zh','en'])test('SSR '+lang+' separates global immediate-save controls and session parameters',()=>{
  const t=key=>{assert.equal(typeof dictionaries[lang][key],'string',key);return dictionaries[lang][key];};
  const html=renderToStaticMarkup(React.createElement(EnablementPanelContent,{snapshot:globalView(snapshot(1,true,false)),t}));
- assert.equal((html.match(/type="checkbox"/g)||[]).length,2);for(const key of ['global.scope','global.charge','global.migration'])assert.ok(html.includes(t(key).replaceAll('&','&amp;')));
+ assert.equal((html.match(/type="checkbox"/g)||[]).length,3);for(const key of ['global.scope','global.charge','global.migration'])assert.ok(html.includes(t(key).replaceAll('&','&amp;')));
  const form=renderToStaticMarkup(React.createElement(Settings,{t,config:sessionSettings({...DEFAULT_SETTINGS,enabled:true}),catalog:{providers:[],models:[]},allowed:true,onChange(){},save(){}}));
  assert.ok(!form.includes('>'+t('enabled')+'</label>'));assert.ok(form.includes(t('follow')));
  const failed=renderToStaticMarkup(React.createElement(EnablementPanelContent,{snapshot:{...globalView(snapshot()),writeError:'global-save-failed'},t}));assert.ok(failed.includes(t('global.saveFailed')));assert.ok(!failed.includes(t('global.saved')));

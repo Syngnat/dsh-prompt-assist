@@ -3399,12 +3399,14 @@ import { isAbsolute as isAbsolute2, resolve } from "node:path";
 var failure2 = (code) => Object.assign(new Error(code), { code });
 var unavailable = () => failure2("global-settings-unavailable");
 var optional = (ctx, name) => typeof ctx?.get === "function" ? ctx.get(name) : ctx?.[name];
-var freezeRecord = (value) => Object.freeze({ revision: value.revision, enabled: Object.freeze({ suggest: value.enabled.suggest, enhance: value.enabled.enhance }) });
-var snapshotOf = (value) => Object.freeze({ scope: "profile", revision: value.revision, enabled: value.enabled });
+var freezeRecord = (value) => Object.freeze({ revision: value.revision, enabled: Object.freeze({ suggest: value.enabled.suggest, enhance: value.enabled.enhance }), finalAnswer: value.finalAnswer !== false });
+var snapshotOf = (value) => Object.freeze({ scope: "profile", revision: value.revision, enabled: value.enabled, finalAnswer: value.finalAnswer !== false });
 function schemaOf(z) {
   return z.object({
     revision: z.number().int().min(0).max(Number.MAX_SAFE_INTEGER),
-    enabled: z.object({ suggest: z.boolean(), enhance: z.boolean() }).strict()
+    enabled: z.object({ suggest: z.boolean(), enhance: z.boolean() }).strict(),
+    // Optional so records written before this flag existed still parse; a missing value means "on".
+    finalAnswer: z.boolean().optional()
   }).strict();
 }
 function profileDomain(dir) {
@@ -3419,7 +3421,7 @@ async function openEnablement(ctx, z) {
     const facility = optional(ctx, "storageDomain"), profile = optional(ctx, "profileContext");
     if (typeof facility?.open !== "function") throw unavailable();
     const name = profileDomain(profile?.dir), schema = schemaOf(z);
-    const initial = freezeRecord({ revision: 0, enabled: { suggest: true, enhance: true } });
+    const initial = freezeRecord({ revision: 0, enabled: { suggest: true, enhance: true }, finalAnswer: true });
     domain = await facility.open({ name, version: 1, global: { schema, initial }, tables: {} });
     const global = domain?.global;
     if (typeof global?.get !== "function" || typeof global?.set !== "function" || typeof domain.close !== "function") throw unavailable();
@@ -3465,7 +3467,40 @@ function createStore(domain, global, loaded) {
       if (expectedRevision !== void 0 && expectedRevision !== snapshot.revision) throw failure2("stale-enablement");
       if (snapshot.enabled[feature] === enabled) return snapshot;
       if (snapshot.revision === Number.MAX_SAFE_INTEGER) throw unavailable();
-      const record = freezeRecord({ revision: snapshot.revision + 1, enabled: { ...snapshot.enabled, [feature]: enabled } });
+      const record = freezeRecord({ revision: snapshot.revision + 1, enabled: { ...snapshot.enabled, [feature]: enabled }, finalAnswer: snapshot.finalAnswer });
+      try {
+        await global.set(record);
+      } catch {
+        throw unavailable();
+      }
+      snapshot = snapshotOf(record);
+      notify();
+      return snapshot;
+    });
+    tail = operation.then(() => {
+    }, () => {
+    });
+    return operation;
+  }
+  function setFinalAnswer(enabled, options = {}) {
+    if (closing) return Promise.reject(unavailable());
+    let signal, expectedRevision;
+    try {
+      if (typeof enabled !== "boolean") throw failure2("invalid-enabled");
+      if (!options || typeof options !== "object" || Array.isArray(options) || Object.keys(options).some((key) => key !== "signal" && key !== "expectedRevision")) throw failure2("invalid-request");
+      ({ signal, expectedRevision } = options);
+      if (expectedRevision !== void 0 && (!Number.isSafeInteger(expectedRevision) || expectedRevision < 0)) throw failure2("invalid-request");
+      if (signal !== void 0 && (typeof signal?.throwIfAborted !== "function" || typeof signal.aborted !== "boolean")) throw failure2("invalid-request");
+      signal?.throwIfAborted();
+    } catch (error) {
+      return Promise.reject(error);
+    }
+    const operation = tail.then(async () => {
+      signal?.throwIfAborted();
+      if (expectedRevision !== void 0 && expectedRevision !== snapshot.revision) throw failure2("stale-enablement");
+      if (snapshot.finalAnswer === enabled) return snapshot;
+      if (snapshot.revision === Number.MAX_SAFE_INTEGER) throw unavailable();
+      const record = freezeRecord({ revision: snapshot.revision + 1, enabled: { ...snapshot.enabled }, finalAnswer: enabled });
       try {
         await global.set(record);
       } catch {
@@ -3483,6 +3518,7 @@ function createStore(domain, global, loaded) {
   return Object.freeze({
     getSnapshot: () => snapshot,
     set,
+    setFinalAnswer,
     subscribe(listener) {
       if (closing) throw unavailable();
       if (typeof listener !== "function") throw failure2("invalid-request");
@@ -3668,7 +3704,7 @@ function combine(flags, controls) {
   let snapshot, closing = false, disposal;
   function refresh() {
     const flag = flags.getSnapshot(), control = controls.getSnapshot();
-    snapshot = Object.freeze({ scope: "profile", revision: flag.revision, enabled: flag.enabled, settingsRevision: control.revision, settings: control.settings, configured: control.configured });
+    snapshot = Object.freeze({ scope: "profile", revision: flag.revision, enabled: flag.enabled, finalAnswer: flag.finalAnswer !== false, settingsRevision: control.revision, settings: control.settings, configured: control.configured });
     for (const listener of [...listeners]) if (listeners.has(listener)) {
       try {
         void Promise.resolve(listener(snapshot)).catch(() => {
@@ -3690,6 +3726,7 @@ function combine(flags, controls) {
     getSnapshot: () => snapshot,
     // Preserve flag validation, CAS semantics and return value for rollback compatibility.
     set: (feature, enabled, options) => flags.set(feature, enabled, options),
+    setFinalAnswer: (enabled, options) => flags.setFinalAnswer(enabled, options),
     async configure(feature, config, options) {
       await controls.configure(feature, config, options);
       return snapshot;
@@ -4409,6 +4446,7 @@ var CLOSED_ENABLEMENT = Object.freeze({
   scope: "profile",
   revision: 0,
   enabled: Object.freeze({ suggest: false, enhance: false }),
+  finalAnswer: true,
   settingsRevision: 0,
   settings: Object.freeze({ suggest: CLOSED_CONFIG, enhance: CLOSED_CONFIG }),
   configured: Object.freeze({ suggest: false, enhance: false })
@@ -4474,6 +4512,13 @@ var AssistRuntime = class {
     if (options.agent?.session?.header?.origin === "subagent") throw failure7("forbidden");
     if (!this.enablement) throw failure7("global-settings-unavailable");
     await this.enablement.set(input.feature, input.enabled, { signal: options.signal, expectedRevision: input.expectedRevision });
+    return this.globalEnablement();
+  }
+  /** Profile-wide switch for the injected final-answer contract; prompts only, never a model call. */
+  async setFinalAnswer(input, options) {
+    if (options.agent?.session?.header?.origin === "subagent") throw failure7("forbidden");
+    if (!this.enablement) throw failure7("global-settings-unavailable");
+    await this.enablement.setFinalAnswer(input.enabled, { signal: options.signal, expectedRevision: input.expectedRevision });
     return this.globalEnablement();
   }
   noteTransportRead(id) {
@@ -4542,6 +4587,7 @@ var AssistRuntime = class {
     if (!input || typeof input !== "object" || Array.isArray(input)) throw failure7("invalid-request");
     if (input.action === "enablement") return this.globalEnablement();
     if (input.action === "set-enabled") return this.setEnabled(input, options);
+    if (input.action === "set-final-answer") return this.setFinalAnswer(input, options);
     if (input.action === "save-global") return this.saveGlobal(input, options);
     if (input.action === "save") throw failure7("global-config-required");
     if (input.action === "catalog") return this.catalog(input.provider);
@@ -4733,7 +4779,7 @@ function installTool(ctx, service) {
     name: "prompt_assist",
     description: "Read prompt assistance or change profile-wide feature switches, auxiliary model controls and QA scope for all conversations. Generate only when explicitly requested; generation may incur model charges and never edits the composer. Reading files requires the user-only UI selection flow.",
     parameters: { type: "object", properties: {
-      action: { type: "string", enum: ["status", "catalog", "model", "configure", "set-enabled", "suggest", "enhance"] },
+      action: { type: "string", enum: ["status", "catalog", "model", "configure", "set-enabled", "set-final-answer", "suggest", "enhance"] },
       provider: { type: "string" },
       model: { type: "string" },
       feature: { type: "string", enum: ["suggest", "enhance"], description: "Required for configure or set-enabled." },
@@ -4745,12 +4791,13 @@ function installTool(ctx, service) {
         fast: { type: "boolean" },
         rounds: { type: "integer", minimum: 1, maximum: 20 }
       }, required: ["followSession", "provider", "model", "reasoningEffort", "fast", "rounds"], additionalProperties: false },
-      enabled: { type: "boolean", description: "Required for set-enabled. Persists for every conversation in this profile; enabling suggestions permits eligible future automatic model requests. Does not replay old Q&A." },
+      enabled: { type: "boolean", description: "Required for set-enabled and set-final-answer. For set-final-answer it toggles the injected Codex-style closing contract. Persists for every conversation in this profile; enabling suggestions permits eligible future automatic model requests. Does not replay old Q&A." },
       draft: { type: "string", description: "Original prompt for enhance; omitted for suggest." }
     }, required: ["action"], additionalProperties: false },
     output: { schema: { type: "object" }, render: (_args, value) => [{ type: "text", text: JSON.stringify(value) }] },
     execute: async (args, exec) => {
       if (args.action === "set-enabled") return service.dispatch({ action: "set-enabled", feature: args.feature, enabled: args.enabled }, { agent: exec.agent, signal: exec.signal });
+      if (args.action === "set-final-answer") return service.dispatch({ action: "set-final-answer", enabled: args.enabled }, { agent: exec.agent, signal: exec.signal });
       if (args.action === "configure") return service.dispatch({
         action: "save-global",
         feature: args.feature,
@@ -5178,8 +5225,11 @@ async function apply2(ctx, config = {}) {
   const providers = () => mergeProviders(configured, priority.snapshot().authorized);
   await apply(ctx, { ...config, adapterEntry, providers });
   const fastService = new OpenAIFastService(ctx, providers, (key) => key);
-  await installAssistHost(ctx, { z, fastService, providers, createUserMessage });
-  const disposeContract = installFinalAnswerContract(ctx, { createUserMessage, enabled: config.finalAnswerContract !== false });
+  const assist = await installAssistHost(ctx, { z, fastService, providers, createUserMessage });
+  const disposeContract = installFinalAnswerContract(ctx, {
+    createUserMessage,
+    enabled: () => config.finalAnswerContract !== false && assist?.enablement?.getSnapshot?.()?.finalAnswer !== false
+  });
   ctx.effect(() => () => disposeContract());
   installPriorityRpc(ctx, priority, configured);
   installUpdateHost(ctx);

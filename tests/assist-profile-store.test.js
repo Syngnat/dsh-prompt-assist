@@ -6,6 +6,7 @@ import { openProfileStore } from '../assist/profile-store.js';
 class Schema {
   constructor(read) { this.read = read; }
   parse(value) { return this.read(value); }
+  optional() { return new Schema(value => value === undefined ? undefined : this.parse(value)); }
   strict() { return this; }
   refine(check) { return new Schema(value => { const parsed = this.parse(value); if (!check(parsed)) throw Error('schema'); return parsed; }); }
   int() { return this.refine(Number.isInteger); }
@@ -34,7 +35,7 @@ async function opened(t,f=fixture(),dir) { const store=await openProfileStore(f.
 
 test('profile controls start unconfirmed, keep flags separate, and persist without session migration',async t=>{
   const {store,f}=await opened(t),first=store.getSnapshot();
-  assert.deepEqual(first,{scope:'profile',revision:0,enabled:{suggest:true,enhance:true},settingsRevision:0,settings:{suggest:defaults(),enhance:defaults()},configured:{suggest:true,enhance:true}});
+  assert.deepEqual(first,{scope:'profile',revision:0,enabled:{suggest:true,enhance:true},finalAnswer:true,settingsRevision:0,settings:{suggest:defaults(),enhance:defaults()},configured:{suggest:true,enhance:true}});
   assert.strictEqual(first,store.getSnapshot()); assert.ok(Object.isFrozen(first.settings.enhance));
   await store.set('suggest',false); assert.equal(store.getSnapshot().settingsRevision,0);
   const value=await store.configure('enhance',{...defaults(),rounds:5,enabled:false},{expectedRevision:0});
@@ -50,7 +51,7 @@ test('controls remain profile isolated and old flags retain their exact records'
  const f=fixture(),a=await opened(t,f),b=await opened(t,f,resolve('synthetic-profiles','beta'));
  await a.store.set('suggest',false);await a.store.configure('suggest',{...defaults(),rounds:7},{expectedRevision:0});
  assert.equal(b.store.getSnapshot().configured.suggest,true);assert.equal(b.store.getSnapshot().enabled.suggest,true);
- assert.deepEqual(f.durable.get(f.specs[0].name),{revision:1,enabled:{suggest:false,enhance:true}});
+ assert.deepEqual(f.durable.get(f.specs[0].name),{revision:1,enabled:{suggest:false,enhance:true},finalAnswer:true});
  const control=f.durable.get(f.specs[1].name);assert.deepEqual(Object.keys(control).sort(),['configured','revision','settings']);
 });
 
@@ -97,4 +98,24 @@ test('observer failures do not undo commits and close failure still closes the o
  await store.configure('enhance',{...defaults(),rounds:5},{expectedRevision:0});assert.equal(notices,0);
  f.hooks.close=spec=>{if(spec.name.includes('_enabled_'))throw Error('close');};
  await assert.rejects(store.close(),{code:'global-settings-unavailable'});assert.equal(f.live.size,0);
+});
+
+test('setFinalAnswer persists alone and rejects stale revisions',async t=>{
+  const {store,f}=await opened(t);
+  const next=await store.setFinalAnswer(false);
+  assert.equal(next.finalAnswer,false);
+  assert.equal(next.revision,1);
+  assert.deepEqual(next.enabled,{suggest:true,enhance:true});
+  assert.equal(f.writes.length,1);
+  assert.equal(f.writes[0].finalAnswer,false);
+  // Idempotent write is a no-op, not a revision bump.
+  const same=await store.setFinalAnswer(false);
+  assert.equal(same.revision,1);
+  assert.equal(f.writes.length,1);
+  await assert.rejects(()=>store.setFinalAnswer(true,{expectedRevision:0}),error=>error.code==='stale-enablement');
+  // Flipping a feature flag must not silently reset the contract switch.
+  const after=await store.set('suggest',false);
+  assert.equal(after.finalAnswer,false);
+  assert.equal(after.enabled.suggest,false);
+  await assert.rejects(()=>store.setFinalAnswer('yes'),error=>error.code==='invalid-enabled');
 });

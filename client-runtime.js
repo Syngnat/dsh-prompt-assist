@@ -625,6 +625,8 @@ var init_messages = __esm({
     NS = "local-prompt-assist";
     dictionaries = {
       zh: {
+        "global.finalAnswer": "\u6536\u5C3E\u5951\u7EA6",
+        "global.finalAnswerHint": "\u6BCF\u4F1A\u8BDD\u6CE8\u5165\u4E00\u6B21 Codex \u5F0F\u6536\u5C3E\u8981\u6C42\uFF1A\u6700\u7EC8\u6D88\u606F\u53EA\u7ED9\u7ED3\u8BBA\u3001\u9ED8\u8BA4\u4E0D\u8D85\u8FC7 10 \u884C\uFF1B\u538B\u7F29\u540E\u81EA\u52A8\u91CD\u6CE8\u3002",
         "global.title": "\u5168\u5C40\u529F\u80FD\u5F00\u5173\uFF08\u5F53\u524D profile\uFF09",
         "global.scope": "\u5F00\u5173\u4E0E\u4E24\u9879\u529F\u80FD\u5404\u81EA\u7684\u6A21\u578B\u3001\u63A8\u7406\u6863\u3001\u8F85\u52A9 Fast \u548C\u95EE\u7B54\u8F6E\u6570\u5747\u4F5C\u7528\u4E8E\u5F53\u524D profile \u7684\u6240\u6709\u73B0\u6709\u548C\u65B0\u5EFA\u4F1A\u8BDD\uFF0C\u65E0\u9700\u9009\u62E9\u4F1A\u8BDD\u3002\u4E3B\u4F1A\u8BDD Fast \u4E0D\u53D8\u3002",
         "global.charge": "\u5F00\u542F\u4E0B\u4E00\u95EE\u5EFA\u8BAE\u540E\uFF0C\u5404\u4F1A\u8BDD\u5728\u65B0\u7684\u5B8C\u6574\u95EE\u7B54\u7ED3\u675F\u3001\u7A7A\u95F2\u4E14\u8349\u7A3F\u4E3A\u7A7A\u65F6\u53EF\u81EA\u52A8\u8BF7\u6C42\u6A21\u578B\u5E76\u4EA7\u751F\u8D39\u7528\uFF1B\u589E\u5F3A\u4ECD\u53EA\u5728\u4E3B\u52A8\u70B9\u51FB\u65F6\u8BF7\u6C42\u3002\u5173\u95ED\u4F1A\u53D6\u6D88\u8BE5\u529F\u80FD\u7684\u8FC7\u671F\u7ED3\u679C\u3002",
@@ -946,6 +948,8 @@ var init_messages = __esm({
         cached: "\u547D\u4E2D\u672C\u4F1A\u8BDD\u7F13\u5B58\uFF0C\u4E0B\u5217\u8017\u65F6\u4E3A\u539F\u751F\u6210\u8017\u65F6\u3002"
       },
       en: {
+        "global.finalAnswer": "Closing contract",
+        "global.finalAnswerHint": "Injects a Codex-style closing contract once per session: conclusions only, 10 lines max by default; re-injected after a compaction.",
         "global.title": "Profile-wide feature switches",
         "global.scope": "Switches and each feature\u2019s independent model, effort, auxiliary Fast and Q&A rounds apply to every existing and new session in this profile. No selected session is required. Main-session Fast is unchanged.",
         "global.charge": "Enabling next-question suggestions can automatically call a model and incur charges after a new complete Q&A when a session is idle with an empty draft. Enhancement still requires a click. Turning a feature off invalidates its pending results.",
@@ -1721,10 +1725,12 @@ function normalizeEnablement(value) {
     const config = value.settings[feature];
     return typeof value.configured[feature] !== "boolean" || !config || typeof config.followSession !== "boolean" || typeof config.fast !== "boolean" || !Number.isInteger(config.rounds) || config.rounds < 1 || config.rounds > 20 || ["provider", "model", "reasoningEffort"].some((key) => typeof config[key] !== "string");
   }))) throw invalid();
+  if (value.finalAnswer !== void 0 && typeof value.finalAnswer !== "boolean") throw invalid();
   return Object.freeze({
     scope: "profile",
     revision: value.revision,
     enabled: Object.freeze({ suggest: value.enabled.suggest, enhance: value.enabled.enhance }),
+    finalAnswer: value.finalAnswer !== false,
     settingsRevision: hasSettings ? value.settingsRevision : null,
     settings: Object.freeze(Object.fromEntries(FEATURES.map((feature) => [feature, Object.freeze(sessionSettings(hasSettings ? value.settings[feature] : void 0))]))),
     configured: Object.freeze(Object.fromEntries(FEATURES.map((feature) => [feature, hasSettings && value.configured[feature]])))
@@ -1953,6 +1959,36 @@ function createEnablementSource({ send, fetcher = (...args) => globalThis.fetch(
       }
     }
   }
+  async function setFinalAnswer(enabled) {
+    if (disposed || state.pending || !state.connected || !state.data || typeof enabled !== "boolean") return false;
+    const owner = epoch, expectedRevision = state.data.revision, abort = new AbortController();
+    writeAbort = abort;
+    publish({ pending: "final-answer", writeError: null, saved: null });
+    try {
+      const value = await send("set-final-answer", void 0, { enabled, expectedRevision }, abort.signal);
+      if (disposed || owner !== epoch || abort.signal.aborted || !state.connected) return false;
+      accept(value);
+      if (state.data.finalAnswer !== enabled) {
+        publish({ writeError: "stale-enablement" });
+        await load();
+        return false;
+      }
+      publish({ saved: { feature: "final-answer", revision: state.data.revision } });
+      return true;
+    } catch (error) {
+      if (!disposed && owner === epoch && !abort.signal.aborted) {
+        const stale = error?.code === "stale-enablement";
+        publish({ writeError: stale ? "stale-enablement" : "global-save-failed" });
+        if (stale) await load();
+      }
+      return false;
+    } finally {
+      if (!disposed && owner === epoch && writeAbort === abort) {
+        writeAbort = null;
+        publish({ pending: null });
+      }
+    }
+  }
   return {
     getSnapshot: () => state,
     subscribe(listener) {
@@ -1969,6 +2005,7 @@ function createEnablementSource({ send, fetcher = (...args) => globalThis.fetch(
     },
     load,
     setEnabled,
+    setFinalAnswer,
     configure,
     dispose() {
       disposed = true;
@@ -1999,7 +2036,7 @@ var init_enablement_source = __esm({
     initial = () => ({ data: null, connected: false, loading: true, pending: null, readError: null, writeError: null, saved: null });
     empty = Object.freeze(initial());
     EMPTY_ENABLEMENT_SOURCE = Object.freeze({ getSnapshot: () => empty, subscribe: () => () => {
-    }, load: async () => false, setEnabled: async () => false, configure: async () => false });
+    }, load: async () => false, setEnabled: async () => false, setFinalAnswer: async () => false, configure: async () => false });
   }
 });
 
@@ -3125,7 +3162,7 @@ var init_settings = __esm({
 });
 
 // assist/client/enablement-panel.js
-function EnablementPanelContent({ snapshot, t, onSet, onReload }) {
+function EnablementPanelContent({ snapshot, t, onSet, onReload, onFinalAnswer }) {
   const { data, connected, loading, pending, readError, writeError, saved } = snapshot;
   const disabled = !data || !connected || !!pending;
   const message = writeError === "stale-enablement" ? "global.stale" : writeError ? "global.saveFailed" : readError ? "global.disconnected" : null;
@@ -3144,6 +3181,13 @@ function EnablementPanelContent({ snapshot, t, onSet, onReload }) {
       h10("span", { className: "lpa-switch-copy" }, h10("strong", null, t("global." + feature)), h10("span", { className: "lpa-note" }, t("global." + feature + "Hint"))),
       h10("input", { className: "lpa-switch", type: "checkbox", checked: data?.enabled[feature] === true, disabled, onChange: (event) => onSet(feature, event.target.checked) })
     ))),
+    // Profile-wide prompt switch: it rides the injected closing contract, not a model call.
+    h10(
+      "label",
+      { className: "lpa-check lpa-switch-row", key: "final-answer" },
+      h10("span", { className: "lpa-switch-copy" }, h10("strong", null, t("global.finalAnswer")), h10("span", { className: "lpa-note" }, t("global.finalAnswerHint"))),
+      h10("input", { className: "lpa-switch", type: "checkbox", checked: data?.finalAnswer !== false, disabled, onChange: (event) => onFinalAnswer?.(event.target.checked) })
+    ),
     pending ? h10("p", { role: "status" }, t("global.saving")) : null,
     !connected && !message ? h10("p", { role: "status", className: "lpa-note" }, t(loading ? "global.loading" : "global.disconnected")) : null,
     message ? h10("p", { role: "alert", className: "lpa-error" }, t(message)) : null,
@@ -3154,11 +3198,19 @@ function EnablementPanelContent({ snapshot, t, onSet, onReload }) {
 }
 function EnablementPanel({ globalSource = EMPTY_ENABLEMENT_SOURCE, t }) {
   const snapshot = import_react11.default.useSyncExternalStore(globalSource.subscribe, globalSource.getSnapshot, globalSource.getSnapshot);
-  return h10(EnablementPanelContent, { snapshot, t, onSet: (feature, value) => {
-    void globalSource.setEnabled(feature, value);
-  }, onReload: () => {
-    void globalSource.load();
-  } });
+  return h10(EnablementPanelContent, {
+    snapshot,
+    t,
+    onSet: (feature, value) => {
+      void globalSource.setEnabled(feature, value);
+    },
+    onFinalAnswer: (value) => {
+      void globalSource.setFinalAnswer?.(value);
+    },
+    onReload: () => {
+      void globalSource.load();
+    }
+  });
 }
 var import_react11, h10;
 var init_enablement_panel = __esm({

@@ -98,7 +98,7 @@ function combine(flags,controls) {
   const listeners=new Set();let snapshot,closing=false,disposal;
   function refresh() {
     const flag=flags.getSnapshot(),control=controls.getSnapshot();
-    snapshot=Object.freeze({scope:'profile',revision:flag.revision,enabled:flag.enabled,settingsRevision:control.revision,settings:control.settings,configured:control.configured});
+    snapshot=Object.freeze({scope:'profile',revision:flag.revision,enabled:flag.enabled,finalAnswer:flag.finalAnswer!==false,settingsRevision:control.revision,settings:control.settings,configured:control.configured});
     for (const listener of [...listeners]) if (listeners.has(listener)) {
       try {void Promise.resolve(listener(snapshot)).catch(()=>{});} catch {}
     }
@@ -111,6 +111,7 @@ function combine(flags,controls) {
     getSnapshot:()=>snapshot,
     // Preserve flag validation, CAS semantics and return value for rollback compatibility.
     set:(feature,enabled,options)=>flags.set(feature,enabled,options),
+    setFinalAnswer:(enabled,options)=>flags.setFinalAnswer(enabled,options),
     async configure(feature,config,options) {await controls.configure(feature,config,options);return snapshot;},
     subscribe(listener) {
       if (closing) throw unavailable();

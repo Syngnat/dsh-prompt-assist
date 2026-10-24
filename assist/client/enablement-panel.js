@@ -1,7 +1,7 @@
 import React from "react";
 import {EMPTY_ENABLEMENT_SOURCE} from "./enablement-source.js";
 const h=React.createElement;
-export function EnablementPanelContent({snapshot,t,onSet,onReload}){
+export function EnablementPanelContent({snapshot,t,onSet,onReload,onFinalAnswer}){
  const {data,connected,loading,pending,readError,writeError,saved}=snapshot;
  const disabled=!data||!connected||!!pending;
  const message=writeError==="stale-enablement"?"global.stale":writeError?"global.saveFailed":readError?"global.disconnected":null;
@@ -11,6 +11,10 @@ export function EnablementPanelContent({snapshot,t,onSet,onReload}){
   h("div",{className:"lpa-row lpa-switches"},["suggest","enhance"].map(feature=>h("label",{className:"lpa-check lpa-switch-row",key:feature},
    h("span",{className:"lpa-switch-copy"},h("strong",null,t("global."+feature)),h("span",{className:"lpa-note"},t("global."+feature+"Hint"))),
    h("input",{className:"lpa-switch",type:"checkbox",checked:data?.enabled[feature]===true,disabled,onChange:event=>onSet(feature,event.target.checked)})))),
+  // Profile-wide prompt switch: it rides the injected closing contract, not a model call.
+  h("label",{className:"lpa-check lpa-switch-row",key:"final-answer"},
+   h("span",{className:"lpa-switch-copy"},h("strong",null,t("global.finalAnswer")),h("span",{className:"lpa-note"},t("global.finalAnswerHint"))),
+   h("input",{className:"lpa-switch",type:"checkbox",checked:data?.finalAnswer!==false,disabled,onChange:event=>onFinalAnswer?.(event.target.checked)})),
   pending?h("p",{role:"status"},t("global.saving")):null,
   !connected&&!message?h("p",{role:"status",className:"lpa-note"},t(loading?"global.loading":"global.disconnected")):null,
   message?h("p",{role:"alert",className:"lpa-error"},t(message)):null,
@@ -20,5 +24,6 @@ export function EnablementPanelContent({snapshot,t,onSet,onReload}){
 }
 export function EnablementPanel({globalSource=EMPTY_ENABLEMENT_SOURCE,t}){
  const snapshot=React.useSyncExternalStore(globalSource.subscribe,globalSource.getSnapshot,globalSource.getSnapshot);
- return h(EnablementPanelContent,{snapshot,t,onSet:(feature,value)=>{void globalSource.setEnabled(feature,value);},onReload:()=>{void globalSource.load();}});
+ return h(EnablementPanelContent,{snapshot,t,onSet:(feature,value)=>{void globalSource.setEnabled(feature,value);},
+  onFinalAnswer:value=>{void globalSource.setFinalAnswer?.(value);},onReload:()=>{void globalSource.load();}});
 }

@@ -25,19 +25,20 @@ function installTool(ctx, service) {
     name: 'prompt_assist',
     description: 'Read prompt assistance or change profile-wide feature switches, auxiliary model controls and QA scope for all conversations. Generate only when explicitly requested; generation may incur model charges and never edits the composer. Reading files requires the user-only UI selection flow.',
     parameters: { type: 'object', properties: {
-      action: { type: 'string', enum: ['status', 'catalog', 'model', 'configure', 'set-enabled', 'suggest', 'enhance'] },
+      action: { type: 'string', enum: ['status', 'catalog', 'model', 'configure', 'set-enabled', 'set-final-answer', 'suggest', 'enhance'] },
       provider: { type: 'string' }, model: { type: 'string' },
       feature: { type: 'string', enum: ['suggest', 'enhance'], description: 'Required for configure or set-enabled.' },
       config: { type: 'object', description: 'Profile-wide controls for the selected feature: followSession, provider, model, reasoningEffort, fast, rounds. Saving affects existing and future conversations, confirms the global configuration for that feature, and does not change its global switch. followSession resolves the model of the calling conversation at generation time.', properties: {
         followSession: { type: 'boolean' }, provider: { type: 'string' }, model: { type: 'string' },
         reasoningEffort: { type: 'string' }, fast: { type: 'boolean' }, rounds: { type: 'integer', minimum: 1, maximum: 20 },
       }, required: ['followSession','provider','model','reasoningEffort','fast','rounds'], additionalProperties: false },
-      enabled: { type: 'boolean', description: 'Required for set-enabled. Persists for every conversation in this profile; enabling suggestions permits eligible future automatic model requests. Does not replay old Q&A.' },
+      enabled: { type: 'boolean', description: 'Required for set-enabled and set-final-answer. For set-final-answer it toggles the injected Codex-style closing contract. Persists for every conversation in this profile; enabling suggestions permits eligible future automatic model requests. Does not replay old Q&A.' },
       draft: { type: 'string', description: 'Original prompt for enhance; omitted for suggest.' },
     }, required: ['action'], additionalProperties: false },
     output: { schema: { type: 'object' }, render: (_args, value) => [{ type: 'text', text: JSON.stringify(value) }] },
     execute: async (args, exec) => {
       if (args.action === 'set-enabled') return service.dispatch({action:'set-enabled',feature:args.feature,enabled:args.enabled},{agent:exec.agent,signal:exec.signal});
+      if (args.action === 'set-final-answer') return service.dispatch({action:'set-final-answer',enabled:args.enabled},{agent:exec.agent,signal:exec.signal});
       if (args.action === 'configure') return service.dispatch({action:'save-global',feature:args.feature,config:args.config,
         expectedRevision:service.globalEnablement().settingsRevision},{agent:exec.agent,signal:exec.signal});
       const input = { ...args };

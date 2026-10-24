@@ -5,10 +5,11 @@ import { openEnablement } from "../assist/enablement-store.js";
 
 const clone = value => structuredClone(value);
 const deferred = () => { let resolve; const promise = new Promise(done => { resolve = done; }); return { promise, resolve }; };
-const initial = () => ({ revision: 0, enabled: { suggest: true, enhance: true } });
+const initial = () => ({ revision: 0, enabled: { suggest: true, enhance: true }, finalAnswer: true });
 class Schema {
   constructor(parse) { this.read = parse; }
   parse(value) { return this.read(value); }
+  optional() { return new Schema(value => value === undefined ? undefined : this.parse(value)); }
   strict() { return this; }
   int() { const prior = this.read; return new Schema(value => { const result = prior(value); if (!Number.isInteger(result)) throw Error("schema"); return result; }); }
   min(bound) { const prior = this.read; return new Schema(value => { const result = prior(value); if (result < bound) throw Error("schema"); return result; }); }
@@ -56,7 +57,7 @@ test("a committed write returns the published snapshot and survives closing then
   const { store, f } = await opened(t); const seen = []; store.subscribe(value => seen.push(value));
   const value = await store.set("suggest", false); assert.strictEqual(value, store.getSnapshot());
   assert.equal(value.revision, 1); assert.equal(value.enabled.suggest, false); assert.equal(value.enabled.enhance, true);
-  assert.strictEqual(seen[0], value); assert.deepEqual(f.writes[0], { revision: 1, enabled: { suggest: false, enhance: true } });
+  assert.strictEqual(seen[0], value); assert.deepEqual(f.writes[0], { revision: 1, enabled: { suggest: false, enhance: true }, finalAnswer: true });
   await store.close(); const next = await openEnablement(f.ctx(), z); t.after(() => next.close());
   assert.deepEqual(next.getSnapshot(), value); assert.equal(f.closed, 1);
 });
@@ -107,7 +108,7 @@ test("no-op preserves snapshot/revision and emits nothing, but never bypasses a 
 test("persist completion precedes publication and notification", async t => {
   const { store, f } = await opened(t), started = deferred(), release = deferred(), before = store.getSnapshot(); const seen = [];
   f.hooks.write = async () => { started.resolve(); await release.promise; };
-  store.subscribe(value => { assert.deepEqual(f.durable.get(f.specs[0].name), { revision: value.revision, enabled: value.enabled }); seen.push(value); });
+  store.subscribe(value => { assert.deepEqual(f.durable.get(f.specs[0].name), { revision: value.revision, enabled: value.enabled, finalAnswer: value.finalAnswer }); seen.push(value); });
   const pending = store.set("enhance", false); await started.promise;
   assert.strictEqual(store.getSnapshot(), before); assert.equal(seen.length, 0); release.resolve();
   assert.strictEqual(await pending, seen[0]); assert.equal(seen.length, 1);

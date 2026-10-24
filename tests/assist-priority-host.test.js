@@ -11,6 +11,7 @@ class Schema {
   min(n) { const prev = this.read; return new Schema(value => { value = prev(value); if ((typeof value === "number" ? value : value.length) < n) throw Error("schema"); return value; }); }
   max(n) { const prev = this.read; return new Schema(value => { value = prev(value); if ((typeof value === "number" ? value : value.length) > n) throw Error("schema"); return value; }); }
   regex(pattern) { const prev = this.read; return new Schema(value => { value = prev(value); if (!pattern.test(value)) throw Error("schema"); return value; }); }
+  optional() { return new Schema(value => value === undefined ? undefined : this.read(value)); }
 }
 const z = {
   number: () => new Schema(value => { if (typeof value !== "number" || !Number.isFinite(value)) throw Error("schema"); return value; }),

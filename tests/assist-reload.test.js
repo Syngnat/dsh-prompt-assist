@@ -23,7 +23,7 @@ test('retired handler sees only disabled tombstone; its config command is reject
  ctx.sessionProjections={register(unit){ctx.effect(()=>{units.set(unit.key,unit);return()=>units.delete(unit.key);});}};
  ctx.commands={register(command){ctx.effect(()=>{commands.set(command.name,command);return()=>commands.delete(command.name);});}};
  let streams=0;ctx.llm={prepareCall(){streams++;throw Error('must not dispatch');}};
- const chain={int(){return this;},min(){return this;},max(){return this;},nullable(){return this;},strict(){return this;},refine(){return this;},parse(value){return value;}};
+ const chain={int(){return this;},min(){return this;},max(){return this;},nullable(){return this;},optional(){return this;},strict(){return this;},refine(){return this;},parse(value){return value;}};
  const z={any:()=>chain,object:()=>chain,string:()=>chain,boolean:()=>chain,number:()=>chain};
  const fast={selection:()=>({provider:'openai',model:'gpt-test'}),enabled:()=>true};
  const service=await installAssistHost(ctx,{z,fastService:fast,providers:['openai'],createUserMessage:value=>value});

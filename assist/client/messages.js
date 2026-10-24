@@ -1,6 +1,8 @@
 export const NS = 'local-prompt-assist';
 export const dictionaries = {
   zh: {
+    "global.finalAnswer": "收尾契约",
+    "global.finalAnswerHint": "每会话注入一次 Codex 式收尾要求：最终消息只给结论、默认不超过 10 行；压缩后自动重注。",
     "global.title": "全局功能开关（当前 profile）",
     "global.scope": "开关与两项功能各自的模型、推理档、辅助 Fast 和问答轮数均作用于当前 profile 的所有现有和新建会话，无需选择会话。主会话 Fast 不变。",
     "global.charge": "开启下一问建议后，各会话在新的完整问答结束、空闲且草稿为空时可自动请求模型并产生费用；增强仍只在主动点击时请求。关闭会取消该功能的过期结果。",
@@ -241,6 +243,8 @@ export const dictionaries = {
     cached: '命中本会话缓存，下列耗时为原生成耗时。',
   },
   en: {
+    "global.finalAnswer": "Closing contract",
+    "global.finalAnswerHint": "Injects a Codex-style closing contract once per session: conclusions only, 10 lines max by default; re-injected after a compaction.",
     "global.title": "Profile-wide feature switches",
     "global.scope": "Switches and each feature’s independent model, effort, auxiliary Fast and Q&A rounds apply to every existing and new session in this profile. No selected session is required. Main-session Fast is unchanged.",
     "global.charge": "Enabling next-question suggestions can automatically call a model and incur charges after a new complete Q&A when a session is idle with an empty draft. Enhancement still requires a click. Turning a feature off invalidates its pending results.",
