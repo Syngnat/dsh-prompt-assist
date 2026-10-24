@@ -457,8 +457,7 @@ var init_style = __esm({
 .lpa-settings-header{align-items:flex-start;gap:20px;margin-bottom:24px}.lpa-settings-heading{display:grid;gap:8px;flex:1 1 520px;min-width:0}.lpa-settings-header h1{font-size:24px;font-weight:650;line-height:1.3;letter-spacing:-.02em}.lpa-settings-header>.lpa-button{flex:none;align-self:flex-start;min-height:32px;padding:6px 10px}
 .lpa-settings-header .lpa-settings-subtitle{font-size:12px;color:var(--dsw-alias-label-secondary);max-width:80ch}
 .lpa-settings-sections{display:grid;gap:16px;min-width:0}
-.lpa-settings-layout{display:grid;gap:16px;min-width:0}
-.lpa-settings-nav{display:flex;flex-wrap:wrap;gap:8px;min-width:0}
+.lpa-settings-nav{display:flex;flex-wrap:wrap;gap:8px;min-width:0;margin-bottom:18px}
 .lpa-nav-item{display:inline-flex;align-items:center;box-sizing:border-box;min-height:32px;padding:6px 12px;border:0;border-radius:8px;background:transparent;color:var(--dsw-alias-label-secondary);font:inherit;font-size:13px;line-height:18px;cursor:pointer}
 .lpa-nav-item:hover{background:var(--dsw-alias-interactive-bg-hover)}
 .lpa-nav-item:focus-visible{outline:2px solid var(--dsw-alias-brand-primary);outline-offset:1px}
@@ -3659,6 +3658,22 @@ function SettingsPage(p) {
   return h12(
     "section",
     { className: "lpa lpa-settings-page", "aria-label": p.t("title") },
+    // Tabs sit above the page title, matching the built-in Computer use settings page.
+    h12(
+      "nav",
+      { ref: nav, className: "lpa-settings-nav", role: "tablist", "aria-orientation": "horizontal", "aria-label": p.t("settings.sectionNav"), onKeyDown: moveFocus },
+      sections.map((section) => h12("button", {
+        key: section.key,
+        type: "button",
+        role: "tab",
+        id: "lpa-tab-" + section.key,
+        "aria-selected": active === section.key,
+        "aria-controls": "lpa-panel-" + section.key,
+        tabIndex: active === section.key ? 0 : -1,
+        className: "lpa-nav-item" + (active === section.key ? " lpa-nav-item--active" : ""),
+        onClick: () => select(section.key)
+      }, p.t(section.label)))
+    ),
     h12(
       "header",
       { className: "lpa-settings-header" },
@@ -3667,34 +3682,15 @@ function SettingsPage(p) {
     ),
     h12(
       "div",
-      { className: "lpa-settings-layout" },
-      h12(
-        "nav",
-        { ref: nav, className: "lpa-settings-nav", role: "tablist", "aria-orientation": "horizontal", "aria-label": p.t("settings.sectionNav"), onKeyDown: moveFocus },
-        sections.map((section) => h12("button", {
-          key: section.key,
-          type: "button",
-          role: "tab",
-          id: "lpa-tab-" + section.key,
-          "aria-selected": active === section.key,
-          "aria-controls": "lpa-panel-" + section.key,
-          tabIndex: active === section.key ? 0 : -1,
-          className: "lpa-nav-item" + (active === section.key ? " lpa-nav-item--active" : ""),
-          onClick: () => select(section.key)
-        }, p.t(section.label)))
-      ),
-      h12(
-        "div",
-        { className: "lpa-settings-panels" },
-        sections.map((section) => h12("div", {
-          key: section.key,
-          role: "tabpanel",
-          id: "lpa-panel-" + section.key,
-          "aria-labelledby": "lpa-tab-" + section.key,
-          hidden: active !== section.key,
-          className: "lpa-settings-panel"
-        }, section.render()))
-      )
+      { className: "lpa-settings-panels" },
+      sections.map((section) => h12("div", {
+        key: section.key,
+        role: "tabpanel",
+        id: "lpa-panel-" + section.key,
+        "aria-labelledby": "lpa-tab-" + section.key,
+        hidden: active !== section.key,
+        className: "lpa-settings-panel"
+      }, section.render()))
     )
   );
 }

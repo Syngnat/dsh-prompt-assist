@@ -101,15 +101,15 @@ export function SettingsPage(p){
   const buttons=nav.current?.querySelectorAll('[role=tab]');buttons?.[next]?.focus();
  };
  return h('section',{className:'lpa lpa-settings-page','aria-label':p.t('title')},
+  // Tabs sit above the page title, matching the built-in Computer use settings page.
+  h('nav',{ref:nav,className:'lpa-settings-nav',role:'tablist','aria-orientation':'horizontal','aria-label':p.t('settings.sectionNav'),onKeyDown:moveFocus},
+   sections.map(section=>h('button',{key:section.key,type:'button',role:'tab',id:'lpa-tab-'+section.key,'aria-selected':active===section.key,
+    'aria-controls':'lpa-panel-'+section.key,tabIndex:active===section.key?0:-1,
+    className:'lpa-nav-item'+(active===section.key?' lpa-nav-item--active':''),onClick:()=>select(section.key)},p.t(section.label)))),
   h('header',{className:'lpa-settings-header'},
    h('div',{className:'lpa-settings-heading'},h('h1',null,p.t('title')),h('p',{className:'lpa-note lpa-settings-subtitle'},p.t('settings.subtitle'))),
    p.returnToConversation?h('button',{type:'button',className:'lpa-button',onClick:p.returnToConversation},p.t('returnConversation')):null),
-  h('div',{className:'lpa-settings-layout'},
-   h('nav',{ref:nav,className:'lpa-settings-nav',role:'tablist','aria-orientation':'horizontal','aria-label':p.t('settings.sectionNav'),onKeyDown:moveFocus},
-    sections.map(section=>h('button',{key:section.key,type:'button',role:'tab',id:'lpa-tab-'+section.key,'aria-selected':active===section.key,
-     'aria-controls':'lpa-panel-'+section.key,tabIndex:active===section.key?0:-1,
-     className:'lpa-nav-item'+(active===section.key?' lpa-nav-item--active':''),onClick:()=>select(section.key)},p.t(section.label)))),
-   h('div',{className:'lpa-settings-panels'},
-    sections.map(section=>h('div',{key:section.key,role:'tabpanel',id:'lpa-panel-'+section.key,'aria-labelledby':'lpa-tab-'+section.key,
-     hidden:active!==section.key,className:'lpa-settings-panel'},section.render())))));
+  h('div',{className:'lpa-settings-panels'},
+   sections.map(section=>h('div',{key:section.key,role:'tabpanel',id:'lpa-panel-'+section.key,'aria-labelledby':'lpa-tab-'+section.key,
+    hidden:active!==section.key,className:'lpa-settings-panel'},section.render()))));
 }
