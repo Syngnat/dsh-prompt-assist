@@ -245,3 +245,33 @@ test('registration keeps the supported session slot and supplies current locale'
   assert.doesNotMatch(source, /MutationObserver|querySelector\('\[data-slot|data-lpa-model-host/);
   assert.doesNotMatch(source, /conversation\.input\.right.*ModelPicker/);
 });
+
+test('the trigger effort renders in every shipped language, with level translations intact', () => {
+  // Regression guard for the reported English+dark "missing effort": the label
+  // pipeline is locale-driven, so a blanked level key is the only way English
+  // could lose the effort while Chinese keeps it.
+  const translate = language => (key, params = {}) =>
+    (dictionaries[language][key] ?? key).replace(/\{(\w+)\}/g, (_, name) => String(params[name] ?? ''));
+  for (const language of ['zh', 'en']) {
+    const t = translate(language);
+    for (const level of ['none', 'minimal', 'low', 'medium', 'high', 'xhigh', 'max']) {
+      assert.ok(t('picker.level.' + level).trim().length > 0, language + ': picker.level.' + level + ' must not be blank');
+    }
+    const rows = effortRows(entry, snapshot.current, t('picker.providerDefault'), t);
+    assert.equal(rows.find(row => row.active)?.label, t('picker.level.high'));
+    assert.equal(triggerEffortLabel(snapshot, entry, rows), t('picker.level.high'));
+  }
+});
+
+test('a blank level label falls through to the state effort instead of hiding it', () => {
+  // effortRows filters empty ids outright, and a whitespace label (nameless
+  // custom catalog level) no longer swallows the trigger via the `??` chain.
+  const catalog = {model: {reasoning: {defaultEffort: 'flagged', efforts: [{id: '', name: 'Blank'}, {id: 'flagged', name: '   '}]}}};
+  const rows = effortRows(catalog, {reasoningEffort: 'flagged'}, 'Default');
+  assert.deepEqual(rows.map(row => row.effort), ['flagged']);
+  assert.equal(triggerEffortLabel({...snapshot, retainedEffort: 'Retained'}, catalog, rows), 'Retained');
+  assert.equal(triggerEffortLabel(snapshot, catalog, rows), 'high');
+  assert.equal(triggerEffortLabel({current: {reasoningEffort: 'flagged'}}, catalog, rows), 'flagged');
+  assert.equal(triggerEffortLabel({}, catalog, rows), '');
+  assert.equal(triggerEffortLabel({current: {reasoningEffort: '   '}}, catalog, rows), '');
+});

@@ -128,6 +128,33 @@ export async function runRegression(page){
  assert.equal((await last()).reasoningEffort,'max');
  assert.equal(await range().inputValue(),'4');
  assert.equal(await range().getAttribute('aria-valuetext'),'最高');cases++;
+ // The trigger effort is locale-agnostic: the same reasoning model shows a readable
+ // level in zh/en and light/dark alike, and models without reasoning metadata hide
+ // the segment in every combination (mirroring the native selector).
+ const readout=()=>page.evaluate(()=>{const effort=document.querySelector('.lpa-model-trigger-effort');if(!effort)return null;const style=getComputedStyle(effort);let node=effort.parentElement;while(node&&node!==document.documentElement){const paint=getComputedStyle(node).backgroundColor;if(paint&&paint!=='transparent'&&!paint.includes('0, 0, 0, 0'))break;node=node.parentElement;}const parse=value=>{const m=value.match(/rgba?\(([^)]+)\)/);if(!m)return null;const p=m[1].split(/[,]\s*|\s*\/\s*/).map(Number);return [p[0],p[1],p[2]];};const channel=value=>{const v=value/255;return v<=0.03928?v/12.92:Math.pow((v+0.055)/1.055,2.4);};const lum=rgb=>rgb?0.2126*channel(rgb[0])+0.7152*channel(rgb[1])+0.0722*channel(rgb[2]):null;const fg=parse(style.color),bg=parse(node&&node!==document.documentElement?getComputedStyle(node).backgroundColor:null);const a=lum(fg),b=lum(bg);return {text:effort.textContent,display:style.display,color:style.color,contrast:a!=null&&b!=null?Number(((Math.max(a,b)+0.05)/(Math.min(a,b)+0.05)).toFixed(2)):null};});
+ await reset({locale:'en'});await page.evaluate(()=>document.body.classList.add('dark'));await settle(page);
+ const enDark=await readout();
+ assert.equal(enDark.text,'High');assert.equal(enDark.display,'block');
+ assert.ok(enDark.contrast>=4.5,'English dark-theme effort must stay readable: '+JSON.stringify(enDark));cases++;
+ await page.evaluate(()=>document.body.classList.remove('dark'));await settle(page);
+ const enLight=await readout();
+ assert.equal(enLight.text,'High');assert.equal(enLight.display,'block');cases++;
+ await reset();await settle(page);
+ const zhLight=await readout();
+ assert.equal(zhLight.text,'高');assert.equal(zhLight.display,'block');
+ assert.equal(zhLight.color,enLight.color,'theme, not language, decides the effort color');cases++;
+ await page.evaluate(()=>document.body.classList.add('dark'));await settle(page);
+ const zhDark=await readout();
+ assert.equal(zhDark.text,'高');assert.equal(zhDark.display,'block');
+ assert.equal(zhDark.color,enDark.color,'dark-theme effort color is locale-independent');
+ assert.ok(zhDark.contrast>=4.5,'Chinese dark-theme effort must stay readable: '+JSON.stringify(zhDark));cases++;
+ await page.evaluate(()=>document.body.classList.remove('dark'));
+ const plain={snapshot:{current:{provider:'opencode-cpa',model:'安和桥/deepseek-v4.1-flash-free'}}};
+ await reset(plain);await settle(page);assert.equal(await page.locator('.lpa-model-trigger-effort').count(),0);cases++;
+ await reset({...plain,locale:'en'});await page.evaluate(()=>document.body.classList.add('dark'));await settle(page);
+ assert.equal(await page.locator('.lpa-model-trigger-effort').count(),0);
+ assert.match(await page.locator('.lpa-model-trigger').textContent(),/deepseek v4\.1-flash-free/);
+ await page.evaluate(()=>document.body.classList.remove('dark'));await settle(page);cases++;
  await page.evaluate(key=>window.__pinStorage.removeItem(key),PIN_KEY);
  await reset();await open();await page.evaluate(()=>window.fixture.unmount());await settle(page);assert.equal(await page.locator('.lpa-model-menu').count(),0);cases++;
  return {passed:true,cases,modelCalls:0};

@@ -65,7 +65,7 @@ const EFFORT_SCALE=['none','off','minimal','low','medium','high','xhigh','max'];
  * the order the Host gave it, because only the provider knows that scale.
  */
 export function orderedEfforts(efforts){
- const list=(efforts??[]).filter(item=>item&&typeof item.id==='string');
+ const list=(efforts??[]).filter(item=>item&&typeof item.id==='string'&&item.id);
  const ranks=list.map(item=>EFFORT_SCALE.indexOf(item.id.toLowerCase()));
  if(ranks.some(rank=>rank<0))return list;
  return list.map((item,index)=>({item,rank:ranks[index]})).sort((a,b)=>a.rank-b.rank).map(entry=>entry.item);
@@ -78,7 +78,13 @@ export function effortRows(entry,current,defaultLabel,t){
  for(const item of orderedEfforts(reasoning.efforts))if(typeof item?.id==='string'&&!rows.some(r=>r.effort===item.id))rows.push({id:JSON.stringify(item.id),effort:item.id,label:t&&['none','minimal','low','medium','high','xhigh','max'].includes(item.id)?t('picker.level.'+item.id):item.name||item.id,active:item.id===active});
  return rows;
 }
-export function triggerEffortLabel(state,entry,rows){return rows.find(r=>r.active)?.label??state?.retainedEffort??state?.current?.reasoningEffort??'';}
+/**
+ * An empty or whitespace-only label (a provider catalog may ship a nameless custom
+ * level, or a language pack may blank a known one) must not swallow the trigger's
+ * whole effort display: `??` cannot see past an empty string, so empty labels are
+ * skipped here and the state's own effort evidence still renders.
+ */
+export function triggerEffortLabel(state,entry,rows){const shown=value=>typeof value==='string'&&value.trim()?value:undefined;return shown(rows.find(r=>r.active)?.label)??shown(state?.retainedEffort)??shown(state?.current?.reasoningEffort)??'';}
 export function effortSelection(current,rows,index){
  if(!current||!Number.isInteger(index)||index<0||index>=rows.length)return null;
  return {provider:current.provider,model:current.model,...(rows[index].effort===undefined?{}:{reasoningEffort:rows[index].effort})};

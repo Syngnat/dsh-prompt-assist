@@ -5034,7 +5034,7 @@ function carriedEffort(model, current) {
   return (model?.reasoning?.efforts ?? []).some((level) => level?.id === effort) ? effort : void 0;
 }
 function orderedEfforts(efforts) {
-  const list = (efforts ?? []).filter((item) => item && typeof item.id === "string");
+  const list = (efforts ?? []).filter((item) => item && typeof item.id === "string" && item.id);
   const ranks = list.map((item) => EFFORT_SCALE.indexOf(item.id.toLowerCase()));
   if (ranks.some((rank) => rank < 0)) return list;
   return list.map((item, index) => ({ item, rank: ranks[index] })).sort((a, b) => a.rank - b.rank).map((entry) => entry.item);
@@ -5048,7 +5048,8 @@ function effortRows(entry, current, defaultLabel, t) {
   return rows;
 }
 function triggerEffortLabel(state, entry, rows) {
-  return rows.find((r) => r.active)?.label ?? state?.retainedEffort ?? state?.current?.reasoningEffort ?? "";
+  const shown = (value) => typeof value === "string" && value.trim() ? value : void 0;
+  return shown(rows.find((r) => r.active)?.label) ?? shown(state?.retainedEffort) ?? shown(state?.current?.reasoningEffort) ?? "";
 }
 function effortSelection(current, rows, index) {
   if (!current || !Number.isInteger(index) || index < 0 || index >= rows.length) return null;
