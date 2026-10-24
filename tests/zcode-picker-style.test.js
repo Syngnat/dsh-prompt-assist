@@ -123,6 +123,8 @@ test('zcode menu wires the ZCode-style region dividers',async()=>{
  const src=await fsp.readFile(new URL('../assist/client/model-picker.js',import.meta.url),'utf8');
  assert.match(pickerCss,/\.lpa-model-menu\[data-style='zcode'\] \.lpa-zt-divider\{[^}]*height:1px/);
  assert.match(pickerCss,/\.lpa-zt-divider\{[^}]*10%,transparent\)/);
+ // The shared effort frame has its own top border for Claude Style; ZCode must drop it or two lines stack.
+ assert.match(pickerCss,/\.lpa-model-menu\[data-style='zcode'\] \.lpa-effort-frame\{border-top:0\}/);
  // two literal divider elements (under the provider row and under the submenu back row);
  // the pre-effort divider reuses one element, so the class string appears exactly twice.
  assert.equal((src.match(/className:'lpa-zt-divider'/g)||[]).length,2);

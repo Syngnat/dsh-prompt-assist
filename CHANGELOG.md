@@ -2,6 +2,11 @@
 
 [English](<README.md>) | [简体中文](<README.zh-CN.md>)
 
+## 1.2.55 — ZCode 思考档边界只留一条分割线 / Single divider（2026-10-24）
+
+- 修复 ZCode 样式在模型列表与思考档之间出现两条叠线：思考档外框 `.lpa-effort-frame` 为 Claude Style 自带一条 `border-top`，ZCode 的分割线又叠在上面。ZCode 样式下移除外框自带的那条，只保留 ZCode 配方的 10% 前景色通栏线。
+- 测试：新增断言锁住「ZCode 下 effort 外框无 border-top」；真实 Chromium 实测该边界为 0px 边框 + 两条区域分割线（供应商行下、思考档上）。全套 1093 项离线测试通过。
+
 ## 1.2.54 — ZCode 菜单补回区域分割线 / Menu dividers（2026-10-24）
 
 - 补上 ZCode 原版菜单的区域分割线：供应商行下方与子菜单返回行下方各一条，模型列表与思考档之间一条。配方与 ZCode 的 `--color-border` 一致（10% 前景色、1px、通栏），深浅主题自动跟随。

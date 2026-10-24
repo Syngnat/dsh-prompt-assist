@@ -59,6 +59,8 @@ export const pickerCss=`
 .lpa-model-menu[data-style='zcode'] .lpa-model-option{min-height:32px;width:calc(100% - 4px);margin:0 2px;padding:0 8px;border-radius:8px}
 .lpa-model-menu[data-style='zcode'] .lpa-model-option:hover:not(:disabled){background:color-mix(in srgb,var(--dsw-alias-label-primary) 6%,transparent)}
 .lpa-model-menu[data-style='zcode'] .lpa-model-option--current{background:color-mix(in srgb,var(--dsw-alias-label-primary) 8%,transparent)}
+/* The shared effort frame draws its own top border for Claude Style; ZCode replaces it with the divider below, so keeping both would stack two lines. */
+.lpa-model-menu[data-style='zcode'] .lpa-effort-frame{border-top:0}
 /* ZCode separates menu regions with a hairline of 10% foreground (--color-border); full-bleed like its DropdownMenuSeparator. */
 .lpa-model-menu[data-style='zcode'] .lpa-zt-divider{flex:none;height:1px;margin:4px -6px;background:color-mix(in srgb,var(--dsw-alias-label-primary) 10%,transparent)}
 .lpa-zt-row{display:flex;align-items:center;gap:8px;box-sizing:border-box;width:calc(100% - 4px);min-height:32px;margin:0 2px 2px;padding:0 8px;border:0;border-radius:8px;background:transparent;color:var(--dsw-alias-label-primary);font:inherit;font-size:13px;cursor:pointer;text-align:start}
