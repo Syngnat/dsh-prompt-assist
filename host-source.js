@@ -7,6 +7,7 @@ import { apply as applyFast, inject as fastInject } from "./host-v1.0.4.js";
 import { OpenAIFastService } from "./service-v2.js";
 import { DEFAULT_PROVIDERS, mergeProviders } from "./policy.js";
 import { installAssistHost } from "./assist/bootstrap.js";
+import { installFinalAnswerContract } from "./assist/final-answer-contract.js";
 import { openPriorityProviders } from "./assist/priority-providers.js";
 import { installPriorityRpc } from "./assist/priority-transport.js";
 export const inject = [...fastInject, "webServer", "connection", "fs", "workingDirectory", "fileUploads", "attachments", "sessionController", "storageDomain", "profileContext"];
@@ -29,6 +30,10 @@ export async function apply(ctx, config = {}) {
   await applyFast(ctx, { ...config, adapterEntry, providers });
   const fastService = new OpenAIFastService(ctx, providers, key => key);
   await installAssistHost(ctx, { z, fastService, providers, createUserMessage });
+  // Liangshen's minimal prompt drops every non-allowlisted system-prompt section, so the Codex-style
+  // closing contract rides the pre-step decision as a durable user reminder instead.
+  const disposeContract = installFinalAnswerContract(ctx, { createUserMessage, enabled: config.finalAnswerContract !== false });
+  ctx.effect(() => () => disposeContract());
   installPriorityRpc(ctx, priority, configured);
   installUpdateHost(ctx);
 }
