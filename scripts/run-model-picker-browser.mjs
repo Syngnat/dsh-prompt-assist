@@ -5,6 +5,7 @@ import {join,resolve} from 'node:path';
 import {fileURLToPath} from 'node:url';
 import assert from 'node:assert/strict';
 import {runRegression} from './test-model-picker-layout.mjs';
+import {runZcodeProviderRegression} from './test-zcode-provider-navigation.mjs';
 const require=createRequire(import.meta.url);
 function playwright(){
  try{return require('playwright');}catch{}
@@ -28,5 +29,9 @@ export async function withBrowser(run){
  }finally{await browser.close();}
 }
 if(process.argv[1]&&resolve(process.argv[1])===fileURLToPath(import.meta.url)){
- console.log(JSON.stringify(await withBrowser(runRegression),null,2));
+ console.log(JSON.stringify(await withBrowser(async page=>{
+  if(process.argv.includes('--zcode-providers'))return runZcodeProviderRegression(page);
+  const baseline=await runRegression(page),providers=await runZcodeProviderRegression(page);
+  return {passed:true,cases:baseline.cases+providers.cases,zcodeProviderCases:providers.cases,modelCalls:0};
+ }),null,2));
 }

@@ -5464,6 +5464,10 @@ function currentEntry(state) {
   for (const group of sectionsOf(state)) for (const model of modelsOf(group)) if (isCurrentModel(state.current, { provider: group.id, model: model.id })) return { group, model };
   return null;
 }
+function zcodeProviderFor(state, viewedProviderId) {
+  const groups = sectionsOf(state);
+  return groups.find((group) => group.id === viewedProviderId) ?? groups.find((group) => group.id === state?.current?.provider) ?? groups[0] ?? null;
+}
 function busyState(state) {
   return state?.pending != null;
 }
@@ -5702,6 +5706,7 @@ function ModelPicker({ locked, available, directory, load, select, t, getLocale 
   const [pinsStored, setPinsStored] = import_react16.default.useState(() => readPinnedProviders(safeStorage()));
   const [otherOpen, setOtherOpen] = import_react16.default.useState(false);
   const [providerView, setProviderView] = import_react16.default.useState(null);
+  const [viewedProviderId, setViewedProviderId] = import_react16.default.useState(null);
   const [silentSubmit, setSilentSubmit] = import_react16.default.useState(false);
   const [styleTick, refreshStyleTick] = import_react16.default.useState(0);
   import_react16.default.useEffect(() => onModelStyleChange(() => refreshStyleTick((v) => v + 1)), []);
@@ -5716,6 +5721,8 @@ function ModelPicker({ locked, available, directory, load, select, t, getLocale 
   import_react16.default.useEffect(() => {
     life.alive = true;
     setOpen(false);
+    setProviderView(null);
+    setViewedProviderId(null);
     setError(null);
     setSubmitting(false);
     life.inflight = false;
@@ -5730,6 +5737,8 @@ function ModelPicker({ locked, available, directory, load, select, t, getLocale 
       life.open = false;
       life.epoch++;
       setOpen(false);
+      setProviderView(null);
+      setViewedProviderId(null);
     }
   }, [available, locked, life]);
   const hide = (restore = false) => {
@@ -5739,6 +5748,7 @@ function ModelPicker({ locked, available, directory, load, select, t, getLocale 
     focusRequest.current = null;
     setOtherOpen(false);
     setProviderView(null);
+    setViewedProviderId(null);
     if (restore) trigger.current?.focus();
   };
   const togglePin = (id3) => {
@@ -5764,9 +5774,9 @@ function ModelPicker({ locked, available, directory, load, select, t, getLocale 
   const { hero, collapsed, pins } = splitSections(state, pinsStored);
   const style = readModelStylePref(), zcode = style === "zcode";
   const zcSections = sectionsOf(state);
-  const zcGroup = zcSections.find((g) => entry && g.id === entry.group?.id) ?? zcSections[0] ?? null;
-  const zcCurrentKey = zcGroup ? providerRowKey(zcGroup.id) : null;
-  const zcFocusOrder = () => providerView ? ["zc-back", ...zcSections.map((g) => providerRowKey(g.id))] : zcGroup && zcCurrentKey ? [zcCurrentKey, ...modelsOf(zcGroup).map((m) => modelRowId(zcGroup, m))] : [];
+  const zcGroup = zcodeProviderFor(state, viewedProviderId);
+  const zcHeaderKey = zcGroup ? "zc-provider" : null;
+  const zcFocusOrder = () => providerView ? ["zc-back", ...zcSections.map((g) => providerRowKey(g.id))] : zcGroup && zcHeaderKey ? [zcHeaderKey, ...modelsOf(zcGroup).map((m) => modelRowId(zcGroup, m))] : [];
   const orderForFocus = () => zcode ? zcFocusOrder() : focusOrderFor(state, pins, null);
   const focusRow = (key) => {
     const node = rowRefs.current.get(key);
@@ -5778,6 +5788,12 @@ function ModelPicker({ locked, available, directory, load, select, t, getLocale 
     }
     return false;
   };
+  import_react16.default.useLayoutEffect(() => {
+    if (viewedProviderId === null || zcGroup?.id === viewedProviderId) return;
+    const active = document.activeElement;
+    if (visible && life.open && (active === document.body || active === document.documentElement || panel.current?.contains(active))) focusRequest.current = "first";
+    setViewedProviderId(null);
+  }, [visible, viewedProviderId, zcGroup?.id, life]);
   import_react16.default.useLayoutEffect(() => {
     const saved = focusRecovery.current;
     if (!saved || busy) return;
@@ -5798,7 +5814,7 @@ function ModelPicker({ locked, available, directory, load, select, t, getLocale 
       panel.current?.querySelector("button:not(:disabled),input:not(:disabled)")?.focus();
       focusRequest.current = null;
     }
-  }, [visible, position, state, pins, providerView, zcode]);
+  }, [visible, position, state, pins, providerView, viewedProviderId, zcode]);
   import_react16.default.useLayoutEffect(() => {
     if (!collapsed.length) setOtherOpen(false);
   }, [collapsed.length]);
@@ -5912,6 +5928,7 @@ function ModelPicker({ locked, available, directory, load, select, t, getLocale 
       focusRow(order[next]);
     }
   };
+  const flyout = useFlyout(otherRowRef, flyoutRef, visible && !zcode && otherOpen && collapsed.length > 0);
   if (!available) return null;
   if (styleTick >= 0 && readModelStylePref() === "dsh") return h15(
     "div",
@@ -5944,7 +5961,6 @@ function ModelPicker({ locked, available, directory, load, select, t, getLocale 
   const effort = triggerEffortLabel(state, entry, rows);
   const caption = entry?.model.name || entry?.model.id || state.current?.model || (loadingState(state) ? t("picker.loading") : t("picker.fallback"));
   const otherCount = otherModelsOf(collapsed).length;
-  const flyout = useFlyout(otherRowRef, flyoutRef, otherOpen && collapsed.length > 0);
   const renderModels = (group) => modelsOf(group).map((model) => renderModel(group, model));
   const renderModel = (group, model) => {
     const key = modelRowId(group, model), checked = isCurrentModel(state.current, { provider: group.id, model: model.id });
@@ -5993,7 +6009,8 @@ function ModelPicker({ locked, available, directory, load, select, t, getLocale 
       h15("span", { "aria-hidden": true }, pins.includes(group.id) ? t("picker.pinnedMark") : t("picker.pinMark"))
     )
   );
-  const effortFrame = rows.length ? h15("div", { className: "lpa-effort-frame" }, h15(EffortSlider, {
+  const showEffort = rows.length && (!zcode || zcGroup?.id === state.current?.provider);
+  const effortFrame = showEffort ? h15("div", { className: "lpa-effort-frame" }, h15(EffortSlider, {
     key: JSON.stringify([state.current?.provider, state.current?.model]),
     state,
     entry,
@@ -6008,25 +6025,28 @@ function ModelPicker({ locked, available, directory, load, select, t, getLocale 
   const zcProviderRow = zcGroup ? h15(
     "button",
     {
-      key: zcCurrentKey,
+      key: zcHeaderKey,
       type: "button",
       role: "menuitem",
       "aria-haspopup": "true",
-      "aria-expanded": providerView,
+      "aria-expanded": !!providerView,
       tabIndex: -1,
       disabled: busy || locked,
-      "data-picker-row": zcCurrentKey,
+      "data-picker-row": zcHeaderKey,
       "data-provider-id": zcGroup.id,
       "aria-label": t("picker.providerSwitch"),
       ref: (node) => {
-        if (node) rowRefs.current.set(zcCurrentKey, node);
-        else rowRefs.current.delete(zcCurrentKey);
+        if (node) rowRefs.current.set(zcHeaderKey, node);
+        else rowRefs.current.delete(zcHeaderKey);
       },
       className: "lpa-zt-row lpa-zt-provider-row",
       onFocus: () => {
-        modelFocus.current = zcCurrentKey;
+        modelFocus.current = zcHeaderKey;
       },
-      onClick: () => setProviderView((open2) => !open2)
+      onClick: () => {
+        focusRequest.current = "first";
+        setProviderView((open2) => !open2);
+      }
     },
     h15("span", { className: "lpa-zt-provider-name" }, zcGroup.id === "deepseek-account" ? t("picker.account") : zcGroup.name || zcGroup.id),
     h15("span", { className: "lpa-zt-provider-count" }, t("picker.providerModels", { count: modelsOf(zcGroup).length })),
@@ -6049,13 +6069,16 @@ function ModelPicker({ locked, available, directory, load, select, t, getLocale 
       onFocus: () => {
         modelFocus.current = "zc-back";
       },
-      onClick: () => setProviderView(null)
+      onClick: () => {
+        focusRequest.current = "first";
+        setProviderView(null);
+      }
     },
     h15("span", { className: "lpa-zt-back-chevron", "aria-hidden": true }, "\u2039"),
     h15("span", null, t("picker.back"))
   );
   const zcProviders = providerView ? zcSections.map((group) => {
-    const key = providerRowKey(group.id), checked = !!zcGroup && group.id === zcGroup.id;
+    const key = providerRowKey(group.id), checked = group.id === state.current?.provider;
     return h15(
       "button",
       {
@@ -6075,7 +6098,11 @@ function ModelPicker({ locked, available, directory, load, select, t, getLocale 
         onFocus: () => {
           modelFocus.current = key;
         },
-        onClick: () => setProviderView(null)
+        onClick: () => {
+          setViewedProviderId(group.id);
+          focusRequest.current = "first";
+          setProviderView(null);
+        }
       },
       h15("span", { className: "lpa-zt-provider-name" }, group.id === "deepseek-account" ? t("picker.account") : group.name || group.id),
       h15("span", { className: "lpa-zt-provider-count" }, t("picker.providerModels", { count: modelsOf(group).length })),
@@ -6094,7 +6121,7 @@ function ModelPicker({ locked, available, directory, load, select, t, getLocale 
       providerView ? h15(import_react16.default.Fragment, null, zcBackRow, h15("div", { className: "lpa-zt-divider", "aria-hidden": true }), zcProviders) : zcGroup ? renderModels(zcGroup) : h15("p", { className: "lpa-model-status", role: "status" }, loadingState(state) ? t("picker.loading") : t("picker.empty"))
     ),
     failures.length ? h15("div", { className: "lpa-model-failures" }, failures.map((f) => h15("p", { key: f.id, className: "lpa-model-status", role: "status" }, t(f.key, f.params)))) : null,
-    rows.length ? zcDivider : null,
+    showEffort ? zcDivider : null,
     effortFrame,
     error ? h15("p", { className: "lpa-model-error", role: "alert" }, t(error === "session/writer-held" ? "picker.sessionInUse" : "picker.failed")) : null,
     busy && !silentSubmit ? h15("span", { className: "lpa-model-status", role: "status" }, t("picker.saving")) : null

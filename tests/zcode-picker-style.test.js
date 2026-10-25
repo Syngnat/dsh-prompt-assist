@@ -6,6 +6,7 @@ import {readModelStylePref,writeModelStylePref,MODEL_STYLES} from '../assist/cli
 import {ZcodeEffortVisual,isGlmHighspeedModel,EFFORT_BUBBLES,highspeedBubbles} from '../assist/client/zcode-effort-visual.js';
 import {zcodeEffortCss} from '../assist/client/zcode-effort-style.js';
 import {pickerCss} from '../assist/client/model-picker-style.js';
+import {zcodeProviderFor} from '../assist/client/model-picker.js';
 
 test('style preference round-trips three values and defaults unknown ones to claude',()=>{
  const store=new Map();
@@ -16,6 +17,34 @@ test('style preference round-trips three values and defaults unknown ones to cla
   writeModelStylePref('nonsense');assert.equal(readModelStylePref(),'claude');
   assert.deepEqual(MODEL_STYLES,['dsh','claude','zcode']);
  }finally{delete globalThis.localStorage;}
+});
+
+test('provider browsing resolves the clicked provider id without changing the committed route',()=>{
+ const groups=[{id:'magpie',name:'Magpie',models:[{id:'shared',name:'Magpie Sol'}]},
+  {id:'magpie-responses',name:'Magpie · Responses',models:[{id:'shared',name:'Responses Sol'}]}];
+ const state={current:{provider:'magpie',model:'shared'},groups};
+ assert.strictEqual(zcodeProviderFor(state,null),groups[0]);
+ assert.strictEqual(zcodeProviderFor(state,'magpie-responses'),groups[1]);
+ assert.deepEqual(state.current,{provider:'magpie',model:'shared'});
+ // Identical labels and model ids must not conflate distinct provider routes.
+ groups[1].name='Magpie';
+ assert.strictEqual(zcodeProviderFor(state,'magpie-responses'),groups[1]);
+});
+
+test('provider browsing follows catalog updates and falls back when the browsed provider vanishes',()=>{
+ const active={id:'magpie',models:[{id:'sol'}]},browsed={id:'responses',models:[{id:'astra'}]};
+ const state={current:{provider:'magpie',model:'sol'},groups:[active,browsed]};
+ assert.strictEqual(zcodeProviderFor(state,'responses'),browsed);
+ const changed={...browsed,models:[{id:'new-model'}]};
+ assert.strictEqual(zcodeProviderFor({...state,groups:[active,changed]},'responses'),changed);
+ assert.strictEqual(zcodeProviderFor({...state,groups:[active]},'responses'),active);
+});
+
+test('provider browsing defaults to a valid catalog group even before model metadata loads',()=>{
+ const groups=[{id:'first',models:[{id:'a'}]},{id:'current',models:[{id:'b'}]}];
+ assert.strictEqual(zcodeProviderFor({groups,current:{provider:'current',model:'not-loaded'}},null),groups[1]);
+ assert.strictEqual(zcodeProviderFor({groups,current:null},null),groups[0]);
+ assert.equal(zcodeProviderFor({groups:[],current:null},null),null);
 });
 
 test('GLM highspeed detection follows the ZCode display-name rule',()=>{
@@ -128,5 +157,5 @@ test('zcode menu wires the ZCode-style region dividers',async()=>{
  // two literal divider elements (under the provider row and under the submenu back row);
  // the pre-effort divider reuses one element, so the class string appears exactly twice.
  assert.equal((src.match(/className:'lpa-zt-divider'/g)||[]).length,2);
- assert.match(src,/rows\.length\?zcDivider:null/);
+ assert.match(src,/showEffort\?zcDivider:null/);
 });

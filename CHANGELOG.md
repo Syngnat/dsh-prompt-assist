@@ -2,6 +2,12 @@
 
 [English](<README.md>) | [简体中文](<README.zh-CN.md>)
 
+## 1.2.67 — 修复 ZCode 供应商切换 / Provider navigation（未发布）
+
+- 修复在供应商列表选择 Magpie · Responses 后仍显示 Magpie 模型：之前点击只关闭列表，模型列表始终从会话当前模型推导供应商。现在独立记录正在浏览的供应商 ID，标题、模型数、列表与键盘导航一并切换。
+- 浏览供应商不自动提交模型；供应商勾选仍反映真实会话路由，明确点击模型后才切换。浏览其他供应商时隐藏原模型的推理控件，避免误改原路由；返回保留浏览位置，关闭重开或切会话时重置，供应商从目录移除时安全回退。
+- 新增真实 Chromium 交互回归，覆盖中英文、深浅色、宽窄屏、同模型 ID 跨供应商选择、键盘选择与目录/会话边界；原问题在修复前可稳定触发。
+
 ## 1.2.66 — Codex 式收尾契约注入 / Final-answer contract（2026-10-24）
 
 - 新增 `assist/final-answer-contract.js`：在 `agent/pre-step` 把 `decision.kind === 'enter'` 的步骤追加一条 `role:'user'` 的 durable `<system-reminder>` 消息，携带最终答复契约（只给结论、默认 ≤10 行、要点 4–6 条按重要性排序、结尾 ≤3 个下一步；过程进度压到 8–10 词）。这是「梁神模式」硬白名单过滤 system-prompt section 后唯一能到达模型的通道。

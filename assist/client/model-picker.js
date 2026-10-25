@@ -43,6 +43,11 @@ export function currentEntry(state){
  for(const group of sectionsOf(state))for(const model of modelsOf(group))if(isCurrentModel(state.current,{provider:group.id,model:model.id}))return {group,model};
  return null;
 }
+/** Browsing a provider is independent of committing a model route. Resolve by stable provider id. */
+export function zcodeProviderFor(state,viewedProviderId){
+ const groups=sectionsOf(state);
+ return groups.find(group=>group.id===viewedProviderId)??groups.find(group=>group.id===state?.current?.provider)??groups[0]??null;
+}
 export function busyState(state){return state?.pending!=null;}
 export function loadingState(state){return state?.status==='loading'||state?.status==='idle';}
 export function effectiveEffort(entry,current){return current?.reasoningEffort??entry?.model?.reasoning?.defaultEffort;}
@@ -210,6 +215,7 @@ export function ModelPicker({locked,available,directory,load,select,t,getLocale=
  const [pinsStored,setPinsStored]=React.useState(()=>readPinnedProviders(safeStorage()));
  const [otherOpen,setOtherOpen]=React.useState(false);
  const [providerView,setProviderView]=React.useState(null);
+ const [viewedProviderId,setViewedProviderId]=React.useState(null);
  /** True while an effort-only submit runs: the menu must not gain a progress row (it changed the popup height). */
  const [silentSubmit,setSilentSubmit]=React.useState(false);
  const [styleTick,refreshStyleTick]=React.useState(0);
@@ -221,9 +227,9 @@ export function ModelPicker({locked,available,directory,load,select,t,getLocale=
  const life=lifecycle.current;life.source=directory;
  const visible=open&&available&&!locked,entry=currentEntry(state),failures=failureRows(state);
  const busy=busyState(state)||submitting,position=usePlacement(trigger,panel,visible);
- React.useEffect(()=>{life.alive=true;setOpen(false);setError(null);setSubmitting(false);life.inflight=false;life.epoch++;return()=>{life.alive=false;life.epoch++;};},[directory,life]);
- React.useEffect(()=>{if(!available||locked){life.open=false;life.epoch++;setOpen(false);}},[available,locked,life]);
- const hide=(restore=false)=>{life.open=false;life.epoch++;setOpen(false);focusRequest.current=null;setOtherOpen(false);setProviderView(null);if(restore)trigger.current?.focus();};
+ React.useEffect(()=>{life.alive=true;setOpen(false);setProviderView(null);setViewedProviderId(null);setError(null);setSubmitting(false);life.inflight=false;life.epoch++;return()=>{life.alive=false;life.epoch++;};},[directory,life]);
+ React.useEffect(()=>{if(!available||locked){life.open=false;life.epoch++;setOpen(false);setProviderView(null);setViewedProviderId(null);}},[available,locked,life]);
+ const hide=(restore=false)=>{life.open=false;life.epoch++;setOpen(false);focusRequest.current=null;setOtherOpen(false);setProviderView(null);setViewedProviderId(null);if(restore)trigger.current?.focus();};
  const togglePin=id=>{const {pins}=splitSections(state,pinsStored);const next=togglePinnedProvider(id,pins);setPinsStored(next);writePinnedProviders(next,safeStorage());};
  /** A short grace period lets the pointer travel from the row into the panel without flicker. */
  const cancelClose=()=>{if(closeTimer.current){clearTimeout(closeTimer.current);closeTimer.current=null;}};
@@ -232,12 +238,21 @@ export function ModelPicker({locked,available,directory,load,select,t,getLocale=
  const {hero,collapsed,pins}=splitSections(state,pinsStored);
  const style=readModelStylePref(),zcode=style==='zcode';
  const zcSections=sectionsOf(state);
- const zcGroup=zcSections.find(g=>entry&&g.id===entry.group?.id)??zcSections[0]??null;
- const zcCurrentKey=zcGroup?providerRowKey(zcGroup.id):null;
+ const zcGroup=zcodeProviderFor(state,viewedProviderId);
+ // The header and a provider option are distinct focus targets, even when they show the same provider.
+ const zcHeaderKey=zcGroup?'zc-provider':null;
  /** ZCode navigation is view-based: the provider list, or the viewed provider's models. */
- const zcFocusOrder=()=>providerView?['zc-back',...zcSections.map(g=>providerRowKey(g.id))]:(zcGroup&&zcCurrentKey?[zcCurrentKey,...modelsOf(zcGroup).map(m=>modelRowId(zcGroup,m))]:[]);
+ const zcFocusOrder=()=>providerView?['zc-back',...zcSections.map(g=>providerRowKey(g.id))]:(zcGroup&&zcHeaderKey?[zcHeaderKey,...modelsOf(zcGroup).map(m=>modelRowId(zcGroup,m))]:[]);
  const orderForFocus=()=>zcode?zcFocusOrder():focusOrderFor(state,pins,null);
  const focusRow=key=>{const node=rowRefs.current.get(key);if(node&&!node.disabled){modelFocus.current=key;node.focus({preventScroll:true});node.scrollIntoView({block:'nearest'});return true;}return false;};
+ React.useLayoutEffect(()=>{
+  if(viewedProviderId===null||zcGroup?.id===viewedProviderId)return;
+  // Catalog refresh can remove the browsed group and its focused row. Clear the stale id
+  // and restore an in-menu focus target, but never take focus from another control.
+  const active=document.activeElement;
+  if(visible&&life.open&&(active===document.body||active===document.documentElement||panel.current?.contains(active)))focusRequest.current='first';
+  setViewedProviderId(null);
+ },[visible,viewedProviderId,zcGroup?.id,life]);
  React.useLayoutEffect(()=>{
   const saved=focusRecovery.current;if(!saved||busy)return;focusRecovery.current=null;
   if(!visible||saved.source!==directory||saved.epoch!==life.epoch||!life.open)return;
@@ -250,7 +265,7 @@ export function ModelPicker({locked,available,directory,load,select,t,getLocale=
   const order=orderForFocus(),wanted=focusRequest.current==='last'?order.at(-1):order[0];
   if(focusRow(wanted)){focusRequest.current=null;return;}
   if(!loadingState(state)){panel.current?.querySelector('button:not(:disabled),input:not(:disabled)')?.focus();focusRequest.current=null;}
- },[visible,position,state,pins,providerView,zcode]);
+ },[visible,position,state,pins,providerView,viewedProviderId,zcode]);
  React.useLayoutEffect(()=>{if(!collapsed.length)setOtherOpen(false);},[collapsed.length]);
  React.useEffect(()=>{
   if(!visible)return;
@@ -302,6 +317,8 @@ export function ModelPicker({locked,available,directory,load,select,t,getLocale=
    focusRow(order[next]);
   }
  };
+ // Keep hook order stable when a session becomes unavailable or the picker style changes.
+ const flyout=useFlyout(otherRowRef,flyoutRef,visible&&!zcode&&otherOpen&&collapsed.length>0);
  if(!available)return null;
  if(styleTick>=0&&readModelStylePref()==='dsh')return h('div',{className:'lpa-model-root'},
   h('style',null,'.lpa-model-native{font:inherit;font-size:13px;max-width:min(320px,52cqw);height:28px;color:var(--dsw-alias-label-primary,inherit);background:var(--dsw-alias-bg-layer-1,ButtonFace);border:1px solid var(--dsw-alias-border-l1,#80808066);border-radius:7px;padding:0 4px;cursor:pointer}'),
@@ -314,7 +331,6 @@ export function ModelPicker({locked,available,directory,load,select,t,getLocale=
  const effort=triggerEffortLabel(state,entry,rows);
  const caption=entry?.model.name||entry?.model.id||state.current?.model||(loadingState(state)?t('picker.loading'):t('picker.fallback'));
  const otherCount=otherModelsOf(collapsed).length;
- const flyout=useFlyout(otherRowRef,flyoutRef,otherOpen&&collapsed.length>0);
  const renderModels=group=>modelsOf(group).map(model=>renderModel(group,model));
  const renderModel=(group,model)=>{
   const key=modelRowId(group,model),checked=isCurrentModel(state.current,{provider:group.id,model:model.id});
@@ -331,28 +347,30 @@ export function ModelPicker({locked,available,directory,load,select,t,getLocale=
   h('button',{type:'button',className:'lpa-model-pin','data-provider-id':group.id,title:pins.includes(group.id)?t('picker.unpin'):t('picker.pin'),'aria-pressed':pins.includes(group.id),
    'aria-label':pins.includes(group.id)?t('picker.unpin'):t('picker.pin'),onClick:()=>togglePin(group.id)},
    h('span',{'aria-hidden':true},pins.includes(group.id)?t('picker.pinnedMark'):t('picker.pinMark'))));
- const effortFrame=rows.length?h('div',{className:'lpa-effort-frame'},h(EffortSlider,{key:JSON.stringify([state.current?.provider,state.current?.model]),state,entry,disabled:busy||locked,t,submit,sliderRef:slider,
+ // Until a model is chosen, the trigger and reasoning slider still belong to the committed route.
+ const showEffort=rows.length&&(!zcode||zcGroup?.id===state.current?.provider);
+ const effortFrame=showEffort?h('div',{className:'lpa-effort-frame'},h(EffortSlider,{key:JSON.stringify([state.current?.provider,state.current?.model]),state,entry,disabled:busy||locked,t,submit,sliderRef:slider,
   Visual:zcode?ZcodeEffortVisual:ClaudeEffortVisual,inputClass:zcode?'lpa-zt-input':'lpa-ce-input',
   highspeed:zcode&&isGlmHighspeedModel(entry?.model?.name||entry?.model?.id||'')})):null;
- const zcProviderRow=zcGroup?h('button',{key:zcCurrentKey,type:'button',role:'menuitem','aria-haspopup':'true','aria-expanded':providerView,
-  tabIndex:-1,disabled:busy||locked,'data-picker-row':zcCurrentKey,'data-provider-id':zcGroup.id,'aria-label':t('picker.providerSwitch'),
-  ref:node=>{if(node)rowRefs.current.set(zcCurrentKey,node);else rowRefs.current.delete(zcCurrentKey);},
-  className:'lpa-zt-row lpa-zt-provider-row',onFocus:()=>{modelFocus.current=zcCurrentKey;},
-  onClick:()=>setProviderView(open=>!open)},
+ const zcProviderRow=zcGroup?h('button',{key:zcHeaderKey,type:'button',role:'menuitem','aria-haspopup':'true','aria-expanded':!!providerView,
+  tabIndex:-1,disabled:busy||locked,'data-picker-row':zcHeaderKey,'data-provider-id':zcGroup.id,'aria-label':t('picker.providerSwitch'),
+  ref:node=>{if(node)rowRefs.current.set(zcHeaderKey,node);else rowRefs.current.delete(zcHeaderKey);},
+  className:'lpa-zt-row lpa-zt-provider-row',onFocus:()=>{modelFocus.current=zcHeaderKey;},
+  onClick:()=>{focusRequest.current='first';setProviderView(open=>!open);}},
   h('span',{className:'lpa-zt-provider-name'},zcGroup.id==='deepseek-account'?t('picker.account'):zcGroup.name||zcGroup.id),
   h('span',{className:'lpa-zt-provider-count'},t('picker.providerModels',{count:modelsOf(zcGroup).length})),
   h('span',{className:'lpa-zt-provider-chevron','aria-hidden':true},'›')):null;
  const zcBackRow=h('button',{key:'zc-back',type:'button',role:'menuitem',tabIndex:-1,disabled:busy||locked,'data-picker-row':'zc-back',
   className:'lpa-zt-row lpa-zt-back-row',
   ref:node=>{if(node)rowRefs.current.set('zc-back',node);else rowRefs.current.delete('zc-back');},
-  onFocus:()=>{modelFocus.current='zc-back';},onClick:()=>setProviderView(null)},
+  onFocus:()=>{modelFocus.current='zc-back';},onClick:()=>{focusRequest.current='first';setProviderView(null);}},
   h('span',{className:'lpa-zt-back-chevron','aria-hidden':true},'‹'),h('span',null,t('picker.back')));
- const zcProviders=providerView?zcSections.map(group=>{const key=providerRowKey(group.id),checked=!!zcGroup&&group.id===zcGroup.id;
+ const zcProviders=providerView?zcSections.map(group=>{const key=providerRowKey(group.id),checked=group.id===state.current?.provider;
    return h('button',{key,type:'button',role:'menuitemradio','aria-checked':checked,tabIndex:-1,disabled:busy||locked,
     'data-picker-row':key,'data-provider-id':group.id,
     ref:node=>{if(node)rowRefs.current.set(key,node);else rowRefs.current.delete(key);},
     className:'lpa-zt-row lpa-zt-provider-option'+(checked?' lpa-zt-provider-option--current':''),
-    onFocus:()=>{modelFocus.current=key;},onClick:()=>setProviderView(null)},
+    onFocus:()=>{modelFocus.current=key;},onClick:()=>{setViewedProviderId(group.id);focusRequest.current='first';setProviderView(null);}},
     h('span',{className:'lpa-zt-provider-name'},group.id==='deepseek-account'?t('picker.account'):group.name||group.id),
     h('span',{className:'lpa-zt-provider-count'},t('picker.providerModels',{count:modelsOf(group).length})),
     checked?h('span',{className:'lpa-model-check','aria-hidden':true},'✓'):null);}):null;
@@ -363,7 +381,7 @@ export function ModelPicker({locked,available,directory,load,select,t,getLocale=
   h('div',{className:'lpa-model-scroll',role:'menu','aria-label':t('picker.models')},
    providerView?h(React.Fragment,null,zcBackRow,h('div',{className:'lpa-zt-divider','aria-hidden':true}),zcProviders):(zcGroup?renderModels(zcGroup):h('p',{className:'lpa-model-status',role:'status'},loadingState(state)?t('picker.loading'):t('picker.empty')))),
   failures.length?h('div',{className:'lpa-model-failures'},failures.map(f=>h('p',{key:f.id,className:'lpa-model-status',role:'status'},t(f.key,f.params)))):null,
-  rows.length?zcDivider:null,
+  showEffort?zcDivider:null,
   effortFrame,
   error?h('p',{className:'lpa-model-error',role:'alert'},t(error==='session/writer-held'?'picker.sessionInUse':'picker.failed')):null,
   busy&&!silentSubmit?h('span',{className:'lpa-model-status',role:'status'},t('picker.saving')):null);
