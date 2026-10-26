@@ -237,7 +237,7 @@ export function ModelPicker({locked,available,directory,load,select,t,getLocale=
  const [styleTick,refreshStyleTick]=React.useState(0);
  React.useEffect(()=>onModelStyleChange(()=>refreshStyleTick(v=>v+1)),[]);
  const trigger=React.useRef(null),panel=React.useRef(null),slider=React.useRef(null),rowRefs=React.useRef(new Map());
- const otherRowRef=React.useRef(null),flyoutRef=React.useRef(null),closeTimer=React.useRef(null);
+ const otherRowRef=React.useRef(null),flyoutRef=React.useRef(null);
  const lifecycle=React.useRef({alive:true,source:directory,epoch:0,open:false,operation:0,inflight:false});
  const focusRequest=React.useRef(null),focusRecovery=React.useRef(null),modelFocus=React.useRef(null),id=React.useId();
  const life=lifecycle.current;life.source=directory;
@@ -245,13 +245,11 @@ export function ModelPicker({locked,available,directory,load,select,t,getLocale=
  const busy=busyState(state)||submitting,position=usePlacement(trigger,panel,visible);
  React.useEffect(()=>{life.alive=true;setOpen(false);setProviderView(null);setViewedProviderId(null);setError(null);setSubmitting(false);life.inflight=false;life.epoch++;return()=>{life.alive=false;life.epoch++;};},[directory,life]);
  React.useEffect(()=>{if(!available||locked){life.open=false;life.epoch++;setOpen(false);setProviderView(null);setViewedProviderId(null);}},[available,locked,life]);
- const hide=(restore=false)=>{life.open=false;life.epoch++;setOpen(false);focusRequest.current=null;openedByHover.current=false;setOtherOpen(false);setProviderView(null);setViewedProviderId(null);if(restore)trigger.current?.focus();};
+ const hide=(restore=false)=>{life.open=false;life.epoch++;setOpen(false);focusRequest.current=null;setOtherOpen(false);setProviderView(null);setViewedProviderId(null);if(restore)trigger.current?.focus();};
  const togglePin=id=>{const {pins}=splitSections(state,pinsStored);const next=togglePinnedProvider(id,pins);setPinsStored(next);writePinnedProviders(next,safeStorage());};
  /** A short grace period lets the pointer travel from the row into the panel without flicker. */
- const cancelClose=()=>{if(closeTimer.current){clearTimeout(closeTimer.current);closeTimer.current=null;}};
- const openedByHover=React.useRef(false);
- const scheduleClose=()=>{cancelClose();closeTimer.current=setTimeout(()=>{closeTimer.current=null;openedByHover.current=false;setOtherOpen(false);},160);};
- React.useEffect(()=>()=>cancelClose(),[]);
+ // The other-models panel opens on click only: a hover-opened panel vanished while the
+ // pointer travelled into it, which made its options impossible to pick.
  const {hero,collapsed,pins}=splitSections(state,pinsStored);
  const style=readModelStylePref(),zcode=style==='zcode';
  const zcSections=sectionsOf(state);
@@ -419,14 +417,7 @@ export function ModelPicker({locked,available,directory,load,select,t,getLocale=
    ref:node=>{otherRowRef.current=node;if(node)rowRefs.current.set(key,node);else rowRefs.current.delete(key);},
    className:'lpa-model-provider-row'+(current?' lpa-model-provider-row--current':'')+(otherOpen&&collapsed.length?' lpa-model-provider-row--open':''),
    onFocus:()=>{modelFocus.current=key;},
-   onPointerEnter:()=>{cancelClose();if(busy||locked)return;if(!otherOpen){openedByHover.current=true;setOtherOpen(true);}},
-   onPointerLeave:scheduleClose,
-   onClick:()=>{if(busy||locked)return;
-    // Hover usually opens this row before the click lands; treating that first click as a
-    // toggle would shut the panel the user just tried to open, so it only pins it open.
-    if(!otherOpen){setOtherOpen(true);return;}
-    if(openedByHover.current){openedByHover.current=false;return;}
-    setOtherOpen(false);},
+   onClick:()=>{if(!busy&&!locked)setOtherOpen(old=>!old);},
    onKeyDown:e=>{if(e.nativeEvent.isComposing)return;if(e.key==='ArrowRight'){e.preventDefault();e.stopPropagation();setOtherOpen(true);}}},
    h('span',{className:'lpa-model-provider-copy'},h('span',{className:'lpa-model-provider-name'},t('picker.otherModels'))),
    h('span',{className:'lpa-model-provider-meta'},
@@ -437,7 +428,7 @@ export function ModelPicker({locked,available,directory,load,select,t,getLocale=
  /** Hover panel: the same option rows as a pinned group, separated by provider dividers. */
  const flyoutPanel=otherOpen&&collapsed.length?h('div',{ref:flyoutRef,className:'lpa-model-flyout',role:'menu','aria-label':t('picker.otherModels'),
   style:flyout?{left:flyout.left,top:flyout.top,maxHeight:flyout.maxHeight}:{left:0,top:0,visibility:'hidden'},
-  onPointerEnter:cancelClose,onPointerLeave:scheduleClose},
+  },
   h('div',{className:'lpa-model-flyout-head'},h('span',null,t('picker.otherModels')),
    h('span',{className:'lpa-model-provider-count'},String(otherCount))),
   h('div',{className:'lpa-model-flyout-scroll'},collapsed.map((group,index)=>h('div',{key:group.id,className:'lpa-model-other-provider'+(index?' lpa-model-other-provider--divided':'')},

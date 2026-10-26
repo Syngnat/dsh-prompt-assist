@@ -5730,7 +5730,7 @@ function ModelPicker({ locked, available, directory, load, select, t, getLocale 
   const [styleTick, refreshStyleTick] = import_react16.default.useState(0);
   import_react16.default.useEffect(() => onModelStyleChange(() => refreshStyleTick((v) => v + 1)), []);
   const trigger = import_react16.default.useRef(null), panel = import_react16.default.useRef(null), slider = import_react16.default.useRef(null), rowRefs = import_react16.default.useRef(/* @__PURE__ */ new Map());
-  const otherRowRef = import_react16.default.useRef(null), flyoutRef = import_react16.default.useRef(null), closeTimer = import_react16.default.useRef(null);
+  const otherRowRef = import_react16.default.useRef(null), flyoutRef = import_react16.default.useRef(null);
   const lifecycle = import_react16.default.useRef({ alive: true, source: directory, epoch: 0, open: false, operation: 0, inflight: false });
   const focusRequest = import_react16.default.useRef(null), focusRecovery = import_react16.default.useRef(null), modelFocus = import_react16.default.useRef(null), id2 = import_react16.default.useId();
   const life = lifecycle.current;
@@ -5765,7 +5765,6 @@ function ModelPicker({ locked, available, directory, load, select, t, getLocale 
     life.epoch++;
     setOpen(false);
     focusRequest.current = null;
-    openedByHover.current = false;
     setOtherOpen(false);
     setProviderView(null);
     setViewedProviderId(null);
@@ -5777,22 +5776,6 @@ function ModelPicker({ locked, available, directory, load, select, t, getLocale 
     setPinsStored(next);
     writePinnedProviders(next, safeStorage());
   };
-  const cancelClose = () => {
-    if (closeTimer.current) {
-      clearTimeout(closeTimer.current);
-      closeTimer.current = null;
-    }
-  };
-  const openedByHover = import_react16.default.useRef(false);
-  const scheduleClose = () => {
-    cancelClose();
-    closeTimer.current = setTimeout(() => {
-      closeTimer.current = null;
-      openedByHover.current = false;
-      setOtherOpen(false);
-    }, 160);
-  };
-  import_react16.default.useEffect(() => () => cancelClose(), []);
   const { hero, collapsed, pins } = splitSections(state, pinsStored);
   const style = readModelStylePref(), zcode = style === "zcode";
   const zcSections = sectionsOf(state);
@@ -6182,26 +6165,8 @@ function ModelPicker({ locked, available, directory, load, select, t, getLocale 
         onFocus: () => {
           modelFocus.current = key;
         },
-        onPointerEnter: () => {
-          cancelClose();
-          if (busy || locked) return;
-          if (!otherOpen) {
-            openedByHover.current = true;
-            setOtherOpen(true);
-          }
-        },
-        onPointerLeave: scheduleClose,
         onClick: () => {
-          if (busy || locked) return;
-          if (!otherOpen) {
-            setOtherOpen(true);
-            return;
-          }
-          if (openedByHover.current) {
-            openedByHover.current = false;
-            return;
-          }
-          setOtherOpen(false);
+          if (!busy && !locked) setOtherOpen((old) => !old);
         },
         onKeyDown: (e) => {
           if (e.nativeEvent.isComposing) return;
@@ -6229,9 +6194,7 @@ function ModelPicker({ locked, available, directory, load, select, t, getLocale 
       className: "lpa-model-flyout",
       role: "menu",
       "aria-label": t("picker.otherModels"),
-      style: flyout ? { left: flyout.left, top: flyout.top, maxHeight: flyout.maxHeight } : { left: 0, top: 0, visibility: "hidden" },
-      onPointerEnter: cancelClose,
-      onPointerLeave: scheduleClose
+      style: flyout ? { left: flyout.left, top: flyout.top, maxHeight: flyout.maxHeight } : { left: 0, top: 0, visibility: "hidden" }
     },
     h15(
       "div",
