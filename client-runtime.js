@@ -867,8 +867,9 @@ var init_messages = __esm({
         "picker.level.none": "\u5173\u95ED",
         "picker.level.minimal": "\u6700\u4F4E",
         "picker.back": "\u8FD4\u56DE",
-        "picker.providerSwitch": "\u5207\u6362\u4F9B\u5E94\u5546",
+        "picker.providerSwitch": "\u5207\u6362\u4F9B\u5E94\u5546\uFF0C\u53E6\u6709 {count} \u4E2A",
         "picker.providerModels": "{count} \u4E2A\u6A21\u578B",
+        "picker.providerCount": "{count} \u4E2A\u4F9B\u5E94\u5546",
         "picker.level.low": "\u4F4E",
         "picker.level.medium": "\u4E2D",
         "picker.level.high": "\u9AD8",
@@ -1190,8 +1191,9 @@ var init_messages = __esm({
         "picker.level.none": "Off",
         "picker.level.minimal": "Minimal",
         "picker.back": "Back",
-        "picker.providerSwitch": "Switch provider",
+        "picker.providerSwitch": "Switch provider, {count} more",
         "picker.providerModels": "{count} models",
+        "picker.providerCount": "{count} providers",
         "picker.level.low": "Low",
         "picker.level.medium": "Medium",
         "picker.level.high": "High",
@@ -5775,8 +5777,10 @@ function ModelPicker({ locked, available, directory, load, select, t, getLocale 
   const style = readModelStylePref(), zcode = style === "zcode";
   const zcSections = sectionsOf(state);
   const zcGroup = zcodeProviderFor(state, viewedProviderId);
+  const zcOthers = zcGroup ? zcSections.filter((group) => group.id !== zcGroup.id) : zcSections;
+  const zcSwitchable = zcOthers.length > 0;
   const zcHeaderKey = zcGroup ? "zc-provider" : null;
-  const zcFocusOrder = () => providerView ? ["zc-back", ...zcSections.map((g) => providerRowKey(g.id))] : zcGroup && zcHeaderKey ? [zcHeaderKey, ...modelsOf(zcGroup).map((m) => modelRowId(zcGroup, m))] : [];
+  const zcFocusOrder = () => providerView ? ["zc-back", ...zcOthers.map((g) => providerRowKey(g.id))] : zcGroup ? [...zcSwitchable ? [zcHeaderKey] : [], ...modelsOf(zcGroup).map((m) => modelRowId(zcGroup, m))] : [];
   const orderForFocus = () => zcode ? zcFocusOrder() : focusOrderFor(state, pins, null);
   const focusRow = (key) => {
     const node = rowRefs.current.get(key);
@@ -5818,6 +5822,9 @@ function ModelPicker({ locked, available, directory, load, select, t, getLocale 
   import_react16.default.useLayoutEffect(() => {
     if (!collapsed.length) setOtherOpen(false);
   }, [collapsed.length]);
+  import_react16.default.useLayoutEffect(() => {
+    if (zcode && providerView && !zcSwitchable) setProviderView(false);
+  }, [zcode, providerView, zcSwitchable]);
   import_react16.default.useEffect(() => {
     if (!visible) return;
     const outside = (e) => {
@@ -6022,7 +6029,8 @@ function ModelPicker({ locked, available, directory, load, select, t, getLocale 
     inputClass: zcode ? "lpa-zt-input" : "lpa-ce-input",
     highspeed: zcode && isGlmHighspeedModel(entry?.model?.name || entry?.model?.id || "")
   })) : null;
-  const zcProviderRow = zcGroup ? h15(
+  const zcProviderName = (group) => group.id === "deepseek-account" ? t("picker.account") : group.name || group.id;
+  const zcProviderRow = !zcGroup ? null : zcSwitchable ? h15(
     "button",
     {
       key: zcHeaderKey,
@@ -6034,7 +6042,7 @@ function ModelPicker({ locked, available, directory, load, select, t, getLocale 
       disabled: busy || locked,
       "data-picker-row": zcHeaderKey,
       "data-provider-id": zcGroup.id,
-      "aria-label": t("picker.providerSwitch"),
+      "aria-label": t("picker.providerSwitch", { count: zcOthers.length }),
       ref: (node) => {
         if (node) rowRefs.current.set(zcHeaderKey, node);
         else rowRefs.current.delete(zcHeaderKey);
@@ -6048,10 +6056,15 @@ function ModelPicker({ locked, available, directory, load, select, t, getLocale 
         setProviderView((open2) => !open2);
       }
     },
-    h15("span", { className: "lpa-zt-provider-name" }, zcGroup.id === "deepseek-account" ? t("picker.account") : zcGroup.name || zcGroup.id),
-    h15("span", { className: "lpa-zt-provider-count" }, t("picker.providerModels", { count: modelsOf(zcGroup).length })),
+    h15("span", { className: "lpa-zt-provider-name" }, zcProviderName(zcGroup)),
+    h15("span", { className: "lpa-zt-provider-count" }, t("picker.providerCount", { count: zcSections.length })),
     h15("span", { className: "lpa-zt-provider-chevron", "aria-hidden": true }, "\u203A")
-  ) : null;
+  ) : h15(
+    "div",
+    { key: zcHeaderKey, role: "presentation", "data-picker-row": zcHeaderKey, "data-provider-id": zcGroup.id, className: "lpa-zt-row lpa-zt-provider-row" },
+    h15("span", { className: "lpa-zt-provider-name" }, zcProviderName(zcGroup)),
+    h15("span", { className: "lpa-zt-provider-count" }, t("picker.providerCount", { count: zcSections.length }))
+  );
   const zcBackRow = h15(
     "button",
     {
@@ -6077,7 +6090,7 @@ function ModelPicker({ locked, available, directory, load, select, t, getLocale 
     h15("span", { className: "lpa-zt-back-chevron", "aria-hidden": true }, "\u2039"),
     h15("span", null, t("picker.back"))
   );
-  const zcProviders = providerView ? zcSections.map((group) => {
+  const zcProviders = providerView ? zcOthers.map((group) => {
     const key = providerRowKey(group.id), checked = group.id === state.current?.provider;
     return h15(
       "button",
@@ -6104,7 +6117,7 @@ function ModelPicker({ locked, available, directory, load, select, t, getLocale 
           setProviderView(null);
         }
       },
-      h15("span", { className: "lpa-zt-provider-name" }, group.id === "deepseek-account" ? t("picker.account") : group.name || group.id),
+      h15("span", { className: "lpa-zt-provider-name" }, zcProviderName(group)),
       h15("span", { className: "lpa-zt-provider-count" }, t("picker.providerModels", { count: modelsOf(group).length })),
       checked ? h15("span", { className: "lpa-model-check", "aria-hidden": true }, "\u2713") : null
     );

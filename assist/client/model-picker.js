@@ -239,10 +239,13 @@ export function ModelPicker({locked,available,directory,load,select,t,getLocale=
  const style=readModelStylePref(),zcode=style==='zcode';
  const zcSections=sectionsOf(state);
  const zcGroup=zcodeProviderFor(state,viewedProviderId);
+ /** The header already names the viewed provider, so the switch list never repeats it. */
+ const zcOthers=zcGroup?zcSections.filter(group=>group.id!==zcGroup.id):zcSections;
+ const zcSwitchable=zcOthers.length>0;
  // The header and a provider option are distinct focus targets, even when they show the same provider.
  const zcHeaderKey=zcGroup?'zc-provider':null;
  /** ZCode navigation is view-based: the provider list, or the viewed provider's models. */
- const zcFocusOrder=()=>providerView?['zc-back',...zcSections.map(g=>providerRowKey(g.id))]:(zcGroup&&zcHeaderKey?[zcHeaderKey,...modelsOf(zcGroup).map(m=>modelRowId(zcGroup,m))]:[]);
+ const zcFocusOrder=()=>providerView?['zc-back',...zcOthers.map(g=>providerRowKey(g.id))]:(zcGroup?[...(zcSwitchable?[zcHeaderKey]:[]),...modelsOf(zcGroup).map(m=>modelRowId(zcGroup,m))]:[]);
  const orderForFocus=()=>zcode?zcFocusOrder():focusOrderFor(state,pins,null);
  const focusRow=key=>{const node=rowRefs.current.get(key);if(node&&!node.disabled){modelFocus.current=key;node.focus({preventScroll:true});node.scrollIntoView({block:'nearest'});return true;}return false;};
  React.useLayoutEffect(()=>{
@@ -267,6 +270,7 @@ export function ModelPicker({locked,available,directory,load,select,t,getLocale=
   if(!loadingState(state)){panel.current?.querySelector('button:not(:disabled),input:not(:disabled)')?.focus();focusRequest.current=null;}
  },[visible,position,state,pins,providerView,viewedProviderId,zcode]);
  React.useLayoutEffect(()=>{if(!collapsed.length)setOtherOpen(false);},[collapsed.length]);
+ React.useLayoutEffect(()=>{if(zcode&&providerView&&!zcSwitchable)setProviderView(false);},[zcode,providerView,zcSwitchable]);
  React.useEffect(()=>{
   if(!visible)return;
   const outside=e=>{if(!trigger.current?.contains(e.target)&&!panel.current?.contains(e.target)&&!flyoutRef.current?.contains(e.target)){setOtherOpen(false);hide();}};
@@ -352,26 +356,31 @@ export function ModelPicker({locked,available,directory,load,select,t,getLocale=
  const effortFrame=showEffort?h('div',{className:'lpa-effort-frame'},h(EffortSlider,{key:JSON.stringify([state.current?.provider,state.current?.model]),state,entry,disabled:busy||locked,t,submit,sliderRef:slider,
   Visual:zcode?ZcodeEffortVisual:ClaudeEffortVisual,inputClass:zcode?'lpa-zt-input':'lpa-ce-input',
   highspeed:zcode&&isGlmHighspeedModel(entry?.model?.name||entry?.model?.id||'')})):null;
- const zcProviderRow=zcGroup?h('button',{key:zcHeaderKey,type:'button',role:'menuitem','aria-haspopup':'true','aria-expanded':!!providerView,
-  tabIndex:-1,disabled:busy||locked,'data-picker-row':zcHeaderKey,'data-provider-id':zcGroup.id,'aria-label':t('picker.providerSwitch'),
+ const zcProviderName=group=>group.id==='deepseek-account'?t('picker.account'):group.name||group.id;
+ const zcProviderRow=!zcGroup?null:zcSwitchable?h('button',{key:zcHeaderKey,type:'button',role:'menuitem','aria-haspopup':'true','aria-expanded':!!providerView,
+  tabIndex:-1,disabled:busy||locked,'data-picker-row':zcHeaderKey,'data-provider-id':zcGroup.id,
+  'aria-label':t('picker.providerSwitch',{count:zcOthers.length}),
   ref:node=>{if(node)rowRefs.current.set(zcHeaderKey,node);else rowRefs.current.delete(zcHeaderKey);},
   className:'lpa-zt-row lpa-zt-provider-row',onFocus:()=>{modelFocus.current=zcHeaderKey;},
   onClick:()=>{focusRequest.current='first';setProviderView(open=>!open);}},
-  h('span',{className:'lpa-zt-provider-name'},zcGroup.id==='deepseek-account'?t('picker.account'):zcGroup.name||zcGroup.id),
-  h('span',{className:'lpa-zt-provider-count'},t('picker.providerModels',{count:modelsOf(zcGroup).length})),
-  h('span',{className:'lpa-zt-provider-chevron','aria-hidden':true},'›')):null;
+  h('span',{className:'lpa-zt-provider-name'},zcProviderName(zcGroup)),
+  h('span',{className:'lpa-zt-provider-count'},t('picker.providerCount',{count:zcSections.length})),
+  h('span',{className:'lpa-zt-provider-chevron','aria-hidden':true},'›')):
+  h('div',{key:zcHeaderKey,role:'presentation','data-picker-row':zcHeaderKey,'data-provider-id':zcGroup.id,className:'lpa-zt-row lpa-zt-provider-row'},
+   h('span',{className:'lpa-zt-provider-name'},zcProviderName(zcGroup)),
+   h('span',{className:'lpa-zt-provider-count'},t('picker.providerCount',{count:zcSections.length})));
  const zcBackRow=h('button',{key:'zc-back',type:'button',role:'menuitem',tabIndex:-1,disabled:busy||locked,'data-picker-row':'zc-back',
   className:'lpa-zt-row lpa-zt-back-row',
   ref:node=>{if(node)rowRefs.current.set('zc-back',node);else rowRefs.current.delete('zc-back');},
   onFocus:()=>{modelFocus.current='zc-back';},onClick:()=>{focusRequest.current='first';setProviderView(null);}},
   h('span',{className:'lpa-zt-back-chevron','aria-hidden':true},'‹'),h('span',null,t('picker.back')));
- const zcProviders=providerView?zcSections.map(group=>{const key=providerRowKey(group.id),checked=group.id===state.current?.provider;
+ const zcProviders=providerView?zcOthers.map(group=>{const key=providerRowKey(group.id),checked=group.id===state.current?.provider;
    return h('button',{key,type:'button',role:'menuitemradio','aria-checked':checked,tabIndex:-1,disabled:busy||locked,
     'data-picker-row':key,'data-provider-id':group.id,
     ref:node=>{if(node)rowRefs.current.set(key,node);else rowRefs.current.delete(key);},
     className:'lpa-zt-row lpa-zt-provider-option'+(checked?' lpa-zt-provider-option--current':''),
     onFocus:()=>{modelFocus.current=key;},onClick:()=>{setViewedProviderId(group.id);focusRequest.current='first';setProviderView(null);}},
-    h('span',{className:'lpa-zt-provider-name'},group.id==='deepseek-account'?t('picker.account'):group.name||group.id),
+    h('span',{className:'lpa-zt-provider-name'},zcProviderName(group)),
     h('span',{className:'lpa-zt-provider-count'},t('picker.providerModels',{count:modelsOf(group).length})),
     checked?h('span',{className:'lpa-model-check','aria-hidden':true},'✓'):null);}):null;
  const zcDivider=h('div',{className:'lpa-zt-divider','aria-hidden':true});
