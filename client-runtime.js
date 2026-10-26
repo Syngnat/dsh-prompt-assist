@@ -403,8 +403,6 @@ var init_style = __esm({
 .lpa-preview-meta summary{cursor:pointer;width:fit-content}
 .lpa-preview-meta pre,.lpa-preview-meta p{margin:7px 0 0}
 .lpa-preview-meta pre{max-height:120px;padding:8px;background:var(--dsw-alias-bg-layer-2);border-radius:6px}
-.lpa-reference{padding:5px 0;overflow-wrap:anywhere}
-.lpa-details{border-top:1px solid var(--dsw-alias-border-l1);padding-top:7px}.lpa-details summary{cursor:pointer;color:var(--dsw-alias-label-secondary)}
 .lpa-features{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(250px,100%),1fr));gap:10px;align-items:start;min-width:0}
 .lpa-feature{display:grid;gap:8px;min-width:0;align-content:start;padding:9px;border:1px solid var(--dsw-alias-border-l1);border-radius:7px;background:var(--dsw-alias-bg-layer-1)}
 .lpa-feature-title{font:inherit;font-size:12px;font-weight:600;margin:0;color:var(--dsw-alias-label-primary)}
@@ -925,11 +923,6 @@ var init_messages = __esm({
         stale: "\u8349\u7A3F\u5DF2\u53D8\u5316\uFF0C\u672A\u5E94\u7528\u7ED3\u679C\u3002\u8BF7\u91CD\u65B0\u751F\u6210\u3002",
         roundsError: "\u81EA\u5B9A\u4E49\u8F6E\u6570\u5FC5\u987B\u4E3A 1\u201320 \u7684\u6574\u6570\u3002",
         modelError: "\u8BF7\u9009\u62E9\u670D\u52A1\u5546\u548C\u6A21\u578B\u3002",
-        references: "\u5F53\u524D\u8349\u7A3F\u5F15\u7528",
-        readFile: "\u5C06\u6B64\u6587\u4EF6\u7528\u4E8E\u672C\u6B21\u589E\u5F3A",
-        unread: "\u672A\u8BFB\u53D6\u5185\u5BB9",
-        namesOnly: "\u4EC5\u4FDD\u7559\u53EF\u89C1\u5F15\u7528\u540D",
-        fileLimits: "\u4EC5\u52FE\u9009\u6587\u4EF6\u4F1A\u8BFB\u53D6\u5185\u5BB9\uFF1B\u6BCF\u4E2A \u226464 KiB\uFF0C\u5408\u8BA1 \u2264128 KiB\u3002\u6587\u4EF6\u5939\u3001\u4F1A\u8BDD\u5F15\u7528\u53CA\u4E0A\u4F20\u9644\u4EF6\u4E0D\u8BFB\u53D6\u3002",
         attachments: "\u6709 {{count}} \u4E2A\u9644\u4EF6\uFF1B\u5185\u5BB9\u4E0D\u8BFB\u53D6\uFF0C\u5E94\u7528\u4E0D\u4F1A\u6539\u52A8\u9644\u4EF6\u3002",
         effortInvalid: "\u5F53\u524D\u6A21\u578B\u4E0D\u652F\u6301\u65E2\u6709\u63A8\u7406\u6863\uFF0C\u8BF7\u4E3B\u52A8\u91CD\u9009\uFF1B\u4E0D\u4F1A\u81EA\u52A8\u964D\u6863\u3002",
         fastUnsupported: "\u6B64\u6A21\u578B\u4E0D\u652F\u6301\u8F85\u52A9 Fast\uFF1B\u5982\u5DF2\u5F00\u542F\uFF0C\u8BF7\u53D6\u6D88\u52FE\u9009\u540E\u4FDD\u5B58\u3002",
@@ -1249,11 +1242,6 @@ var init_messages = __esm({
         stale: "The draft changed. Nothing was applied. Generate a new preview.",
         roundsError: "Custom rounds must be an integer from 1 to 20.",
         modelError: "Choose a provider and model.",
-        references: "Current draft references",
-        readFile: "Use this file for this enhancement",
-        unread: "Content not read",
-        namesOnly: "Visible reference name only",
-        fileLimits: "Only checked files are read: \u226464 KiB each, \u2264128 KiB total. Folders, session references, and uploaded attachments are not read.",
         attachments: "{{count}} attachment(s). Content is not read; applying text leaves attachments unchanged.",
         effortInvalid: "This model does not support the saved effort. Select explicitly; no automatic downgrade.",
         fastUnsupported: "This model does not support assist Fast. If enabled, uncheck it before saving.",
@@ -1432,16 +1420,6 @@ function validateSettings(value) {
   if (!Number.isInteger(value.rounds) || value.rounds < 1 || value.rounds > 20) return "rounds";
   if (!value.followSession && (!value.provider || !value.model)) return "model";
   return null;
-}
-function selectedFileOf(occurrence) {
-  if (occurrence?.source !== "reference" || occurrence.appearance !== "file") return null;
-  const ref = occurrence.ref;
-  if (typeof ref !== "string" || typeof occurrence.label !== "string") return null;
-  let path;
-  if (/^@"[^"\r\n]+"$/.test(ref)) path = ref.slice(2, -1);
-  else if (/^@[^\s"\r\n]+$/.test(ref)) path = ref.slice(1);
-  if (!path || path.endsWith("/") || path.endsWith("\\")) return null;
-  return { name: occurrence.label, path };
 }
 function referenceNames(occurrences = []) {
   return occurrences.flatMap((item) => typeof item?.label === "string" ? [{ name: item.label }] : []);
@@ -2253,53 +2231,27 @@ var init_preview = __esm({
   }
 });
 
-// assist/client/selected-files.js
-function SelectedFiles({ input, files, onChange, t }) {
-  if (!input.occurrences.length) return null;
-  return h5(
-    "details",
-    { className: "lpa-details" },
-    h5("summary", null, t("references")),
-    h5("p", { className: "lpa-note" }, t("fileLimits")),
-    input.occurrences.map((occ, index) => {
-      const entry = selectedFileOf(occ), key = String(occ.occurrenceId ?? index);
-      return h5("div", { className: "lpa-reference", key }, entry ? h5("label", { className: "lpa-check" }, h5("input", { type: "checkbox", checked: Boolean(files[key]), "aria-label": t("readFile") + ": " + entry.name, onChange: (e) => onChange(key, e.target.checked ? entry : null) }), entry.name, h5("span", { className: "lpa-note" }, entry.path)) : h5("span", null, occ.label ?? t("references"), " \xB7 ", t("namesOnly")));
-    })
-  );
-}
-var import_react6, h5;
-var init_selected_files = __esm({
-  "assist/client/selected-files.js"() {
-    import_react6 = __toESM(require("react"), 1);
-    init_api();
-    h5 = import_react6.default.createElement;
-  }
-});
-
 // assist/client/panel.js
 function AssistPanel(p) {
   const r = useAssistRuntime(p), t = p.t;
-  const [files, setFiles] = import_react7.default.useState({}), [undo, setUndo] = import_react7.default.useState(null);
-  import_react7.default.useEffect(() => {
+  const [undo, setUndo] = import_react6.default.useState(null);
+  import_react6.default.useEffect(() => {
     if (!r.session?.subagent && !r.session?.removed) p.settingsTarget.select(p.sessionId);
   }, [p.settingsTarget, p.sessionId, r.session?.subagent, r.session?.removed]);
-  import_react7.default.useEffect(() => () => {
+  import_react6.default.useEffect(() => () => {
     p.assistEnhance.clear();
     p.assistSuggest.clear();
   }, [p.assistEnhance, p.assistSuggest]);
-  import_react7.default.useEffect(() => {
-    p.assistEnhance.update(enhanceAvailability(r), () => r.controller.generate("enhance", Object.values(files).filter(Boolean)));
+  import_react6.default.useEffect(() => {
+    p.assistEnhance.update(enhanceAvailability(r), () => r.controller.generate("enhance", []));
     p.assistSuggest.update(suggestAvailability(r), () => r.controller.generate("suggest"));
-  }, [p.assistEnhance, p.assistSuggest, r.controller, r.allowed, r.state, r.settings, r.dirty, r.busy, r.input, r.result.pending, files]);
-  import_react7.default.useEffect(() => {
-    setFiles({});
-  }, [p.sessionId, r.input.draftRev]);
-  import_react7.default.useEffect(() => {
+  }, [p.assistEnhance, p.assistSuggest, r.controller, r.allowed, r.state, r.settings, r.dirty, r.busy, r.input, r.result.pending]);
+  import_react6.default.useEffect(() => {
     setUndo(null);
   }, [p.sessionId]);
   const visible = shouldShowPanel({ open: false, result: r.result, undo, input: r.input, sessionId: p.sessionId });
-  if (r.session?.subagent || r.session?.removed || !visible && !r.input.occurrences.length) return null;
-  const button = (key, onClick, disabled = false) => h6("button", { type: "button", className: "lpa-button", onClick, disabled }, t(key));
+  if (r.session?.subagent || r.session?.removed || !visible) return null;
+  const button = (key, onClick, disabled = false) => h5("button", { type: "button", className: "lpa-button", onClick, disabled }, t(key));
   const validUndo = ownsResult(undo, p.sessionId) && r.input.draft === undo.original && r.input.draftRev === undo.draftRev;
   const undoApply = () => {
     const result2 = undoText(undo, r.readInput, p.inputActions);
@@ -2311,36 +2263,31 @@ function AssistPanel(p) {
     r.setNotice(null);
   };
   const notice = r.result.error ?? r.notice;
-  return h6(ResultAnchor, null, h6(
+  return h5(ResultAnchor, null, h5(
     "section",
-    { className: "lpa lpa-inline" + compactPanelModifier({ pending: r.result.pending, preview: r.result.preview, referenceCount: r.input.occurrences.length, notice, validUndo }), "aria-label": t("preview") },
-    h6("style", null, css),
-    h6(SelectedFiles, { input: r.input, files, t, onChange: (key, entry) => {
-      r.controller.dismiss();
-      setFiles((old) => ({ ...old, [key]: entry }));
-    } }),
-    r.result.pending && !r.result.preview ? h6("div", { className: "lpa-row lpa-pending", role: "status" }, h6("span", { className: "lpa-pending-mark", "aria-hidden": true }), t(r.result.pending === "suggest" ? "generatingSuggest" : "generating"), button("cancel", () => r.controller.cancel())) : null,
-    h6(NoSuggestion, { runtime: r, t }),
-    h6(Preview, { runtime: r, actions: p.inputActions, t, onApplied: setUndo }),
-    validUndo ? h6("div", { className: "lpa-undo-actions" }, button("undo", undoApply, !r.allowed)) : null,
-    visible && notice ? h6("div", { className: "lpa-row", role: "status" }, h6("span", { className: r.result.error ? "lpa-error" : "lpa-note" }, typeof notice === "string" && notice !== "requestError" ? t(notice) : errorText(notice, t)), button("dismiss", dismiss)) : null
+    { className: "lpa lpa-inline" + compactPanelModifier({ pending: r.result.pending, preview: r.result.preview, notice, validUndo }), "aria-label": t("preview") },
+    h5("style", null, css),
+    r.result.pending && !r.result.preview ? h5("div", { className: "lpa-row lpa-pending", role: "status" }, h5("span", { className: "lpa-pending-mark", "aria-hidden": true }), t(r.result.pending === "suggest" ? "generatingSuggest" : "generating"), button("cancel", () => r.controller.cancel())) : null,
+    h5(NoSuggestion, { runtime: r, t }),
+    h5(Preview, { runtime: r, actions: p.inputActions, t, onApplied: setUndo }),
+    validUndo ? h5("div", { className: "lpa-undo-actions" }, button("undo", undoApply, !r.allowed)) : null,
+    visible && notice ? h5("div", { className: "lpa-row", role: "status" }, h5("span", { className: r.result.error ? "lpa-error" : "lpa-note" }, typeof notice === "string" && notice !== "requestError" ? t(notice) : errorText(notice, t)), button("dismiss", dismiss)) : null
   ));
 }
-var import_react7, h6;
+var import_react6, h5;
 var init_panel = __esm({
   "assist/client/panel.js"() {
     init_result_layout();
     init_result_anchor();
-    import_react7 = __toESM(require("react"), 1);
+    import_react6 = __toESM(require("react"), 1);
     init_enhance_action();
     init_panel_visibility();
     init_runtime();
     init_preview();
-    init_selected_files();
     init_editor();
     init_api();
     init_style();
-    h6 = import_react7.default.createElement;
+    h5 = import_react6.default.createElement;
   }
 });
 
@@ -2710,9 +2657,9 @@ function OnlineUpdatePanelContent({ snapshot = initialOnlineSnapshot(), updateAv
   const canForget = canForgetOnlineMarker(snapshot);
   const active = operation && !operation.terminal;
   const staleRecord = Boolean(currentVersion && operation?.terminal && operation?.installedVersion && operation.installedVersion !== currentVersion);
-  const button = (key, onClick, disabled = false, emphasis = "") => h7("button", { type: "button", className: "lpa-button" + emphasis, onClick, disabled }, t("online." + key));
-  const field = (label, value) => h7("div", { className: "lpa-update-field", key: label }, h7("dt", null, t("online." + label)), h7("dd", null, value));
-  const operationFields = () => h7(
+  const button = (key, onClick, disabled = false, emphasis = "") => h6("button", { type: "button", className: "lpa-button" + emphasis, onClick, disabled }, t("online." + key));
+  const field = (label, value) => h6("div", { className: "lpa-update-field", key: label }, h6("dt", null, t("online." + label)), h6("dd", null, value));
+  const operationFields = () => h6(
     "dl",
     { className: "lpa-update-versions" },
     field("jobId", operation.jobId),
@@ -2722,70 +2669,70 @@ function OnlineUpdatePanelContent({ snapshot = initialOnlineSnapshot(), updateAv
     currentVersion ? field("runningVersion", currentVersion) : null
   );
   const operationNotes = () => [
-    operation.error ? h7("p", { className: "lpa-error", key: "error" }, t("online.errorCode"), " ", h7("code", null, operation.error)) : null,
-    operation.detailCode ? h7("p", { className: "lpa-note", key: "detail" }, t("online.detailCode"), " ", h7("code", null, operation.detailCode)) : null,
-    operation.restartRequired ? h7("p", { className: "lpa-note", key: "restart" }, t("online.restart")) : null,
-    operation.cancelRequested ? h7("p", { className: "lpa-note", key: "cancel" }, t("online.cancelRequested")) : null
+    operation.error ? h6("p", { className: "lpa-error", key: "error" }, t("online.errorCode"), " ", h6("code", null, operation.error)) : null,
+    operation.detailCode ? h6("p", { className: "lpa-note", key: "detail" }, t("online.detailCode"), " ", h6("code", null, operation.detailCode)) : null,
+    operation.restartRequired ? h6("p", { className: "lpa-note", key: "restart" }, t("online.restart")) : null,
+    operation.cancelRequested ? h6("p", { className: "lpa-note", key: "cancel" }, t("online.cancelRequested")) : null
   ];
-  return h7(
+  return h6(
     "section",
     { className: "lpa-subsection lpa-online-update", "aria-label": t("online.title"), "aria-busy": !!pending },
-    h7("h3", { className: "lpa-subsection-title" }, t("online.title")),
-    showAvailability && updateAvailable && data?.available && !active && !pending && !uncertain && !recordLost && operation?.phase !== "unknown" ? h7(
+    h6("h3", { className: "lpa-subsection-title" }, t("online.title")),
+    showAvailability && updateAvailable && data?.available && !active && !pending && !uncertain && !recordLost && operation?.phase !== "unknown" ? h6(
       "div",
       { className: "lpa-update-banner", role: "status", "aria-live": "polite", "aria-atomic": true },
-      h7("span", { className: "lpa-update-badge" }, t("online.badge")),
-      h7("div", { className: "lpa-update-banner-copy" }, h7("h4", null, t("online.availableTitle")), h7("p", null, t("online.availableHint")))
+      h6("span", { className: "lpa-update-badge" }, t("online.badge")),
+      h6("div", { className: "lpa-update-banner-copy" }, h6("h4", null, t("online.availableTitle")), h6("p", null, t("online.availableHint")))
     ) : null,
-    h7("p", { className: "lpa-note" }, t("online.userOnly")),
-    h7("p", { className: "lpa-note" }, t("online.continuity")),
-    operation && !uncertain && staleRecord ? h7(
+    h6("p", { className: "lpa-note" }, t("online.userOnly")),
+    h6("p", { className: "lpa-note" }, t("online.continuity")),
+    operation && !uncertain && staleRecord ? h6(
       "details",
       { className: "lpa-update-history" },
-      h7(
+      h6(
         "summary",
         null,
         t("online.history"),
         ": ",
-        h7("code", null, operation.fromVersion),
+        h6("code", null, operation.fromVersion),
         " \u2192 ",
-        h7("code", null, operation.targetVersion),
+        h6("code", null, operation.targetVersion),
         operation.installedVersion ? " \xB7 " + t("online.installedVersion") + " " + operation.installedVersion : "",
         currentVersion ? " \xB7 " + t("online.runningVersion") + " " + currentVersion : ""
       ),
-      h7("p", { className: "lpa-note" }, t("online.recordStale")),
-      h7("p", { className: "lpa-note" }, t("online.phase." + operation.phase)),
+      h6("p", { className: "lpa-note" }, t("online.recordStale")),
+      h6("p", { className: "lpa-note" }, t("online.phase." + operation.phase)),
       operationFields(),
       operationNotes()
     ) : null,
-    operation && !uncertain && !staleRecord ? h7(
+    operation && !uncertain && !staleRecord ? h6(
       "div",
       { role: "status", "aria-live": "polite", "aria-atomic": true },
-      h7("p", null, t("online.phase." + operation.phase)),
+      h6("p", null, t("online.phase." + operation.phase)),
       operationFields(),
       operationNotes()
     ) : null,
-    !data && !localError && !markerCleared ? h7("p", { role: "status" }, t("online.loading")) : null,
-    data && !operation && !uncertain ? h7("p", { className: "lpa-note" }, t("online.noRecord")) : null,
-    data && !data.available ? h7(
-      import_react8.default.Fragment,
+    !data && !localError && !markerCleared ? h6("p", { role: "status" }, t("online.loading")) : null,
+    data && !operation && !uncertain ? h6("p", { className: "lpa-note" }, t("online.noRecord")) : null,
+    data && !data.available ? h6(
+      import_react7.default.Fragment,
       null,
-      h7(
+      h6(
         "p",
         { className: "lpa-note" },
         t("online.unavailable"),
         data.reason ? " (" + data.reason + ")" : null,
-        data.source ? h7(import_react8.default.Fragment, null, " \xB7 " + t("online.sourceObserved") + ": ", h7("code", null, data.source)) : null
+        data.source ? h6(import_react7.default.Fragment, null, " \xB7 " + t("online.sourceObserved") + ": ", h6("code", null, data.source)) : null
       ),
-      data.reason === "unsupported-source" ? h7("p", { className: "lpa-note" }, t("online.unsupportedSourceHint")) : null
+      data.reason === "unsupported-source" ? h6("p", { className: "lpa-note" }, t("online.unsupportedSourceHint")) : null
     ) : null,
-    recordLost || uncertain ? h7("p", { className: "lpa-error", role: "alert" }, t(recordLost ? "online.recordLost" : "online.uncertain")) : null,
-    localError ? h7("p", { className: "lpa-error", role: "alert" }, t(confirmationRejected ? "online.confirmationRejected" : "online.requestFailed"), " ", h7("code", null, localError)) : null,
-    recordLost || uncertain ? h7(
+    recordLost || uncertain ? h6("p", { className: "lpa-error", role: "alert" }, t(recordLost ? "online.recordLost" : "online.uncertain")) : null,
+    localError ? h6("p", { className: "lpa-error", role: "alert" }, t(confirmationRejected ? "online.confirmationRejected" : "online.requestFailed"), " ", h6("code", null, localError)) : null,
+    recordLost || uncertain ? h6(
       "div",
       { className: "lpa-update-install" },
-      h7("p", { className: "lpa-note" }, t("online.forgetWarning")),
-      h7("label", { className: "lpa-row" }, h7("input", {
+      h6("p", { className: "lpa-note" }, t("online.forgetWarning")),
+      h6("label", { className: "lpa-row" }, h6("input", {
         type: "checkbox",
         checked: recoveryAcknowledged === true,
         disabled: !canForget,
@@ -2793,37 +2740,37 @@ function OnlineUpdatePanelContent({ snapshot = initialOnlineSnapshot(), updateAv
       }), t("online.forgetAcknowledgement")),
       button("forgetMarker", onForgetMarker, !canForget || recoveryAcknowledged !== true)
     ) : null,
-    markerCleared ? h7("p", { className: "lpa-note", role: "status" }, t("online.markerCleared")) : null,
-    preparation ? h7(
+    markerCleared ? h6("p", { className: "lpa-note", role: "status" }, t("online.markerCleared")) : null,
+    preparation ? h6(
       "div",
       { className: "lpa-update-review" },
-      h7("h4", null, t("online.review")),
-      h7(
+      h6("h4", null, t("online.review")),
+      h6(
         "dl",
         { className: "lpa-update-versions" },
         field("fromVersion", preparation.fromVersion),
         field("targetVersion", preparation.targetVersion),
-        field("targetSpec", h7("code", null, preparation.targetSpec)),
-        field("restoreSpec", h7("code", null, preparation.restoreSpec)),
-        field("expiresAt", h7("time", { dateTime: new Date(preparation.expiresAt).toISOString() }, displayUtcTime(preparation.expiresAt)))
+        field("targetSpec", h6("code", null, preparation.targetSpec)),
+        field("restoreSpec", h6("code", null, preparation.restoreSpec)),
+        field("expiresAt", h6("time", { dateTime: new Date(preparation.expiresAt).toISOString() }, displayUtcTime(preparation.expiresAt)))
       ),
-      h7("p", { className: "lpa-update-risk" }, t("online.risks")),
-      h7(
+      h6("p", { className: "lpa-update-risk" }, t("online.risks")),
+      h6(
         "fieldset",
         { className: "lpa-update-consent" },
-        h7("legend", null, t("online.consentTitle")),
-        h7("label", { className: "lpa-row" }, h7("input", { type: "checkbox", checked: consent, disabled: !!pending, onChange: (event) => onConsent?.(event.target.checked) }), t("online.consent"))
+        h6("legend", null, t("online.consentTitle")),
+        h6("label", { className: "lpa-row" }, h6("input", { type: "checkbox", checked: consent, disabled: !!pending, onChange: (event) => onConsent?.(event.target.checked) }), t("online.consent"))
       ),
-      h7("div", { className: "lpa-row lpa-card-actions" }, button("confirm", onConfirm, !consent || !!pending || uncertain, " lpa-button--primary lpa-button--danger"), button("dismiss", onDismiss, !!pending))
+      h6("div", { className: "lpa-row lpa-card-actions" }, button("confirm", onConfirm, !consent || !!pending || uncertain, " lpa-button--primary lpa-button--danger"), button("dismiss", onDismiss, !!pending))
     ) : null,
-    h7(
+    h6(
       "div",
       { className: "lpa-row lpa-card-actions" },
-      showInstall && !preparation && updateAvailable && data?.available && !active ? h7(
-        import_react8.default.Fragment,
+      showInstall && !preparation && updateAvailable && data?.available && !active ? h6(
+        import_react7.default.Fragment,
         null,
-        h7("p", { className: "lpa-note" }, t("online.risks")),
-        h7("label", { className: "lpa-row" }, h7("input", {
+        h6("p", { className: "lpa-note" }, t("online.risks")),
+        h6("label", { className: "lpa-row" }, h6("input", {
           type: "checkbox",
           checked: acknowledged === true,
           disabled: !!pending,
@@ -2833,14 +2780,14 @@ function OnlineUpdatePanelContent({ snapshot = initialOnlineSnapshot(), updateAv
       ) : null,
       button("reload", onReload, !!pending)
     ),
-    pending === "confirm" ? h7("p", { role: "status" }, t("online.submitting")) : null
+    pending === "confirm" ? h6("p", { role: "status" }, t("online.submitting")) : null
   );
 }
 function OnlineUpdatePanel({ t, updateAvailable, currentVersion = null, showAvailability = true, showInstall = true, fetcher = globalThis.fetch, controller: external = null }) {
-  const controller = import_react8.default.useMemo(() => external ?? createOnlineUpdateController(fetcher), [external, fetcher]);
-  const snapshot = import_react8.default.useSyncExternalStore(controller.subscribe, controller.getSnapshot, controller.getSnapshot);
-  const [acknowledged, setAcknowledged] = import_react8.default.useState(false);
-  import_react8.default.useEffect(() => {
+  const controller = import_react7.default.useMemo(() => external ?? createOnlineUpdateController(fetcher), [external, fetcher]);
+  const snapshot = import_react7.default.useSyncExternalStore(controller.subscribe, controller.getSnapshot, controller.getSnapshot);
+  const [acknowledged, setAcknowledged] = import_react7.default.useState(false);
+  import_react7.default.useEffect(() => {
     if (external) return;
     void controller.start();
     return () => controller.dispose();
@@ -2852,7 +2799,7 @@ function OnlineUpdatePanel({ t, updateAvailable, currentVersion = null, showAvai
     controller.setConsent(true);
     await controller.confirm();
   };
-  return h7(OnlineUpdatePanelContent, {
+  return h6(OnlineUpdatePanelContent, {
     t,
     snapshot,
     updateAvailable,
@@ -2876,13 +2823,13 @@ function OnlineUpdatePanel({ t, updateAvailable, currentVersion = null, showAvai
     }
   });
 }
-var import_react8, h7;
+var import_react7, h6;
 var init_online_update_panel = __esm({
   "assist/client/online-update-panel.js"() {
-    import_react8 = __toESM(require("react"), 1);
+    import_react7 = __toESM(require("react"), 1);
     init_online_update_state();
     init_update_state();
-    h7 = import_react8.default.createElement;
+    h6 = import_react7.default.createElement;
   }
 });
 
@@ -2891,36 +2838,36 @@ function UpdatePanelContent({ snapshot = initialUpdateSnapshot(), t, onCheck, on
   const view = updateDisplay(snapshot);
   const data = snapshot.data;
   const available = view.status === "update-available";
-  const button = (key, onClick, disabled = false) => h8("button", { type: "button", className: "lpa-button", onClick, disabled }, t(key));
-  const field = (label, value, highlight = false) => h8(
+  const button = (key, onClick, disabled = false) => h7("button", { type: "button", className: "lpa-button", onClick, disabled }, t(key));
+  const field = (label, value, highlight = false) => h7(
     "div",
     { className: "lpa-update-field lpa-stat" + (highlight ? " lpa-update-field--highlight lpa-stat--highlight" : ""), key: label },
-    h8("dt", null, t(label)),
-    h8("dd", null, value)
+    h7("dt", null, t(label)),
+    h7("dd", null, value)
   );
-  return h8(
+  return h7(
     "section",
     { className: "lpa-update-panel lpa-card", "aria-label": t("updates.title") },
-    h8(
+    h7(
       "header",
       { className: "lpa-card-header" },
-      h8("h2", { className: "lpa-update-title lpa-card-title" }, t("settings.updatesSection")),
-      h8("p", { className: "lpa-note" }, t("updates.readOnly"))
+      h7("h2", { className: "lpa-update-title lpa-card-title" }, t("settings.updatesSection")),
+      h7("p", { className: "lpa-note" }, t("updates.readOnly"))
     ),
-    h8(
+    h7(
       "dl",
       { className: "lpa-update-versions lpa-stats" },
       field("updates.installedVersion", data?.currentVersion ?? t("updates.unknown")),
       field("updates.latestVersion", data?.latestVersion ?? t("updates.unknown"), available),
-      field("updates.checkedAt", view.checkedAt ? h8("time", { dateTime: view.checkedAt }, displayCheckedAt(new Date(view.checkedAt).getTime()) ?? view.checkedAt) : t("updates.notChecked"))
+      field("updates.checkedAt", view.checkedAt ? h7("time", { dateTime: view.checkedAt }, displayCheckedAt(new Date(view.checkedAt).getTime()) ?? view.checkedAt) : t("updates.notChecked"))
     ),
-    available ? h8(
+    available ? h7(
       "div",
       { className: "lpa-update-summary lpa-update-summary--available", role: "status", "aria-live": "polite", "aria-atomic": true },
-      h8("strong", null, t("updates.availableTitle")),
-      h8("p", null, t(view.message)),
-      h8("p", null, t("updates.availableHint"))
-    ) : h8(
+      h7("strong", null, t("updates.availableTitle")),
+      h7("p", null, t(view.message)),
+      h7("p", null, t("updates.availableHint"))
+    ) : h7(
       "p",
       {
         className: view.status === "error" ? "lpa-error" : "lpa-note",
@@ -2931,21 +2878,21 @@ function UpdatePanelContent({ snapshot = initialUpdateSnapshot(), t, onCheck, on
       t(view.message),
       view.status === "error" && view.error ? " " + t("updates.error." + view.error) : null
     ),
-    h8(
+    h7(
       "div",
       { className: "lpa-row lpa-card-actions" },
       // Once a newer stable release is known the primary action belongs here: installing from the
       // card avoids scrolling down to the online section just to start the same job.
-      available && install ? h8(
-        import_react9.default.Fragment,
+      available && install ? h7(
+        import_react8.default.Fragment,
         null,
-        h8(
+        h7(
           "label",
           { className: "lpa-row lpa-update-consent-inline" },
-          h8("input", { type: "checkbox", checked: acknowledged === true, disabled: install.pending, onChange: (event) => install.onAcknowledge(event.target.checked) }),
+          h7("input", { type: "checkbox", checked: acknowledged === true, disabled: install.pending, onChange: (event) => install.onAcknowledge(event.target.checked) }),
           t("updates.installConsent")
         ),
-        h8("button", {
+        h7("button", {
           type: "button",
           className: "lpa-button lpa-button--primary",
           onClick: install.onInstall,
@@ -2954,50 +2901,50 @@ function UpdatePanelContent({ snapshot = initialUpdateSnapshot(), t, onCheck, on
       ) : button(snapshot.pending === "check" ? "updates.checkingButton" : "updates.checkButton", onCheck, snapshot.pending === "check"),
       snapshot.pending ? button("updates.cancel", onCancel) : null,
       snapshot.localError ? button("updates.reloadStatus", onReload) : null,
-      view.releaseUrl ? h8("a", { className: "lpa-button", href: view.releaseUrl, target: "_blank", rel: "noopener noreferrer" }, t("updates.releaseLink")) : null
+      view.releaseUrl ? h7("a", { className: "lpa-button", href: view.releaseUrl, target: "_blank", rel: "noopener noreferrer" }, t("updates.releaseLink")) : null
     ),
-    h8(
+    h7(
       "details",
       { className: "lpa-footnote-details" },
-      h8("summary", null, t("settings.advanced")),
-      h8("p", { className: "lpa-note" }, t("updates.privacy")),
-      h8("p", { className: "lpa-note" }, t("updates.cacheNote"))
+      h7("summary", null, t("settings.advanced")),
+      h7("p", { className: "lpa-note" }, t("updates.privacy")),
+      h7("p", { className: "lpa-note" }, t("updates.cacheNote"))
     ),
-    h8("div", { className: "lpa-divider" }),
+    h7("div", { className: "lpa-divider" }),
     children,
-    h8(
+    h7(
       "div",
       { className: "lpa-update-install lpa-install-row" },
-      h8("span", null, t("updates.installAddress")),
-      h8("code", null, INSTALL_SPEC),
+      h7("span", null, t("updates.installAddress")),
+      h7("code", null, INSTALL_SPEC),
       button("updates.copy", onCopy),
-      copyStatus ? h8("span", { className: "lpa-note", role: "status" }, t("updates." + copyStatus)) : null
+      copyStatus ? h7("span", { className: "lpa-note", role: "status" }, t("updates." + copyStatus)) : null
     ),
-    h8(
+    h7(
       "details",
       { className: "lpa-update-guide" },
-      h8("summary", null, t("updates.manualUpgrade")),
-      h8(
+      h7("summary", null, t("updates.manualUpgrade")),
+      h7(
         "ol",
         null,
-        h8("li", null, t("updates.stepSave")),
-        h8("li", null, t("updates.stepRemove"), " ", h8("code", null, "@local/dsh-openai-fast")),
-        h8("li", null, t("updates.stepInstall"), " ", h8("code", null, INSTALL_SPEC)),
-        h8("li", null, t("updates.stepRestart"))
+        h7("li", null, t("updates.stepSave")),
+        h7("li", null, t("updates.stepRemove"), " ", h7("code", null, "@local/dsh-openai-fast")),
+        h7("li", null, t("updates.stepInstall"), " ", h7("code", null, INSTALL_SPEC)),
+        h7("li", null, t("updates.stepRestart"))
       ),
-      h8("p", { className: "lpa-note" }, t("updates.backup"))
+      h7("p", { className: "lpa-note" }, t("updates.backup"))
     )
   );
 }
 function UpdatePanel({ t, fetcher = globalThis.fetch }) {
-  const controller = import_react9.default.useMemo(() => createUpdateController(fetcher), [fetcher]);
-  const online = import_react9.default.useMemo(() => createOnlineUpdateController(fetcher), [fetcher]);
-  const snapshot = import_react9.default.useSyncExternalStore(controller.subscribe, controller.getSnapshot, controller.getSnapshot);
-  const onlineSnapshot = import_react9.default.useSyncExternalStore(online.subscribe, online.getSnapshot, online.getSnapshot);
-  const [copyStatus, setCopyStatus] = import_react9.default.useState(null);
-  const [acknowledged, setAcknowledged] = import_react9.default.useState(false);
-  const copyEpoch = import_react9.default.useRef(0);
-  import_react9.default.useEffect(() => {
+  const controller = import_react8.default.useMemo(() => createUpdateController(fetcher), [fetcher]);
+  const online = import_react8.default.useMemo(() => createOnlineUpdateController(fetcher), [fetcher]);
+  const snapshot = import_react8.default.useSyncExternalStore(controller.subscribe, controller.getSnapshot, controller.getSnapshot);
+  const onlineSnapshot = import_react8.default.useSyncExternalStore(online.subscribe, online.getSnapshot, online.getSnapshot);
+  const [copyStatus, setCopyStatus] = import_react8.default.useState(null);
+  const [acknowledged, setAcknowledged] = import_react8.default.useState(false);
+  const copyEpoch = import_react8.default.useRef(0);
+  import_react8.default.useEffect(() => {
     void controller.start();
     void online.start();
     return () => {
@@ -3024,7 +2971,7 @@ function UpdatePanel({ t, fetcher = globalThis.fetch }) {
   }
   const operation = onlineSnapshot.data?.operation;
   const installPending = onlineSnapshot.pending !== null || Boolean(operation && !operation.terminal);
-  return h8(
+  return h7(
     UpdatePanelContent,
     {
       snapshot,
@@ -3043,7 +2990,7 @@ function UpdatePanel({ t, fetcher = globalThis.fetch }) {
       },
       onCancel: () => controller.cancel()
     },
-    h8(OnlineUpdatePanel, {
+    h7(OnlineUpdatePanel, {
       t,
       fetcher,
       controller: online,
@@ -3056,14 +3003,14 @@ function UpdatePanel({ t, fetcher = globalThis.fetch }) {
     })
   );
 }
-var import_react9, h8;
+var import_react8, h7;
 var init_update_panel = __esm({
   "assist/client/update-panel.js"() {
-    import_react9 = __toESM(require("react"), 1);
+    import_react8 = __toESM(require("react"), 1);
     init_update_state();
     init_online_update_panel();
     init_online_update_state();
-    h8 = import_react9.default.createElement;
+    h7 = import_react8.default.createElement;
   }
 });
 
@@ -3108,11 +3055,11 @@ var init_model_style_pref = __esm({
 function Settings(p) {
   const { t, config: v, catalog: c, capabilities: cap } = p;
   const change = (patch) => p.onChange({ ...v, ...patch });
-  const field = (key, node) => h9("label", { className: "lpa-field" }, t(key), node);
-  const check = (key, checked, change2, disabled = false) => h9("label", { className: "lpa-check" }, h9("input", { type: "checkbox", checked, disabled, onChange: (e) => change2(e.target.checked) }), t(key));
-  const [custom, setCustom] = import_react10.default.useState(![1, 3, 5].includes(v.rounds));
-  const [error, setError] = import_react10.default.useState(null);
-  import_react10.default.useEffect(() => {
+  const field = (key, node) => h8("label", { className: "lpa-field" }, t(key), node);
+  const check = (key, checked, change2, disabled = false) => h8("label", { className: "lpa-check" }, h8("input", { type: "checkbox", checked, disabled, onChange: (e) => change2(e.target.checked) }), t(key));
+  const [custom, setCustom] = import_react9.default.useState(![1, 3, 5].includes(v.rounds));
+  const [error, setError] = import_react9.default.useState(null);
+  import_react9.default.useEffect(() => {
     setCustom(![1, 3, 5].includes(v.rounds));
   }, [v.rounds]);
   const efforts = cap?.efforts ?? [];
@@ -3124,44 +3071,44 @@ function Settings(p) {
     setError(problem === "rounds" ? "roundsError" : problem ? "modelError" : null);
     if (!problem && !invalidEffort) p.save(sessionSettings(v));
   };
-  const select = (key, value, items, change2) => field(key, h9("select", { value, onChange: (e) => change2(e.target.value) }, items.map((item) => h9("option", { key: item.id, value: item.id }, item.name))));
-  return h9(
+  const select = (key, value, items, change2) => field(key, h8("select", { value, onChange: (e) => change2(e.target.value) }, items.map((item) => h8("option", { key: item.id, value: item.id }, item.name))));
+  return h8(
     "form",
     { onSubmit: submit },
-    h9("div", { className: "lpa-row" }, check("follow", v.followSession, (followSession) => change({ followSession }))),
-    h9("p", { className: "lpa-note" }, t("followHint")),
-    v.followSession && !cap ? h9("p", { className: "lpa-note", role: "status" }, t("settings.modelUnknown")) : null,
-    h9("p", { className: "lpa-note" }, t("budgetPolicy")),
-    !v.followSession ? h9(
+    h8("div", { className: "lpa-row" }, check("follow", v.followSession, (followSession) => change({ followSession }))),
+    h8("p", { className: "lpa-note" }, t("followHint")),
+    v.followSession && !cap ? h8("p", { className: "lpa-note", role: "status" }, t("settings.modelUnknown")) : null,
+    h8("p", { className: "lpa-note" }, t("budgetPolicy")),
+    !v.followSession ? h8(
       "div",
       { className: "lpa-grid" },
       select("provider", v.provider, [{ id: "", name: t("selectProvider") }, ...c.providers], (provider) => change({ provider, model: "" })),
       select("model", v.model, [{ id: "", name: t("selectModel") }, ...c.models.filter((m) => m.provider === v.provider)], (model) => change({ model })),
       select("effort", v.reasoningEffort, [{ id: "", name: t("nativeDefault") }, ...invalidEffort ? [{ id: v.reasoningEffort, name: v.reasoningEffort }] : [], ...efforts], (reasoningEffort) => change({ reasoningEffort }))
     ) : null,
-    invalidEffort ? h9("p", { className: "lpa-error", role: "alert" }, t("effortInvalid")) : null,
+    invalidEffort ? h8("p", { className: "lpa-error", role: "alert" }, t("effortInvalid")) : null,
     check("fast", v.fast, (fast2) => change({ fast: fast2 }), !v.fast && !v.followSession && cap?.fastEligible !== true),
-    invalidFast ? h9("p", { className: "lpa-note", role: "status" }, t("fastSkipped")) : null,
-    h9(
+    invalidFast ? h8("p", { className: "lpa-note", role: "status" }, t("fastSkipped")) : null,
+    h8(
       "div",
       { className: "lpa-grid" },
       select("rounds", custom ? "custom" : String(v.rounds), [1, 3, 5].map((n) => ({ id: String(n), name: n })).concat({ id: "custom", name: t("custom") }), (value) => {
         setCustom(value === "custom");
         if (value !== "custom") change({ rounds: Number(value) });
       }),
-      custom ? field("custom", h9("input", { type: "number", min: 1, max: 20, step: 1, value: Number.isFinite(v.rounds) ? v.rounds : "", onChange: (e) => change({ rounds: e.target.value === "" ? NaN : Number(e.target.value) }) })) : null
+      custom ? field("custom", h8("input", { type: "number", min: 1, max: 20, step: 1, value: Number.isFinite(v.rounds) ? v.rounds : "", onChange: (e) => change({ rounds: e.target.value === "" ? NaN : Number(e.target.value) }) })) : null
     ),
-    error ? h9("p", { role: "alert", className: "lpa-error" }, t(error)) : null,
+    error ? h8("p", { role: "alert", className: "lpa-error" }, t(error)) : null,
     p.feedback ?? null,
-    h9("button", { className: "lpa-button lpa-button--primary", type: "submit", disabled: p.saving || !p.allowed }, t(p.saving ? "saving" : "save"))
+    h8("button", { className: "lpa-button lpa-button--primary", type: "submit", disabled: p.saving || !p.allowed }, t(p.saving ? "saving" : "save"))
   );
 }
-var import_react10, h9;
+var import_react9, h8;
 var init_settings = __esm({
   "assist/client/settings.js"() {
-    import_react10 = __toESM(require("react"), 1);
+    import_react9 = __toESM(require("react"), 1);
     init_api();
-    h9 = import_react10.default.createElement;
+    h8 = import_react9.default.createElement;
   }
 });
 
@@ -3170,39 +3117,39 @@ function EnablementPanelContent({ snapshot, t, onSet, onReload, onFinalAnswer })
   const { data, connected, loading, pending, readError, writeError, saved } = snapshot;
   const disabled = !data || !connected || !!pending;
   const message = writeError === "stale-enablement" ? "global.stale" : writeError ? "global.saveFailed" : readError ? "global.disconnected" : null;
-  return h10(
+  return h9(
     "section",
     { className: "lpa-feature lpa-card", "aria-label": t("global.title"), "aria-busy": !!pending },
-    h10(
+    h9(
       "header",
       { className: "lpa-card-header" },
-      h10("h2", { className: "lpa-feature-title lpa-card-title" }, t("settings.globalSection")),
-      h10("p", { className: "lpa-note" }, t("global.scope"))
+      h9("h2", { className: "lpa-feature-title lpa-card-title" }, t("settings.globalSection")),
+      h9("p", { className: "lpa-note" }, t("global.scope"))
     ),
-    h10("div", { className: "lpa-row lpa-switches" }, ["suggest", "enhance"].map((feature) => h10(
+    h9("div", { className: "lpa-row lpa-switches" }, ["suggest", "enhance"].map((feature) => h9(
       "label",
       { className: "lpa-check lpa-switch-row", key: feature },
-      h10("span", { className: "lpa-switch-copy" }, h10("strong", null, t("global." + feature)), h10("span", { className: "lpa-note" }, t("global." + feature + "Hint"))),
-      h10("input", { className: "lpa-switch", type: "checkbox", checked: data?.enabled[feature] === true, disabled, onChange: (event) => onSet(feature, event.target.checked) })
+      h9("span", { className: "lpa-switch-copy" }, h9("strong", null, t("global." + feature)), h9("span", { className: "lpa-note" }, t("global." + feature + "Hint"))),
+      h9("input", { className: "lpa-switch", type: "checkbox", checked: data?.enabled[feature] === true, disabled, onChange: (event) => onSet(feature, event.target.checked) })
     ))),
     // Profile-wide prompt switch: it rides the injected closing contract, not a model call.
-    h10(
+    h9(
       "label",
       { className: "lpa-check lpa-switch-row", key: "final-answer" },
-      h10("span", { className: "lpa-switch-copy" }, h10("strong", null, t("global.finalAnswer")), h10("span", { className: "lpa-note" }, t("global.finalAnswerHint"))),
-      h10("input", { className: "lpa-switch", type: "checkbox", checked: data?.finalAnswer !== false, disabled, onChange: (event) => onFinalAnswer?.(event.target.checked) })
+      h9("span", { className: "lpa-switch-copy" }, h9("strong", null, t("global.finalAnswer")), h9("span", { className: "lpa-note" }, t("global.finalAnswerHint"))),
+      h9("input", { className: "lpa-switch", type: "checkbox", checked: data?.finalAnswer !== false, disabled, onChange: (event) => onFinalAnswer?.(event.target.checked) })
     ),
-    pending ? h10("p", { role: "status" }, t("global.saving")) : null,
-    !connected && !message ? h10("p", { role: "status", className: "lpa-note" }, t(loading ? "global.loading" : "global.disconnected")) : null,
-    message ? h10("p", { role: "alert", className: "lpa-error" }, t(message)) : null,
-    saved && connected && saved.revision === data?.revision && !writeError ? h10("p", { role: "status", className: "lpa-note" }, t("global.saved")) : null,
-    !connected || readError || writeError ? h10("div", { className: "lpa-card-actions" }, h10("button", { type: "button", className: "lpa-button", onClick: onReload, disabled: !!pending || loading }, t("global.reload"))) : null,
-    h10("div", { className: "lpa-footnote" }, h10("p", { className: "lpa-note" }, t("global.charge")), h10("p", { className: "lpa-note" }, t("global.migration")))
+    pending ? h9("p", { role: "status" }, t("global.saving")) : null,
+    !connected && !message ? h9("p", { role: "status", className: "lpa-note" }, t(loading ? "global.loading" : "global.disconnected")) : null,
+    message ? h9("p", { role: "alert", className: "lpa-error" }, t(message)) : null,
+    saved && connected && saved.revision === data?.revision && !writeError ? h9("p", { role: "status", className: "lpa-note" }, t("global.saved")) : null,
+    !connected || readError || writeError ? h9("div", { className: "lpa-card-actions" }, h9("button", { type: "button", className: "lpa-button", onClick: onReload, disabled: !!pending || loading }, t("global.reload"))) : null,
+    h9("div", { className: "lpa-footnote" }, h9("p", { className: "lpa-note" }, t("global.charge")), h9("p", { className: "lpa-note" }, t("global.migration")))
   );
 }
 function EnablementPanel({ globalSource = EMPTY_ENABLEMENT_SOURCE, t }) {
-  const snapshot = import_react11.default.useSyncExternalStore(globalSource.subscribe, globalSource.getSnapshot, globalSource.getSnapshot);
-  return h10(EnablementPanelContent, {
+  const snapshot = import_react10.default.useSyncExternalStore(globalSource.subscribe, globalSource.getSnapshot, globalSource.getSnapshot);
+  return h9(EnablementPanelContent, {
     snapshot,
     t,
     onSet: (feature, value) => {
@@ -3216,12 +3163,12 @@ function EnablementPanel({ globalSource = EMPTY_ENABLEMENT_SOURCE, t }) {
     }
   });
 }
-var import_react11, h10;
+var import_react10, h9;
 var init_enablement_panel = __esm({
   "assist/client/enablement-panel.js"() {
-    import_react11 = __toESM(require("react"), 1);
+    import_react10 = __toESM(require("react"), 1);
     init_enablement_source();
-    h10 = import_react11.default.createElement;
+    h9 = import_react10.default.createElement;
   }
 });
 
@@ -3269,84 +3216,84 @@ function PriorityPanelContent({
   const names = state?.names && typeof state.names === "object" ? state.names : {};
   const nameOf = (id2) => typeof names[id2] === "string" && names[id2] && names[id2] !== id2 ? names[id2] : null;
   const builtinModels = new Map(raw.filter((item) => item && item.configured === true && Array.isArray(item.openAIModels)).map((item) => [item.id, item.openAIModels.filter((model) => typeof model === "string" && isPriorityModel(model)).slice(0, 8)]));
-  const button = (key, action, disabled = false, extra = {}) => h11(
+  const button = (key, action, disabled = false, extra = {}) => h10(
     "button",
     { type: "button", className: "lpa-button", onClick: action, disabled, ...extra },
     t(key)
   );
-  return h11(
+  return h10(
     "section",
     { className: "lpa-feature lpa-card", "aria-label": t("priority.title"), "aria-busy": Boolean(pending) },
-    h11(
+    h10(
       "header",
       { className: "lpa-card-header" },
-      h11("h2", { className: "lpa-feature-title lpa-card-title" }, t("settings.prioritySection")),
-      h11("p", { className: "lpa-note" }, t("priority.scope"))
+      h10("h2", { className: "lpa-feature-title lpa-card-title" }, t("settings.prioritySection")),
+      h10("p", { className: "lpa-note" }, t("priority.scope"))
     ),
-    h11(
+    h10(
       "div",
       { className: "lpa-field" },
-      h11("strong", null, t("priority.configured")),
-      h11("div", { className: "lpa-chip-list" }, configured.map((id2) => h11(
+      h10("strong", null, t("priority.configured")),
+      h10("div", { className: "lpa-chip-list" }, configured.map((id2) => h10(
         "div",
         { className: "lpa-provider-item", key: id2 },
-        h11(
+        h10(
           "span",
           { className: "lpa-note lpa-chip lpa-chip--readonly" },
-          nameOf(id2) ? h11("strong", null, nameOf(id2)) : null,
-          h11("code", null, id2)
+          nameOf(id2) ? h10("strong", null, nameOf(id2)) : null,
+          h10("code", null, id2)
         ),
-        builtinModels.get(id2)?.length ? h11("span", { className: "lpa-note lpa-chip-models" }, " \xB7 " + t("priority.visibleModels") + ": " + builtinModels.get(id2).join(", ")) : null
+        builtinModels.get(id2)?.length ? h10("span", { className: "lpa-note lpa-chip-models" }, " \xB7 " + t("priority.visibleModels") + ": " + builtinModels.get(id2).join(", ")) : null
       )))
     ),
-    h11(
+    h10(
       "div",
       { className: "lpa-field" },
-      h11("strong", null, t("priority.authorized")),
-      h11("div", { className: "lpa-chip-list" }, authorized.map((id2) => h11(
+      h10("strong", null, t("priority.authorized")),
+      h10("div", { className: "lpa-chip-list" }, authorized.map((id2) => h10(
         "span",
         { className: "lpa-row lpa-chip", key: id2 },
-        nameOf(id2) ? h11("strong", null, nameOf(id2)) : null,
-        h11("code", null, id2),
+        nameOf(id2) ? h10("strong", null, nameOf(id2)) : null,
+        h10("code", null, id2),
         button("priority.revoke", () => onRevoke?.(id2), !state || Boolean(pending), { "aria-label": t("priority.revoke") + ": " + id2, className: "lpa-button lpa-chip-action" })
       ))),
-      state && !authorized.length ? h11("p", { className: "lpa-note" }, t("priority.none")) : null
+      state && !authorized.length ? h10("p", { className: "lpa-note" }, t("priority.none")) : null
     ),
-    h11(
+    h10(
       "div",
       { className: "lpa-card-actions lpa-priority-actions" },
-      available.length ? h11(
+      available.length ? h10(
         "label",
         { className: "lpa-field" },
         t("priority.candidates"),
-        h11(
+        h10(
           "select",
           {
             value: selection?.id ?? "",
             disabled: !state || Boolean(pending),
             onChange: (event) => onSelect?.(event.target.value)
           },
-          h11("option", { value: "" }, t("priority.choose")),
-          available.map((item) => h11("option", { key: item.id, value: item.id }, item.name + " (" + item.id + ")"))
+          h10("option", { value: "" }, t("priority.choose")),
+          available.map((item) => h10("option", { key: item.id, value: item.id }, item.name + " (" + item.id + ")"))
         )
       ) : null,
-      state && !available.length ? h11("p", { className: "lpa-note" }, t(raw.length ? "priority.allAuthorized" : "priority.noProviderModels")) : null,
-      selection ? h11("p", { className: "lpa-note" }, t("priority.exampleModels"), ": ", selection.openAIModels.join(", ")) : null,
-      h11("label", { className: "lpa-check" }, h11("input", {
+      state && !available.length ? h10("p", { className: "lpa-note" }, t(raw.length ? "priority.allAuthorized" : "priority.noProviderModels")) : null,
+      selection ? h10("p", { className: "lpa-note" }, t("priority.exampleModels"), ": ", selection.openAIModels.join(", ")) : null,
+      h10("label", { className: "lpa-check" }, h10("input", {
         type: "checkbox",
         checked: consent === true,
         disabled: !state || Boolean(pending),
         onChange: (event) => onConsent?.(event.target.checked)
       }), t("priority.consent")),
-      h11(
+      h10(
         "div",
         { className: "lpa-row lpa-action-buttons" },
         button("priority.authorize", () => onAuthorize?.(selected, consent), !state || Boolean(pending) || consent !== true || !selection),
         button("priority.reload", () => onReload?.(), Boolean(pending))
       )
     ),
-    pending || !state && !notice ? h11("p", { className: "lpa-note", role: "status" }, t("priority.loading")) : null,
-    notice ? h11("p", { className: notice === "priority.error" ? "lpa-error" : "lpa-note", role: "status" }, t(notice)) : null
+    pending || !state && !notice ? h10("p", { className: "lpa-note", role: "status" }, t("priority.loading")) : null,
+    notice ? h10("p", { className: notice === "priority.error" ? "lpa-error" : "lpa-note", role: "status" }, t(notice)) : null
   );
 }
 function readState(value) {
@@ -3487,26 +3434,26 @@ function createPriorityController(connection, { onChanged } = {}) {
   };
 }
 function PriorityPanel({ connection, t, onChanged }) {
-  const changed = import_react12.default.useRef(onChanged);
+  const changed = import_react11.default.useRef(onChanged);
   changed.current = onChanged;
-  const controller = import_react12.default.useMemo(() => createPriorityController(connection, { onChanged: () => changed.current?.() }), [connection]);
-  const snapshot = import_react12.default.useSyncExternalStore(controller.subscribe, controller.getSnapshot, controller.getSnapshot);
-  const [selected, setSelected] = import_react12.default.useState("");
-  const [consent, setConsent] = import_react12.default.useState(false);
-  import_react12.default.useEffect(() => {
+  const controller = import_react11.default.useMemo(() => createPriorityController(connection, { onChanged: () => changed.current?.() }), [connection]);
+  const snapshot = import_react11.default.useSyncExternalStore(controller.subscribe, controller.getSnapshot, controller.getSnapshot);
+  const [selected, setSelected] = import_react11.default.useState("");
+  const [consent, setConsent] = import_react11.default.useState(false);
+  import_react11.default.useEffect(() => {
     void controller.start();
     return () => controller.dispose();
   }, [controller]);
-  import_react12.default.useEffect(() => {
+  import_react11.default.useEffect(() => {
     setConsent(false);
   }, [snapshot.state?.revision, snapshot.notice]);
-  import_react12.default.useEffect(() => {
+  import_react11.default.useEffect(() => {
     if (selected && !availableCandidates(snapshot.candidates, snapshot.state).some((item) => item.id === selected)) {
       setSelected("");
       setConsent(false);
     }
   }, [snapshot.candidates, snapshot.state, selected]);
-  return h11(PriorityPanelContent, {
+  return h10(PriorityPanelContent, {
     ...snapshot,
     consent,
     selected,
@@ -3528,14 +3475,14 @@ function PriorityPanel({ connection, t, onChanged }) {
     }
   });
 }
-var import_react12, h11, ENDPOINT, PROVIDER, providerIds, notices, noticeFor;
+var import_react11, h10, ENDPOINT, PROVIDER, providerIds, notices, noticeFor;
 var init_priority_panel = __esm({
   "assist/client/priority-panel.js"() {
-    import_react12 = __toESM(require("react"), 1);
+    import_react11 = __toESM(require("react"), 1);
     init_identity();
     init_policy();
     init_priority_source();
-    h11 = import_react12.default.createElement;
+    h10 = import_react11.default.createElement;
     ENDPOINT = "local-openai-fast.priority";
     PROVIDER = /^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$/;
     providerIds = (values) => Array.isArray(values) ? [...new Set(values.filter((value) => typeof value === "string" && PROVIDER.test(value)))] : [];
@@ -3598,19 +3545,19 @@ var init_settings_page_state = __esm({
 // assist/client/settings-page.js
 function FeatureSettings({ feature, global, source, p }) {
   const host = global.data;
-  const [draft, setDraft] = import_react13.default.useState(() => createSettingsDraft(host.settings[feature], host.settingsRevision));
-  const current = import_react13.default.useRef(draft);
+  const [draft, setDraft] = import_react12.default.useState(() => createSettingsDraft(host.settings[feature], host.settingsRevision));
+  const current = import_react12.default.useRef(draft);
   current.current = draft;
-  const [saving, setSaving] = import_react13.default.useState(false), [notice, setNotice] = import_react13.default.useState(null);
-  const scope = import_react13.default.useRef(null), inFlight = import_react13.default.useRef(false);
-  import_react13.default.useEffect(() => {
+  const [saving, setSaving] = import_react12.default.useState(false), [notice, setNotice] = import_react12.default.useState(null);
+  const scope = import_react12.default.useRef(null), inFlight = import_react12.default.useRef(false);
+  import_react12.default.useEffect(() => {
     const requests = createSettingsRequests();
     scope.current = requests;
     inFlight.current = false;
     setSaving(false);
     return () => requests.close();
   }, []);
-  import_react13.default.useEffect(() => {
+  import_react12.default.useEffect(() => {
     const next = syncSettingsDraft(current.current, host.settings[feature], host.settingsRevision);
     current.current = next;
     setDraft(next);
@@ -3658,13 +3605,13 @@ function FeatureSettings({ feature, global, source, p }) {
     setNotice(null);
   }
   const noticeValue = notice ?? options.error;
-  return h12(
+  return h11(
     "section",
     { className: "lpa-feature lpa-card", "aria-label": p.t(feature) },
-    h12("h2", { className: "lpa-feature-title" }, p.t(feature)),
-    h12("p", { className: "lpa-note" }, p.t(feature === "suggest" ? "suggestContext" : "enhanceOriginal")),
-    h12("p", { className: "lpa-note", role: "status" }, host.configured[feature] ? null : p.t("settings.unconfigured")),
-    h12(Settings, {
+    h11("h2", { className: "lpa-feature-title" }, p.t(feature)),
+    h11("p", { className: "lpa-note" }, p.t(feature === "suggest" ? "suggestContext" : "enhanceOriginal")),
+    h11("p", { className: "lpa-note", role: "status" }, host.configured[feature] ? null : p.t("settings.unconfigured")),
+    h11(Settings, {
       t: p.t,
       config: draft.config,
       catalog: options.catalog,
@@ -3673,32 +3620,32 @@ function FeatureSettings({ feature, global, source, p }) {
       saving,
       onChange: edit,
       save,
-      feedback: h12(
+      feedback: h11(
         "div",
         { className: "lpa-settings-feedback" },
-        draft.dirty ? h12("p", { className: "lpa-note" }, p.t("settingsChanged")) : null,
-        stale ? h12("p", { className: "lpa-error", role: "alert" }, p.t("settings.stale")) : null,
-        draft.dirty ? h12("button", { type: "button", className: "lpa-button", disabled: !global.connected || Boolean(global.pending), onClick: reset }, p.t("settings.resetDraft")) : null,
-        noticeValue ? h12("p", { role: "status", className: noticeValue === "saved" ? "lpa-note" : "lpa-error" }, noticeValue === "saved" ? p.t("saved") : errorText(noticeValue, p.t)) : null
+        draft.dirty ? h11("p", { className: "lpa-note" }, p.t("settingsChanged")) : null,
+        stale ? h11("p", { className: "lpa-error", role: "alert" }, p.t("settings.stale")) : null,
+        draft.dirty ? h11("button", { type: "button", className: "lpa-button", disabled: !global.connected || Boolean(global.pending), onClick: reset }, p.t("settings.resetDraft")) : null,
+        noticeValue ? h11("p", { role: "status", className: noticeValue === "saved" ? "lpa-note" : "lpa-error" }, noticeValue === "saved" ? p.t("saved") : errorText(noticeValue, p.t)) : null
       )
     })
   );
 }
 function ModelStyleCard({ t }) {
-  const [style, setStyle] = import_react13.default.useState(readModelStylePref());
+  const [style, setStyle] = import_react12.default.useState(readModelStylePref());
   const options = [
     ["dsh", "settings.modelStyleDsh", "settings.modelStyleDshNote"],
     ["claude", "settings.modelStyleClaude", "settings.modelStyleClaudeNote"],
     ["zcode", "settings.modelStyleZcode", "settings.modelStyleZcodeNote"]
   ];
-  return h12(
+  return h11(
     "section",
     { className: "lpa-feature lpa-card", "aria-label": t("settings.modelStyleSection") },
-    h12("header", { className: "lpa-card-header" }, h12("h2", { className: "lpa-feature-title lpa-card-title" }, t("settings.modelStyleSection")), h12("p", { className: "lpa-note" }, t("settings.modelStyleHint"))),
-    h12(
+    h11("header", { className: "lpa-card-header" }, h11("h2", { className: "lpa-feature-title lpa-card-title" }, t("settings.modelStyleSection")), h11("p", { className: "lpa-note" }, t("settings.modelStyleHint"))),
+    h11(
       "div",
       { className: "lpa-style-options", role: "radiogroup", "aria-label": t("settings.modelStyleSection") },
-      options.map(([value, nameKey, noteKey]) => h12(
+      options.map(([value, nameKey, noteKey]) => h11(
         "button",
         {
           key: value,
@@ -3711,39 +3658,39 @@ function ModelStyleCard({ t }) {
             writeModelStylePref(value);
           }
         },
-        h12("span", { className: "lpa-style-option-name" }, t(nameKey)),
-        h12("span", { className: "lpa-note" }, t(noteKey))
+        h11("span", { className: "lpa-style-option-name" }, t(nameKey)),
+        h11("span", { className: "lpa-note" }, t(noteKey))
       ))
     )
   );
 }
 function SettingsPage(p) {
-  const target = import_react13.default.useSyncExternalStore(p.targetSource.subscribe, p.targetSource.getSnapshot, p.targetSource.getSnapshot);
+  const target = import_react12.default.useSyncExternalStore(p.targetSource.subscribe, p.targetSource.getSnapshot, p.targetSource.getSnapshot);
   const source = p.globalSource ?? EMPTY_ENABLEMENT_SOURCE;
-  const global = import_react13.default.useSyncExternalStore(source.subscribe, source.getSnapshot, source.getSnapshot);
-  const [stored, setStored] = import_react13.default.useState(readSection), nav = import_react13.default.useRef(null);
+  const global = import_react12.default.useSyncExternalStore(source.subscribe, source.getSnapshot, source.getSnapshot);
+  const [stored, setStored] = import_react12.default.useState(readSection), nav = import_react12.default.useRef(null);
   const sections = [
-    { key: "assist", label: "settings.nav.assist", render: () => h12(
-      import_react13.default.Fragment,
+    { key: "assist", label: "settings.nav.assist", render: () => h11(
+      import_react12.default.Fragment,
       null,
-      h12(EnablementPanel, { globalSource: source, t: p.t }),
-      h12(
+      h11(EnablementPanel, { globalSource: source, t: p.t }),
+      h11(
         "section",
         { className: "lpa-session-panel lpa-card", "aria-label": p.t("settings.profileSection") },
-        h12("header", { className: "lpa-card-header" }, h12("h2", { className: "lpa-card-title" }, p.t("settings.profileSection")), h12("p", { className: "lpa-note" }, p.t("profileScope"))),
-        global.loading ? h12("p", { role: "status" }, p.t("global.loading")) : null,
-        !global.connected ? h12("p", { className: "lpa-note", role: "status" }, p.t("global.disconnected")) : null,
-        global.readError ? h12("p", { className: "lpa-error", role: "alert" }, errorText(global.readError, p.t)) : null,
-        global.data && !Number.isSafeInteger(global.data.settingsRevision) ? h12("p", { className: "lpa-error", role: "alert" }, p.t("settings.hostUpgrade")) : null,
-        global.data ? h12("div", { className: "lpa-settings-cards" }, ["suggest", "enhance"].map((feature) => h12(FeatureSettings, { key: feature, feature, global, source, p }))) : h12("p", { className: "lpa-note lpa-empty-state" }, p.t("settings.profileEmpty"))
+        h11("header", { className: "lpa-card-header" }, h11("h2", { className: "lpa-card-title" }, p.t("settings.profileSection")), h11("p", { className: "lpa-note" }, p.t("profileScope"))),
+        global.loading ? h11("p", { role: "status" }, p.t("global.loading")) : null,
+        !global.connected ? h11("p", { className: "lpa-note", role: "status" }, p.t("global.disconnected")) : null,
+        global.readError ? h11("p", { className: "lpa-error", role: "alert" }, errorText(global.readError, p.t)) : null,
+        global.data && !Number.isSafeInteger(global.data.settingsRevision) ? h11("p", { className: "lpa-error", role: "alert" }, p.t("settings.hostUpgrade")) : null,
+        global.data ? h11("div", { className: "lpa-settings-cards" }, ["suggest", "enhance"].map((feature) => h11(FeatureSettings, { key: feature, feature, global, source, p }))) : h11("p", { className: "lpa-note lpa-empty-state" }, p.t("settings.profileEmpty"))
       )
     ) },
-    p.connection ? { key: "priority", label: "settings.nav.priority", render: () => h12(PriorityPanel, { connection: p.connection, t: p.t, onChanged: () => {
+    p.connection ? { key: "priority", label: "settings.nav.priority", render: () => h11(PriorityPanel, { connection: p.connection, t: p.t, onChanged: () => {
       if (target.sessionId) void p.refreshAssist(target.sessionId).catch(() => {
       });
     } }) } : null,
-    { key: "style", label: "settings.nav.style", render: () => h12(ModelStyleCard, { t: p.t }) },
-    { key: "update", label: "settings.nav.update", render: () => h12(UpdatePanel, { t: p.t }) }
+    { key: "style", label: "settings.nav.style", render: () => h11(ModelStyleCard, { t: p.t }) },
+    { key: "update", label: "settings.nav.update", render: () => h11(UpdatePanel, { t: p.t }) }
   ].filter(Boolean);
   const active = sections.some((section) => section.key === stored) ? stored : sections[0].key;
   const select = (key) => {
@@ -3760,14 +3707,14 @@ function SettingsPage(p) {
     const buttons = nav.current?.querySelectorAll("[role=tab]");
     buttons?.[next]?.focus();
   };
-  return h12(
+  return h11(
     "section",
     { className: "lpa lpa-settings-page", "aria-label": p.t("title") },
     // Tabs sit above the page title, matching the built-in Computer use settings page.
-    h12(
+    h11(
       "nav",
       { ref: nav, className: "lpa-settings-nav", role: "tablist", "aria-orientation": "horizontal", "aria-label": p.t("settings.sectionNav"), onKeyDown: moveFocus },
-      sections.map((section) => h12("button", {
+      sections.map((section) => h11("button", {
         key: section.key,
         type: "button",
         role: "tab",
@@ -3779,16 +3726,16 @@ function SettingsPage(p) {
         onClick: () => select(section.key)
       }, p.t(section.label)))
     ),
-    h12(
+    h11(
       "header",
       { className: "lpa-settings-header" },
-      h12("div", { className: "lpa-settings-heading" }, h12("h1", null, p.t("title")), h12("p", { className: "lpa-note lpa-settings-subtitle" }, p.t("settings.subtitle"))),
-      p.returnToConversation ? h12("button", { type: "button", className: "lpa-button", onClick: p.returnToConversation }, p.t("returnConversation")) : null
+      h11("div", { className: "lpa-settings-heading" }, h11("h1", null, p.t("title")), h11("p", { className: "lpa-note lpa-settings-subtitle" }, p.t("settings.subtitle"))),
+      p.returnToConversation ? h11("button", { type: "button", className: "lpa-button", onClick: p.returnToConversation }, p.t("returnConversation")) : null
     ),
-    h12(
+    h11(
       "div",
       { className: "lpa-settings-panels" },
-      sections.map((section) => h12("div", {
+      sections.map((section) => h11("div", {
         key: section.key,
         role: "tabpanel",
         id: "lpa-panel-" + section.key,
@@ -3799,12 +3746,12 @@ function SettingsPage(p) {
     )
   );
 }
-var import_react13, h12, SECTION_KEY, readSection, writeSection;
+var import_react12, h11, SECTION_KEY, readSection, writeSection;
 var init_settings_page = __esm({
   "assist/client/settings-page.js"() {
     init_update_panel();
     init_model_style_pref();
-    import_react13 = __toESM(require("react"), 1);
+    import_react12 = __toESM(require("react"), 1);
     init_settings();
     init_runtime();
     init_api();
@@ -3812,7 +3759,7 @@ var init_settings_page = __esm({
     init_enablement_source();
     init_priority_panel();
     init_settings_page_state();
-    h12 = import_react13.default.createElement;
+    h11 = import_react12.default.createElement;
     SECTION_KEY = "lpa_settings_section";
     readSection = () => {
       try {
@@ -5096,7 +5043,7 @@ function matrixParticle(row, column, columnCount) {
   };
 }
 function useTrackBox(track) {
-  const [box, setBox] = import_react14.default.useState({ width: 0, dpr: 1 });
+  const [box, setBox] = import_react13.default.useState({ width: 0, dpr: 1 });
   useLayout(() => {
     const node = track.current;
     if (!node) return;
@@ -5129,15 +5076,15 @@ function ClaudeEffortVisual({
   t,
   children
 }) {
-  const track = import_react14.default.useRef(null), knob = import_react14.default.useRef(null), fill = import_react14.default.useRef(null), value = import_react14.default.useRef(null);
+  const track = import_react13.default.useRef(null), knob = import_react13.default.useRef(null), fill = import_react13.default.useRef(null), value = import_react13.default.useRef(null);
   const box = useTrackBox(track);
   const count = rows.length;
   const at = Math.max(0, Math.min(Math.max(0, count - 1), Number.isInteger(index) ? index : 0));
   const ratio = position === null ? count < 2 ? 1 : at / (count - 1) : magneticRatio(position, count);
   const pixels = Math.round(ratio * Math.max(0, box.width - 16));
-  const geometry = import_react14.default.useMemo(() => matrixGeometry(box.width, box.dpr), [box.width, box.dpr]);
+  const geometry = import_react13.default.useMemo(() => matrixGeometry(box.width, box.dpr), [box.width, box.dpr]);
   const wantsApex = count > 1 && at === count - 1 && !unknown;
-  const [matrixBuilt, setMatrixBuilt] = import_react14.default.useState(false);
+  const [matrixBuilt, setMatrixBuilt] = import_react13.default.useState(false);
   const layout = wantsApex || matrixBuilt ? geometry : null;
   const apex = wantsApex && layout !== null;
   const signature = Math.round(box.width * box.dpr) + "@" + box.dpr;
@@ -5152,25 +5099,25 @@ function ClaudeEffortVisual({
     knob.current.style.transition = "";
     fill.current.style.transition = "";
   }, [box.width]);
-  const [swap, setSwap] = import_react14.default.useState({ text: label, previous: "", serial: 0, left: 0 });
+  const [swap, setSwap] = import_react13.default.useState({ text: label, previous: "", serial: 0, left: 0 });
   useLayout(() => {
     if (swap.text === label) return;
     const left = value.current?.offsetLeft ?? 0;
     setSwap((previous) => ({ text: label, previous: previous.text, serial: previous.serial + 1, left }));
   }, [label, swap.text]);
-  const cells = import_react14.default.useMemo(() => {
+  const cells = import_react13.default.useMemo(() => {
     if (!layout) return null;
     return Array.from({ length: layout.rows * layout.cols }, (_, i) => {
       const row = Math.floor(i / layout.cols), column = i % layout.cols;
       const particle = matrixParticle(row, column, layout.cols);
-      return h13(
+      return h12(
         "div",
         {
           key: signature + ":" + i,
           className: "lpa-ce-matrix-cell",
           style: { "--lpa-ce-cell-delay": particle.entranceDelay }
         },
-        h13("div", {
+        h12("div", {
           className: "lpa-ce-matrix-sq",
           "data-tone": particle.tone,
           style: {
@@ -5187,11 +5134,11 @@ function ClaudeEffortVisual({
     "picker.faster": "Faster",
     "picker.smarter": "Smarter"
   }[key];
-  return h13(
-    import_react14.default.Fragment,
+  return h12(
+    import_react13.default.Fragment,
     null,
-    h13("style", { "data-lpa-ce-style": "" }, claudeEffortCss),
-    h13(
+    h12("style", { "data-lpa-ce-style": "" }, claudeEffortCss),
+    h12(
       "section",
       {
         className: "lpa-effort lpa-ce",
@@ -5202,57 +5149,57 @@ function ClaudeEffortVisual({
         "data-disabled": disabled ? "" : void 0,
         "data-unknown": unknown ? "true" : void 0
       },
-      h13(
+      h12(
         "div",
         { className: "lpa-ce-head" },
-        h13("span", { className: "lpa-ce-label" }, copy("picker.effort")),
-        h13(
+        h12("span", { className: "lpa-ce-label" }, copy("picker.effort")),
+        h12(
           "span",
           { className: "lpa-ce-live", "aria-live": "polite", "aria-atomic": true },
-          h13("span", { key: swap.serial, ref: value, className: "lpa-ce-value" }, swap.text)
+          h12("span", { key: swap.serial, ref: value, className: "lpa-ce-value" }, swap.text)
         ),
-        h13("span", {
+        h12("span", {
           key: swap.serial,
           className: "lpa-ce-value-ghost",
           "aria-hidden": true,
           style: { left: swap.left + "px" }
         }, swap.previous)
       ),
-      h13(
+      h12(
         "div",
         { className: "lpa-ce-ends", "aria-hidden": true },
-        h13("span", { className: "lpa-ce-end" }, copy("picker.faster")),
-        h13("span", { className: "lpa-ce-end" }, copy("picker.smarter"))
+        h12("span", { className: "lpa-ce-end" }, copy("picker.faster")),
+        h12("span", { className: "lpa-ce-end" }, copy("picker.smarter"))
       ),
-      h13(
+      h12(
         "div",
         { ref: track, className: "lpa-effort-slider lpa-ce-track" },
-        h13("div", { ref: fill, className: "lpa-ce-fill", "aria-hidden": true, style: { width: (count ? pixels + 8 : 0) + "px" } }),
-        h13("div", { className: "lpa-ce-ticks", "aria-hidden": true }, rows.map((row, i) => h13("span", {
+        h12("div", { ref: fill, className: "lpa-ce-fill", "aria-hidden": true, style: { width: (count ? pixels + 8 : 0) + "px" } }),
+        h12("div", { className: "lpa-ce-ticks", "aria-hidden": true }, rows.map((row, i) => h12("span", {
           key: row.id,
           className: "lpa-ce-tick",
           style: { left: Math.round((count < 2 ? 1 : i / (count - 1)) * Math.max(0, box.width - 16) + 8) + "px" }
         }))),
-        h13("div", { className: "lpa-ce-matrix", "aria-hidden": true, style: layout ? {
+        h12("div", { className: "lpa-ce-matrix", "aria-hidden": true, style: layout ? {
           gap: layout.gap + "px",
           padding: `${layout.padTop}px ${layout.padRight}px ${layout.padBottom}px ${layout.padLeft}px`,
           gridTemplateColumns: `repeat(${layout.cols}, ${layout.sq}px)`,
           gridAutoRows: layout.sq + "px"
         } : void 0 }, cells),
-        h13("div", { ref: knob, className: "lpa-ce-knob", "aria-hidden": true, style: { translate: pixels + "px" } }),
+        h12("div", { ref: knob, className: "lpa-ce-knob", "aria-hidden": true, style: { translate: pixels + "px" } }),
         children
       )
     )
   );
 }
-var import_react14, h13, useLayout, FLASH_SECONDS;
+var import_react13, h12, useLayout, FLASH_SECONDS;
 var init_claude_effort_visual = __esm({
   "assist/client/claude-effort-visual.js"() {
-    import_react14 = __toESM(require("react"), 1);
+    import_react13 = __toESM(require("react"), 1);
     init_claude_effort_style();
     init_claude_effort_style();
-    h13 = import_react14.default.createElement;
-    useLayout = typeof window === "undefined" ? import_react14.default.useEffect : import_react14.default.useLayoutEffect;
+    h12 = import_react13.default.createElement;
+    useLayout = typeof window === "undefined" ? import_react13.default.useEffect : import_react13.default.useLayoutEffect;
     FLASH_SECONDS = 1.45;
   }
 });
@@ -5340,11 +5287,11 @@ function ZcodeEffortVisual({
   const atMax = count > 1 && at === count - 1 && !unknown && !disabled;
   const hovered = dragging && count > 1 ? Math.round(ratio * (count - 1)) : null;
   const bubbles = highspeed ? highspeedBubbles() : EFFORT_BUBBLES;
-  return h14(
-    import_react15.default.Fragment,
+  return h13(
+    import_react14.default.Fragment,
     null,
-    h14("style", { "data-lpa-zt-style": "" }, zcodeEffortCss),
-    h14(
+    h13("style", { "data-lpa-zt-style": "" }, zcodeEffortCss),
+    h13(
       "section",
       {
         className: "lpa-effort lpa-zt",
@@ -5355,29 +5302,29 @@ function ZcodeEffortVisual({
         "data-disabled": disabled ? "" : void 0,
         "data-unknown": unknown ? "true" : void 0
       },
-      h14(
+      h13(
         "div",
         { className: "lpa-zt-head" },
-        h14("span", { className: "lpa-zt-label" }, t("picker.effort")),
-        h14("span", { className: "lpa-zt-value", "aria-live": "polite", "aria-atomic": true }, label)
+        h13("span", { className: "lpa-zt-label" }, t("picker.effort")),
+        h13("span", { className: "lpa-zt-value", "aria-live": "polite", "aria-atomic": true }, label)
       ),
-      h14(
+      h13(
         "div",
         { className: "lpa-zt-slider" },
-        h14(
+        h13(
           "div",
           { className: "lpa-zt-track", "aria-hidden": true },
-          h14(
+          h13(
             "div",
             {
               className: "lpa-zt-fill",
               "aria-hidden": true,
               style: { width: "calc(14px + (100% - 28px) * " + ratio + ")" }
             },
-            atMax ? h14(
+            atMax ? h13(
               "div",
               { className: "lpa-zt-bubbles", "aria-hidden": true },
-              bubbles.map((bubble, i) => h14(
+              bubbles.map((bubble, i) => h13(
                 "span",
                 {
                   key: i,
@@ -5388,18 +5335,18 @@ function ZcodeEffortVisual({
                     animationDelay: bubble.delay + "s"
                   }
                 },
-                h14("span", { style: { width: bubble.size + "px", height: bubble.size + "px" } })
+                h13("span", { style: { width: bubble.size + "px", height: bubble.size + "px" } })
               ))
             ) : null
           )
         ),
-        h14("div", { className: "lpa-zt-stops", "aria-hidden": true }, rows.map((row, i) => h14("span", {
+        h13("div", { className: "lpa-zt-stops", "aria-hidden": true }, rows.map((row, i) => h13("span", {
           key: row.id,
           className: "lpa-zt-stop",
           "data-filled": count > 1 && i <= at ? "" : void 0,
           "data-hovered": i === hovered ? "" : void 0
         }))),
-        h14("div", {
+        h13("div", {
           className: "lpa-zt-thumb",
           "aria-hidden": true,
           style: { left: "calc((100% - 28px) * " + ratio + ")" }
@@ -5409,12 +5356,12 @@ function ZcodeEffortVisual({
     )
   );
 }
-var import_react15, h14, EFFORT_BUBBLES;
+var import_react14, h13, EFFORT_BUBBLES;
 var init_zcode_effort_visual = __esm({
   "assist/client/zcode-effort-visual.js"() {
-    import_react15 = __toESM(require("react"), 1);
+    import_react14 = __toESM(require("react"), 1);
     init_zcode_effort_style();
-    h14 = import_react15.default.createElement;
+    h13 = import_react14.default.createElement;
     EFFORT_BUBBLES = [
       { top: 4, size: 2, duration: 2.6, delay: -0.4 },
       { top: 14, size: 3, duration: 3.2, delay: -2.1 },
@@ -5521,9 +5468,9 @@ function menuGeometry(trigger, size, viewport) {
   };
 }
 function usePlacement(trigger, panel, open) {
-  const [position, setPosition] = import_react16.default.useState(null);
-  const frozen = import_react16.default.useRef(null);
-  import_react16.default.useLayoutEffect(() => {
+  const [position, setPosition] = import_react15.default.useState(null);
+  const frozen = import_react15.default.useRef(null);
+  import_react15.default.useLayoutEffect(() => {
     if (!open) {
       setPosition(null);
       frozen.current = null;
@@ -5573,8 +5520,8 @@ function usePlacement(trigger, panel, open) {
   return position;
 }
 function useFlyout(rowRef, panelRef, open) {
-  const [position, setPosition] = import_react16.default.useState(null);
-  import_react16.default.useLayoutEffect(() => {
+  const [position, setPosition] = import_react15.default.useState(null);
+  import_react15.default.useLayoutEffect(() => {
     if (!open) {
       setPosition(null);
       return;
@@ -5630,24 +5577,24 @@ function EffortSlider({ state, entry, disabled, t, submit, sliderRef, Visual = C
   const rows = effortRows(entry, state.current, t("picker.providerDefault"), t);
   const active = rows.findIndex((r) => r.active);
   const token = JSON.stringify([state.current, rows.map((r) => r.effort)]);
-  const tokenRef = import_react16.default.useRef(token);
+  const tokenRef = import_react15.default.useRef(token);
   tokenRef.current = token;
-  const gesture = import_react16.default.useRef(null), interaction = import_react16.default.useRef({ mode: null, token: null, cancelled: false });
-  const [draft, setDraft] = import_react16.default.useState(null), [pointerPosition, setPointerPosition] = import_react16.default.useState(null), [landing, setLanding] = import_react16.default.useState(null);
-  const alive = import_react16.default.useRef(true);
-  import_react16.default.useEffect(() => {
+  const gesture = import_react15.default.useRef(null), interaction = import_react15.default.useRef({ mode: null, token: null, cancelled: false });
+  const [draft, setDraft] = import_react15.default.useState(null), [pointerPosition, setPointerPosition] = import_react15.default.useState(null), [landing, setLanding] = import_react15.default.useState(null);
+  const alive = import_react15.default.useRef(true);
+  import_react15.default.useEffect(() => {
     alive.current = true;
     return () => {
       alive.current = false;
     };
   }, []);
-  import_react16.default.useEffect(() => {
+  import_react15.default.useEffect(() => {
     if (interaction.current.mode) interaction.current.cancelled = true;
     gesture.current = null;
     setDraft(null);
     setPointerPosition(null);
   }, [token, disabled]);
-  import_react16.default.useEffect(() => {
+  import_react15.default.useEffect(() => {
     setLanding(null);
   }, [token]);
   const clear = () => {
@@ -5682,10 +5629,10 @@ function EffortSlider({ state, entry, disabled, t, submit, sliderRef, Visual = C
   const index = preview ?? Math.max(0, active), max = Math.max(0, rows.length - 1);
   const position = interaction.current.token === token && !interaction.current.cancelled ? pointerPosition : null;
   const label = preview !== null ? rows[index]?.label : active < 0 ? t("picker.effortUnavailable") : rows[active].label;
-  return h15(
+  return h14(
     Visual,
     { rows, index, position, dragging: position !== null, disabled: disabled || rows.length < 2, unknown: active < 0 && preview === null, highspeed, label, t },
-    h15("input", {
+    h14("input", {
       ref: sliderRef,
       type: "range",
       className: inputClass,
@@ -5734,24 +5681,24 @@ function EffortSlider({ state, entry, disabled, t, submit, sliderRef, Visual = C
   );
 }
 function ModelPicker({ locked, available, directory, load, select, t, getLocale = () => "en" }) {
-  const state = import_react16.default.useSyncExternalStore(import_react16.default.useCallback((fn) => directory.subscribe(fn), [directory]), () => directory.getSnapshot(), () => directory.getSnapshot());
-  const [open, setOpen] = import_react16.default.useState(false), [error, setError] = import_react16.default.useState(null), [submitting, setSubmitting] = import_react16.default.useState(false);
-  const [pinsStored, setPinsStored] = import_react16.default.useState(() => readPinnedProviders(safeStorage()));
-  const [otherOpen, setOtherOpen] = import_react16.default.useState(false);
-  const [providerView, setProviderView] = import_react16.default.useState(null);
-  const [viewedProviderId, setViewedProviderId] = import_react16.default.useState(null);
-  const [silentSubmit, setSilentSubmit] = import_react16.default.useState(false);
-  const [styleTick, refreshStyleTick] = import_react16.default.useState(0);
-  import_react16.default.useEffect(() => onModelStyleChange(() => refreshStyleTick((v) => v + 1)), []);
-  const trigger = import_react16.default.useRef(null), panel = import_react16.default.useRef(null), slider = import_react16.default.useRef(null), rowRefs = import_react16.default.useRef(/* @__PURE__ */ new Map());
-  const otherRowRef = import_react16.default.useRef(null), flyoutRef = import_react16.default.useRef(null);
-  const lifecycle = import_react16.default.useRef({ alive: true, source: directory, epoch: 0, open: false, operation: 0, inflight: false });
-  const focusRequest = import_react16.default.useRef(null), focusRecovery = import_react16.default.useRef(null), modelFocus = import_react16.default.useRef(null), id2 = import_react16.default.useId();
+  const state = import_react15.default.useSyncExternalStore(import_react15.default.useCallback((fn) => directory.subscribe(fn), [directory]), () => directory.getSnapshot(), () => directory.getSnapshot());
+  const [open, setOpen] = import_react15.default.useState(false), [error, setError] = import_react15.default.useState(null), [submitting, setSubmitting] = import_react15.default.useState(false);
+  const [pinsStored, setPinsStored] = import_react15.default.useState(() => readPinnedProviders(safeStorage()));
+  const [otherOpen, setOtherOpen] = import_react15.default.useState(false);
+  const [providerView, setProviderView] = import_react15.default.useState(null);
+  const [viewedProviderId, setViewedProviderId] = import_react15.default.useState(null);
+  const [silentSubmit, setSilentSubmit] = import_react15.default.useState(false);
+  const [styleTick, refreshStyleTick] = import_react15.default.useState(0);
+  import_react15.default.useEffect(() => onModelStyleChange(() => refreshStyleTick((v) => v + 1)), []);
+  const trigger = import_react15.default.useRef(null), panel = import_react15.default.useRef(null), slider = import_react15.default.useRef(null), rowRefs = import_react15.default.useRef(/* @__PURE__ */ new Map());
+  const otherRowRef = import_react15.default.useRef(null), flyoutRef = import_react15.default.useRef(null);
+  const lifecycle = import_react15.default.useRef({ alive: true, source: directory, epoch: 0, open: false, operation: 0, inflight: false });
+  const focusRequest = import_react15.default.useRef(null), focusRecovery = import_react15.default.useRef(null), modelFocus = import_react15.default.useRef(null), id2 = import_react15.default.useId();
   const life = lifecycle.current;
   life.source = directory;
   const visible = open && available && !locked, entry = currentEntry(state), failures = failureRows(state);
   const busy = busyState(state) || submitting, position = usePlacement(trigger, panel, visible);
-  import_react16.default.useEffect(() => {
+  import_react15.default.useEffect(() => {
     life.alive = true;
     setOpen(false);
     setProviderView(null);
@@ -5765,7 +5712,7 @@ function ModelPicker({ locked, available, directory, load, select, t, getLocale 
       life.epoch++;
     };
   }, [directory, life]);
-  import_react16.default.useEffect(() => {
+  import_react15.default.useEffect(() => {
     if (!available || locked) {
       life.open = false;
       life.epoch++;
@@ -5809,13 +5756,13 @@ function ModelPicker({ locked, available, directory, load, select, t, getLocale 
     }
     return false;
   };
-  import_react16.default.useLayoutEffect(() => {
+  import_react15.default.useLayoutEffect(() => {
     if (viewedProviderId === null || zcGroup?.id === viewedProviderId) return;
     const active = document.activeElement;
     if (visible && life.open && (active === document.body || active === document.documentElement || panel.current?.contains(active))) focusRequest.current = "first";
     setViewedProviderId(null);
   }, [visible, viewedProviderId, zcGroup?.id, life]);
-  import_react16.default.useLayoutEffect(() => {
+  import_react15.default.useLayoutEffect(() => {
     const saved = focusRecovery.current;
     if (!saved || busy) return;
     focusRecovery.current = null;
@@ -5824,7 +5771,7 @@ function ModelPicker({ locked, available, directory, load, select, t, getLocale 
     if (saved.node?.isConnected && !saved.node.disabled) saved.node.focus({ preventScroll: true });
     else if (!focusRow(modelFocus.current)) panel.current?.querySelector("button:not(:disabled),input:not(:disabled)")?.focus();
   }, [busy, visible, directory, life]);
-  import_react16.default.useLayoutEffect(() => {
+  import_react15.default.useLayoutEffect(() => {
     if (!visible || !position || !focusRequest.current) return;
     const order = orderForFocus(), wanted = focusRequest.current === "last" ? order.at(-1) : order[0];
     if (focusRow(wanted)) {
@@ -5836,13 +5783,13 @@ function ModelPicker({ locked, available, directory, load, select, t, getLocale 
       focusRequest.current = null;
     }
   }, [visible, position, state, pins, providerView, viewedProviderId, zcode]);
-  import_react16.default.useLayoutEffect(() => {
+  import_react15.default.useLayoutEffect(() => {
     if (!collapsed.length) setOtherOpen(false);
   }, [collapsed.length]);
-  import_react16.default.useLayoutEffect(() => {
+  import_react15.default.useLayoutEffect(() => {
     if (zcode && providerView && !zcSwitchable) setProviderView(false);
   }, [zcode, providerView, zcSwitchable]);
-  import_react16.default.useEffect(() => {
+  import_react15.default.useEffect(() => {
     if (!visible) return;
     const outside = (e) => {
       if (!trigger.current?.contains(e.target) && !panel.current?.contains(e.target) && !flyoutRef.current?.contains(e.target)) {
@@ -5954,11 +5901,11 @@ function ModelPicker({ locked, available, directory, load, select, t, getLocale 
   };
   const flyout = useFlyout(otherRowRef, flyoutRef, visible && !zcode && otherOpen && collapsed.length > 0);
   if (!available) return null;
-  if (styleTick >= 0 && readModelStylePref() === "dsh") return h15(
+  if (styleTick >= 0 && readModelStylePref() === "dsh") return h14(
     "div",
     { className: "lpa-model-root" },
-    h15("style", null, ".lpa-model-native{font:inherit;font-size:13px;max-width:min(320px,52cqw);height:28px;color:var(--dsw-alias-label-primary,inherit);background:var(--dsw-alias-bg-layer-1,ButtonFace);border:1px solid var(--dsw-alias-border-l1,#80808066);border-radius:7px;padding:0 4px;cursor:pointer}"),
-    h15(
+    h14("style", null, ".lpa-model-native{font:inherit;font-size:13px;max-width:min(320px,52cqw);height:28px;color:var(--dsw-alias-label-primary,inherit);background:var(--dsw-alias-bg-layer-1,ButtonFace);border:1px solid var(--dsw-alias-border-l1,#80808066);border-radius:7px;padding:0 4px;cursor:pointer}"),
+    h14(
       "select",
       {
         className: "lpa-model-native",
@@ -5977,8 +5924,8 @@ function ModelPicker({ locked, available, directory, load, select, t, getLocale 
           if (group && model) pick(group, model);
         }
       },
-      sectionsOf(state).length === 0 ? h15("option", { value: "" }, loadingState(state) ? t("picker.loading") : t("picker.empty")) : null,
-      sectionsOf(state).map((group) => h15("optgroup", { key: group.id, label: group.name || group.id }, modelsOf(group).map((model) => h15("option", { key: modelRowId(group, model), value: modelRowId(group, model) }, model.name || model.id))))
+      sectionsOf(state).length === 0 ? h14("option", { value: "" }, loadingState(state) ? t("picker.loading") : t("picker.empty")) : null,
+      sectionsOf(state).map((group) => h14("optgroup", { key: group.id, label: group.name || group.id }, modelsOf(group).map((model) => h14("option", { key: modelRowId(group, model), value: modelRowId(group, model) }, model.name || model.id))))
     )
   );
   const rows = effortRows(entry, state.current, t("picker.providerDefault"), t);
@@ -5989,7 +5936,7 @@ function ModelPicker({ locked, available, directory, load, select, t, getLocale 
   const renderModel = (group, model) => {
     const key = modelRowId(group, model), checked = isCurrentModel(state.current, { provider: group.id, model: model.id });
     const description = modelDescription(group.id, model, getLocale());
-    return h15(
+    return h14(
       "button",
       {
         key,
@@ -6011,15 +5958,15 @@ function ModelPicker({ locked, available, directory, load, select, t, getLocale 
         },
         onClick: () => pick(group, model)
       },
-      h15("span", { className: "lpa-model-copy" }, h15("span", { className: "lpa-model-name" }, model.name || model.id), description ? h15("span", { className: "lpa-model-desc" }, description) : null),
-      checked ? h15("span", { className: "lpa-model-check", "aria-hidden": true }, "\u2713") : null
+      h14("span", { className: "lpa-model-copy" }, h14("span", { className: "lpa-model-name" }, model.name || model.id), description ? h14("span", { className: "lpa-model-desc" }, description) : null),
+      checked ? h14("span", { className: "lpa-model-check", "aria-hidden": true }, "\u2713") : null
     );
   };
-  const groupHeader = (group) => h15(
+  const groupHeader = (group) => h14(
     "div",
     { className: "lpa-model-group-name", title: group.id },
-    h15("span", null, group.id === "deepseek-account" ? t("picker.account") : group.name || group.id),
-    h15(
+    h14("span", null, group.id === "deepseek-account" ? t("picker.account") : group.name || group.id),
+    h14(
       "button",
       {
         type: "button",
@@ -6030,11 +5977,11 @@ function ModelPicker({ locked, available, directory, load, select, t, getLocale 
         "aria-label": pins.includes(group.id) ? t("picker.unpin") : t("picker.pin"),
         onClick: () => togglePin(group.id)
       },
-      h15("span", { "aria-hidden": true }, pins.includes(group.id) ? t("picker.pinnedMark") : t("picker.pinMark"))
+      h14("span", { "aria-hidden": true }, pins.includes(group.id) ? t("picker.pinnedMark") : t("picker.pinMark"))
     )
   );
   const showEffort = rows.length && (!zcode || zcGroup?.id === state.current?.provider);
-  const effortFrame = showEffort ? h15("div", { className: "lpa-effort-frame" }, h15(EffortSlider, {
+  const effortFrame = showEffort ? h14("div", { className: "lpa-effort-frame" }, h14(EffortSlider, {
     key: JSON.stringify([state.current?.provider, state.current?.model]),
     state,
     entry,
@@ -6047,7 +5994,7 @@ function ModelPicker({ locked, available, directory, load, select, t, getLocale 
     highspeed: zcode && isGlmHighspeedModel(entry?.model?.name || entry?.model?.id || "")
   })) : null;
   const zcProviderName = (group) => group.id === "deepseek-account" ? t("picker.account") : group.name || group.id;
-  const zcProviderRow = !zcGroup ? null : zcSwitchable ? h15(
+  const zcProviderRow = !zcGroup ? null : zcSwitchable ? h14(
     "button",
     {
       key: zcHeaderKey,
@@ -6073,15 +6020,15 @@ function ModelPicker({ locked, available, directory, load, select, t, getLocale 
         setProviderView((open2) => !open2);
       }
     },
-    h15("span", { className: "lpa-zt-provider-name" }, zcProviderName(zcGroup)),
-    h15("span", { className: "lpa-zt-provider-count" }, t("picker.providerCount", { count: zcOthers.length })),
-    h15("span", { className: "lpa-zt-provider-chevron", "aria-hidden": true }, "\u203A")
-  ) : h15(
+    h14("span", { className: "lpa-zt-provider-name" }, zcProviderName(zcGroup)),
+    h14("span", { className: "lpa-zt-provider-count" }, t("picker.providerCount", { count: zcOthers.length })),
+    h14("span", { className: "lpa-zt-provider-chevron", "aria-hidden": true }, "\u203A")
+  ) : h14(
     "div",
     { key: zcHeaderKey, role: "presentation", "data-picker-row": zcHeaderKey, "data-provider-id": zcGroup.id, className: "lpa-zt-row lpa-zt-provider-row" },
-    h15("span", { className: "lpa-zt-provider-name" }, zcProviderName(zcGroup))
+    h14("span", { className: "lpa-zt-provider-name" }, zcProviderName(zcGroup))
   );
-  const zcBackRow = h15(
+  const zcBackRow = h14(
     "button",
     {
       key: "zc-back",
@@ -6103,12 +6050,12 @@ function ModelPicker({ locked, available, directory, load, select, t, getLocale 
         setProviderView(null);
       }
     },
-    h15("span", { className: "lpa-zt-back-chevron", "aria-hidden": true }, "\u2039"),
-    h15("span", null, t("picker.back"))
+    h14("span", { className: "lpa-zt-back-chevron", "aria-hidden": true }, "\u2039"),
+    h14("span", null, t("picker.back"))
   );
   const zcProviders = providerView ? zcOthers.map((group) => {
     const key = providerRowKey(group.id), checked = group.id === state.current?.provider;
-    return h15(
+    return h14(
       "button",
       {
         key,
@@ -6133,31 +6080,31 @@ function ModelPicker({ locked, available, directory, load, select, t, getLocale 
           setProviderView(null);
         }
       },
-      h15("span", { className: "lpa-zt-provider-name" }, zcProviderName(group)),
-      h15("span", { className: "lpa-zt-provider-count" }, t("picker.providerModels", { count: modelsOf(group).length })),
-      checked ? h15("span", { className: "lpa-model-check", "aria-hidden": true }, "\u2713") : null
+      h14("span", { className: "lpa-zt-provider-name" }, zcProviderName(group)),
+      h14("span", { className: "lpa-zt-provider-count" }, t("picker.providerModels", { count: modelsOf(group).length })),
+      checked ? h14("span", { className: "lpa-model-check", "aria-hidden": true }, "\u2713") : null
     );
   }) : null;
-  const zcDivider = h15("div", { className: "lpa-zt-divider", "aria-hidden": true });
-  const zcodeBody = h15(
-    import_react16.default.Fragment,
+  const zcDivider = h14("div", { className: "lpa-zt-divider", "aria-hidden": true });
+  const zcodeBody = h14(
+    import_react15.default.Fragment,
     null,
     providerView ? null : zcProviderRow,
     providerView ? null : zcDivider,
-    h15(
+    h14(
       "div",
       { className: "lpa-model-scroll", role: "menu", "aria-label": t("picker.models") },
-      providerView ? h15(import_react16.default.Fragment, null, zcProviders, h15("div", { className: "lpa-zt-divider", "aria-hidden": true }), zcBackRow) : zcGroup ? renderModels(zcGroup) : h15("p", { className: "lpa-model-status", role: "status" }, loadingState(state) ? t("picker.loading") : t("picker.empty"))
+      providerView ? h14(import_react15.default.Fragment, null, zcProviders, h14("div", { className: "lpa-zt-divider", "aria-hidden": true }), zcBackRow) : zcGroup ? renderModels(zcGroup) : h14("p", { className: "lpa-model-status", role: "status" }, loadingState(state) ? t("picker.loading") : t("picker.empty"))
     ),
-    failures.length ? h15("div", { className: "lpa-model-failures" }, failures.map((f) => h15("p", { key: f.id, className: "lpa-model-status", role: "status" }, t(f.key, f.params)))) : null,
+    failures.length ? h14("div", { className: "lpa-model-failures" }, failures.map((f) => h14("p", { key: f.id, className: "lpa-model-status", role: "status" }, t(f.key, f.params)))) : null,
     showEffort ? zcDivider : null,
     effortFrame,
-    error ? h15("p", { className: "lpa-model-error", role: "alert" }, t(error === "session/writer-held" ? "picker.sessionInUse" : "picker.failed")) : null,
-    busy && !silentSubmit ? h15("span", { className: "lpa-model-status", role: "status" }, t("picker.saving")) : null
+    error ? h14("p", { className: "lpa-model-error", role: "alert" }, t(error === "session/writer-held" ? "picker.sessionInUse" : "picker.failed")) : null,
+    busy && !silentSubmit ? h14("span", { className: "lpa-model-status", role: "status" }, t("picker.saving")) : null
   );
   const otherRow = () => {
     const key = providerRowKey(OTHER_MODELS), current = collapsed.some((group) => state.current?.provider === group.id);
-    return h15(
+    return h14(
       "button",
       {
         key,
@@ -6191,17 +6138,17 @@ function ModelPicker({ locked, available, directory, load, select, t, getLocale 
           }
         }
       },
-      h15("span", { className: "lpa-model-provider-copy" }, h15("span", { className: "lpa-model-provider-name" }, t("picker.otherModels"))),
-      h15(
+      h14("span", { className: "lpa-model-provider-copy" }, h14("span", { className: "lpa-model-provider-name" }, t("picker.otherModels"))),
+      h14(
         "span",
         { className: "lpa-model-provider-meta" },
-        current ? h15("span", { className: "lpa-model-check", "aria-hidden": true }, "\u2713") : null,
-        h15("span", { className: "lpa-model-provider-count" }, String(otherCount)),
-        h15("span", { className: "lpa-model-provider-chevron", "aria-hidden": true }, "\u203A")
+        current ? h14("span", { className: "lpa-model-check", "aria-hidden": true }, "\u2713") : null,
+        h14("span", { className: "lpa-model-provider-count" }, String(otherCount)),
+        h14("span", { className: "lpa-model-provider-chevron", "aria-hidden": true }, "\u203A")
       )
     );
   };
-  const flyoutPanel = otherOpen && collapsed.length ? h15(
+  const flyoutPanel = otherOpen && collapsed.length ? h14(
     "div",
     {
       ref: flyoutRef,
@@ -6210,20 +6157,20 @@ function ModelPicker({ locked, available, directory, load, select, t, getLocale 
       "aria-label": t("picker.otherModels"),
       style: flyout ? { left: flyout.left, top: flyout.top, maxHeight: flyout.maxHeight } : { left: 0, top: 0, visibility: "hidden" }
     },
-    h15(
+    h14(
       "div",
       { className: "lpa-model-flyout-head" },
-      h15("span", null, t("picker.otherModels")),
-      h15("span", { className: "lpa-model-provider-count" }, String(otherCount))
+      h14("span", null, t("picker.otherModels")),
+      h14("span", { className: "lpa-model-provider-count" }, String(otherCount))
     ),
-    h15("div", { className: "lpa-model-flyout-scroll" }, collapsed.map((group, index) => h15(
+    h14("div", { className: "lpa-model-flyout-scroll" }, collapsed.map((group, index) => h14(
       "div",
       { key: group.id, className: "lpa-model-other-provider" + (index ? " lpa-model-other-provider--divided" : "") },
-      h15(
+      h14(
         "div",
         { className: "lpa-model-other-label" },
-        h15("span", null, group.id === "deepseek-account" ? t("picker.account") : group.name || group.id),
-        h15(
+        h14("span", null, group.id === "deepseek-account" ? t("picker.account") : group.name || group.id),
+        h14(
           "button",
           {
             type: "button",
@@ -6235,13 +6182,13 @@ function ModelPicker({ locked, available, directory, load, select, t, getLocale 
             disabled: busy || locked,
             onClick: () => togglePin(group.id)
           },
-          h15("span", { "aria-hidden": true }, t("picker.pinMark"))
+          h14("span", { "aria-hidden": true }, t("picker.pinMark"))
         )
       ),
       modelsOf(group).map((model) => renderModel(group, model))
     )))
   ) : null;
-  const menu = visible ? h15(
+  const menu = visible ? h14(
     "div",
     {
       ref: panel,
@@ -6255,34 +6202,34 @@ function ModelPicker({ locked, available, directory, load, select, t, getLocale 
       style: { ...position ?? { left: 0, top: 0, visibility: "hidden" }, ...menuSurfaceVars() },
       onKeyDown
     },
-    zcode ? zcodeBody : h15(
-      import_react16.default.Fragment,
+    zcode ? zcodeBody : h14(
+      import_react15.default.Fragment,
       null,
-      h15(
+      h14(
         "div",
         { className: "lpa-model-scroll", role: "menu", "aria-label": t("picker.models") },
         [
-          ...hero.map((group) => h15("section", { key: group.id, className: "lpa-model-group", role: "group", "aria-label": group.name || group.id }, groupHeader(group), renderModels(group))),
-          collapsed.length ? h15("div", { key: "more", className: "lpa-model-more" }, otherRow()) : null
+          ...hero.map((group) => h14("section", { key: group.id, className: "lpa-model-group", role: "group", "aria-label": group.name || group.id }, groupHeader(group), renderModels(group))),
+          collapsed.length ? h14("div", { key: "more", className: "lpa-model-more" }, otherRow()) : null
         ],
-        !hero.length && !collapsed.length ? h15("p", { className: "lpa-model-status", role: "status" }, loadingState(state) ? t("picker.loading") : t("picker.empty")) : null
+        !hero.length && !collapsed.length ? h14("p", { className: "lpa-model-status", role: "status" }, loadingState(state) ? t("picker.loading") : t("picker.empty")) : null
       ),
-      failures.length ? h15(
+      failures.length ? h14(
         "div",
         { className: "lpa-model-failures" },
-        failures.map((f) => h15("p", { key: f.id, className: "lpa-model-status", role: "status" }, t(f.key, f.params))),
-        h15("button", { type: "button", className: "lpa-model-retry", onClick: reload, disabled: busy || loadingState(state) }, t("picker.retry"))
+        failures.map((f) => h14("p", { key: f.id, className: "lpa-model-status", role: "status" }, t(f.key, f.params))),
+        h14("button", { type: "button", className: "lpa-model-retry", onClick: reload, disabled: busy || loadingState(state) }, t("picker.retry"))
       ) : null,
       effortFrame,
-      error ? h15("p", { className: "lpa-model-error", role: "alert" }, t(error === "session/writer-held" ? "picker.sessionInUse" : "picker.failed")) : null,
-      busy && !silentSubmit ? h15("span", { className: "lpa-model-status", role: "status" }, t("picker.saving")) : null
+      error ? h14("p", { className: "lpa-model-error", role: "alert" }, t(error === "session/writer-held" ? "picker.sessionInUse" : "picker.failed")) : null,
+      busy && !silentSubmit ? h14("span", { className: "lpa-model-status", role: "status" }, t("picker.saving")) : null
     )
   ) : null;
-  return h15(
-    import_react16.default.Fragment,
+  return h14(
+    import_react15.default.Fragment,
     null,
-    h15("style", null, pickerCss),
-    h15("div", { className: "lpa-model-root", "data-style": style }, h15(
+    h14("style", null, pickerCss),
+    h14("div", { className: "lpa-model-root", "data-style": style }, h14(
       "button",
       {
         ref: trigger,
@@ -6307,19 +6254,19 @@ function ModelPicker({ locked, available, directory, load, select, t, getLocale 
           }
         }
       },
-      h15("span", { className: "lpa-model-trigger-icon", "aria-hidden": true }, "\u25C7"),
-      h15("span", { className: "lpa-model-trigger-label" }, caption),
-      effort ? h15("span", { className: "lpa-model-trigger-effort" }, effort) : null,
-      h15("svg", { className: "lpa-model-chevron", viewBox: "0 0 16 16", width: 12, height: 12, fill: "none", stroke: "currentColor", strokeWidth: 1.5, strokeLinecap: "round", strokeLinejoin: "round", "aria-hidden": true, focusable: "false" }, h15("path", { d: "M4 6l4 4 4-4" }))
+      h14("span", { className: "lpa-model-trigger-icon", "aria-hidden": true }, "\u25C7"),
+      h14("span", { className: "lpa-model-trigger-label" }, caption),
+      effort ? h14("span", { className: "lpa-model-trigger-effort" }, effort) : null,
+      h14("svg", { className: "lpa-model-chevron", viewBox: "0 0 16 16", width: 12, height: 12, fill: "none", stroke: "currentColor", strokeWidth: 1.5, strokeLinecap: "round", strokeLinejoin: "round", "aria-hidden": true, focusable: "false" }, h14("path", { d: "M4 6l4 4 4-4" }))
     )),
     menu ? (0, import_react_dom.createPortal)(menu, document.body) : null,
     flyoutPanel && visible && !zcode ? (0, import_react_dom.createPortal)(flyoutPanel, document.body) : null
   );
 }
-var import_react16, import_react_dom, h15, MODEL_SLOT, MODEL_PICKER_PRIORITY, modelRowId, OTHER_MODELS, providerRowKey, EFFORT_SCALE, gestureKeys, safeStorage, menuSurfaceVars;
+var import_react15, import_react_dom, h14, MODEL_SLOT, MODEL_PICKER_PRIORITY, modelRowId, OTHER_MODELS, providerRowKey, EFFORT_SCALE, gestureKeys, safeStorage, menuSurfaceVars;
 var init_model_picker = __esm({
   "assist/client/model-picker.js"() {
-    import_react16 = __toESM(require("react"), 1);
+    import_react15 = __toESM(require("react"), 1);
     import_react_dom = require("react-dom");
     init_model_descriptions();
     init_model_pin_store();
@@ -6327,7 +6274,7 @@ var init_model_picker = __esm({
     init_model_style_pref();
     init_claude_effort_visual();
     init_zcode_effort_visual();
-    h15 = import_react16.default.createElement;
+    h14 = import_react15.default.createElement;
     MODEL_SLOT = "conversation.input.model";
     MODEL_PICKER_PRIORITY = -1;
     modelRowId = (group, model) => JSON.stringify([group.id, model.id]);
@@ -6359,7 +6306,7 @@ __export(client_exports, {
   installAssist: () => installAssist
 });
 function SettingsSurface(p) {
-  return h16(import_react17.default.Fragment, null, h16("style", null, css), h16(SettingsPage, p));
+  return h15(import_react16.default.Fragment, null, h15("style", null, css), h15(SettingsPage, p));
 }
 function installAssist(ctx) {
   ctx.effect(() => ctx.locale.register(NS, dictionaries));
@@ -6419,10 +6366,10 @@ function installAssist(ctx) {
   ctx.slots.inject("conversation.input.right", () => ctx.slots.register({ name: "conversation.input.right", id: "local-next-question-action", order: 1010, label: dictionaries.en.suggest, locale: NS, inject: inject2 }, SuggestButton));
   ctx.slots.inject("conversation.input.overlay", () => ctx.slots.register({ name: "conversation.input.overlay", id: "local-prompt-assist-results", order: 50, label, locale: NS, inject: inject2 }, AssistPanel));
 }
-var import_react17, h16;
+var import_react16, h15;
 var init_client = __esm({
   "assist/client/index.js"() {
-    import_react17 = __toESM(require("react"), 1);
+    import_react16 = __toESM(require("react"), 1);
     init_enhance_action();
     init_enhance_button();
     init_suggest_button();
@@ -6436,7 +6383,7 @@ var init_client = __esm({
     init_enablement_source();
     init_model_picker();
     init_model_style_pref();
-    h16 = import_react17.default.createElement;
+    h15 = import_react16.default.createElement;
   }
 });
 
@@ -6459,8 +6406,8 @@ init_model_id();
 init_fast_route();
 init_priority_source();
 function createFast(require2) {
-  let React18;
-  let h17;
+  let React17;
+  let h16;
   const NS2 = "local-openai-fast";
   const quietCommandNames2 = Object.freeze(["openai-fast", "openai-fast-ui-health"]);
   function HiddenFastCommand2() {
@@ -6662,8 +6609,8 @@ function createFast(require2) {
       .local-openai-fast__notice{position:absolute;bottom:34px;right:0;max-width:280px;width:max-content;padding:8px 10px;border:1px solid var(--dsw-alias-border-l2);border-radius:7px;background:var(--dsw-alias-bg-overlay);color:var(--dsw-alias-label-primary);font-size:12px;line-height:18px;z-index:20}
     `;
   function useDefaultSelection(remote) {
-    const [selection, setSelection] = React18.useState(null);
-    React18.useEffect(() => {
+    const [selection, setSelection] = React17.useState(null);
+    React17.useEffect(() => {
       let active = true;
       remote.session.modelCatalog().then((result2) => {
         if (active && result2.ok) setSelection(result2.value.default);
@@ -6676,12 +6623,12 @@ function createFast(require2) {
     return selection;
   }
   function FastToggle(props) {
-    const fastState = React18.useSyncExternalStore(props.fastSource.subscribe, props.fastSource.getSnapshot, props.fastSource.getSnapshot);
-    const modelState = React18.useSyncExternalStore(props.modelSource.subscribe, props.modelSource.getSnapshot, props.modelSource.getSnapshot);
-    const priorityState = props.prioritySource ? React18.useSyncExternalStore(props.prioritySource.subscribe, props.prioritySource.getSnapshot, props.prioritySource.getSnapshot) : null;
+    const fastState = React17.useSyncExternalStore(props.fastSource.subscribe, props.fastSource.getSnapshot, props.fastSource.getSnapshot);
+    const modelState = React17.useSyncExternalStore(props.modelSource.subscribe, props.modelSource.getSnapshot, props.modelSource.getSnapshot);
+    const priorityState = props.prioritySource ? React17.useSyncExternalStore(props.prioritySource.subscribe, props.prioritySource.getSnapshot, props.prioritySource.getSnapshot) : null;
     const selected = modelState?.next ?? null;
     const defaultSelection = useDefaultSelection(props.remote);
-    const sessionState = React18.useSyncExternalStore(props.sessionSource.subscribe, props.sessionSource.getSnapshot, props.sessionSource.getSnapshot);
+    const sessionState = React17.useSyncExternalStore(props.sessionSource.subscribe, props.sessionSource.getSnapshot, props.sessionSource.getSnapshot);
     const unavailable = Boolean(sessionState?.subagent) || sessionState?.removed === true;
     const allowed = props.useAccess("commands/execute");
     const wireProviders = Array.isArray(fastState?.providers) ? fastState.providers : [];
@@ -6690,8 +6637,8 @@ function createFast(require2) {
     const viewState = hasFastState(fastState) ? { enabled: fastState.enabled === true, providers } : priorityReady ? { enabled: false, providers } : fastState;
     const { visible, enabled, eligible, reason } = derivePresentation2(viewState, selected, defaultSelection);
     const ready = hasFastState(fastState);
-    const [loadFailed, setLoadFailed] = React18.useState(false);
-    React18.useEffect(() => {
+    const [loadFailed, setLoadFailed] = React17.useState(false);
+    React17.useEffect(() => {
       setLoadFailed(false);
       const retry = createHydrationRetry({
         attempt: props.ensureHydrated,
@@ -6701,17 +6648,17 @@ function createFast(require2) {
       void retry.start();
       return () => retry.dispose();
     }, [props.hydrationKey, props.sessionId, ready]);
-    const [interaction, setInteraction] = React18.useState({ enabled: null, pending: false });
-    const [error, setError] = React18.useState("");
-    const [notice, setNotice] = React18.useState("");
-    const alive = React18.useRef(true);
-    React18.useEffect(() => {
+    const [interaction, setInteraction] = React17.useState({ enabled: null, pending: false });
+    const [error, setError] = React17.useState("");
+    const [notice, setNotice] = React17.useState("");
+    const alive = React17.useRef(true);
+    React17.useEffect(() => {
       alive.current = true;
       return () => {
         alive.current = false;
       };
     }, []);
-    const controller = React18.useMemo(() => createToggleController2({
+    const controller = React17.useMemo(() => createToggleController2({
       initial: enabled,
       send: async (next) => {
         const result2 = await props.remote.commands.execute(
@@ -6733,13 +6680,13 @@ function createFast(require2) {
         });
       }
     }), [props.remote, props.sessionId]);
-    React18.useEffect(() => controller.sync(enabled), [controller, enabled]);
+    React17.useEffect(() => controller.sync(enabled), [controller, enabled]);
     const checked = eligible && (interaction.enabled ?? enabled);
     const provider = (selected ?? defaultSelection)?.provider ?? "";
     const providerName = priorityState?.names?.[provider];
     const providerLabel = typeof providerName === "string" && providerName && providerName !== provider ? providerName + " (" + provider + ")" : provider;
     const blocked = reason === "loading" ? props.t(loadFailed ? "loadError" : "loading") : reason === "needs-verification" ? props.t("unverified") + ": " + providerLabel : reason === "grant-missing" ? props.t("unsupportedProvider") + ": " + providerLabel : reason === "rejected" ? props.t("rejected") + ": " + providerLabel : !allowed ? props.t("access") : null;
-    React18.useEffect(() => {
+    React17.useEffect(() => {
       if (!blocked) setNotice("");
     }, [blocked]);
     if (!visible || unavailable) return null;
@@ -6753,11 +6700,11 @@ function createFast(require2) {
       controller.toggle().catch(() => {
       });
     }
-    return h17(
+    return h16(
       "span",
       { className: "local-openai-fast", title: blocked ?? props.t(checked ? "on" : "off") },
-      h17("style", null, css2),
-      h17("button", {
+      h16("style", null, css2),
+      h16("button", {
         type: "button",
         role: "switch",
         className: "local-openai-fast__button",
@@ -6766,10 +6713,10 @@ function createFast(require2) {
         "aria-busy": interaction.pending || reason === "loading" && !loadFailed,
         "aria-disabled": !allowed || !eligible,
         onClick: toggle
-      }, h17(
+      }, h16(
         "svg",
         { viewBox: "0 0 20 20", width: 14, height: 14, fill: "none", "aria-hidden": true },
-        h17("path", {
+        h16("path", {
           d: "M11.5 2 4 11h5l-.5 7L16 8h-5l.5-6Z",
           stroke: "currentColor",
           strokeWidth: 1.5,
@@ -6777,8 +6724,8 @@ function createFast(require2) {
           fill: checked ? "currentColor" : "none"
         })
       ), props.t("label")),
-      notice ? h17("span", { role: "status", className: "local-openai-fast__notice" }, notice) : null,
-      error ? h17("span", { role: "alert", className: "local-openai-fast__error" }, error) : null
+      notice ? h16("span", { role: "status", className: "local-openai-fast__notice" }, notice) : null,
+      error ? h16("span", { role: "alert", className: "local-openai-fast__error" }, error) : null
     );
   }
   return {
@@ -6790,8 +6737,8 @@ function createFast(require2) {
     HiddenFastCommand: HiddenFastCommand2,
     inject: ["slots", "locale", "sessions", "remote", "remote.commands", "remote.session"],
     apply(ctx) {
-      React18 = require2("react");
-      h17 = React18.createElement;
+      React17 = require2("react");
+      h16 = React17.createElement;
       ctx.effect(() => ctx.locale.register(NS2, dictionaries2));
       const prioritySource = createPrioritySource(ctx.connection);
       ctx.effect(() => {

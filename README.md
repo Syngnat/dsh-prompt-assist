@@ -114,8 +114,8 @@ The Fast switch for each auxiliary feature is separate from the main Fast button
 
 ### Files and references
 
-- Existing file references are not read automatically. Explicitly select the files you want the current enhancement request to read.
-- Limits are **64 KiB per file** and **128 KiB total** (65,536 and 131,072 bytes). Oversized inputs are rejected, not silently truncated.
+- The composer no longer shows "Current draft references". Enhancement does not read file contents from the draft.
+- If a caller still submits files explicitly, limits are **64 KiB per file** and **128 KiB total** (65,536 and 131,072 bytes). Oversized inputs are rejected, not silently truncated.
 - Folders are not traversed. Session references and uploaded images/attachments are not read as file content. Unsupported or sensitive files may be refused.
 - Visible reference names may be included as context. A draft containing structured references or a command supports preview/copy only: structured apply is not supported.
 
