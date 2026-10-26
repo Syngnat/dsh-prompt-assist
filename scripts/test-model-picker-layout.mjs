@@ -91,6 +91,9 @@ export async function runRegression(page){
  const placed=await flyout.boundingBox(), rowBox=await row.boundingBox();
  assert.ok(placed.x+placed.width<=rowBox.x||placed.x>=rowBox.x+rowBox.width,'flyout sits beside the row, not on top of it');
  assert.ok(placed.x+placed.width<=1900&&placed.y>=0&&placed.y+placed.height<=900,'flyout stays in the viewport');
+ const flyMenu=await page.locator('.lpa-model-menu').boundingBox();
+ assert.ok(Math.abs(placed.y-flyMenu.y)<=1,'The flyout starts on the menu row so both lists read as one pair');
+ assert.ok(placed.height<=flyMenu.height+1,'The flyout never grows taller than the menu it belongs to');
  assert.equal(await page.locator('.lpa-model-other-provider').count(),2);
  assert.equal(await page.locator('.lpa-model-other-provider--divided').count(),1);
  assert.ok(await page.locator('.lpa-model-option').count()>=6);cases++;

@@ -151,7 +151,11 @@ function useFlyout(rowRef,panelRef,open){
    const left=beside?rect.right+gap
     :menu&&menu.right+gap+width<=innerWidth-margin?menu.right+gap
     :Math.max(margin,Math.min(rect.left-gap-width,menu?menu.left-gap-width:rect.left-gap-width));
-   const top=Math.max(margin,rect.top),maxHeight=Math.max(180,innerHeight-top-margin);
+   // The flyout tracks the menu column: same top edge, and never taller than the menu
+   // it belongs to, so the two lists read as one pair instead of a stub pinned to the row.
+   const top=menu?Math.max(margin,Math.min(menu.top,innerHeight-margin-180)):Math.max(margin,rect.top);
+   const room=Math.max(180,innerHeight-top-margin),span=menu?menu.height:room;
+   const maxHeight=Math.max(180,Math.min(span,room));
    setPosition(old=>old?.left===left&&old?.top===top&&old?.maxHeight===maxHeight?old:{left,top,maxHeight});
   };
   place();const observer=typeof ResizeObserver==='function'?new ResizeObserver(place):null;
