@@ -105,6 +105,16 @@ export async function runRegression(page){
  assert.equal(await flyout.count(),0,'A second click closes it');
  await row.focus();await page.keyboard.press('ArrowRight');await settle(page);
  assert.equal(await flyout.count(),1,'ArrowRight opens it for the keyboard');
+ // Scrolling a list must not re-render it: a layout read per scroll event is what made it janky.
+ const scrollCost=await page.evaluate(async()=>{
+  const menu=document.querySelector('.lpa-model-menu'),scroller=document.querySelector('.lpa-model-scroll');
+  let mutations=0;const mo=new MutationObserver(list=>{mutations+=list.length;});
+  mo.observe(menu,{childList:true,subtree:true,attributes:true});
+  for(let i=0;i<20;i++){scroller.scrollTop=i*8;await new Promise(r=>requestAnimationFrame(r));}
+  await new Promise(r=>requestAnimationFrame(r));mo.disconnect();
+  return mutations;
+ });
+ assert.equal(scrollCost,0,'Scrolling the menu must not mutate or re-render it');
  assert.ok(await page.locator('.lpa-model-option').count()>=6);cases++;
  await page.locator('.lpa-model-pin[data-provider-id="openai"]').click();await settle(page);
  assert.deepEqual(await storedPins(),['xiaomi-token-plan-cn','openai']);

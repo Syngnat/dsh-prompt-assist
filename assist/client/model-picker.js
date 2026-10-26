@@ -127,10 +127,17 @@ function usePlacement(trigger,panel,open){
    const next=menuGeometry(placed,{width:node.offsetWidth,height:node.offsetHeight},{width:innerWidth,height:innerHeight});
    setPosition(old=>old?.left===next.left&&old?.top===next.top?old:next);
   };
-  place();const observer=typeof ResizeObserver==='function'?new ResizeObserver(place):null;
+  // Same rule as the flyout: measuring the anchor is a synchronous layout read, so it runs at
+  // most once per frame and never for scrolls inside the menu itself, which cannot move it.
+  let frame=0;
+  const schedule=()=>{if(frame)return;frame=requestAnimationFrame(()=>{frame=0;place();});};
+  const onScroll=event=>{const target=event.target;
+  if(target instanceof Node&&panel.current?.contains(target))return;schedule();};
+  place();const observer=typeof ResizeObserver==='function'?new ResizeObserver(schedule):null;
   if(panel.current)observer?.observe(panel.current);if(trigger.current)observer?.observe(trigger.current);
-  window.addEventListener('resize',place);window.addEventListener('scroll',place,true);
-  return ()=>{observer?.disconnect();window.removeEventListener('resize',place);window.removeEventListener('scroll',place,true);};
+  window.addEventListener('resize',schedule);window.addEventListener('scroll',onScroll,true);
+  return ()=>{if(frame)cancelAnimationFrame(frame);observer?.disconnect();
+  window.removeEventListener('resize',schedule);window.removeEventListener('scroll',onScroll,true);};
  },[open,trigger,panel]);return position;
 }
 /** The other-models flyout hugs the row on its right, flipping left only when there is no room. */
