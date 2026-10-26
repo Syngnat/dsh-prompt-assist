@@ -245,7 +245,7 @@ export function ModelPicker({locked,available,directory,load,select,t,getLocale=
  // The header and a provider option are distinct focus targets, even when they show the same provider.
  const zcHeaderKey=zcGroup?'zc-provider':null;
  /** ZCode navigation is view-based: the provider list, or the viewed provider's models. */
- const zcFocusOrder=()=>providerView?['zc-back',...zcOthers.map(g=>providerRowKey(g.id))]:(zcGroup?[...(zcSwitchable?[zcHeaderKey]:[]),...modelsOf(zcGroup).map(m=>modelRowId(zcGroup,m))]:[]);
+ const zcFocusOrder=()=>providerView?[...zcOthers.map(g=>providerRowKey(g.id)),'zc-back']:(zcGroup?[...(zcSwitchable?[zcHeaderKey]:[]),...modelsOf(zcGroup).map(m=>modelRowId(zcGroup,m))]:[]);
  const orderForFocus=()=>zcode?zcFocusOrder():focusOrderFor(state,pins,null);
  const focusRow=key=>{const node=rowRefs.current.get(key);if(node&&!node.disabled){modelFocus.current=key;node.focus({preventScroll:true});node.scrollIntoView({block:'nearest'});return true;}return false;};
  React.useLayoutEffect(()=>{
@@ -385,10 +385,10 @@ export function ModelPicker({locked,available,directory,load,select,t,getLocale=
     checked?h('span',{className:'lpa-model-check','aria-hidden':true},'✓'):null);}):null;
  const zcDivider=h('div',{className:'lpa-zt-divider','aria-hidden':true});
  const zcodeBody=h(React.Fragment,null,
-  zcProviderRow,
-  zcDivider,
+  providerView?null:zcProviderRow,
+  providerView?null:zcDivider,
   h('div',{className:'lpa-model-scroll',role:'menu','aria-label':t('picker.models')},
-   providerView?h(React.Fragment,null,zcBackRow,h('div',{className:'lpa-zt-divider','aria-hidden':true}),zcProviders):(zcGroup?renderModels(zcGroup):h('p',{className:'lpa-model-status',role:'status'},loadingState(state)?t('picker.loading'):t('picker.empty')))),
+   providerView?h(React.Fragment,null,zcProviders,h('div',{className:'lpa-zt-divider','aria-hidden':true}),zcBackRow):(zcGroup?renderModels(zcGroup):h('p',{className:'lpa-model-status',role:'status'},loadingState(state)?t('picker.loading'):t('picker.empty')))),
   failures.length?h('div',{className:'lpa-model-failures'},failures.map(f=>h('p',{key:f.id,className:'lpa-model-status',role:'status'},t(f.key,f.params)))):null,
   showEffort?zcDivider:null,
   effortFrame,

@@ -5780,7 +5780,7 @@ function ModelPicker({ locked, available, directory, load, select, t, getLocale 
   const zcOthers = zcGroup ? zcSections.filter((group) => group.id !== zcGroup.id) : zcSections;
   const zcSwitchable = zcOthers.length > 0;
   const zcHeaderKey = zcGroup ? "zc-provider" : null;
-  const zcFocusOrder = () => providerView ? ["zc-back", ...zcOthers.map((g) => providerRowKey(g.id))] : zcGroup ? [...zcSwitchable ? [zcHeaderKey] : [], ...modelsOf(zcGroup).map((m) => modelRowId(zcGroup, m))] : [];
+  const zcFocusOrder = () => providerView ? [...zcOthers.map((g) => providerRowKey(g.id)), "zc-back"] : zcGroup ? [...zcSwitchable ? [zcHeaderKey] : [], ...modelsOf(zcGroup).map((m) => modelRowId(zcGroup, m))] : [];
   const orderForFocus = () => zcode ? zcFocusOrder() : focusOrderFor(state, pins, null);
   const focusRow = (key) => {
     const node = rowRefs.current.get(key);
@@ -6126,12 +6126,12 @@ function ModelPicker({ locked, available, directory, load, select, t, getLocale 
   const zcodeBody = h15(
     import_react16.default.Fragment,
     null,
-    zcProviderRow,
-    zcDivider,
+    providerView ? null : zcProviderRow,
+    providerView ? null : zcDivider,
     h15(
       "div",
       { className: "lpa-model-scroll", role: "menu", "aria-label": t("picker.models") },
-      providerView ? h15(import_react16.default.Fragment, null, zcBackRow, h15("div", { className: "lpa-zt-divider", "aria-hidden": true }), zcProviders) : zcGroup ? renderModels(zcGroup) : h15("p", { className: "lpa-model-status", role: "status" }, loadingState(state) ? t("picker.loading") : t("picker.empty"))
+      providerView ? h15(import_react16.default.Fragment, null, zcProviders, h15("div", { className: "lpa-zt-divider", "aria-hidden": true }), zcBackRow) : zcGroup ? renderModels(zcGroup) : h15("p", { className: "lpa-model-status", role: "status" }, loadingState(state) ? t("picker.loading") : t("picker.empty"))
     ),
     failures.length ? h15("div", { className: "lpa-model-failures" }, failures.map((f) => h15("p", { key: f.id, className: "lpa-model-status", role: "status" }, t(f.key, f.params)))) : null,
     showEffort ? zcDivider : null,

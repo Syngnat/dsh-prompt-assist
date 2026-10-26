@@ -39,7 +39,17 @@ export async function runZcodeProviderRegression(page){
   assert.deepEqual(await rows().locator('.lpa-model-name').allTextContents(),['Responses Astra','Responses Sol']);
   assert.deepEqual(await calls(),[],'Provider navigation must not auto-select any model');
   assert.deepEqual(await page.evaluate(()=>window.fixture.state().current),initial);
-  assert.equal(await page.locator('input[type=range]').count(),0,'Do not expose the old provider reasoning control while browsing a different provider');cases++;
+  assert.equal(await page.locator('input[type=range]').count(),0,'Do not expose the old provider reasoning control while browsing a different provider');
+  await header().click();await settle(page);
+  assert.equal(await page.locator('.lpa-zt-provider-row').count(),0,'The provider list must not repeat the browsed provider as a header row');
+  const placed=await page.evaluate(()=>{
+   const back=document.querySelector('.lpa-zt-back-row').getBoundingClientRect();
+   const options=[...document.querySelectorAll('.lpa-zt-provider-option')].map(node=>node.getBoundingClientRect());
+   return {backTop:back.top,bottom:Math.max(...options.map(rect=>rect.bottom))};
+  });
+  assert.ok(placed.backTop>=placed.bottom-1,'Back must sit below the provider list');
+  await page.locator('.lpa-zt-back-row').click();await settle(page);
+  assert.equal(await name(),'Magpie · Responses','Back returns to the browsed provider');cases++;
 
   await header().click();await settle(page);
   assert.equal(await page.locator('.lpa-zt-provider-option[data-provider-id="magpie"]').getAttribute('aria-checked'),'true');
@@ -53,12 +63,12 @@ export async function runZcodeProviderRegression(page){
   assert.equal(await page.locator('.lpa-model-menu').count(),0);await open();cases++;
 
   await header().focus();await page.keyboard.press('Enter');await settle(page);
-  await page.keyboard.press('Home');await page.keyboard.press('ArrowDown');await page.keyboard.press('ArrowDown');
+  await page.keyboard.press('Home');await page.keyboard.press('ArrowDown');
   await page.keyboard.press('Enter');await settle(page);
   assert.equal(await name(),'Magpie','Keyboard provider navigation must change the browsed provider without committing a route');
   assert.equal((await calls()).length,1);
   await page.keyboard.press('Enter');await settle(page);
-  await page.keyboard.press('End');await page.keyboard.press('Enter');await settle(page);
+  await page.keyboard.press('End');await page.keyboard.press('ArrowUp');await page.keyboard.press('Enter');await settle(page);
   assert.equal(await name(),'Magpie · Responses');
   assert.equal(await header().evaluate(node=>node===document.activeElement),true,'Keyboard drill-down restores focus to the provider header');
   await page.keyboard.press('ArrowDown');await page.keyboard.press('Enter');await settle(page);
