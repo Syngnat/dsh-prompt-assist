@@ -6057,13 +6057,12 @@ function ModelPicker({ locked, available, directory, load, select, t, getLocale 
       }
     },
     h15("span", { className: "lpa-zt-provider-name" }, zcProviderName(zcGroup)),
-    h15("span", { className: "lpa-zt-provider-count" }, t("picker.providerCount", { count: zcSections.length })),
+    h15("span", { className: "lpa-zt-provider-count" }, t("picker.providerCount", { count: zcOthers.length })),
     h15("span", { className: "lpa-zt-provider-chevron", "aria-hidden": true }, "\u203A")
   ) : h15(
     "div",
     { key: zcHeaderKey, role: "presentation", "data-picker-row": zcHeaderKey, "data-provider-id": zcGroup.id, className: "lpa-zt-row lpa-zt-provider-row" },
-    h15("span", { className: "lpa-zt-provider-name" }, zcProviderName(zcGroup)),
-    h15("span", { className: "lpa-zt-provider-count" }, t("picker.providerCount", { count: zcSections.length }))
+    h15("span", { className: "lpa-zt-provider-name" }, zcProviderName(zcGroup))
   );
   const zcBackRow = h15(
     "button",

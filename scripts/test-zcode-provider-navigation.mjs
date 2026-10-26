@@ -96,10 +96,13 @@ export async function runZcodeProviderRegression(page){
   }
 
   await choose('deepseek-account');
-  // The header badge counts providers, not this provider's models: one model here, three providers.
+  // The badge must match what the list actually offers: the other providers, never this one's models.
   const badge=await header().locator('.lpa-zt-provider-count').textContent();
-  assert.equal(/\d+/.exec(badge)[0],'3','The provider row must report the provider count, not the model count');
   assert.match(badge,/供应商|provider/);
+  await header().click();await settle(page);
+  const listed=await page.locator('.lpa-zt-provider-option').count();
+  assert.equal(Number(/\d+/.exec(badge)[0]),listed,'The badge must equal the number of listed providers');
+  await page.locator('.lpa-zt-back-row').click();await settle(page);
   assert.equal(await page.locator('.lpa-zt-provider-option[data-provider-id="deepseek-account"]').count(),0,'The listed providers exclude the one shown above');
   await page.keyboard.press('ArrowDown');
   assert.equal(await rows().first().evaluate(node=>node===document.activeElement),true);

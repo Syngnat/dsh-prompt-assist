@@ -364,11 +364,10 @@ export function ModelPicker({locked,available,directory,load,select,t,getLocale=
   className:'lpa-zt-row lpa-zt-provider-row',onFocus:()=>{modelFocus.current=zcHeaderKey;},
   onClick:()=>{focusRequest.current='first';setProviderView(open=>!open);}},
   h('span',{className:'lpa-zt-provider-name'},zcProviderName(zcGroup)),
-  h('span',{className:'lpa-zt-provider-count'},t('picker.providerCount',{count:zcSections.length})),
+  h('span',{className:'lpa-zt-provider-count'},t('picker.providerCount',{count:zcOthers.length})),
   h('span',{className:'lpa-zt-provider-chevron','aria-hidden':true},'›')):
   h('div',{key:zcHeaderKey,role:'presentation','data-picker-row':zcHeaderKey,'data-provider-id':zcGroup.id,className:'lpa-zt-row lpa-zt-provider-row'},
-   h('span',{className:'lpa-zt-provider-name'},zcProviderName(zcGroup)),
-   h('span',{className:'lpa-zt-provider-count'},t('picker.providerCount',{count:zcSections.length})));
+   h('span',{className:'lpa-zt-provider-name'},zcProviderName(zcGroup)));
  const zcBackRow=h('button',{key:'zc-back',type:'button',role:'menuitem',tabIndex:-1,disabled:busy||locked,'data-picker-row':'zc-back',
   className:'lpa-zt-row lpa-zt-back-row',
   ref:node=>{if(node)rowRefs.current.set('zc-back',node);else rowRefs.current.delete('zc-back');},
