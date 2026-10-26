@@ -158,10 +158,22 @@ function useFlyout(rowRef,panelRef,open){
    const maxHeight=Math.max(180,Math.min(span,room));
    setPosition(old=>old?.left===left&&old?.top===top&&old?.maxHeight===maxHeight?old:{left,top,maxHeight});
   };
-  place();const observer=typeof ResizeObserver==='function'?new ResizeObserver(place):null;
-  if(panelRef.current)observer?.observe(panelRef.current);if(rowRef.current)observer?.observe(rowRef.current);
-  window.addEventListener('resize',place);window.addEventListener('scroll',place,true);
-  return ()=>{observer?.disconnect();window.removeEventListener('resize',place);window.removeEventListener('scroll',place,true);};
+  // Placement reads layout, so it is throttled to one frame and never runs for scrolls that
+  // happen inside these two lists: the flyout is anchored to the menu, not to the row, so an
+  // inner scroll changes nothing but would otherwise re-render the whole picker per frame.
+  let frame=0;
+  const schedule=()=>{if(frame)return;frame=requestAnimationFrame(()=>{frame=0;place();});};
+  const onScroll=event=>{const target=event.target;
+  if(target instanceof Node&&((panelRef.current&&panelRef.current.contains(target))||rowRef.current?.closest('.lpa-model-menu')?.contains(target)))return;
+  schedule();};
+  place();
+  // Observing the flyout itself would loop: its height is what this effect writes.
+  const menuEl=rowRef.current?.closest('.lpa-model-menu');
+  const observer=typeof ResizeObserver==='function'?new ResizeObserver(schedule):null;
+  if(menuEl)observer?.observe(menuEl);if(rowRef.current)observer?.observe(rowRef.current);
+  window.addEventListener('resize',schedule);window.addEventListener('scroll',onScroll,true);
+  return()=>{if(frame)cancelAnimationFrame(frame);observer?.disconnect();
+  window.removeEventListener('resize',schedule);window.removeEventListener('scroll',onScroll,true);};
  },[open,rowRef,panelRef]);return position;
 }
 const gestureKeys=['ArrowLeft','ArrowRight','ArrowUp','ArrowDown','Home','End','PageUp','PageDown'];
@@ -233,11 +245,12 @@ export function ModelPicker({locked,available,directory,load,select,t,getLocale=
  const busy=busyState(state)||submitting,position=usePlacement(trigger,panel,visible);
  React.useEffect(()=>{life.alive=true;setOpen(false);setProviderView(null);setViewedProviderId(null);setError(null);setSubmitting(false);life.inflight=false;life.epoch++;return()=>{life.alive=false;life.epoch++;};},[directory,life]);
  React.useEffect(()=>{if(!available||locked){life.open=false;life.epoch++;setOpen(false);setProviderView(null);setViewedProviderId(null);}},[available,locked,life]);
- const hide=(restore=false)=>{life.open=false;life.epoch++;setOpen(false);focusRequest.current=null;setOtherOpen(false);setProviderView(null);setViewedProviderId(null);if(restore)trigger.current?.focus();};
+ const hide=(restore=false)=>{life.open=false;life.epoch++;setOpen(false);focusRequest.current=null;openedByHover.current=false;setOtherOpen(false);setProviderView(null);setViewedProviderId(null);if(restore)trigger.current?.focus();};
  const togglePin=id=>{const {pins}=splitSections(state,pinsStored);const next=togglePinnedProvider(id,pins);setPinsStored(next);writePinnedProviders(next,safeStorage());};
  /** A short grace period lets the pointer travel from the row into the panel without flicker. */
  const cancelClose=()=>{if(closeTimer.current){clearTimeout(closeTimer.current);closeTimer.current=null;}};
- const scheduleClose=()=>{cancelClose();closeTimer.current=setTimeout(()=>{closeTimer.current=null;setOtherOpen(false);},160);};
+ const openedByHover=React.useRef(false);
+ const scheduleClose=()=>{cancelClose();closeTimer.current=setTimeout(()=>{closeTimer.current=null;openedByHover.current=false;setOtherOpen(false);},160);};
  React.useEffect(()=>()=>cancelClose(),[]);
  const {hero,collapsed,pins}=splitSections(state,pinsStored);
  const style=readModelStylePref(),zcode=style==='zcode';
@@ -405,8 +418,15 @@ export function ModelPicker({locked,available,directory,load,select,t,getLocale=
    'aria-haspopup':'true','aria-expanded':otherOpen&&collapsed.length>0,
    ref:node=>{otherRowRef.current=node;if(node)rowRefs.current.set(key,node);else rowRefs.current.delete(key);},
    className:'lpa-model-provider-row'+(current?' lpa-model-provider-row--current':'')+(otherOpen&&collapsed.length?' lpa-model-provider-row--open':''),
-   onFocus:()=>{modelFocus.current=key;},onPointerEnter:()=>{cancelClose();if(!busy&&!locked)setOtherOpen(true);},onPointerLeave:scheduleClose,
-   onClick:()=>{if(!busy&&!locked)setOtherOpen(old=>!old);},
+   onFocus:()=>{modelFocus.current=key;},
+   onPointerEnter:()=>{cancelClose();if(busy||locked)return;if(!otherOpen){openedByHover.current=true;setOtherOpen(true);}},
+   onPointerLeave:scheduleClose,
+   onClick:()=>{if(busy||locked)return;
+    // Hover usually opens this row before the click lands; treating that first click as a
+    // toggle would shut the panel the user just tried to open, so it only pins it open.
+    if(!otherOpen){setOtherOpen(true);return;}
+    if(openedByHover.current){openedByHover.current=false;return;}
+    setOtherOpen(false);},
    onKeyDown:e=>{if(e.nativeEvent.isComposing)return;if(e.key==='ArrowRight'){e.preventDefault();e.stopPropagation();setOtherOpen(true);}}},
    h('span',{className:'lpa-model-provider-copy'},h('span',{className:'lpa-model-provider-name'},t('picker.otherModels'))),
    h('span',{className:'lpa-model-provider-meta'},

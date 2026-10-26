@@ -96,6 +96,13 @@ export async function runRegression(page){
  assert.ok(placed.height<=flyMenu.height+1,'The flyout never grows taller than the menu it belongs to');
  assert.equal(await page.locator('.lpa-model-other-provider').count(),2);
  assert.equal(await page.locator('.lpa-model-other-provider--divided').count(),1);
+ // Hover already opens the row; the click that follows must pin it open, not shut it.
+ await row.click();await settle(page);
+ assert.equal(await flyout.count(),1,'The first click after hovering keeps the other-models panel open');
+ await row.click();await settle(page);
+ assert.equal(await flyout.count(),0,'A second click closes it');
+ await page.mouse.move(5,5);await settle(page);
+ await row.hover();await settle(page);
  assert.ok(await page.locator('.lpa-model-option').count()>=6);cases++;
  await page.locator('.lpa-model-pin[data-provider-id="openai"]').click();await settle(page);
  assert.deepEqual(await storedPins(),['xiaomi-token-plan-cn','openai']);
