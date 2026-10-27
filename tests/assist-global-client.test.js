@@ -24,11 +24,11 @@ test('shared source starts read-only and ignores late older RPC after a newer wa
  assert.equal(source.getSnapshot().data.revision,5);assert.equal(source.getSnapshot().data.enabled.suggest,true);assert.equal(calls.length,1);assert.equal(calls[0][0],'enablement');assert.equal(calls[0][1],undefined);source.dispose();
 });
 
-test('settings shows three profile switches even with no selected session',async()=>{
+test('settings shows four profile switches even with no selected session',async()=>{
  const React=await import('react');const {renderToStaticMarkup}=await import('react-dom/server');const {SettingsPage}=await import('../assist/client/settings-page.js');
  const target={sessionId:null},global={data:snapshot(1,true,false),connected:true,loading:false,pending:null,readError:null,writeError:null,saved:null};
  const html=renderToStaticMarkup(React.createElement(SettingsPage,{t:key=>key,targetSource:{getSnapshot:()=>target,subscribe:()=>()=>{}},globalSource:{getSnapshot:()=>global,subscribe:()=>()=>{},setEnabled(){}},returnToConversation(){}}));
- assert.ok(html.includes('global.title'));assert.equal((html.match(/type="checkbox"/g)||[]).length,7);assert.ok(html.includes('settings.profileSection'));assert.ok(html.includes('settings.modelStyleZcode'));assert.ok(!html.includes('settings.sessionEmpty'));
+ assert.ok(html.includes('global.title'));assert.equal((html.match(/type="checkbox"/g)||[]).length,8);assert.ok(html.includes('settings.profileSection'));assert.ok(html.includes('settings.modelStyleZcode'));assert.ok(!html.includes('settings.sessionEmpty'));
 });
 
 test('feature cards render the draft feedback inside the form so pointer events reach the controls',async()=>{
@@ -61,6 +61,41 @@ function harness(handler=async action=>snapshot()){
  const source=createEnablementSource({send:(...args)=>{calls.push(args);return handler(...args);},fetcher:async(url,init)=>{const stream=watchFixture();streams.push({stream,url,init});return stream.response;},setTimer:(fn,ms)=>{timers.set(++next,fn);delays.push(ms);return next;},clearTimer:id=>timers.delete(id)});
  return {source,calls,streams,timers,delays,async ready(data=snapshot()){await source.start();await tick();streams[0].stream.send(data);await tick();},async reconnect(){const [id,fn]=timers.entries().next().value;timers.delete(id);fn();await tick();}};
 }
+const withPromptSwitches=(base=snapshot(2),finalAnswer=true,processFeedback=true)=>({...base,finalAnswer,finalAnswerRevision:base.finalAnswerRevision??0,processFeedback,processFeedbackRevision:base.processFeedbackRevision??0});
+test('prompt-switch writes publish the new value without a reread and use their own revisions',async()=>{
+ let current=withPromptSwitches(snapshot(2));
+ const h=harness(action=>{
+  if(action==='set-final-answer')return Promise.resolve(current={...current,finalAnswer:false,finalAnswerRevision:current.finalAnswerRevision+1});
+  if(action==='set-process-feedback')return Promise.resolve(current={...current,processFeedback:false,processFeedbackRevision:current.processFeedbackRevision+1});
+  return Promise.resolve(current);
+ });
+ await h.ready(current);
+ assert.equal(await h.source.setFinalAnswer(false),true);
+ assert.equal(h.source.getSnapshot().data.finalAnswer,false);
+ assert.equal(h.source.getSnapshot().writeError,null);
+ assert.equal(h.source.getSnapshot().saved.feature,'final-answer');
+ assert.equal(await h.source.setProcessFeedback(false),true);
+ assert.equal(h.source.getSnapshot().data.processFeedback,false);
+ assert.equal(h.source.getSnapshot().writeError,null);
+ assert.equal(h.source.getSnapshot().saved.feature,'process-feedback');
+ assert.deepEqual(h.calls.map(x=>x[0]),['enablement','set-final-answer','set-process-feedback']);
+ assert.deepEqual(h.calls[1][2],{enabled:false,expectedRevision:0});
+ assert.deepEqual(h.calls[2][2],{enabled:false,expectedRevision:0});
+ h.source.dispose();
+});
+test('a prompt-switch-only watch frame is accepted and a value with an unchanged revision is rejected',async()=>{
+ const base=withPromptSwitches(snapshot(3));
+ const h=harness(async()=>base);await h.ready(base);
+ h.streams[0].stream.send({...base,processFeedback:false,processFeedbackRevision:1});await tick();
+ assert.equal(h.source.getSnapshot().data.processFeedback,false);
+ assert.equal(h.source.getSnapshot().connected,true);
+ assert.equal(h.source.getSnapshot().readError,null);
+ h.streams[0].stream.send({...base,finalAnswer:false,finalAnswerRevision:0});await tick();
+ assert.equal(h.source.getSnapshot().connected,false);
+ assert.equal(h.source.getSnapshot().data.finalAnswer,true);
+ assert.equal(h.source.getSnapshot().readError,'transport-invalid-response');
+ h.source.dispose();
+});
 test('explicit checkbox write uses sessionless CAS; no optimistic update or duplicate write',async()=>{
  const write=deferred(),h=harness(action=>action==='set-enabled'?write.promise:Promise.resolve(snapshot(3)));
  await h.ready(snapshot(3));const pending=h.source.setEnabled('suggest',true);
@@ -140,7 +175,7 @@ test('unknown or disconnected globals never inherit legacy wire/session controls
 for(const lang of ['zh','en'])test('SSR '+lang+' separates global immediate-save controls and session parameters',()=>{
  const t=key=>{assert.equal(typeof dictionaries[lang][key],'string',key);return dictionaries[lang][key];};
  const html=renderToStaticMarkup(React.createElement(EnablementPanelContent,{snapshot:globalView(snapshot(1,true,false)),t}));
- assert.equal((html.match(/type="checkbox"/g)||[]).length,3);for(const key of ['global.scope','global.charge','global.migration'])assert.ok(html.includes(t(key).replaceAll('&','&amp;')));
+ assert.equal((html.match(/type="checkbox"/g)||[]).length,4);for(const key of ['global.scope','global.charge','global.migration','global.processFeedbackHint'])assert.ok(html.includes(t(key).replaceAll('&','&amp;')));
  const form=renderToStaticMarkup(React.createElement(Settings,{t,config:sessionSettings({...DEFAULT_SETTINGS,enabled:true}),catalog:{providers:[],models:[]},allowed:true,onChange(){},save(){}}));
  assert.ok(!form.includes('>'+t('enabled')+'</label>'));assert.ok(form.includes(t('follow')));
  const failed=renderToStaticMarkup(React.createElement(EnablementPanelContent,{snapshot:{...globalView(snapshot()),writeError:'global-save-failed'},t}));assert.ok(failed.includes(t('global.saveFailed')));assert.ok(!failed.includes(t('global.saved')));

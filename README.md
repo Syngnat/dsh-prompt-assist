@@ -6,6 +6,7 @@ Provides prompt enhancement, next-question suggestions, and OpenAI / xAI Priorit
 
 A plugin bundle for the DeepSeek Harness (DSH) Web GUI. Enhancement and suggestions are independent features: enable either or both for the current DSH profile. Settings live on the sidebar page, not in a composer popup. Feature switches and auxiliary controls are profile-wide; conversation content remains isolated.
 
+> **v1.3.0:** adds Codex-style process feedback — one progress sentence before each tool batch and one after each tool result, switched independently from the closing contract and on by default. An offline A/B showed the old "compress progress to one line" wording produced no text, while the explicit rules produced a progress sentence on 3/3 turns; this is a prompt probe, not GUI visual acceptance. [Design and evidence](<docs/process-feedback.md>).
 > **v1.2.29:** fixes two interactions. The profile settings draft feedback no longer overflows the card's `span 4` subgrid — that overflow swallowed every click over the complete-QA rounds select and the save button and kept the composer Enhance button disabled because the mandatory one-time global save could not complete. Under reduced motion the reasoning-effort slider again shows its highest-level twinkle instead of a static highlight, mirroring upstream 0.01ms semantics. No wire, storage or model-call changes. [Details in the changelog](<CHANGELOG.md>).
 > **v1.2.28:** the existing composer model selector now lists models directly beneath provider headings, with builtin descriptions from Claude Style 0.16.3 and a discrete reasoning-effort slider. There is no extra composer button, editable-description card or new profile storage. [Details and attribution](<docs/model-picker.md>). Publishing does not automatically install or upgrade any profile.
 
@@ -61,6 +62,12 @@ The package identifier remains `@local/dsh-openai-fast`, even though this reposi
 Follow-session is a globally saved policy that resolves the model and effort of the conversation making each request; it does not bind to a conversation that happened to save it. QA count is shared, but **QA content still comes only from the calling conversation**. Drafts and selected files are not shared. Main conversation model selection and main Fast preferences are unchanged.
 
 Fresh global switches start disabled; legacy session flags are retained for replay compatibility but cannot override them. When upgrading from v1.2.11 or earlier, explicitly enable the new global switches once; later upgrades preserve those choices. Following the session follows only its model and reasoning effort; auxiliary Fast always remains an independent setting. Choose 1, 3, 5, or a custom **1–20 complete Q&A rounds**. Invalid values are rejected, not silently clamped. A model change that invalidates a saved effort requires an explicit new choice; the plugin does not silently lower the effort.
+
+### Closing contract and process feedback
+
+The **Closing contract** switch in the global feature panel keeps the final message to conclusions only. The v1.3.0 **Process feedback** switch additionally requires one user-facing progress sentence before every tool batch and one sentence after each tool result. Both are profile-wide switches with independent storage and revisions, on by default. The tool action `prompt_assist({action:"set-process-feedback", enabled})` is equivalent to the panel; `processFeedbackContract: false` in the package config is a hard switch.
+
+Progress sentences appear as ordinary assistant text between tool cards, while the closing contract still governs the final message. A switch change applies at the next step; turning one off cannot retract text already in the history. Enabling a section mid-session appends only the section the model has not seen, and a compaction re-injects the sections that are currently enabled. See [the design note](<docs/process-feedback.md>) for the probe and limits.
 
 ### Model menu and model descriptions
 

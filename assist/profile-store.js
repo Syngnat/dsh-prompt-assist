@@ -2,6 +2,7 @@ import { createHash } from 'node:crypto';
 import { isAbsolute, resolve } from 'node:path';
 import { openEnablement } from './enablement-store.js';
 import { openClosingContract } from './closing-contract-store.js';
+import { openProcessFeedback } from './process-feedback-store.js';
 import { normalizeConfig } from './config.js';
 
 const FEATURES = ['suggest', 'enhance'];
@@ -35,18 +36,20 @@ function domainName(dir) {
 
 /** Keep the original flag domain intact; controls are independently versioned and never seeded from sessions. */
 export async function openProfileStore(ctx,z) {
-  let flags, contract, domain, controls;
+  let flags, contract, feedback, domain, controls;
   try {
     flags = await openEnablement(ctx,z);
     contract = await openClosingContract(ctx,z);
+    feedback = await openProcessFeedback(ctx,z);
     const facility = optional(ctx,'storageDomain'), schema = schemaOf(z);
     const initial = freezeRecord({revision:0,settings:{suggest:configOf({},false),enhance:configOf({},false)},configured:{suggest:true,enhance:true}});
     domain = await facility.open({name:domainName(optional(ctx,'profileContext')?.dir),version:1,global:{schema,initial},tables:{}});
     if (typeof domain?.global?.get !== 'function' || typeof domain?.global?.set !== 'function' || typeof domain?.close !== 'function') throw unavailable();
     controls = controlsStore(domain,freezeRecord(schema.parse(domain.global.get())));
-    return combine(flags,contract,controls);
+    return combine(flags,contract,feedback,controls);
   } catch {
     await Promise.allSettled([Promise.resolve().then(()=>flags?.close()),Promise.resolve().then(()=>contract?.close()),
+      Promise.resolve().then(()=>feedback?.close()),
       Promise.resolve().then(()=>controls ? controls.close() : domain?.close())]);
     throw unavailable();
   }
@@ -97,13 +100,14 @@ function controlsStore(domain,loaded) {
   });
 }
 
-function combine(flags,contract,controls) {
+function combine(flags,contract,feedback,controls) {
   const listeners=new Set();let snapshot,closing=false,disposal;
   function refresh() {
-    const flag=flags.getSnapshot(),switchValue=contract.getSnapshot(),control=controls.getSnapshot();
-    // The closing-contract switch keeps its own revision so each domain's record shape stays unchanged.
+    const flag=flags.getSnapshot(),switchValue=contract.getSnapshot(),feedbackValue=feedback.getSnapshot(),control=controls.getSnapshot();
+    // Each prompt switch keeps its own revision so every domain's record shape stays unchanged.
     snapshot=Object.freeze({scope:'profile',revision:flag.revision,enabled:flag.enabled,
       finalAnswer:switchValue.finalAnswer, finalAnswerRevision:switchValue.revision,
+      processFeedback:feedbackValue.processFeedback, processFeedbackRevision:feedbackValue.revision,
       settingsRevision:control.revision,settings:control.settings,configured:control.configured});
     for (const listener of [...listeners]) if (listeners.has(listener)) {
       try {void Promise.resolve(listener(snapshot)).catch(()=>{});} catch {}
@@ -112,14 +116,17 @@ function combine(flags,contract,controls) {
   refresh();
   const stopFlags=flags.subscribe(refresh);
   const stopContract=contract.subscribe(refresh);
+  let stopFeedback;
+  try {stopFeedback=feedback.subscribe(refresh);} catch(error) {stopFlags();stopContract();throw error;}
   let stopControls;
-  try {stopControls=controls.subscribe(refresh);} catch(error) {stopFlags();stopContract();throw error;}
+  try {stopControls=controls.subscribe(refresh);} catch(error) {stopFlags();stopContract();stopFeedback();throw error;}
   return Object.freeze({
     getSnapshot:()=>snapshot,
     // Preserve flag validation, CAS semantics and return value for rollback compatibility.
     set:(feature,enabled,options)=>flags.set(feature,enabled,options),
     // Return the merged snapshot, mirroring set(): callers always publish one profile view.
     async setFinalAnswer(enabled,options) {await contract.setFinalAnswer(enabled,options);return snapshot;},
+    async setProcessFeedback(enabled,options) {await feedback.setProcessFeedback(enabled,options);return snapshot;},
     async configure(feature,config,options) {await controls.configure(feature,config,options);return snapshot;},
     subscribe(listener) {
       if (closing) throw unavailable();
@@ -128,8 +135,8 @@ function combine(flags,contract,controls) {
     },
     close() {
       closing=true;
-      disposal??=Promise.allSettled([flags.close(),contract.close(),controls.close()]).then(results=>{
-        stopFlags();stopContract();stopControls();listeners.clear();
+      disposal??=Promise.allSettled([flags.close(),contract.close(),feedback.close(),controls.close()]).then(results=>{
+        stopFlags();stopContract();stopFeedback();stopControls();listeners.clear();
         if (results.some(result=>result.status==='rejected')) throw unavailable();
       });
       return disposal;

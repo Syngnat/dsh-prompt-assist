@@ -2,6 +2,15 @@
 
 [English](<README.md>) | [简体中文](<README.zh-CN.md>)
 
+## 1.3.0 — Codex 式过程反馈 / Progress narration（2026-10-27）
+
+- 新增独立的过程反馈契约：每轮要调用工具时，先输出一句用户可见的进度说明；每个工具结果后先说明再继续；不调用工具的最后一轮直接给结论、不复述过程。与收尾契约组合注入，两段各自开关。
+- 实测（同一路由 `cpa/deepseek-v4.1-flash:1017`，真实 DSH system prompt，3 轮工具回放）：旧「进度压到一句」组 0 条文字、只有工具调用；新硬性规则组 3/3 轮都有进度句。这是离线探针，不是 GUI 视觉验收或统计评测。详见[过程反馈契约](<docs/process-feedback.md>)。
+- 开关 `processFeedback` 存在独立存储域 `local_prompt_assist_process_feedback_*`（默认开），enablement、收尾契约与 controls 的严格记录形状保持不变；新增 `set-process-feedback` 工具动作与设置页第四个开关，各自走 revision CAS；`config.processFeedbackContract === false` 是硬开关。
+- 注入改为按「历史中尚未收到的 section」追加：先开收尾后开过程时只补过程段，关闭不撤回历史，重新开启不重复；`compaction/end` 后按当前开关重注缺失段。
+- 客户端修复实时帧只改变提示开关 revision 时的接受逻辑：`finalAnswerRevision` / `processFeedbackRevision` 独立参与单调比较，不再要求 flags 或 controls revision 同时增加；同一 revision 下值变化仍判非法。保存反馈按各自 revision 匹配，收尾/过程开关不再误报 stale。
+- 测试：新增过程契约、组合与缺失段注入、独立存储域、设置页第四开关、提示开关实时帧用例；全套 1115 项离线测试通过（1114 通过、1 跳过）。
+
 ## 1.2.75 — 去掉当前草稿引用 / Drop draft references（2026-10-26）
 
 - 输入区不再显示「当前草稿引用」，增强请求不再读取草稿里的文件内容。可见引用名仍作为上下文发送。

@@ -1,6 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {installFinalAnswerContract, FINAL_ANSWER_REMINDER, FINAL_ANSWER_SOURCE} from '../assist/final-answer-contract.js';
+import {
+  installFinalAnswerContract, buildContractReminder,
+  FINAL_ANSWER_REMINDER, FINAL_ANSWER_SOURCE, PROCESS_FEEDBACK_REMINDER, FULL_CONTRACT_REMINDER,
+} from '../assist/final-answer-contract.js';
 
 /** Minimal cordis-shaped context: records waterfall listeners and emits session events by hand. */
 function fakeCtx() {
@@ -95,4 +98,67 @@ test('an empty decision is left alone and a disabled switch never injects', asyn
   assert.equal((await live.preStep(payload(enter([userMessage('z')])))).messages.length, 1);
   enabled = true;
   assert.equal((await live.preStep(payload(enter([userMessage('z')])))).messages.length, 2);
+});
+
+test('the process reminder states the narration rules explicitly', () => {
+  assert.ok(PROCESS_FEEDBACK_REMINDER.startsWith('<system-reminder>\n'));
+  assert.ok(PROCESS_FEEDBACK_REMINDER.endsWith('\n</system-reminder>'));
+  assert.match(PROCESS_FEEDBACK_REMINDER, /过程反馈契约（硬性要求）/);
+  assert.match(PROCESS_FEEDBACK_REMINDER, /只要这一轮要调用工具，就必须在调用前先输出一句面向用户的进度说明/);
+  assert.match(PROCESS_FEEDBACK_REMINDER, /禁止只给工具调用而没有文字/);
+  assert.match(PROCESS_FEEDBACK_REMINDER, /不要连续两次工具调用之间没有文字/);
+  assert.match(PROCESS_FEEDBACK_REMINDER, /不调用工具的最后一轮不要写进度说明/);
+  assert.doesNotMatch(PROCESS_FEEDBACK_REMINDER, /Final Answer Contract/);
+});
+
+test('both switches compose one reminder and neither section disappears', () => {
+  assert.equal(buildContractReminder({finalAnswer: false, processFeedback: false}), '');
+  assert.match(FULL_CONTRACT_REMINDER, /Final Answer Contract/);
+  assert.match(FULL_CONTRACT_REMINDER, /过程反馈契约/);
+  assert.ok(FULL_CONTRACT_REMINDER.indexOf('Final Answer Contract') < FULL_CONTRACT_REMINDER.indexOf('过程反馈契约'));
+  assert.equal(buildContractReminder({finalAnswer: true, processFeedback: true}), FULL_CONTRACT_REMINDER);
+});
+
+test('turning process feedback on mid-session appends only the missing section', async () => {
+  const {ctx, preStep} = fakeCtx();
+  let process = false;
+  installFinalAnswerContract(ctx, {processEnabled: () => process});
+  const first = await preStep(payload(enter([userMessage('hello')])));
+  assert.equal(first.messages.at(-1).content[0].text, FINAL_ANSWER_REMINDER);
+  process = true;
+  const second = await preStep(payload(enter([userMessage('again')])));
+  assert.equal(second.messages.length, 2);
+  assert.equal(second.messages.at(-1).content[0].text, PROCESS_FEEDBACK_REMINDER);
+  assert.equal((await preStep(payload(enter([userMessage('third')])))).messages.length, 1);
+});
+
+test('turning a switch off appends nothing, and re-enabling a section already sent stays quiet', async () => {
+  const {ctx, preStep} = fakeCtx();
+  let final = true, process = true;
+  installFinalAnswerContract(ctx, {enabled: () => final, processEnabled: () => process});
+  const first = await preStep(payload(enter([userMessage('hello')])));
+  assert.equal(first.messages.at(-1).content[0].text, FULL_CONTRACT_REMINDER);
+  process = false;
+  assert.equal((await preStep(payload(enter([userMessage('off')])))).messages.length, 1);
+  final = false;
+  assert.equal((await preStep(payload(enter([userMessage('both-off')])))).messages.length, 1);
+  process = true;
+  assert.equal((await preStep(payload(enter([userMessage('on')])))).messages.length, 1);
+  final = true;
+  assert.equal((await preStep(payload(enter([userMessage('final')])))).messages.length, 1);
+  // A different session starts with both off and receives only what it enables later.
+  const other = {id: 'session-2'};
+  final = false; process = false;
+  assert.equal((await preStep(payload(enter([userMessage('none')]), other))).messages.length, 1);
+  process = true;
+  const again = await preStep(payload(enter([userMessage('process')]), other));
+  assert.equal(again.messages.at(-1).content[0].text, PROCESS_FEEDBACK_REMINDER);
+});
+
+test('a compaction re-injects the current combined contract', async () => {
+  const {ctx, preStep, emitSession} = fakeCtx();
+  installFinalAnswerContract(ctx, {processEnabled: true});
+  assert.equal((await preStep(payload(enter([userMessage('one')])))).messages.at(-1).content[0].text, FULL_CONTRACT_REMINDER);
+  emitSession(session, {type: 'compaction/end'});
+  assert.equal((await preStep(payload(enter([userMessage('two')])))).messages.at(-1).content[0].text, FULL_CONTRACT_REMINDER);
 });

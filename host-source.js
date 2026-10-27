@@ -31,10 +31,11 @@ export async function apply(ctx, config = {}) {
   const fastService = new OpenAIFastService(ctx, providers, key => key);
   const assist = await installAssistHost(ctx, { z, fastService, providers, createUserMessage });
   // Liangshen's minimal prompt drops every non-allowlisted system-prompt section, so the Codex-style
-  // closing contract rides the pre-step decision as a durable user reminder instead.
-  // Package config is the hard switch; the profile toggle is read live so the settings page applies at once.
+  // closing and progress contracts ride the pre-step decision as durable user reminders instead.
+  // Package config is the hard switch; each profile toggle is read live so the settings page applies at once.
   const disposeContract = installFinalAnswerContract(ctx, { createUserMessage,
-    enabled: () => config.finalAnswerContract !== false && assist?.enablement?.getSnapshot?.()?.finalAnswer !== false });
+    enabled: () => config.finalAnswerContract !== false && assist?.enablement?.getSnapshot?.()?.finalAnswer !== false,
+    processEnabled: () => config.processFeedbackContract !== false && assist?.enablement?.getSnapshot?.()?.processFeedback !== false });
   ctx.effect(() => () => disposeContract());
   installPriorityRpc(ctx, priority, configured);
   installUpdateHost(ctx);

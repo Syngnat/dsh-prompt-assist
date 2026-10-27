@@ -2,7 +2,8 @@ import { normalizeConfig } from '../assist/config.js';
 const controls = input => {const {enabled:_ignored,...config}=normalizeConfig(input);return Object.freeze(config);};
 /** Explicit, already-confirmed global defaults for offline runtime tests. Never reads session projections. */
 export function fixtureEnablement(enabled={suggest:true,enhance:true}, settings={}) {
- let snapshot=Object.freeze({scope:'profile',revision:0,enabled:Object.freeze({...enabled}),finalAnswer:true,finalAnswerRevision:0,settingsRevision:0,
+ let snapshot=Object.freeze({scope:'profile',revision:0,enabled:Object.freeze({...enabled}),finalAnswer:true,finalAnswerRevision:0,
+  processFeedback:true,processFeedbackRevision:0,settingsRevision:0,
   settings:Object.freeze({suggest:controls(settings.suggest),enhance:controls(settings.enhance)}),configured:Object.freeze({suggest:true,enhance:true})});
  const listeners=new Set(),notify=()=>{for(const listener of listeners)listener(snapshot);};
  return {getSnapshot:()=>snapshot,subscribe(fn){listeners.add(fn);return()=>listeners.delete(fn);},

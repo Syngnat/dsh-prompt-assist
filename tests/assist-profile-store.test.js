@@ -35,15 +35,15 @@ async function opened(t,f=fixture(),dir) { const store=await openProfileStore(f.
 
 test('profile controls start unconfirmed, keep flags separate, and persist without session migration',async t=>{
   const {store,f}=await opened(t),first=store.getSnapshot();
-  assert.deepEqual(first,{scope:'profile',revision:0,enabled:{suggest:true,enhance:true},finalAnswer:true,finalAnswerRevision:0,settingsRevision:0,settings:{suggest:defaults(),enhance:defaults()},configured:{suggest:true,enhance:true}});
+  assert.deepEqual(first,{scope:'profile',revision:0,enabled:{suggest:true,enhance:true},finalAnswer:true,finalAnswerRevision:0,processFeedback:true,processFeedbackRevision:0,settingsRevision:0,settings:{suggest:defaults(),enhance:defaults()},configured:{suggest:true,enhance:true}});
   assert.strictEqual(first,store.getSnapshot()); assert.ok(Object.isFrozen(first.settings.enhance));
   await store.set('suggest',false); assert.equal(store.getSnapshot().settingsRevision,0);
   const value=await store.configure('enhance',{...defaults(),rounds:5,enabled:false},{expectedRevision:0});
   assert.equal(value.enabled.enhance,true);assert.equal(value.revision,1);assert.equal(value.settingsRevision,1);assert.equal(value.configured.enhance,true);assert.equal(value.configured.suggest,true);
   assert.equal(Object.hasOwn(value.settings.enhance,'enabled'),false);
   assert.strictEqual(value.settings.suggest,first.settings.suggest);
-  assert.equal(f.specs.length,3);assert.ok(f.specs.every(spec=>spec.version===1));
-  assert.match(f.specs[0].name,/^local_prompt_assist_enabled_/);assert.match(f.specs[1].name,/^local_prompt_assist_final_answer_/);assert.match(f.specs[2].name,/^local_prompt_assist_controls_/);
+  assert.equal(f.specs.length,4);assert.ok(f.specs.every(spec=>spec.version===1));
+  assert.match(f.specs[0].name,/^local_prompt_assist_enabled_/);assert.match(f.specs[1].name,/^local_prompt_assist_final_answer_/);assert.match(f.specs[2].name,/^local_prompt_assist_process_feedback_/);assert.match(f.specs[3].name,/^local_prompt_assist_controls_/);
   await store.close();const reopened=await opened(t,f);assert.deepEqual(reopened.store.getSnapshot(),value);
 });
 
@@ -52,7 +52,7 @@ test('controls remain profile isolated and old flags retain their exact records'
  await a.store.set('suggest',false);await a.store.configure('suggest',{...defaults(),rounds:7},{expectedRevision:0});
  assert.equal(b.store.getSnapshot().configured.suggest,true);assert.equal(b.store.getSnapshot().enabled.suggest,true);
  assert.deepEqual(f.durable.get(f.specs[0].name),{revision:1,enabled:{suggest:false,enhance:true}});
- const control=f.durable.get(f.specs[2].name);assert.deepEqual(Object.keys(control).sort(),['configured','revision','settings']);
+ const control=f.durable.get(f.specs[3].name);assert.deepEqual(Object.keys(control).sort(),['configured','revision','settings']);
 });
 
 test('required controls CAS serializes writers, no-op is stable, and flags have independent revisions',async t=>{
@@ -120,4 +120,27 @@ test('setFinalAnswer persists alone and rejects stale revisions',async t=>{
   assert.equal(after.finalAnswer,false);
   assert.equal(after.enabled.suggest,false);
   await assert.rejects(()=>store.setFinalAnswer('yes'),error=>error.code==='invalid-enabled');
+});
+
+test('setProcessFeedback persists in its own domain and leaves the other switches intact',async t=>{
+  const {store,f}=await opened(t);
+  const next=await store.setProcessFeedback(false);
+  assert.equal(next.processFeedback,false);
+  assert.equal(next.processFeedbackRevision,1);
+  assert.equal(next.finalAnswer,true);
+  assert.equal(next.finalAnswerRevision,0);
+  assert.equal(next.revision,0);
+  assert.equal(next.settingsRevision,0);
+  assert.equal(f.writes.length,1);
+  assert.equal(f.writes[0].processFeedback,false);
+  const same=await store.setProcessFeedback(false);
+  assert.equal(same.processFeedbackRevision,1);
+  assert.equal(f.writes.length,1);
+  await assert.rejects(()=>store.setProcessFeedback(true,{expectedRevision:0}),error=>error.code==='stale-enablement');
+  await store.setFinalAnswer(false);
+  const after=store.getSnapshot();
+  assert.equal(after.processFeedback,false);
+  assert.equal(after.finalAnswer,false);
+  assert.equal(after.finalAnswerRevision,1);
+  await assert.rejects(()=>store.setProcessFeedback('yes'),error=>error.code==='invalid-enabled');
 });
