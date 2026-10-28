@@ -783,6 +783,8 @@ var init_messages = __esm({
         "updates.installNow": "\u4E0B\u8F7D\u5E76\u5B89\u88C5",
         "updates.installing": "\u6B63\u5728\u5B89\u88C5\u2026",
         "updates.installConsent": "\u6211\u5DF2\u77E5\u6653\uFF1A\u5728\u7EBF\u66F4\u65B0\u4F1A\u4FEE\u6539\u672C profile\uFF0C\u53EF\u80FD\u8981\u6C42\u91CD\u542F",
+        "updates.installNeedsConsent": "\u5148\u52FE\u9009\u4E0A\u9762\u7684\u786E\u8BA4\u9879\uFF0C\u300C\u4E0B\u8F7D\u5E76\u5B89\u88C5\u300D\u624D\u4F1A\u542F\u7528\u3002",
+        "updates.installFailed": "\u5B89\u88C5\u6CA1\u80FD\u542F\u52A8\uFF1A",
         "updates.checkButton": "\u68C0\u67E5\u66F4\u65B0",
         "updates.checkingButton": "\u6B63\u5728\u68C0\u67E5\u2026",
         "updates.cancel": "\u53D6\u6D88",
@@ -1104,6 +1106,8 @@ var init_messages = __esm({
         "updates.installNow": "Download and install",
         "updates.installing": "Installing\u2026",
         "updates.installConsent": "I understand the online update modifies this profile and may require a restart",
+        "updates.installNeedsConsent": "Tick the confirmation above to enable \u201CDownload and install\u201D.",
+        "updates.installFailed": "The install could not start:",
         "updates.checkButton": "Check for updates",
         "updates.checkingButton": "Checking\u2026",
         "updates.cancel": "Cancel",
@@ -2938,17 +2942,27 @@ function UpdatePanelContent({ snapshot = initialUpdateSnapshot(), t, onCheck, on
           h7("input", { type: "checkbox", checked: acknowledged === true, disabled: install.pending, onChange: (event) => install.onAcknowledge(event.target.checked) }),
           t("updates.installConsent")
         ),
-        h7("button", {
-          type: "button",
-          className: "lpa-button lpa-button--primary",
-          onClick: install.onInstall,
-          disabled: !acknowledged || install.pending
-        }, t(install.pending ? "updates.installing" : "updates.installNow"))
+        h7(
+          "button",
+          {
+            type: "button",
+            className: "lpa-button lpa-button--primary",
+            onClick: install.onInstall,
+            disabled: !acknowledged || install.pending,
+            // A disabled button is invisible feedback on its own: name the reason on the control too.
+            title: !acknowledged && !install.pending ? t("updates.installNeedsConsent") : void 0
+          },
+          t(install.pending ? "updates.installing" : "updates.installNow")
+        )
       ) : button(snapshot.pending === "check" ? "updates.checkingButton" : "updates.checkButton", onCheck, snapshot.pending === "check"),
       snapshot.pending ? button("updates.cancel", onCancel) : null,
       snapshot.localError ? button("updates.reloadStatus", onReload) : null,
       view.releaseUrl ? h7("a", { className: "lpa-button", href: view.releaseUrl, target: "_blank", rel: "noopener noreferrer" }, t("updates.releaseLink")) : null
     ),
+    // The primary action is disabled until consent is ticked, so the card has to say that out loud;
+    // a refused/failed preparation must land here as well instead of returning silently.
+    available && install && !acknowledged && !install.pending ? h7("p", { className: "lpa-note lpa-install-hint", role: "status" }, t("updates.installNeedsConsent")) : null,
+    available && install && install.error ? h7("p", { className: "lpa-error", role: "alert" }, t("updates.installFailed"), " ", h7("code", null, install.error)) : null,
     h7(
       "details",
       { className: "lpa-footnote-details" },
@@ -3009,6 +3023,7 @@ function UpdatePanel({ t, fetcher = globalThis.fetch }) {
     }
   }
   async function install() {
+    if (!acknowledged) return;
     await online.prepare();
     const live = online.getSnapshot();
     if (!live.preparation || live.uncertain || live.localError) return;
@@ -3025,7 +3040,7 @@ function UpdatePanel({ t, fetcher = globalThis.fetch }) {
       copyStatus,
       onCopy: copy,
       acknowledged,
-      install: { pending: installPending, onAcknowledge: setAcknowledged, onInstall: () => {
+      install: { pending: installPending, error: onlineSnapshot.localError, onAcknowledge: setAcknowledged, onInstall: () => {
         void install();
       } },
       onCheck: () => {

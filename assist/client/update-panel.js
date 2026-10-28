@@ -32,11 +32,18 @@ export function UpdatePanelContent({snapshot = initialUpdateSnapshot(), t, onChe
           h("input", {type: "checkbox", checked: acknowledged === true, disabled: install.pending, onChange: event => install.onAcknowledge(event.target.checked)}),
           t("updates.installConsent")),
         h("button", {type: "button", className: "lpa-button lpa-button--primary", onClick: install.onInstall,
-          disabled: !acknowledged || install.pending}, t(install.pending ? "updates.installing" : "updates.installNow"))) :
+          disabled: !acknowledged || install.pending,
+          // A disabled button is invisible feedback on its own: name the reason on the control too.
+          title: !acknowledged && !install.pending ? t("updates.installNeedsConsent") : undefined},
+          t(install.pending ? "updates.installing" : "updates.installNow"))) :
         button(snapshot.pending === "check" ? "updates.checkingButton" : "updates.checkButton", onCheck, snapshot.pending === "check"),
       snapshot.pending ? button("updates.cancel", onCancel) : null,
       snapshot.localError ? button("updates.reloadStatus", onReload) : null,
       view.releaseUrl ? h("a", {className: "lpa-button", href: view.releaseUrl, target: "_blank", rel: "noopener noreferrer"}, t("updates.releaseLink")) : null),
+    // The primary action is disabled until consent is ticked, so the card has to say that out loud;
+    // a refused/failed preparation must land here as well instead of returning silently.
+    available && install && !acknowledged && !install.pending ? h("p", {className: "lpa-note lpa-install-hint", role: "status"}, t("updates.installNeedsConsent")) : null,
+    available && install && install.error ? h("p", {className: "lpa-error", role: "alert"}, t("updates.installFailed"), " ", h("code", null, install.error)) : null,
     h("details", {className: "lpa-footnote-details"}, h("summary", null, t("settings.advanced")),
       h("p", {className: "lpa-note"}, t("updates.privacy")),
       h("p", {className: "lpa-note"}, t("updates.cacheNote"))),
@@ -78,8 +85,10 @@ export function UpdatePanel({t, fetcher = globalThis.fetch}) {
   }
   // The card runs the same prepare -> consent -> confirm sequence as the online section.
   async function install() {
+    if (!acknowledged) return;
     await online.prepare();
     const live = online.getSnapshot();
+    // A refused preparation leaves localError set; the card renders it, so the click is never silent.
     if (!live.preparation || live.uncertain || live.localError) return;
     online.setConsent(true);
     await online.confirm();
@@ -87,7 +96,7 @@ export function UpdatePanel({t, fetcher = globalThis.fetch}) {
   const operation = onlineSnapshot.data?.operation;
   const installPending = onlineSnapshot.pending !== null || Boolean(operation && !operation.terminal);
   return h(UpdatePanelContent, {snapshot, t, copyStatus, onCopy: copy, acknowledged,
-    install: {pending: installPending, onAcknowledge: setAcknowledged, onInstall: () => {void install();}},
+    install: {pending: installPending, error: onlineSnapshot.localError, onAcknowledge: setAcknowledged, onInstall: () => {void install();}},
     onCheck: () => {void controller.check();}, onReload: () => {void controller.load();}, onCancel: () => controller.cancel()},
     h(OnlineUpdatePanel, {t, fetcher, controller: online, snapshot: onlineSnapshot,
       currentVersion: snapshot.data?.currentVersion ?? null,

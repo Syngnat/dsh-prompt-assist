@@ -11,6 +11,12 @@
 - 客户端修复实时帧只改变提示开关 revision 时的接受逻辑：`finalAnswerRevision` / `processFeedbackRevision` 独立参与单调比较，不再要求 flags 或 controls revision 同时增加；同一 revision 下值变化仍判非法。保存反馈按各自 revision 匹配，收尾/过程开关不再误报 stale。
 - 测试：新增过程契约、组合与缺失段注入、独立存储域、设置页第四开关、提示开关实时帧用例；全套 1115 项离线测试通过（1114 通过、1 跳过）。
 
+## 1.3.2 — 安装按钮不再「点了没反应」 / The install button explains itself（2026-10-28）
+
+- 「版本与更新」卡片里的「下载并安装」在未勾选风险确认时是禁用态，之前点击没有任何反馈，看起来像按钮坏了。现在按钮带 `title` 说明，并在按钮下方显示「先勾选上面的确认项」。
+- 卡片里的安装流程此前在准备失败时直接 `return`：只有下方「在线更新」区会显示错误。现在失败原因（`network` / `rate-limited` / `metadata-unavailable` 等）直接在卡片里以 `role="alert"` 显示，并按记录给出错误码。
+- 新增 `tests/assist-update-card-consent.test.js`：未勾选时必须同时出现禁用态、`title` 与提示行；勾选后提示消失；准备失败必须出现错误行与错误码。
+
 ## 1.3.1 — 触发按钮不再切字 / No clipped glyphs in the model trigger（2026-10-28）
 
 - 模型触发按钮的模型名与推理档位此前都用 `line-height:1`：13px 行盒装不下 13px 字号的下伸部，`DeepSeek` 的 p 尾被 `overflow:hidden` 切掉约 1px（真实 Chromium 对照：旧规则在 p 尾少 2 个设备像素行）。两条规则改用 18px 行高，行内省略号截断与 28px 按钮内的垂直居中都不变。
