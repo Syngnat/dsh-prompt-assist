@@ -11,6 +11,12 @@
 - 客户端修复实时帧只改变提示开关 revision 时的接受逻辑：`finalAnswerRevision` / `processFeedbackRevision` 独立参与单调比较，不再要求 flags 或 controls revision 同时增加；同一 revision 下值变化仍判非法。保存反馈按各自 revision 匹配，收尾/过程开关不再误报 stale。
 - 测试：新增过程契约、组合与缺失段注入、独立存储域、设置页第四开关、提示开关实时帧用例；全套 1115 项离线测试通过（1114 通过、1 跳过）。
 
+## 1.3.1 — 触发按钮不再切字 / No clipped glyphs in the model trigger（2026-10-28）
+
+- 模型触发按钮的模型名与推理档位此前都用 `line-height:1`：13px 行盒装不下 13px 字号的下伸部，`DeepSeek` 的 p 尾被 `overflow:hidden` 切掉约 1px（真实 Chromium 对照：旧规则在 p 尾少 2 个设备像素行）。两条规则改用 18px 行高，行内省略号截断与 28px 按钮内的垂直居中都不变。
+- 新增样式回归 `tests/assist-model-trigger-metrics.test.js`：行高必须能容下 13px 字形的升降部（≥17px）且不超过按钮高度，行高一旦退回 `1` 即失败。
+- 生成请求的 135 秒上限定时器改为 `unref`：浏览器里它仍是数字、行为不变；Node 里不再让测试进程被钉住 135 秒。发布闸门的 `node --test` 从「4 个文件各挂 135+ 秒」变为 1108 项 1.9 秒结束。
+
 ## 1.2.75 — 去掉当前草稿引用 / Drop draft references（2026-10-26）
 
 - 输入区不再显示「当前草稿引用」，增强请求不再读取草稿里的文件内容。可见引用名仍作为上下文发送。

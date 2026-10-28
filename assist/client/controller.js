@@ -106,6 +106,9 @@ export function createAssistController(deps) {
         publish({ error: 'timeout', pending: null, preview: null });
       }
     }, 135000);
+    // Never let the ceiling be the only reason a host process stays alive: in a browser this is
+    // a number and the call is a no-op, under Node it lets tests and CLI hosts exit once idle.
+    ceiling.unref?.();
     try {
       const result = await deps.send('generate', sessionId, {
         feature, requestId: deps.requestId(), draft: snapshot.original,
