@@ -841,7 +841,7 @@ var init_messages = __esm({
         "updates.readOnly": "\u7248\u672C\u68C0\u67E5\u53EA\u8BFB\u53D6\u516C\u5F00\u4FE1\u606F\uFF0C\u4E0D\u4E0B\u8F7D\u6216\u5B89\u88C5\u3002\u68C0\u6D4B\u5230\u65B0\u7248\u540E\u53EF\u5728\u6B64\u52FE\u9009\u98CE\u9669\u786E\u8BA4\u5E76\u76F4\u63A5\u5B89\u88C5\uFF1B\u4E0D\u4F1A\u81EA\u52A8\u5347\u7EA7\u3002",
         "updates.installedVersion": "\u5F53\u524D\u8FD0\u884C\u7248\u672C",
         "updates.latestVersion": "\u6700\u65B0\u7A33\u5B9A\u7248",
-        "updates.checkedAt": "\u4E0A\u6B21\u68C0\u67E5\u65F6\u95F4\uFF08UTC\uFF09",
+        "updates.checkedAt": "\u4E0A\u6B21\u68C0\u67E5\u65F6\u95F4\uFF08\u672C\u673A\u65F6\u533A\uFF09",
         "updates.unknown": "\u672A\u77E5",
         "updates.notChecked": "\u5C1A\u65E0\u8BB0\u5F55",
         "updates.idle": "\u5C1A\u672A\u68C0\u67E5\u66F4\u65B0\uFF0C\u8BF7\u6309\u9700\u70B9\u51FB\u68C0\u67E5\u6309\u94AE\u3002",
@@ -1172,7 +1172,7 @@ var init_messages = __esm({
         "updates.readOnly": "Version checks only read public information; they never download or install. When a newer stable release is found you can tick the risk confirmation here and install directly. Nothing upgrades automatically.",
         "updates.installedVersion": "Running version",
         "updates.latestVersion": "Latest stable release",
-        "updates.checkedAt": "Last check (UTC)",
+        "updates.checkedAt": "Last check (local time)",
         "updates.unknown": "Unknown",
         "updates.notChecked": "Not recorded",
         "updates.idle": "Updates have not been checked. Use the button when needed.",
@@ -2583,14 +2583,18 @@ function formatCheckedAt(value) {
   const date = new Date(value);
   return Number.isNaN(date.getTime()) ? null : date.toISOString();
 }
+function stamp(date, utc) {
+  const pad = (number) => String(number).padStart(2, "0");
+  const parts = utc ? [date.getUTCFullYear(), date.getUTCMonth() + 1, date.getUTCDate(), date.getUTCHours(), date.getUTCMinutes(), date.getUTCSeconds()] : [date.getFullYear(), date.getMonth() + 1, date.getDate(), date.getHours(), date.getMinutes(), date.getSeconds()];
+  return parts[0] + "-" + pad(parts[1]) + "-" + pad(parts[2]) + " " + pad(parts[3]) + ":" + pad(parts[4]) + ":" + pad(parts[5]);
+}
 function displayCheckedAt(value) {
   const iso = formatCheckedAt(value);
-  if (!iso) return null;
-  const date = new Date(iso), pad = (number) => String(number).padStart(2, "0");
-  return date.getUTCFullYear() + "-" + pad(date.getUTCMonth() + 1) + "-" + pad(date.getUTCDate()) + " " + pad(date.getUTCHours()) + ":" + pad(date.getUTCMinutes()) + ":" + pad(date.getUTCSeconds()) + " UTC";
+  return iso ? stamp(new Date(iso), false) : null;
 }
 function displayUtcTime(value) {
-  return displayCheckedAt(value) ?? "";
+  const iso = formatCheckedAt(value);
+  return iso ? stamp(new Date(iso), true) + " UTC" : "";
 }
 function normalizeUpdateState(value) {
   if (!value || typeof value !== "object" || !version(value.currentVersion) || !STATUSES.has(value.status)) throw invalid2();

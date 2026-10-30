@@ -28,17 +28,24 @@ export function formatCheckedAt(value) {
 }
 
 /** Human-readable UTC stamp: the label says UTC, so the display must not depend on the viewer's zone. */
-export function displayCheckedAt(value) {
-  const iso = formatCheckedAt(value);
-  if (!iso) return null;
-  const date = new Date(iso), pad = number => String(number).padStart(2, "0");
-  return date.getUTCFullYear() + "-" + pad(date.getUTCMonth() + 1) + "-" + pad(date.getUTCDate())
-    + " " + pad(date.getUTCHours()) + ":" + pad(date.getUTCMinutes()) + ":" + pad(date.getUTCSeconds()) + " UTC";
+function stamp(date, utc) {
+  const pad = number => String(number).padStart(2, "0");
+  const parts = utc
+    ? [date.getUTCFullYear(), date.getUTCMonth() + 1, date.getUTCDate(), date.getUTCHours(), date.getUTCMinutes(), date.getUTCSeconds()]
+    : [date.getFullYear(), date.getMonth() + 1, date.getDate(), date.getHours(), date.getMinutes(), date.getSeconds()];
+  return parts[0] + "-" + pad(parts[1]) + "-" + pad(parts[2]) + " " + pad(parts[3]) + ":" + pad(parts[4]) + ":" + pad(parts[5]);
 }
 
-/** Same deterministic formatting for any millisecond timestamp rendered as UTC. */
+/** "Last check" is a wall-clock moment for the reader, so it follows the machine zone. */
+export function displayCheckedAt(value) {
+  const iso = formatCheckedAt(value);
+  return iso ? stamp(new Date(iso), false) : null;
+}
+
+/** Absolute deadlines (confirmation expiry) stay in UTC and say so. */
 export function displayUtcTime(value) {
-  return displayCheckedAt(value) ?? "";
+  const iso = formatCheckedAt(value);
+  return iso ? stamp(new Date(iso), true) + " UTC" : "";
 }
 
 /** Pick only the public contract. Never trust a remote installation target or HTML. */

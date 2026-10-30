@@ -4,7 +4,7 @@ import {createRequire} from "node:module";
 import {readFileSync} from "node:fs";
 import {fileURLToPath} from "node:url";
 import {dictionaries} from "../assist/client/messages.js";
-import {createUpdateController, normalizeUpdateState, safeReleaseUrl, formatCheckedAt,
+import {createUpdateController, normalizeUpdateState, safeReleaseUrl, formatCheckedAt, displayCheckedAt, displayUtcTime,
   initialUpdateSnapshot, updateDisplay, copyInstallSpec, INSTALL_SPEC, UPDATE_ENDPOINT} from "../assist/client/update-state.js";
 
 const require = createRequire(new URL("../package.json", import.meta.url));
@@ -136,9 +136,9 @@ test("untrusted version HTML is rejected and timestamps are bounded", () => {
   assert.equal(formatCheckedAt(9e99), null);
   const html = render(snapshot("current"));
   assert.ok(html.includes(new Date(stamp).toISOString()));
-  // The visible stamp is a readable UTC stamp, not the raw machine timestamp.
-  assert.ok(html.includes("2026-10-18 00:00:00 UTC") || html.includes(" UTC"));
-  assert.match(html, /<time dateTime="[^"]+">\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2} UTC<\/time>/);
+  // The visible stamp is a readable local stamp, not the raw machine timestamp and not UTC.
+  assert.match(html, /<time dateTime="[^"]+">\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}<\/time>/);
+  assert.doesNotMatch(html, />\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2} UTC</);
   assert.ok(!/<time[^>]*>\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z<\/time>/.test(html));
 });
 
@@ -285,4 +285,16 @@ test("the online subsection does not repeat the install action", async () => {
     t: tFor("en"), onReload() {}}));
   assert.ok(!html.includes(dictionaries.en["online.installNow"]));
   assert.ok(!html.includes(dictionaries.en["online.installConsent"]));
+});
+
+test('the last-check stamp follows the machine zone while absolute deadlines keep saying UTC', () => {
+  const ms = Date.UTC(2026, 9, 30, 2, 34, 2);
+  const date = new Date(ms), pad = number => String(number).padStart(2, '0');
+  const local = date.getFullYear() + '-' + pad(date.getMonth() + 1) + '-' + pad(date.getDate())
+    + ' ' + pad(date.getHours()) + ':' + pad(date.getMinutes()) + ':' + pad(date.getSeconds());
+  assert.equal(displayCheckedAt(ms), local);
+  assert.doesNotMatch(displayCheckedAt(ms), /UTC/);
+  assert.match(displayUtcTime(ms), /^\d{4}-\d{2}-\d{2} 02:34:02 UTC$/);
+  assert.equal(displayCheckedAt(null), null);
+  assert.equal(displayUtcTime(null), '');
 });
