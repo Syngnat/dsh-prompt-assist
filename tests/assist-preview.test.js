@@ -47,7 +47,7 @@ function fixture(original = 'Original draft', inputPatch = {}, enhancePatch = {}
   return {
     runtime, controller, actions, edits, applied, notices, requests,
     get input() { return input; },
-    render: (t = key => key) => Preview({runtime, actions, t, onApplied: value => applied.push(value)}),
+    render: (t = key => key, extra = {}) => Preview({runtime, actions, t, onApplied: value => applied.push(value), ...extra}),
     changeInput(patch) { input = {...input, ...patch}; },
     reply(text, patch = {}) {
       const request = requests.at(-1);
@@ -469,4 +469,20 @@ test('the capsule keeps the original behind a collapsed details instead of a ful
   const html = renderToStaticMarkup(tree);
   assert.doesNotMatch(html, /<details[^>]* open/, 'the original stays collapsed until asked for');
   assert.ok(html.includes('Original draft'));
+});
+
+test('the capsule reads status, undo, original, dismiss in that order', async t => {
+  const f = fixture('Original draft', {}, {autoApply: true});
+  t.after(() => f.controller.dispose());
+  const work = f.controller.generate('enhance');
+  f.reply('Rewritten requirements');
+  await work;
+  const tree = f.render(key => dictionaries.zh[key], {onUndo() {}, canUndo: true});
+  const capsule = descendants(tree, element => element.props.role === 'status')[0];
+  const slots = capsule.props.children.map(child => !child ? null
+    : child.type === 'details' ? 'original' : child.props.children);
+  assert.deepEqual(slots, [dictionaries.zh.enhanceWritten, dictionaries.zh.undo, 'original', dictionaries.zh.dismiss]);
+  // Undo lives in the capsule now, so the panel must not render a second row for it.
+  const panel = await import('node:fs/promises').then(fs => fs.readFile(new URL('../assist/client/panel.js', import.meta.url), 'utf8'));
+  assert.match(panel, /validUndo&&!landed\?/);
 });

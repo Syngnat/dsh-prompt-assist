@@ -2399,7 +2399,7 @@ function NoSuggestion({ runtime: r, t }) {
     h4("button", { type: "button", className: "lpa-button", onClick: () => r.controller.dismiss() }, t("dismiss"))
   );
 }
-function Preview({ runtime: r, actions, t, onApplied }) {
+function Preview({ runtime: r, actions, t, onApplied, onUndo, canUndo }) {
   const value = r.result.preview;
   if (!value || !ownsResult(value, r.sessionId)) return null;
   if (value.feature === "suggest" && (value.outcome !== void 0 && value.outcome !== "suggestion" || typeof value.text !== "string" || !value.text.trim() || isNoSuggestionPlaceholder(value.text))) return null;
@@ -2420,13 +2420,14 @@ function Preview({ runtime: r, actions, t, onApplied }) {
       "div",
       { className: "lpa-row lpa-note", role: "status", "aria-label": t(value.feature) },
       h4("span", { className: "lpa-preview-status" }, status),
-      value.streaming ? button("cancel", () => r.controller.cancel()) : button("dismiss", () => r.controller.dismiss()),
+      written && canUndo ? button("undo", onUndo, !r.allowed) : null,
       written ? h4(
         "details",
         { className: "lpa-original" },
         h4("summary", null, t("showOriginal")),
         h4("pre", null, value.original)
-      ) : null
+      ) : null,
+      value.streaming ? button("cancel", () => r.controller.cancel()) : button("dismiss", () => r.controller.dismiss())
     );
   }
   function apply2() {
@@ -2530,6 +2531,7 @@ function AssistPanel(p) {
     r.controller.dismiss();
     r.setNotice(null);
   };
+  const landed = r.result.writeback?.mode === "auto" || r.result.writeback?.mode === "stream";
   const notice = r.result.error ?? r.notice;
   return h5(ResultAnchor, null, h5(
     "section",
@@ -2537,8 +2539,8 @@ function AssistPanel(p) {
     h5("style", null, css),
     r.result.pending && !r.result.preview ? h5("div", { className: "lpa-row lpa-pending", role: "status" }, h5("span", { className: "lpa-pending-mark", "aria-hidden": true }), t(r.result.pending === "suggest" ? "generatingSuggest" : "generating"), button("cancel", () => r.controller.cancel())) : null,
     h5(NoSuggestion, { runtime: r, t }),
-    h5(Preview, { runtime: r, actions: p.inputActions, t, onApplied: setUndo }),
-    validUndo ? h5("div", { className: "lpa-undo-actions" }, button("undo", undoApply, !r.allowed)) : null,
+    h5(Preview, { runtime: r, actions: p.inputActions, t, onApplied: setUndo, onUndo: undoApply, canUndo: validUndo }),
+    validUndo && !landed ? h5("div", { className: "lpa-undo-actions" }, button("undo", undoApply, !r.allowed)) : null,
     visible && notice ? h5("div", { className: "lpa-row", role: "status" }, h5("span", { className: r.result.error ? "lpa-error" : "lpa-note" }, typeof notice === "string" && notice !== "requestError" ? t(notice) : errorText(notice, t)), button("dismiss", dismiss)) : null
   ));
 }

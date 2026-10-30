@@ -12,7 +12,7 @@ export function NoSuggestion({runtime:r,t}){
   value.fastSkipped===true?h('span',{className:'lpa-note'},t('fastSkipped')):null,
   h('button',{type:'button',className:'lpa-button',onClick:()=>r.controller.dismiss()},t('dismiss')));
 }
-export function Preview({runtime:r,actions,t,onApplied}){
+export function Preview({runtime:r,actions,t,onApplied,onUndo,canUndo}){
  const value=r.result.preview;
  if(!value||!ownsResult(value,r.sessionId))return null;
   if(value.feature==='suggest'&&((value.outcome!==undefined&&value.outcome!=='suggestion')||typeof value.text!=='string'||!value.text.trim()||isNoSuggestionPlaceholder(value.text)))return null;
@@ -35,10 +35,11 @@ export function Preview({runtime:r,actions,t,onApplied}){
  if(value.feature==='enhance'&&(written||value.streaming)){
   return h('div',{className:'lpa-row lpa-note',role:'status','aria-label':t(value.feature)},
    h('span',{className:'lpa-preview-status'},status),
-   value.streaming?button('cancel',()=>r.controller.cancel()):button('dismiss',()=>r.controller.dismiss()),
+   written&&canUndo?button('undo',onUndo,!r.allowed):null,
    written?h('details',{className:'lpa-original'},
     h('summary',null,t('showOriginal')),
-    h('pre',null,value.original)):null);
+    h('pre',null,value.original)):null,
+   value.streaming?button('cancel',()=>r.controller.cancel()):button('dismiss',()=>r.controller.dismiss()));
  }
  function apply(){
   if(value.streaming||unchanged||!ownsResult(value,r.sessionId))return;
