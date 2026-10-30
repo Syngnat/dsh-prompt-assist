@@ -8,7 +8,8 @@ export function normalizeEnablement(value){
   ||FEATURES.some(feature=>typeof value.enabled[feature]!=='boolean'))throw invalid();
  const hasSettings=value.settings!==undefined||value.settingsRevision!==undefined||value.configured!==undefined;
  if(hasSettings&&(!Number.isSafeInteger(value.settingsRevision)||value.settingsRevision<0||!value.settings||!value.configured||FEATURES.some(feature=>{
-  const config=value.settings[feature];return typeof value.configured[feature]!=='boolean'||!config||typeof config.followSession!=='boolean'||typeof config.fast!=='boolean'||!Number.isInteger(config.rounds)||config.rounds<1||config.rounds>20||['provider','model','reasoningEffort'].some(key=>typeof config[key]!=='string');
+  const config=value.settings[feature];return typeof value.configured[feature]!=='boolean'||!config||typeof config.followSession!=='boolean'||typeof config.fast!=='boolean'||!Number.isInteger(config.rounds)||config.rounds<1||config.rounds>20||['provider','model','reasoningEffort'].some(key=>typeof config[key]!=='string')
+   ||['autoApply','streamWrite'].some(key=>config[key]!==undefined&&typeof config[key]!=='boolean');
  })))throw invalid();
  if(value.finalAnswer!==undefined&&typeof value.finalAnswer!=='boolean')throw invalid();
  if(value.finalAnswerRevision!==undefined&&(!Number.isSafeInteger(value.finalAnswerRevision)||value.finalAnswerRevision<0))throw invalid();

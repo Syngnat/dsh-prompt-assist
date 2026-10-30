@@ -38,7 +38,7 @@ test("new session settings are independent, disabled and auxiliary Fast defaults
 
 test("config validates all QA counts and preserves explicit native effort IDs", () => {
   for (let rounds = 1; rounds <= 20; rounds++) assert.equal(normalizeConfig({ rounds }).rounds, rounds);
-  const input = freeze({ followSession: false, enabled: true, provider: "local-route", model: "native-id", reasoningEffort: "xhigh", fast: true, rounds: 3 });
+  const input = freeze({ followSession: false, enabled: true, provider: "local-route", model: "native-id", reasoningEffort: "xhigh", fast: true, rounds: 3, autoApply: true, streamWrite: false });
   assert.deepEqual(normalizeConfig(input), input);
   assert.notStrictEqual(normalizeConfig(input), input);
   assert.equal(normalizeConfig({ followSession: true, fast: false }).fast, false);

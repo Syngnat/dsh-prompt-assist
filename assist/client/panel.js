@@ -19,11 +19,14 @@ export function AssistPanel(p){
   p.assistSuggest.update(suggestAvailability(r),()=>r.controller.generate('suggest'));
  },[p.assistEnhance,p.assistSuggest,r.controller,r.allowed,r.state,r.settings,r.dirty,r.busy,r.input,r.result.pending]);
  React.useEffect(()=>{setUndo(null);},[p.sessionId]);
- const visible=shouldShowPanel({open:false,result:r.result,undo,input:r.input,sessionId:p.sessionId});
+ // The controller registers every automatic landing; the local record only covers the manual path.
+ const registered=r.result.undo??null;
+ const source=registered??undo;
+ const visible=shouldShowPanel({open:false,result:r.result,undo:source,input:r.input,sessionId:p.sessionId});
  if(r.session?.subagent||r.session?.removed||!visible)return null;
  const button=(key,onClick,disabled=false)=>h('button',{type:'button',className:'lpa-button',onClick,disabled},t(key));
- const validUndo=ownsResult(undo,p.sessionId)&&r.input.draft===undo.original&&r.input.draftRev===undo.draftRev;
- const undoApply=()=>{const result=undoText(undo,r.readInput,p.inputActions);if(result.ok)setUndo(null);else r.setNotice(result.reason);};
+ const validUndo=ownsResult(source,p.sessionId)&&r.input.draft===source.original&&r.input.draftRev===source.draftRev;
+ const undoApply=()=>{const result=undoText(source,r.readInput,p.inputActions);if(result.ok){if(registered)r.controller.clearLanding?.();setUndo(null);}else r.setNotice(result.reason);};
  const dismiss=()=>{r.controller.dismiss();r.setNotice(null);};
  const notice=r.result.error??r.notice;
  return h(ResultAnchor,null,h('section',{className:'lpa lpa-inline'+compactPanelModifier({pending:r.result.pending,preview:r.result.preview,notice,validUndo}),'aria-label':t('preview')},h('style',null,css),

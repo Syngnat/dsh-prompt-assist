@@ -20,12 +20,16 @@ export function createAssistApi(fetcher = globalThis.fetch) {
 
 export const DEFAULT_SETTINGS = Object.freeze({
   enabled: false, followSession: true, provider: '', model: '',
-  reasoningEffort: '', fast: false, rounds: 1,
+  reasoningEffort: '', fast: false, rounds: 1, autoApply: true, streamWrite: false,
 });
 
-export const SESSION_FIELDS = Object.freeze(['followSession','provider','model','reasoningEffort','fast','rounds']);
+export const SESSION_FIELDS = Object.freeze(['followSession','provider','model','reasoningEffort','fast','rounds','autoApply','streamWrite']);
+/** Write-back switches are strict booleans: any other value falls back to the profile default. */
+const BOOLEAN_FIELDS = Object.freeze(['autoApply','streamWrite']);
 export function sessionSettings(value = {}) {
-  return Object.fromEntries(SESSION_FIELDS.map(key => [key, value[key] ?? DEFAULT_SETTINGS[key]]));
+  return Object.fromEntries(SESSION_FIELDS.map(key => [key, BOOLEAN_FIELDS.includes(key)
+    ? (typeof value[key] === 'boolean' ? value[key] : DEFAULT_SETTINGS[key])
+    : value[key] ?? DEFAULT_SETTINGS[key]]));
 }
 
 export function configKey(settings) {

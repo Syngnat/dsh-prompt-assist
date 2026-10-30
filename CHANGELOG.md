@@ -2,14 +2,14 @@
 
 [English](<README.md>) | [简体中文](<README.zh-CN.md>)
 
-## 1.3.0 — Codex 式过程反馈 / Progress narration（2026-10-27）
+## 1.3.3 — 增强结果直接写入输入框 / Enhance lands in the composer（2026-10-30）
 
-- 新增独立的过程反馈契约：每轮要调用工具时，先输出一句用户可见的进度说明；每个工具结果后先说明再继续；不调用工具的最后一轮直接给结论、不复述过程。与收尾契约组合注入，两段各自开关。
-- 实测（同一路由 `cpa/deepseek-v4.1-flash:1017`，真实 DSH system prompt，3 轮工具回放）：旧「进度压到一句」组 0 条文字、只有工具调用；新硬性规则组 3/3 轮都有进度句。这是离线探针，不是 GUI 视觉验收或统计评测。详见[过程反馈契约](<docs/process-feedback.md>)。
-- 开关 `processFeedback` 存在独立存储域 `local_prompt_assist_process_feedback_*`（默认开），enablement、收尾契约与 controls 的严格记录形状保持不变；新增 `set-process-feedback` 工具动作与设置页第四个开关，各自走 revision CAS；`config.processFeedbackContract === false` 是硬开关。
-- 注入改为按「历史中尚未收到的 section」追加：先开收尾后开过程时只补过程段，关闭不撤回历史，重新开启不重复；`compaction/end` 后按当前开关重注缺失段。
-- 客户端修复实时帧只改变提示开关 revision 时的接受逻辑：`finalAnswerRevision` / `processFeedbackRevision` 独立参与单调比较，不再要求 flags 或 controls revision 同时增加；同一 revision 下值变化仍判非法。保存反馈按各自 revision 匹配，收尾/过程开关不再误报 stale。
-- 测试：新增过程契约、组合与缺失段注入、独立存储域、设置页第四开关、提示开关实时帧用例；全套 1115 项离线测试通过（1114 通过、1 跳过）。
+- 新增 `autoApply`（默认开）：增强生成完成后自动把结果整段写入输入框，等价于原先手动点「应用到草稿」，并保留一次撤销。
+- 新增 `streamWrite`（默认关）：生成过程中约每 150ms 整段写入一次；一旦检测到草稿被你自己改过就永久停写，结果留在卡片上可手动应用。
+- 输入框上方的预览卡片改为状态条：已写入 / 正在写入 / 撤销 / 停止；被接管与写入阻塞分别给出原因，不再出现「已经自动写入却还让你点应用」的冗余。
+- 撤销会同时清掉写回记录，卡片不再声称已写入。写入走宿主 `setDraft`（不进入独立撤销步）与 `insertText`（rev CAS）两条路径；含引用或附件的结构化草稿永不整段替换。
+- 两个开关只在 enhance 设置卡片出现，suggest 控件集不变；`configKey` 纳入新字段，改动任一开关都会让进行中的结果失效。
+- 测试：全套 1152 项（1151 通过、1 跳过）。
 
 ## 1.3.2 — 安装按钮不再「点了没反应」 / The install button explains itself（2026-10-28）
 
@@ -22,6 +22,15 @@
 - 模型触发按钮的模型名与推理档位此前都用 `line-height:1`：13px 行盒装不下 13px 字号的下伸部，`DeepSeek` 的 p 尾被 `overflow:hidden` 切掉约 1px（真实 Chromium 对照：旧规则在 p 尾少 2 个设备像素行）。两条规则改用 18px 行高，行内省略号截断与 28px 按钮内的垂直居中都不变。
 - 新增样式回归 `tests/assist-model-trigger-metrics.test.js`：行高必须能容下 13px 字形的升降部（≥17px）且不超过按钮高度，行高一旦退回 `1` 即失败。
 - 生成请求的 135 秒上限定时器改为 `unref`：浏览器里它仍是数字、行为不变；Node 里不再让测试进程被钉住 135 秒。发布闸门的 `node --test` 从「4 个文件各挂 135+ 秒」变为 1108 项 1.9 秒结束。
+
+## 1.3.0 — Codex 式过程反馈 / Progress narration（2026-10-27）
+
+- 新增独立的过程反馈契约：每轮要调用工具时，先输出一句用户可见的进度说明；每个工具结果后先说明再继续；不调用工具的最后一轮直接给结论、不复述过程。与收尾契约组合注入，两段各自开关。
+- 实测（同一路由 `cpa/deepseek-v4.1-flash:1017`，真实 DSH system prompt，3 轮工具回放）：旧「进度压到一句」组 0 条文字、只有工具调用；新硬性规则组 3/3 轮都有进度句。这是离线探针，不是 GUI 视觉验收或统计评测。详见[过程反馈契约](<docs/process-feedback.md>)。
+- 开关 `processFeedback` 存在独立存储域 `local_prompt_assist_process_feedback_*`（默认开），enablement、收尾契约与 controls 的严格记录形状保持不变；新增 `set-process-feedback` 工具动作与设置页第四个开关，各自走 revision CAS；`config.processFeedbackContract === false` 是硬开关。
+- 注入改为按「历史中尚未收到的 section」追加：先开收尾后开过程时只补过程段，关闭不撤回历史，重新开启不重复；`compaction/end` 后按当前开关重注缺失段。
+- 客户端修复实时帧只改变提示开关 revision 时的接受逻辑：`finalAnswerRevision` / `processFeedbackRevision` 独立参与单调比较，不再要求 flags 或 controls revision 同时增加；同一 revision 下值变化仍判非法。保存反馈按各自 revision 匹配，收尾/过程开关不再误报 stale。
+- 测试：新增过程契约、组合与缺失段注入、独立存储域、设置页第四开关、提示开关实时帧用例；全套 1115 项离线测试通过（1114 通过、1 跳过）。
 
 ## 1.2.75 — 去掉当前草稿引用 / Drop draft references（2026-10-26）
 

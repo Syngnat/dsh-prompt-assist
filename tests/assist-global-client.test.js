@@ -28,7 +28,7 @@ test('settings shows four profile switches even with no selected session',async(
  const React=await import('react');const {renderToStaticMarkup}=await import('react-dom/server');const {SettingsPage}=await import('../assist/client/settings-page.js');
  const target={sessionId:null},global={data:snapshot(1,true,false),connected:true,loading:false,pending:null,readError:null,writeError:null,saved:null};
  const html=renderToStaticMarkup(React.createElement(SettingsPage,{t:key=>key,targetSource:{getSnapshot:()=>target,subscribe:()=>()=>{}},globalSource:{getSnapshot:()=>global,subscribe:()=>()=>{},setEnabled(){}},returnToConversation(){}}));
- assert.ok(html.includes('global.title'));assert.equal((html.match(/type="checkbox"/g)||[]).length,8);assert.ok(html.includes('settings.profileSection'));assert.ok(html.includes('settings.modelStyleZcode'));assert.ok(!html.includes('settings.sessionEmpty'));
+ assert.ok(html.includes('global.title'));assert.equal((html.match(/type="checkbox"/g)||[]).length,10);assert.ok(html.includes('settings.profileSection'));assert.ok(html.includes('settings.modelStyleZcode'));assert.ok(!html.includes('settings.sessionEmpty'));
 });
 
 test('feature cards render the draft feedback inside the form so pointer events reach the controls',async()=>{
@@ -170,7 +170,7 @@ test('unknown or disconnected globals never inherit legacy wire/session controls
  const params={...DEFAULT_SETTINGS,enabled:true,provider:'custom',model:'m',rounds:9};for(const global of [undefined,globalView(snapshot(4,true,true),false),globalView(snapshot(5,false,false))]){
   const merged=mergeGlobalSettings({suggest:params,enhance:params},global);assert.equal(merged.suggest.enabled,false);assert.equal(merged.suggest.model,'');assert.equal(merged.suggest.rounds,1);
  }
- assert.deepEqual(Object.keys(sessionSettings(params)),['followSession','provider','model','reasoningEffort','fast','rounds']);
+ assert.deepEqual(Object.keys(sessionSettings(params)),['followSession','provider','model','reasoningEffort','fast','rounds','autoApply','streamWrite']);
 });
 for(const lang of ['zh','en'])test('SSR '+lang+' separates global immediate-save controls and session parameters',()=>{
  const t=key=>{assert.equal(typeof dictionaries[lang][key],'string',key);return dictionaries[lang][key];};

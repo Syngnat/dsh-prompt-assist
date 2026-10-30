@@ -282,6 +282,90 @@ function applyText(snapshot, text, readInput, actions) {
     replacement: snapshot.original
   } };
 }
+function createDraftWriter({ actions, readInput, intervalMs = 150, schedule = setTimeout, cancelTimer = clearTimeout }) {
+  const history = /* @__PURE__ */ new Set();
+  const surface = actions ?? {};
+  let snapshot = null;
+  let last = null;
+  let takenOver = false;
+  let stopped = false;
+  let pending = null;
+  let timer = null;
+  const live = () => (typeof readInput === "function" ? readInput() : null) ?? {};
+  const stopTimer = () => {
+    if (timer === null) return;
+    cancelTimer(timer);
+    timer = null;
+  };
+  const state = () => ({ takenOver, written: typeof last === "string" && last !== (snapshot?.original ?? null), text: last });
+  const put = (text, draft) => {
+    if (typeof surface.setDraft === "function") {
+      surface.setDraft(text);
+      return true;
+    }
+    if (typeof surface.insertText !== "function") return false;
+    return surface.insertText(text, { ...surface.captureInsertion(), start: 0, end: draft.length }) === true;
+  };
+  function flush() {
+    stopTimer();
+    if (stopped || takenOver) {
+      pending = null;
+      return false;
+    }
+    const text = pending;
+    pending = null;
+    if (typeof text !== "string") return false;
+    const input = live();
+    const draft = typeof input.draft === "string" ? input.draft : "";
+    if ((input.occurrences?.length ?? 0) > 0 || input.claim) {
+      takenOver = true;
+      return false;
+    }
+    if (!history.has(draft)) {
+      takenOver = true;
+      return false;
+    }
+    if (text === last) return true;
+    if (!put(text, draft)) return false;
+    history.add(text);
+    last = text;
+    return true;
+  }
+  return {
+    begin(next) {
+      stopTimer();
+      snapshot = next ?? null;
+      last = typeof snapshot?.original === "string" ? snapshot.original : null;
+      history.clear();
+      if (last !== null) history.add(last);
+      pending = null;
+      stopped = false;
+      takenOver = snapshot?.structured === true;
+      return state();
+    },
+    write(text) {
+      if (stopped || takenOver || typeof text !== "string") return false;
+      pending = text;
+      if (timer === null) timer = schedule(flush, intervalMs);
+      return true;
+    },
+    finish(text) {
+      stopTimer();
+      if (stopped || takenOver) {
+        pending = null;
+        return false;
+      }
+      if (typeof text === "string") pending = text;
+      return flush();
+    },
+    abort() {
+      stopTimer();
+      pending = null;
+      stopped = true;
+    },
+    state
+  };
+}
 function undoText(undo, readInput, actions) {
   return applyText(undo, undo?.replacement, readInput, actions);
 }
@@ -939,6 +1023,14 @@ var init_messages = __esm({
         load: "\u52A0\u8F7D\u8F85\u52A9\u914D\u7F6E\u2026",
         settingsChanged: "\u6709\u672A\u4FDD\u5B58\u914D\u7F6E\uFF1B\u4FDD\u5B58\u540E\u518D\u8BF7\u6C42\u3002",
         budgetPolicy: "\u8F93\u5165\u4E0A\u4E0B\u6587\u548C\u8F93\u51FA\u9884\u7B97\u8DDF\u968F\u6240\u9009\u4F9B\u5E94\u5546\u6A21\u578B\u8BBE\u7F6E\uFF1B\u672A\u914D\u7F6E\u8F93\u51FA\u9884\u7B97\u65F6\u6CBF\u7528\u5BBF\u4E3B/\u4F9B\u5E94\u5546\u9ED8\u8BA4\u884C\u4E3A\u3002\u8F83\u5927\u9884\u7B97\u53EF\u80FD\u589E\u52A0\u8017\u65F6\u548C\u8D39\u7528\uFF1B120 \u79D2\u8BF7\u6C42\u622A\u6B62\u4F1A\u53D1\u51FA\u53D6\u6D88\u4FE1\u53F7\uFF0C\u5B9E\u9645\u505C\u6B62\u53D6\u51B3\u4E8E\u9002\u914D\u5668\u54CD\u5E94\uFF1B\u6587\u4EF6\u8BFB\u53D6\u5B89\u5168\u9650\u5236\u72EC\u7ACB\u4FDD\u7559\u3002\u4E0D\u6539\u53D8\u4E3B\u4F1A\u8BDD\u53C2\u6570\u3002",
+        autoApply: "\u751F\u6210\u5B8C\u6210\u540E\u5199\u5165\u8F93\u5165\u6846",
+        autoApplyHint: "\u751F\u6210\u5B8C\u6210\u540E\u81EA\u52A8\u66FF\u6362\u8F93\u5165\u6846\u5185\u5BB9\uFF0C\u53EF\u64A4\u9500\u3002",
+        streamWrite: "\u751F\u6210\u8FC7\u7A0B\u4E2D\u6D41\u5F0F\u5199\u5165",
+        streamWriteHint: "\u751F\u6210\u8FC7\u7A0B\u4E2D\u5B9E\u65F6\u5199\u5165\u8F93\u5165\u6846\uFF0C\u4F60\u4E00\u65E6\u624B\u52A8\u7F16\u8F91\u5C31\u505C\u6B62\u5199\u5165\u3002",
+        enhanceWritten: "\u5DF2\u5199\u5165\u8F93\u5165\u6846",
+        enhanceTakenOver: "\u4F60\u5DF2\u4FEE\u6539\u8349\u7A3F\uFF0C\u81EA\u52A8\u5199\u5165\u5DF2\u505C\u6B62\uFF1B\u53EF\u624B\u52A8\u5E94\u7528\u5B8C\u6574\u7ED3\u679C\u3002",
+        enhanceBlocked: "\u81EA\u52A8\u5199\u5165\u672A\u6267\u884C\uFF1A\u8349\u7A3F\u5DF2\u53D8\u5316\uFF0C\u6216\u4E0D\u80FD\u6574\u6BB5\u66FF\u6362\u3002",
+        enhanceStreamingWrite: "\u6B63\u5728\u5199\u5165\u2026",
         contextUnknown: "\u65E0\u6CD5\u8BFB\u53D6\u6A21\u578B\u4E0A\u4E0B\u6587\u7A97\u53E3\u6216\u5BBF\u4E3B token \u8BA1\u91CF\u670D\u52A1\uFF0C\u672A\u53D1\u8D77\u751F\u6210\u8BF7\u6C42\u3002\u8BF7\u68C0\u67E5\u4F9B\u5E94\u5546\u6A21\u578B\u914D\u7F6E\u4E0E\u5BBF\u4E3B\u517C\u5BB9\u6027\u3002",
         requestTimeout: "\u8F85\u52A9\u8BF7\u6C42\u8FBE\u5230\u7B49\u5F85\u4E0A\u9650\uFF0C\u672A\u5E94\u7528\u7ED3\u679C\uFF1B\u539F\u6587\u4FDD\u6301\u4E0D\u53D8\uFF0C\u4E0D\u4F1A\u81EA\u52A8\u91CD\u8BD5\u3002\u8BF7\u68C0\u67E5\u6A21\u578B\u54CD\u5E94\u901F\u5EA6\u6216\u63A8\u7406\u8BBE\u7F6E\u3002",
         budget: "\u672C\u6B21\u8BF7\u6C42\u8F93\u51FA\u9884\u7B97 {{tokens}} token\uFF0C\u6700\u957F\u7B49\u5F85 {{seconds}} \u79D2\uFF1B\u63A8\u7406\u53EF\u80FD\u5360\u7528\u8F93\u51FA\u9884\u7B97\uFF0C\u4E0D\u81EA\u52A8\u91CD\u8BD5\u6216\u8C03\u6863\u3002",
@@ -1262,6 +1354,14 @@ var init_messages = __esm({
         load: "Loading assist settings\u2026",
         settingsChanged: "Settings have unsaved changes. Save before requesting.",
         budgetPolicy: "Input context and output budgets follow the selected provider/model settings. With no configured output cap, native/provider defaults apply. Larger budgets may increase time and cost. The 120-second request deadline sends a cancellation signal; actual termination depends on the adapter. Independent file-access safeguards remain. Main conversation controls are unchanged.",
+        autoApply: "Write the result to the composer",
+        autoApplyHint: "Replace the composer text with the finished result. The previous draft stays undoable.",
+        streamWrite: "Write while generating",
+        streamWriteHint: "Write into the composer as the result arrives. Your own edit stops the writing.",
+        enhanceWritten: "Written to the composer",
+        enhanceTakenOver: "You edited the draft, so automatic writing stopped. You can still apply the full result.",
+        enhanceBlocked: "Automatic writing did not run: the draft changed, or it cannot be replaced as a whole.",
+        enhanceStreamingWrite: "Writing\u2026",
         contextUnknown: "The model context window or Host token estimator is unavailable. No generation was dispatched. Check provider/model configuration and Host compatibility.",
         requestTimeout: "The auxiliary request reached its wait limit. Nothing was applied or retried automatically. Check model latency or reasoning settings.",
         budget: "Requested output budget: {{tokens}} tokens, wait limit: {{seconds}} s. Reasoning may share this budget; no automatic retry or effort change.",
@@ -1416,7 +1516,7 @@ var init_provider_failure = __esm({
 
 // assist/client/api.js
 function sessionSettings(value = {}) {
-  return Object.fromEntries(SESSION_FIELDS.map((key) => [key, value[key] ?? DEFAULT_SETTINGS[key]]));
+  return Object.fromEntries(SESSION_FIELDS.map((key) => [key, BOOLEAN_FIELDS.includes(key) ? typeof value[key] === "boolean" ? value[key] : DEFAULT_SETTINGS[key] : value[key] ?? DEFAULT_SETTINGS[key]]));
 }
 function configKey(settings) {
   return JSON.stringify(["suggest", "enhance"].map((key) => {
@@ -1474,7 +1574,7 @@ function errorText(error, t) {
   const status = providerHttpStatus(typeof error === "string" ? error : error?.code);
   return t(key) + (status === null ? "" : ` (HTTP ${status})`) + (key === "requestError" ? " " + t("safeCodeLabel") + " " + safeCode(error) : "");
 }
-var DEFAULT_SETTINGS, SESSION_FIELDS;
+var DEFAULT_SETTINGS, SESSION_FIELDS, BOOLEAN_FIELDS;
 var init_api = __esm({
   "assist/client/api.js"() {
     init_identity();
@@ -1486,16 +1586,20 @@ var init_api = __esm({
       model: "",
       reasoningEffort: "",
       fast: false,
-      rounds: 1
+      rounds: 1,
+      autoApply: true,
+      streamWrite: false
     });
-    SESSION_FIELDS = Object.freeze(["followSession", "provider", "model", "reasoningEffort", "fast", "rounds"]);
+    SESSION_FIELDS = Object.freeze(["followSession", "provider", "model", "reasoningEffort", "fast", "rounds", "autoApply", "streamWrite"]);
+    BOOLEAN_FIELDS = Object.freeze(["autoApply", "streamWrite"]);
   }
 });
 
 // assist/client/stream-preview.js
-function streamPreview({ isCurrent, publish, snapshot, sessionId, qaId, feature }) {
+function streamPreview({ isCurrent, publish, snapshot, sessionId, qaId, feature, writer }) {
   return (text) => {
     if (feature === "suggest" || !isCurrent() || typeof text !== "string") return;
+    writer?.write(text);
     publish({ preview: { text, original: snapshot.original, draftRev: snapshot.draftRev, sessionId, qaId, feature, streaming: true, snapshot } });
   };
 }
@@ -1513,6 +1617,17 @@ var init_suggestion_result = __esm({
   }
 });
 
+// assist/client/enhance-result.js
+function isUnchangedEnhancement(original, text) {
+  if (typeof original !== "string" || typeof text !== "string") return false;
+  const normalize = (value) => value.replace(/\r\n/g, "\n").trim();
+  return normalize(original) === normalize(text);
+}
+var init_enhance_result = __esm({
+  "assist/client/enhance-result.js"() {
+  }
+});
+
 // assist/client/controller.js
 function qaEndOf(id2) {
   const match = typeof id2 === "string" ? /^(\d+):(\d+)$/.exec(id2) : null;
@@ -1527,11 +1642,43 @@ function createAssistController(deps) {
   let flight = null;
   let epoch = 0;
   let disposed = false;
+  let writer = null;
   const requested = /* @__PURE__ */ new Set();
-  const state = { pending: null, preview: null, noSuggestion: null, error: null, trigger: null };
+  const state = { pending: null, preview: null, noSuggestion: null, error: null, trigger: null, undo: null, writeback: null };
   const publish = (patch) => {
-    Object.assign(state, patch);
+    const next = { ...patch };
+    if (next.preview === null) {
+      if (!("writeback" in next)) next.writeback = null;
+      if (!("undo" in next)) next.undo = null;
+    }
+    Object.assign(state, next);
     deps.publish({ ...state });
+  };
+  const readInput = () => typeof deps.readInput === "function" ? deps.readInput() : current?.input;
+  const autoApply = () => current?.settings?.enhance?.autoApply !== false;
+  const streamWrite = () => current?.settings?.enhance?.streamWrite === true;
+  const writeBack = (receipt, snapshot, draftWriter) => {
+    if (draftWriter) {
+      draftWriter.finish(receipt.text);
+      const settled = draftWriter.state();
+      if (settled.takenOver && settled.written) return { writeback: { mode: "taken-over" }, undo: null };
+      if (settled.written) {
+        const after = readInput() ?? {};
+        return { writeback: { mode: "stream" }, undo: {
+          original: receipt.text,
+          draftRev: after.draftRev,
+          structured: false,
+          span: { start: 0, end: receipt.text.length, draftRev: after.draftRev },
+          replacement: snapshot.original,
+          sessionId: receipt.sessionId
+        } };
+      }
+    }
+    if (!autoApply()) return { writeback: null, undo: null };
+    const actions = deps.actions();
+    if (receipt.snapshot.structured || typeof actions.insertText !== "function" || typeof receipt.text !== "string" || receipt.text.trim() === "" || isUnchangedEnhancement(snapshot.original, receipt.text)) return { writeback: null, undo: null };
+    const outcome = applyText(snapshot, receipt.text, readInput, actions);
+    return outcome.ok ? { writeback: { mode: "auto" }, undo: { ...outcome.undo, sessionId: receipt.sessionId } } : { writeback: { mode: "blocked", reason: outcome.reason }, undo: null };
   };
   const explain = (status, reason) => {
     const trigger = { status, reason, qaId: current?.qaId ?? null, candidate, busy: current?.busy === true };
@@ -1541,7 +1688,9 @@ function createAssistController(deps) {
     epoch += 1;
     flight?.abort();
     flight = null;
-    if (state.pending || state.noSuggestion) publish({ pending: null, noSuggestion: null, ...state.preview?.streaming ? { preview: null } : {} });
+    writer?.abort();
+    writer = null;
+    if (state.pending || state.noSuggestion || state.writeback || state.undo) publish({ pending: null, noSuggestion: null, writeback: null, undo: null, ...state.preview?.streaming ? { preview: null } : {} });
   };
   const configured = (feature) => current?.settings?.[feature]?.enabled === true && (current.settings[feature].followSession || Boolean(current.settings[feature].provider && current.settings[feature].model));
   function observe(next) {
@@ -1552,17 +1701,19 @@ function createAssistController(deps) {
     const hydratedRoute = changedRoute && (previous.routeKey == null || previous.routeKey === "null") && next.routeKey != null && next.routeKey !== "null";
     const changedConfig = previous && (configKey(previous.settings) !== configKey(next.settings) || changedRoute && !hydratedRoute || previous.paused !== next.paused);
     const changedInput = previous && !sameInput(previous.input, next.input);
+    const selfWritten = changedInput && (writer !== null || state.undo !== null && next.input.draft === state.undo.original);
+    const editedInput = changedInput && !selfWritten;
     const changedQA = previous && previous.qaId !== next.qaId;
     const changedBusy = previous && previous.busy !== next.busy;
     const backgroundInvalid = (changedQA || changedBusy) && state.pending !== "enhance" && state.preview?.feature !== "enhance";
-    if (changedSession || changedConfig || changedRoute || changedInput || backgroundInvalid) cancel();
-    if (changedSession || changedConfig || changedInput) candidate = null;
+    if (changedSession || changedConfig || changedRoute || editedInput || backgroundInvalid) cancel();
+    if (changedSession || changedConfig || editedInput) candidate = null;
     if (changedSession) {
       knownQA = false;
       requested.clear();
     }
     current = next;
-    if (changedSession || changedConfig || changedRoute || changedInput || changedQA && backgroundInvalid) publish({ preview: null, error: null });
+    if (changedSession || changedConfig || changedRoute || editedInput || changedQA && backgroundInvalid) publish({ preview: null, error: null });
     if (next.qaId === void 0) {
       explain("waiting", "qa-unavailable");
       return;
@@ -1595,7 +1746,7 @@ function createAssistController(deps) {
     else if (!canSuggest(next.input)) explain("skipped", "input-ineligible");
     else if (candidate && next.busy) explain("waiting", "busy-or-unhydrated");
     else if (changedConfig) explain("skipped", changedRoute ? "route-changed" : "configuration-changed");
-    else if (changedInput) explain("skipped", "input-changed");
+    else if (editedInput) explain("skipped", "input-changed");
     else if (requested.has(`${next.sessionId}:${next.qaId}`)) explain("skipped", "already-requested");
     else explain("skipped", "no-new-qa");
   }
@@ -1610,6 +1761,9 @@ function createAssistController(deps) {
       publish({ error: "stale" });
       return false;
     }
+    const draftWriter = feature === "enhance" && streamWrite() && !snapshot.structured ? createDraftWriter({ ...deps.writerOptions ?? {}, actions: deps.actions(), readInput }) : null;
+    writer = draftWriter;
+    if (draftWriter) draftWriter.begin(snapshot);
     const revision = epoch;
     const sessionId = current.sessionId;
     const qaId = current.qaId;
@@ -1638,7 +1792,8 @@ function createAssistController(deps) {
         snapshot,
         sessionId,
         qaId,
-        feature
+        feature,
+        writer: draftWriter
       }));
       if (disposed || abort.signal.aborted || revision !== epoch) return false;
       if (!result2 || result2.draftRev !== snapshot.draftRev || result2.original !== snapshot.original || result2.feature !== feature || feature === "suggest" && result2.qaId !== qaId) {
@@ -1653,13 +1808,22 @@ function createAssistController(deps) {
         return false;
       }
       const receipt = { ...result2, sessionId, snapshot: { ...snapshot, structured: snapshot.structured || result2.structured === true } };
-      publish(noSuggestion ? { noSuggestion: { ...receipt, automatic: automatic === true }, preview: null } : { preview: receipt, noSuggestion: null });
+      if (noSuggestion) {
+        publish({ noSuggestion: { ...receipt, automatic: automatic === true }, preview: null });
+        return true;
+      }
+      const landing = feature === "enhance" ? writeBack(receipt, snapshot, draftWriter) : { writeback: null, undo: null };
+      publish({ preview: receipt, noSuggestion: null, writeback: landing.writeback, undo: landing.undo });
       return true;
     } catch (error) {
       if (!disposed && !abort.signal.aborted && revision === epoch) publish({ error, preview: null });
       return false;
     } finally {
       clearTimeout(ceiling);
+      if (draftWriter) {
+        draftWriter.abort();
+        if (writer === draftWriter) writer = null;
+      }
       if (!disposed && revision === epoch) {
         flight = null;
         publish({ pending: null });
@@ -1671,10 +1835,11 @@ function createAssistController(deps) {
     generate,
     mount() {
       disposed = false;
+      writer = null;
       current = void 0;
       knownQA = false;
       candidate = null;
-      Object.assign(state, { pending: null, preview: null, noSuggestion: null, error: null, trigger: null });
+      Object.assign(state, { pending: null, preview: null, noSuggestion: null, error: null, trigger: null, undo: null, writeback: null });
     },
     cancel() {
       candidate = null;
@@ -1690,6 +1855,19 @@ function createAssistController(deps) {
       cancel();
       publish({ preview: null });
     },
+    // Undo restored the original draft: drop the landing record so the card stops claiming a write.
+    clearLanding() {
+      publish({ preview: null, writeback: null, undo: null });
+    },
+    // Manual landing for a card that was never written automatically; the undo record lives here only.
+    applyStaged() {
+      const preview = state.preview;
+      if (!preview || preview.feature !== "enhance" || preview.streaming) return { ok: false, reason: "stale" };
+      const outcome = applyText(preview.snapshot, preview.text, readInput, deps.actions());
+      if (!outcome.ok) return outcome;
+      publish({ preview: null, writeback: null, undo: { ...outcome.undo, sessionId: preview.sessionId } });
+      return { ok: true };
+    },
     dispose() {
       disposed = true;
       candidate = null;
@@ -1703,6 +1881,7 @@ var init_controller = __esm({
     init_suggestion_result();
     init_api();
     init_editor();
+    init_enhance_result();
   }
 });
 
@@ -1712,7 +1891,7 @@ function normalizeEnablement(value) {
   const hasSettings = value.settings !== void 0 || value.settingsRevision !== void 0 || value.configured !== void 0;
   if (hasSettings && (!Number.isSafeInteger(value.settingsRevision) || value.settingsRevision < 0 || !value.settings || !value.configured || FEATURES.some((feature) => {
     const config = value.settings[feature];
-    return typeof value.configured[feature] !== "boolean" || !config || typeof config.followSession !== "boolean" || typeof config.fast !== "boolean" || !Number.isInteger(config.rounds) || config.rounds < 1 || config.rounds > 20 || ["provider", "model", "reasoningEffort"].some((key) => typeof config[key] !== "string");
+    return typeof value.configured[feature] !== "boolean" || !config || typeof config.followSession !== "boolean" || typeof config.fast !== "boolean" || !Number.isInteger(config.rounds) || config.rounds < 1 || config.rounds > 20 || ["provider", "model", "reasoningEffort"].some((key) => typeof config[key] !== "string") || ["autoApply", "streamWrite"].some((key) => config[key] !== void 0 && typeof config[key] !== "boolean");
   }))) throw invalid();
   if (value.finalAnswer !== void 0 && typeof value.finalAnswer !== "boolean") throw invalid();
   if (value.finalAnswerRevision !== void 0 && (!Number.isSafeInteger(value.finalAnswerRevision) || value.finalAnswerRevision < 0)) throw invalid();
@@ -2087,7 +2266,7 @@ function useAssistRuntime(p) {
   current.current = { input, actions: p.inputActions, sessionId: p.sessionId };
   const alive = import_react4.default.useRef(false);
   const send = p.assistSend;
-  const controller = import_react4.default.useMemo(() => createAssistController({ send, actions: () => current.current.actions, publish: (value) => {
+  const controller = import_react4.default.useMemo(() => createAssistController({ send, actions: () => current.current.actions, readInput: () => current.current.input, publish: (value) => {
     if (alive.current) setResult(value);
   }, requestId: () => globalThis.crypto.randomUUID() }), [p.sessionId, send]);
   const observeEnablement = import_react4.default.useMemo(() => createEnablementObserver(controller), [controller]);
@@ -2191,17 +2370,6 @@ var init_duration = __esm({
   }
 });
 
-// assist/client/enhance-result.js
-function isUnchangedEnhancement(original, text) {
-  if (typeof original !== "string" || typeof text !== "string") return false;
-  const normalize = (value) => value.replace(/\r\n/g, "\n").trim();
-  return normalize(original) === normalize(text);
-}
-var init_enhance_result = __esm({
-  "assist/client/enhance-result.js"() {
-  }
-});
-
 // assist/client/preview.js
 function NoSuggestion({ runtime: r, t }) {
   const value = r.result.noSuggestion;
@@ -2218,11 +2386,25 @@ function Preview({ runtime: r, actions, t, onApplied }) {
   const value = r.result.preview;
   if (!value || !ownsResult(value, r.sessionId)) return null;
   if (value.feature === "suggest" && (value.outcome !== void 0 && value.outcome !== "suggestion" || typeof value.text !== "string" || !value.text.trim() || isNoSuggestionPlaceholder(value.text))) return null;
+  const writeback = r.result.writeback ?? null;
+  const mode = writeback?.mode ?? null;
+  const written = mode === "auto" || mode === "stream";
   const blocked = value.snapshot.structured;
   const unchanged = value.feature === "enhance" && !value.streaming && isUnchangedEnhancement(value.original, value.text);
+  const translate = (key, fallback) => {
+    const text = t(key);
+    return text === void 0 || text === null || text === "" || text === key ? t(fallback) : text;
+  };
+  const status = value.streaming ? translate("enhanceStreamingWrite", "streamingShort") : written ? translate("enhanceWritten", "apply") : null;
+  const landing = mode === "taken-over" ? translate("enhanceTakenOver", "stale") : mode === "blocked" ? translate("enhanceBlocked", writeback.reason === "structured" ? "structured" : "stale") : null;
   const button = (key, action, disabled = false, primary = false) => h4("button", { type: "button", className: "lpa-button" + (primary ? " lpa-button--primary" : ""), onClick: action, disabled }, t(key));
   function apply2() {
     if (value.streaming || unchanged || !ownsResult(value, r.sessionId)) return;
+    if (value.feature === "enhance" && writeback && typeof r.controller?.applyStaged === "function") {
+      const outcome2 = r.controller.applyStaged();
+      if (!outcome2.ok) r.setNotice(outcome2.reason);
+      return;
+    }
     const outcome = applyText(value.snapshot, value.text, r.readInput, actions);
     if (outcome.ok) {
       onApplied({ ...outcome.undo, sessionId: r.sessionId });
@@ -2241,15 +2423,16 @@ function Preview({ runtime: r, actions, t, onApplied }) {
   return h4(
     "section",
     { className: "lpa-preview", "aria-label": t(value.feature), "aria-busy": Boolean(value.streaming) },
-    h4("header", { className: "lpa-preview-header" }, h4("span", null, t(value.feature)), value.streaming ? h4("span", { className: "lpa-preview-status" }, t("streamingShort")) : null),
+    h4("header", { className: "lpa-preview-header" }, h4("span", null, t(value.feature)), status ? h4("span", { className: "lpa-preview-status" }, status) : null),
     h4("pre", { className: "lpa-result-text" }, value.text),
+    landing ? h4("p", { className: "lpa-note", role: "status" }, landing) : null,
     unchanged ? h4("p", { className: "lpa-note", role: "status" }, t("enhanceUnchanged")) : null,
     value.fastSkipped === true ? h4("p", { className: "lpa-note", role: "status" }, t("fastSkipped")) : null,
     blocked ? h4("p", { className: "lpa-note" }, t("structured")) : null,
     h4(
       "div",
       { className: "lpa-preview-actions" },
-      button(value.feature === "suggest" ? "accept" : "apply", apply2, value.streaming || unchanged || blocked || !r.allowed || value.feature === "suggest" && r.busy || r.dirty, true),
+      written ? null : button(value.feature === "suggest" ? "accept" : "apply", apply2, value.streaming || unchanged || blocked || !r.allowed || value.feature === "suggest" && r.busy || r.dirty, true),
       button("copy", copy, Boolean(value.streaming)),
       value.streaming ? button("cancel", () => r.controller.cancel()) : button("dismiss", () => r.controller.dismiss())
     ),
@@ -2299,14 +2482,18 @@ function AssistPanel(p) {
   import_react6.default.useEffect(() => {
     setUndo(null);
   }, [p.sessionId]);
-  const visible = shouldShowPanel({ open: false, result: r.result, undo, input: r.input, sessionId: p.sessionId });
+  const registered = r.result.undo ?? null;
+  const source = registered ?? undo;
+  const visible = shouldShowPanel({ open: false, result: r.result, undo: source, input: r.input, sessionId: p.sessionId });
   if (r.session?.subagent || r.session?.removed || !visible) return null;
   const button = (key, onClick, disabled = false) => h5("button", { type: "button", className: "lpa-button", onClick, disabled }, t(key));
-  const validUndo = ownsResult(undo, p.sessionId) && r.input.draft === undo.original && r.input.draftRev === undo.draftRev;
+  const validUndo = ownsResult(source, p.sessionId) && r.input.draft === source.original && r.input.draftRev === source.draftRev;
   const undoApply = () => {
-    const result2 = undoText(undo, r.readInput, p.inputActions);
-    if (result2.ok) setUndo(null);
-    else r.setNotice(result2.reason);
+    const result2 = undoText(source, r.readInput, p.inputActions);
+    if (result2.ok) {
+      if (registered) r.controller.clearLanding?.();
+      setUndo(null);
+    } else r.setNotice(result2.reason);
   };
   const dismiss = () => {
     r.controller.dismiss();
@@ -3150,6 +3337,15 @@ function Settings(p) {
     invalidEffort ? h8("p", { className: "lpa-error", role: "alert" }, t("effortInvalid")) : null,
     check("fast", v.fast, (fast2) => change({ fast: fast2 }), !v.fast && !v.followSession && cap?.fastEligible !== true),
     invalidFast ? h8("p", { className: "lpa-note", role: "status" }, t("fastSkipped")) : null,
+    // Write-back only exists for enhance: the suggest card keeps its original control set.
+    p.feature === "enhance" ? h8(
+      import_react9.default.Fragment,
+      null,
+      check("autoApply", v.autoApply, (autoApply) => change({ autoApply })),
+      h8("p", { className: "lpa-note" }, t("autoApplyHint")),
+      check("streamWrite", v.streamWrite, (streamWrite) => change({ streamWrite })),
+      h8("p", { className: "lpa-note" }, t("streamWriteHint"))
+    ) : null,
     h8(
       "div",
       { className: "lpa-grid" },
@@ -3685,6 +3881,7 @@ function FeatureSettings({ feature, global, source, p }) {
     h11("p", { className: "lpa-note", role: "status" }, host.configured[feature] ? null : p.t("settings.unconfigured")),
     h11(Settings, {
       t: p.t,
+      feature,
       config: draft.config,
       catalog: options.catalog,
       capabilities: options.capabilities,

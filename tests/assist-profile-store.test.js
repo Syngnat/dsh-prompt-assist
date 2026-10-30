@@ -19,7 +19,7 @@ const z = { boolean: () => scalar('boolean'), number: () => scalar('number'), st
     if (!value || typeof value !== 'object' || Array.isArray(value) || Object.keys(value).some(key => !Object.hasOwn(shape,key))) throw Error('schema');
     return Object.fromEntries(Object.entries(shape).map(([key,schema]) => [key,schema.parse(value[key])]));
   }) };
-const defaults = () => ({followSession:true,provider:'',model:'',reasoningEffort:'',fast:false,rounds:1});
+const defaults = () => ({followSession:true,provider:'',model:'',reasoningEffort:'',fast:false,rounds:1,autoApply:true,streamWrite:false});
 function fixture() {
   const durable = new Map(), live = new Set(), specs = [], writes = [], hooks = {};
   const facility = { async open(spec) {

@@ -45,7 +45,7 @@ test('retired handler sees only disabled tombstone; its config command is reject
   assert.deepEqual(commands.get(ASSIST_COMMAND).handler(),{kind:'error',text:'global-config-required'});
   assert.equal(commands.get(ASSIST_COMMAND).recordInput,false);
   assert.strictEqual(service.globalEnablement(),before,'retired command cannot write profile settings');
-  const configGlobal={followSession:true,provider:'',model:'',reasoningEffort:'',fast:false,rounds:3};
+  const configGlobal={followSession:true,provider:'',model:'',reasoningEffort:'',fast:false,rounds:3,autoApply:true,streamWrite:false};
   const saved=await registeredTool.execute({action:'configure',feature:'enhance',config:configGlobal},{agent:{session:{header:{}}},signal:new AbortController().signal});
   assert.deepEqual(saved.settings.enhance,configGlobal);assert.equal(saved.settingsRevision,1);assert.equal(saved.configured.enhance,true);
   assert.equal(saved.revision,before.revision);assert.deepEqual(saved.enabled,before.enabled);assert.equal(streams,0);

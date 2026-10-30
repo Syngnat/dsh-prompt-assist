@@ -1,7 +1,7 @@
 /** Auxiliary feature settings never inherit the main model Fast preference. */
 export const DEFAULT_CONFIG = Object.freeze({
   enabled: false, followSession: true, provider: "", model: "",
-  reasoningEffort: "", fast: false, rounds: 1,
+  reasoningEffort: "", fast: false, rounds: 1, autoApply: true, streamWrite: false,
 });
 
 function invalid(code) {
@@ -15,6 +15,7 @@ export function normalizeConfig(input = {}) {
   const config = { ...DEFAULT_CONFIG, ...input };
   for (const [key, code] of [
     ["enabled", "invalid-enabled"], ["followSession", "invalid-follow-session"], ["fast", "invalid-fast"],
+    ["autoApply", "invalid-auto-apply"], ["streamWrite", "invalid-stream-write"],
   ]) {
     if (typeof config[key] !== "boolean") throw invalid(code);
   }

@@ -15,7 +15,7 @@ export function useAssistRuntime(p) {
  const current=React.useRef({input,actions:p.inputActions,sessionId:p.sessionId});current.current={input,actions:p.inputActions,sessionId:p.sessionId};
  const alive=React.useRef(false);
  const send=p.assistSend;
- const controller=React.useMemo(()=>createAssistController({send,actions:()=>current.current.actions,publish:value=>{if(alive.current)setResult(value);},requestId:()=>globalThis.crypto.randomUUID()}),[p.sessionId,send]);
+ const controller=React.useMemo(()=>createAssistController({send,actions:()=>current.current.actions,readInput:()=>current.current.input,publish:value=>{if(alive.current)setResult(value);},requestId:()=>globalThis.crypto.randomUUID()}),[p.sessionId,send]);
  const observeEnablement=React.useMemo(()=>createEnablementObserver(controller),[controller]);
  const hostValue=host?.sessionId===p.sessionId?host.value:null;
  const allowed=p.useAccess("commands/execute")&&!session?.subagent&&!session?.removed;

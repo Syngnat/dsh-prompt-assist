@@ -26,6 +26,12 @@ export function Settings(p) {
  invalidEffort?h("p",{className:"lpa-error",role:"alert"},t("effortInvalid")):null,
  check("fast",v.fast,fast=>change({fast}),!v.fast&&!v.followSession&&cap?.fastEligible!==true),
  invalidFast?h("p",{className:"lpa-note",role:"status"},t("fastSkipped")):null,
+ // Write-back only exists for enhance: the suggest card keeps its original control set.
+ p.feature==="enhance"?h(React.Fragment,null,
+  check("autoApply",v.autoApply,autoApply=>change({autoApply})),
+  h("p",{className:"lpa-note"},t("autoApplyHint")),
+  check("streamWrite",v.streamWrite,streamWrite=>change({streamWrite})),
+  h("p",{className:"lpa-note"},t("streamWriteHint"))):null,
  h("div",{className:"lpa-grid"},select("rounds",custom?"custom":String(v.rounds),[1,3,5].map(n=>({id:String(n),name:n})).concat({id:"custom",name:t("custom")}),value=>{setCustom(value==="custom");if(value!=="custom")change({rounds:Number(value)});}),
  custom?field("custom",h("input",{type:"number",min:1,max:20,step:1,value:Number.isFinite(v.rounds)?v.rounds:"",onChange:e=>change({rounds:e.target.value===""?NaN:Number(e.target.value)})})):null),
  error?h("p",{role:"alert",className:"lpa-error"},t(error)):null,

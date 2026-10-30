@@ -6,7 +6,7 @@ import { openProcessFeedback } from './process-feedback-store.js';
 import { normalizeConfig } from './config.js';
 
 const FEATURES = ['suggest', 'enhance'];
-const FIELDS = ['followSession', 'provider', 'model', 'reasoningEffort', 'fast', 'rounds'];
+const FIELDS = ['followSession', 'provider', 'model', 'reasoningEffort', 'fast', 'rounds', 'autoApply', 'streamWrite'];
 const failure = code => Object.assign(new Error(code), { code });
 const unavailable = () => failure('global-settings-unavailable');
 const optional = (ctx, name) => typeof ctx?.get === 'function' ? ctx.get(name) : ctx?.[name];
@@ -15,14 +15,20 @@ function configOf(input, complete = true) {
   const { enabled: _ignored, ...config } = normalizeConfig(input);
   return Object.freeze(config);
 }
+/** Records persisted before the write-back switches keep loading: their defaults merge on read. */
+function completedRecord(record) {
+  return {...record,settings:Object.fromEntries(FEATURES.map(feature=>[feature,configOf(record.settings[feature],false)]))};
+}
 function freezeRecord(record) {
   return Object.freeze({revision:record.revision,
     settings:Object.freeze({suggest:Object.freeze(record.settings.suggest),enhance:Object.freeze(record.settings.enhance)}),
     configured:Object.freeze({...record.configured})});
 }
 function schemaOf(z) {
-  const config = z.object({followSession:z.boolean(),provider:z.string(),model:z.string(),reasoningEffort:z.string(),fast:z.boolean(),rounds:z.number().int().min(1).max(20)}).strict().refine(value => {
-    try { configOf(value); return true; } catch { return false; }
+  const config = z.object({followSession:z.boolean(),provider:z.string(),model:z.string(),reasoningEffort:z.string(),fast:z.boolean(),rounds:z.number().int().min(1).max(20),
+    // Records written before the write-back switches must still parse; their defaults merge on read.
+    autoApply:z.boolean().optional(),streamWrite:z.boolean().optional()}).strict().refine(value => {
+    try { configOf(value,false); return true; } catch { return false; }
   });
   return z.object({revision:z.number().int().min(0).max(Number.MAX_SAFE_INTEGER),
     settings:z.object({suggest:config,enhance:config}).strict(),
@@ -45,7 +51,7 @@ export async function openProfileStore(ctx,z) {
     const initial = freezeRecord({revision:0,settings:{suggest:configOf({},false),enhance:configOf({},false)},configured:{suggest:true,enhance:true}});
     domain = await facility.open({name:domainName(optional(ctx,'profileContext')?.dir),version:1,global:{schema,initial},tables:{}});
     if (typeof domain?.global?.get !== 'function' || typeof domain?.global?.set !== 'function' || typeof domain?.close !== 'function') throw unavailable();
-    controls = controlsStore(domain,freezeRecord(schema.parse(domain.global.get())));
+    controls = controlsStore(domain,freezeRecord(completedRecord(schema.parse(domain.global.get()))));
     return combine(flags,contract,feedback,controls);
   } catch {
     await Promise.allSettled([Promise.resolve().then(()=>flags?.close()),Promise.resolve().then(()=>contract?.close()),

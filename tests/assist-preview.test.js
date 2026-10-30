@@ -18,7 +18,7 @@ function descendants(element, predicate) {
 const button = (tree, key) => descendants(tree, element => element.type === 'button' && element.props.children === key)[0];
 const resultText = tree => descendants(tree, element => element.type === 'pre' && element.props.className === 'lpa-result-text')[0].props.children;
 
-function fixture(original = 'Original draft', inputPatch = {}) {
+function fixture(original = 'Original draft', inputPatch = {}, enhancePatch = {}) {
   let input = {draft: original, draftRev: 7, phase: 'plain', attachmentIds: ['keep'], occurrences: [], ...inputPatch};
   const edits = [], applied = [], notices = [], requests = [];
   const actions = {
@@ -36,10 +36,10 @@ function fixture(original = 'Original draft', inputPatch = {}) {
   };
   const frame = () => ({
     sessionId: runtime.sessionId, input, qaId: '1:2', busy: runtime.busy, paused: false, routeKey: 'route',
-    settings: {enhance: {enabled: true, followSession: true}, suggest: {enabled: true, followSession: true}},
+    settings: {enhance: {enabled: true, followSession: true, autoApply: false, ...enhancePatch}, suggest: {enabled: true, followSession: true}},
   });
   const controller = createAssistController({
-    actions: () => actions, publish: state => { runtime.result = state; }, requestId: () => String(requests.length),
+    actions: () => actions, readInput: () => input, publish: state => { runtime.result = state; }, requestId: () => String(requests.length),
     send: (_action, _sessionId, payload, signal, onText) => new Promise(resolve => requests.push({payload, signal, onText, resolve})),
   });
   runtime.controller = controller;
@@ -321,3 +321,137 @@ for (const [locale, patterns] of [
     assert.equal(f.applied.length, 0);
   });
 }
+
+test('auto-applied landing drops apply, keeps copy and details, and marks the card as written', async t => {
+  const f = fixture('Original draft', {}, {autoApply: true});
+  t.after(() => f.controller.dispose());
+  const work = f.controller.generate('enhance');
+  f.reply('Rewritten requirements');
+  await work;
+  const tree = f.render();
+  assert.equal(f.input.draft, 'Rewritten requirements');
+  assert.equal(f.runtime.result.writeback.mode, 'auto');
+  assert.equal(button(tree, 'apply'), undefined);
+  assert.equal(button(tree, 'copy').props.disabled, false);
+  assert.ok(button(tree, 'dismiss'));
+  assert.ok(button(tree, 'cancel') === undefined);
+  assert.equal(resultText(tree), 'Rewritten requirements');
+  assert.ok(descendants(tree, element => element.type === 'details').length >= 1, 'the original comparison survives');
+  assert.ok(descendants(tree, element => element.props.className === 'lpa-preview-status').length);
+  assert.equal(f.applied.length, 0, 'the controller registered the undo, not the card');
+  assert.equal(f.runtime.result.undo.sessionId, 'a');
+});
+
+test('stream landing renders like an applied card and still hides apply', async t => {
+  const f = fixture('Original draft', {}, {autoApply: true});
+  t.after(() => f.controller.dispose());
+  const work = f.controller.generate('enhance');
+  f.requests[0].onText('Rewritten');
+  assert.equal(button(f.render(), 'apply').props.disabled, true, 'streaming keeps the guarded button');
+  f.reply('Rewritten requirements');
+  await work;
+  f.runtime.result = {...f.runtime.result, writeback: {mode: 'stream'}};
+  const tree = f.render();
+  assert.equal(button(tree, 'apply'), undefined);
+  assert.equal(button(tree, 'copy').props.disabled, false);
+  assert.ok(button(tree, 'dismiss'));
+});
+
+test('a taken-over landing keeps the card and lands through the controller on demand', async t => {
+  const f = fixture('Original draft', {}, {autoApply: false});
+  t.after(() => f.controller.dispose());
+  const work = f.controller.generate('enhance');
+  f.reply('Rewritten requirements');
+  await work;
+  f.runtime.result = {...f.runtime.result, writeback: {mode: 'taken-over'}};
+  const tree = f.render(key => dictionaries.zh[key]);
+  const status = descendants(tree, element => element.props.role === 'status');
+  assert.equal(status.length, 1);
+  assert.equal(status[0].props.children, dictionaries.zh.enhanceTakenOver);
+  assert.doesNotMatch(renderToStaticMarkup(tree), /enhanceTakenOver|lpa-success/);
+  button(tree, dictionaries.zh.apply).props.onClick();
+  assert.equal(f.input.draft, 'Rewritten requirements');
+  assert.equal(f.applied.length, 0);
+  assert.equal(f.runtime.result.preview, null);
+  assert.equal(f.runtime.result.undo.sessionId, 'a');
+});
+
+test('a blocked landing explains the reason and keeps the manual apply button', async t => {
+  const f = fixture('Original draft', {}, {autoApply: false});
+  t.after(() => f.controller.dispose());
+  const work = f.controller.generate('enhance');
+  f.reply('Rewritten requirements');
+  await work;
+  f.runtime.result = {...f.runtime.result, writeback: {mode: 'blocked', reason: 'stale'}};
+  const tree = f.render(key => dictionaries.zh[key]);
+  const status = descendants(tree, element => element.props.role === 'status');
+  assert.equal(status.length, 1);
+  assert.equal(status[0].props.children, dictionaries.zh.enhanceBlocked);
+  assert.doesNotMatch(renderToStaticMarkup(tree), /enhanceBlocked/);
+  assert.equal(button(tree, dictionaries.zh.apply).props.disabled, false);
+});
+
+test('a card without write-back keeps the shipped manual behaviour', async t => {
+  const f = fixture('Original draft', {}, {autoApply: false});
+  t.after(() => f.controller.dispose());
+  const work = f.controller.generate('enhance');
+  f.reply('Rewritten requirements');
+  await work;
+  assert.equal(f.runtime.result.writeback, null);
+  const tree = f.render();
+  assert.equal(button(tree, 'apply').props.disabled, false);
+  assert.equal(descendants(tree, element => element.props.className === 'lpa-preview-status').length, 0);
+});
+
+test('write-back wording uses the shipped entry and falls back only when a key is unregistered', async t => {
+  const f = fixture('Original draft', {}, {autoApply: true});
+  t.after(() => f.controller.dispose());
+  const work = f.controller.generate('enhance');
+  const shipped = key => dictionaries.en[key] ?? key;
+  const statusText = tree => descendants(tree, element => element.props.className === 'lpa-preview-status')[0]?.props.children;
+  const noteText = tree => descendants(tree, element => element.props.role === 'status')[0]?.props.children;
+  const unregistered = key => (['enhanceWritten', 'enhanceTakenOver', 'enhanceStreamingWrite'].includes(key)
+    ? key : dictionaries.en[key] ?? key);
+
+  // Streaming owns its own key, so no dictionary entry is left unreferenced.
+  f.requests[0].onText('Partial rewrite');
+  assert.equal(statusText(f.render(shipped)), dictionaries.en.enhanceStreamingWrite, 'a registered key renders its own wording');
+  assert.equal(statusText(f.render(unregistered)), dictionaries.en.streamingShort, 'an unregistered key falls back to a shipped label');
+  assert.doesNotMatch(renderToStaticMarkup(f.render(unregistered)), /enhanceStreamingWrite/);
+  f.reply('Rewritten requirements');
+  await work;
+
+  const auto = f.render(shipped);
+  assert.equal(statusText(auto), dictionaries.en.enhanceWritten, 'a registered key renders its own wording');
+  assert.doesNotMatch(renderToStaticMarkup(auto), /enhanceWritten/);
+
+  f.runtime.result = {...f.runtime.result, writeback: {mode: 'taken-over'}};
+  assert.equal(noteText(f.render(shipped)), dictionaries.en.enhanceTakenOver, 'a registered key renders its own wording');
+
+  // The Host locale hands the key itself back for a key it has not registered, so a miss is never a label.
+  f.runtime.result = {...f.runtime.result, writeback: {mode: 'auto'}};
+  const fallbackAuto = f.render(unregistered);
+  assert.equal(statusText(fallbackAuto), dictionaries.en.apply, 'an unregistered key falls back to a shipped label');
+  assert.doesNotMatch(renderToStaticMarkup(fallbackAuto), /enhanceWritten/);
+
+  f.runtime.result = {...f.runtime.result, writeback: {mode: 'taken-over'}};
+  const fallbackTaken = f.render(unregistered);
+  assert.equal(noteText(fallbackTaken), dictionaries.en.stale, 'an unregistered key falls back to a shipped label');
+  assert.doesNotMatch(renderToStaticMarkup(fallbackTaken), /enhanceTakenOver/);
+});
+
+test('undoing an automatic landing clears the record so the card stops claiming a write', async t => {
+  const f = fixture('Original draft', {}, {autoApply: true});
+  t.after(() => f.controller.dispose());
+  const work = f.controller.generate('enhance');
+  f.reply('Rewritten requirements');
+  await work;
+  assert.equal(f.runtime.result.writeback.mode, 'auto');
+  assert.equal(undoText(f.runtime.result.undo, () => f.input, f.actions).ok, true);
+  assert.equal(f.input.draft, 'Original draft');
+  f.controller.clearLanding();
+  assert.equal(f.runtime.result.writeback, null);
+  assert.equal(f.runtime.result.undo, null);
+  assert.equal(f.runtime.result.preview, null);
+  assert.equal(f.render(), null, 'no written status survives the undo');
+});
