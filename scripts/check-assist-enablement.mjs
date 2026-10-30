@@ -97,7 +97,7 @@ try {
     assert.deepEqual(before.enabled, { suggest: true, enhance: false }, 'existing flags survive without migration writes');
     assert.deepEqual(before.configured, { suggest: true, enhance: true });
     assert.equal(before.settingsRevision, 0);
-    const input = { followSession: false, provider: 'offline', model: 'gpt-fixture', reasoningEffort: '', fast: false, rounds: 5 };
+    const input = { followSession: false, provider: 'offline', model: 'gpt-fixture', reasoningEffort: '', fast: false, rounds: 5, autoApply: true, streamWrite: false };
     const seen = []; a.subscribe(value => seen.push(value));
     await a.configure('enhance', input, { expectedRevision: before.settingsRevision });
     const saved = a.getSnapshot();
