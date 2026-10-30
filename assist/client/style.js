@@ -9,6 +9,10 @@ export const css = `
 /* Landed or streamed text needs no card: the status, ignore and undo share one capsule row. */
 .lpa-inline--written{display:flex;flex-direction:row;align-items:center;gap:8px;width:fit-content;max-width:calc(100% - 32px);padding:6px 12px;border-radius:24px}
 .lpa-inline--written .lpa-undo-actions{justify-content:flex-start}
+.lpa-inline--written .lpa-original{flex:none}
+.lpa-inline--written .lpa-original[open]{flex-basis:100%}
+.lpa-inline--written .lpa-original>summary{cursor:pointer;color:var(--dsw-alias-label-secondary);font-size:12px}
+.lpa-inline--written .lpa-original>pre{margin:6px 0 0;max-height:160px;overflow:auto;white-space:pre-wrap;color:var(--dsw-alias-label-secondary);font-size:12px}
 /* Only our result floats in the native, zero-height composer overlay. Native menus stay above it. */
 .lpa-result-anchor{position:absolute;inset-inline:0;bottom:8px;z-index:90;display:flex;flex-direction:column;align-items:stretch;pointer-events:none}
 .lpa-result-anchor>.lpa-inline{width:100%;max-width:none;margin:0;max-height:min(clamp(180px,38vh,320px),var(--lpa-result-height,320px));pointer-events:auto}

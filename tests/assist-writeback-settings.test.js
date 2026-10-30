@@ -16,21 +16,21 @@ const legacySettings = () => ({followSession:true,provider:'',model:'',reasoning
 const wire = (settings=legacySettings()) => ({scope:'profile',revision:2,enabled:{suggest:true,enhance:true},settingsRevision:3,
   settings:{suggest:settings,enhance:settings},configured:{suggest:true,enhance:true}});
 
-test('write-back switches default to autoApply on and streamWrite off when a record omits them',()=>{
+test('write-back switches default to on for both switches when a record omits them',()=>{
   assert.equal(sessionSettings({}).autoApply,true);
-  assert.equal(sessionSettings({}).streamWrite,false);
+  assert.equal(sessionSettings({}).streamWrite,true);
   assert.equal(sessionSettings().autoApply,true);
   for(const feature of ['suggest','enhance']){
     const merged=mergeGlobalSettings({[feature]:{}},{connected:true,data:{settings:{[feature]:legacySettings()},configured:{[feature]:true},enabled:{[feature]:true}}});
     assert.equal(merged[feature].autoApply,true,feature);
-    assert.equal(merged[feature].streamWrite,false,feature);
+    assert.equal(merged[feature].streamWrite,true,feature);
     assert.equal(merged[feature].enabled,true,feature);
   }
   const accepted=normalizeEnablement(wire());
   assert.equal(accepted.settings.enhance.autoApply,true);
-  assert.equal(accepted.settings.enhance.streamWrite,false);
+  assert.equal(accepted.settings.enhance.streamWrite,true);
   assert.equal(normalizeConfig({}).autoApply,true);
-  assert.equal(normalizeConfig({}).streamWrite,false);
+  assert.equal(normalizeConfig({}).streamWrite,true);
 });
 
 test('explicit write-back values survive normalization and are never coerced back to defaults',()=>{
@@ -39,7 +39,7 @@ test('explicit write-back values survive normalization and are never coerced bac
   // Only real booleans count; null, numbers and strings fall back to the profile default.
   for(const bogus of [null,0,1,'true',{},[]]){
     assert.equal(sessionSettings({autoApply:bogus,streamWrite:bogus}).autoApply,true);
-    assert.equal(sessionSettings({autoApply:bogus,streamWrite:bogus}).streamWrite,false);
+    assert.equal(sessionSettings({autoApply:bogus,streamWrite:bogus}).streamWrite,true);
   }
   const accepted=normalizeEnablement(wire({...legacySettings(),autoApply:false,streamWrite:true}));
   assert.equal(accepted.settings.enhance.autoApply,false);
@@ -62,10 +62,10 @@ test('configKey changes with either write-back switch so in-flight results inval
   const base={suggest:sessionSettings(),enhance:sessionSettings()};
   const key=configKey(base);
   assert.notEqual(configKey({...base,enhance:{...base.enhance,autoApply:false}}),key);
-  assert.notEqual(configKey({...base,enhance:{...base.enhance,streamWrite:true}}),key);
+  assert.notEqual(configKey({...base,enhance:{...base.enhance,streamWrite:false}}),key);
   assert.notEqual(configKey({...base,enhance:{...base.enhance,autoApply:false,streamWrite:true}}),key);
   // An unchanged snapshot keeps its identity, and a suggest record alone never shifts the enhance key.
-  assert.equal(configKey({...base,enhance:{...base.enhance,streamWrite:false}}),key);
+  assert.equal(configKey({...base,enhance:{...base.enhance,streamWrite:true}}),key);
   assert.equal(configCount(key),Object.keys(DEFAULT_SETTINGS).length*2);
 });
 
@@ -74,7 +74,7 @@ test('validateSettings never reports the write-back switches and keeps every exi
   assert.equal(validateSettings({...DEFAULT_SETTINGS,autoApply:'on',streamWrite:7}),null);
   assert.equal(validateSettings({...DEFAULT_SETTINGS,rounds:0,autoApply:false}),'rounds');
   assert.equal(DEFAULT_SETTINGS.autoApply,true);
-  assert.equal(DEFAULT_SETTINGS.streamWrite,false);
+  assert.equal(DEFAULT_SETTINGS.streamWrite,true);
 });
 
 const renderForm = (feature,t,config) => renderToStaticMarkup(React.createElement(Settings,{t,feature,config:sessionSettings(config),catalog:{providers:[],models:[]},allowed:true,onChange(){},save(){}}));
@@ -91,7 +91,7 @@ test('the enhance form renders both switches from the persisted draft in both la
     assert.match(inputs[2],/type="checkbox"/);assert.doesNotMatch(inputs[2],/checked=""/);
     assert.match(inputs[3],/type="checkbox"/);assert.match(inputs[3],/checked=""/);
     const defaults=(renderForm('enhance',t,{}).match(/<input[^>]*>/g)??[]);
-    assert.match(defaults[2],/checked=""/);assert.doesNotMatch(defaults[3],/checked=""/);
+    assert.match(defaults[2],/checked=""/);assert.match(defaults[3],/checked=""/);
   }
 });
 
@@ -147,8 +147,8 @@ test('host persistence round-trips both switches and keeps pre-upgrade records l
   const legacy=store.getSnapshot();
   // A record written before this feature has no switch keys at all: defaults merge, nothing is invalid.
   assert.equal(legacy.settings.enhance.autoApply,true);
-  assert.equal(legacy.settings.enhance.streamWrite,false);
-  assert.equal(legacy.settings.suggest.streamWrite,false);
+  assert.equal(legacy.settings.enhance.streamWrite,true);
+  assert.equal(legacy.settings.suggest.streamWrite,true);
   await assert.rejects(store.configure('enhance',complete({autoApply:'on'}),{expectedRevision:legacy.settingsRevision}),{code:'invalid-auto-apply'});
   const saved=await store.configure('enhance',complete({rounds:3,autoApply:false,streamWrite:true}),{expectedRevision:legacy.settingsRevision});
   assert.equal(saved.settings.enhance.autoApply,false);

@@ -1,7 +1,7 @@
 /** Auxiliary feature settings never inherit the main model Fast preference. */
 export const DEFAULT_CONFIG = Object.freeze({
   enabled: false, followSession: true, provider: "", model: "",
-  reasoningEffort: "", fast: false, rounds: 1, autoApply: true, streamWrite: false,
+  reasoningEffort: "", fast: false, rounds: 1, autoApply: true, streamWrite: true,
 });
 
 function invalid(code) {

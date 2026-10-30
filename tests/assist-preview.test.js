@@ -335,7 +335,7 @@ test('auto-applied landing drops apply, keeps copy and details, and marks the ca
   assert.ok(button(tree, 'dismiss'));
   assert.equal(button(tree, 'cancel'), undefined);
   assert.equal(resultText(tree), undefined, 'the written text is not repeated as a preview');
-  assert.equal(descendants(tree, element => element.type === 'details').length, 0);
+  assert.equal(descendants(tree, element => element.type === 'details').length, 1, 'only the collapsed original remains');
   assert.ok(descendants(tree, element => element.props.className === 'lpa-preview-status').length);
   assert.equal(f.applied.length, 0, 'the controller registered the undo, not the card');
   assert.equal(f.runtime.result.undo.sessionId, 'a');
@@ -454,4 +454,19 @@ test('undoing an automatic landing clears the record so the card stops claiming 
   assert.equal(f.runtime.result.undo, null);
   assert.equal(f.runtime.result.preview, null);
   assert.equal(f.render(), null, 'no written status survives the undo');
+});
+
+test('the capsule keeps the original behind a collapsed details instead of a full card', async t => {
+  const f = fixture('Original draft', {}, {autoApply: true});
+  t.after(() => f.controller.dispose());
+  const work = f.controller.generate('enhance');
+  f.reply('Rewritten requirements');
+  await work;
+  const tree = f.render(key => dictionaries.zh[key]);
+  const details = descendants(tree, element => element.type === 'details');
+  assert.equal(details.length, 1, 'one collapsed original, no diagnostics panel');
+  assert.equal(details[0].props.children[0].props.children, dictionaries.zh.showOriginal);
+  const html = renderToStaticMarkup(tree);
+  assert.doesNotMatch(html, /<details[^>]* open/, 'the original stays collapsed until asked for');
+  assert.ok(html.includes('Original draft'));
 });

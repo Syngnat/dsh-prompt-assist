@@ -35,7 +35,10 @@ export function Preview({runtime:r,actions,t,onApplied}){
  if(value.feature==='enhance'&&(written||value.streaming)){
   return h('div',{className:'lpa-row lpa-note',role:'status','aria-label':t(value.feature)},
    h('span',{className:'lpa-preview-status'},status),
-   value.streaming?button('cancel',()=>r.controller.cancel()):button('dismiss',()=>r.controller.dismiss()));
+   value.streaming?button('cancel',()=>r.controller.cancel()):button('dismiss',()=>r.controller.dismiss()),
+   written?h('details',{className:'lpa-original'},
+    h('summary',null,t('showOriginal')),
+    h('pre',null,value.original)):null);
  }
  function apply(){
   if(value.streaming||unchanged||!ownsResult(value,r.sessionId))return;

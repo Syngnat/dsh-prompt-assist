@@ -20,7 +20,7 @@ export function createAssistApi(fetcher = globalThis.fetch) {
 
 export const DEFAULT_SETTINGS = Object.freeze({
   enabled: false, followSession: true, provider: '', model: '',
-  reasoningEffort: '', fast: false, rounds: 1, autoApply: true, streamWrite: false,
+  reasoningEffort: '', fast: false, rounds: 1, autoApply: true, streamWrite: true,
 });
 
 export const SESSION_FIELDS = Object.freeze(['followSession','provider','model','reasoningEffort','fast','rounds','autoApply','streamWrite']);
