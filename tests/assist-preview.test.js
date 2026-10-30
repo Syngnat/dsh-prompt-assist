@@ -16,7 +16,7 @@ function descendants(element, predicate) {
   ];
 }
 const button = (tree, key) => descendants(tree, element => element.type === 'button' && element.props.children === key)[0];
-const resultText = tree => descendants(tree, element => element.type === 'pre' && element.props.className === 'lpa-result-text')[0].props.children;
+const resultText = tree => descendants(tree, element => element.type === 'pre' && element.props.className === 'lpa-result-text')[0]?.props.children;
 
 function fixture(original = 'Original draft', inputPatch = {}, enhancePatch = {}) {
   let input = {draft: original, draftRev: 7, phase: 'plain', attachmentIds: ['keep'], occurrences: [], ...inputPatch};
@@ -79,12 +79,11 @@ test('actual newlines survive streaming, final preview, whole-draft replacement 
   const partial = text.slice(0, text.indexOf('```js'));
   f.requests[0].onText(partial);
   let tree = f.render();
-  assert.equal(resultText(tree), partial);
-  assert.ok(renderToStaticMarkup(tree).includes(partial));
-  assert.equal(button(tree, 'apply').props.disabled, true);
-  assert.equal(button(tree, 'copy').props.disabled, true);
+  // Streamed text lands in the composer, so the card keeps one status line and repeats nothing.
+  assert.equal(resultText(tree), undefined);
+  assert.equal(button(tree, 'apply'), undefined);
+  assert.equal(button(tree, 'copy'), undefined);
   assert.ok(button(tree, 'cancel'));
-  button(tree, 'apply').props.onClick();
   assert.equal(f.edits.length, 0);
   f.reply(text);
   await work;
@@ -241,9 +240,9 @@ test('an echo during streaming is classified only when enhancement finishes', as
   const work = f.controller.generate('enhance');
   f.requests[0].onText(original);
   const partial = f.render();
-  assert.equal(partial.props['aria-busy'], true);
-  assert.equal(button(partial, 'apply').props.disabled, true);
-  assert.equal(button(partial, 'copy').props.disabled, true);
+  assert.equal(partial.props['aria-busy'], undefined, 'the status line carries no card chrome');
+  assert.equal(button(partial, 'apply'), undefined);
+  assert.equal(button(partial, 'copy'), undefined);
   assert.ok(button(partial, 'cancel'));
   assert.equal(descendants(partial, element => element.props.children === 'enhanceUnchanged').length, 0);
   f.reply(original);
@@ -332,11 +331,11 @@ test('auto-applied landing drops apply, keeps copy and details, and marks the ca
   assert.equal(f.input.draft, 'Rewritten requirements');
   assert.equal(f.runtime.result.writeback.mode, 'auto');
   assert.equal(button(tree, 'apply'), undefined);
-  assert.equal(button(tree, 'copy').props.disabled, false);
+  assert.equal(button(tree, 'copy'), undefined);
   assert.ok(button(tree, 'dismiss'));
-  assert.ok(button(tree, 'cancel') === undefined);
-  assert.equal(resultText(tree), 'Rewritten requirements');
-  assert.ok(descendants(tree, element => element.type === 'details').length >= 1, 'the original comparison survives');
+  assert.equal(button(tree, 'cancel'), undefined);
+  assert.equal(resultText(tree), undefined, 'the written text is not repeated as a preview');
+  assert.equal(descendants(tree, element => element.type === 'details').length, 0);
   assert.ok(descendants(tree, element => element.props.className === 'lpa-preview-status').length);
   assert.equal(f.applied.length, 0, 'the controller registered the undo, not the card');
   assert.equal(f.runtime.result.undo.sessionId, 'a');
@@ -347,13 +346,14 @@ test('stream landing renders like an applied card and still hides apply', async 
   t.after(() => f.controller.dispose());
   const work = f.controller.generate('enhance');
   f.requests[0].onText('Rewritten');
-  assert.equal(button(f.render(), 'apply').props.disabled, true, 'streaming keeps the guarded button');
+  assert.ok(button(f.render(), 'cancel'), 'streaming offers stop, not an apply button');
+  assert.equal(button(f.render(), 'apply'), undefined);
   f.reply('Rewritten requirements');
   await work;
   f.runtime.result = {...f.runtime.result, writeback: {mode: 'stream'}};
   const tree = f.render();
   assert.equal(button(tree, 'apply'), undefined);
-  assert.equal(button(tree, 'copy').props.disabled, false);
+  assert.equal(button(tree, 'copy'), undefined);
   assert.ok(button(tree, 'dismiss'));
 });
 

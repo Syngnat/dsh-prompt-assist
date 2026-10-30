@@ -65,10 +65,14 @@ test("public whole-span insertion and guarded undo leave attachments untouched",
  assert.equal(result.ok,true);assert.equal(f.input.attachmentIds,ids);assert.equal(f.edits.length,1);
  assert.equal(undoText(result.undo,()=>f.input,f.actions).ok,true);assert.equal(f.input.draft,"Original");assert.equal(f.input.attachmentIds,ids);
 });
-test("same draft with changed revision rejects apply and undo",()=>{
+test("apply rejects a shifted revision while undo follows the draft text",()=>{
  const f=fixture();f.type({draft:"Original"});const snapshot=captureText(f.input,f.actions);f.type({draftRev:2});
  assert.deepEqual(applyText(snapshot,"New",()=>f.input,f.actions),{ok:false,reason:"stale"});
- const result=applyText(captureText(f.input,f.actions),"New",()=>f.input,f.actions);f.type({draftRev:4});assert.equal(undoText(result.undo,()=>f.input,f.actions).ok,false);
+ const result=applyText(captureText(f.input,f.actions),"New",()=>f.input,f.actions);
+ f.type({draft:"typed by hand"});
+ assert.equal(undoText(result.undo,()=>f.input,f.actions).ok,false,"content that is not ours cannot be undone");
+ f.type({draft:"New",draftRev:9});
+ assert.equal(undoText(result.undo,()=>f.input,f.actions).ok,true,"a later Host revision must not invalidate our own landing");
 });
 test("capture/action revision race and structured documents fail closed",()=>{
  const f=fixture();const actions={...f.actions,captureInsertion:()=>({start:0,end:0,draftRev:999})};assert.equal(captureText(f.input,actions),null);

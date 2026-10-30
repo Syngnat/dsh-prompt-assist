@@ -58,12 +58,13 @@ test("ordinary results do not claim Fast was skipped", () => {
   assert.doesNotMatch(previewFixture({ fastSkipped: false }), /fastSkipped/);
 });
 
-test("the Fast skip note never relaxes streaming or structured-input Apply guards", () => {
-  for (const changes of [{ streaming: true }, { snapshot: { structured: true } }]) {
-    const html = previewFixture(changes);
-    const button = html.match(/<button[^>]*>apply<\/button>/)?.[0]; assert.ok(button); assert.match(button, /disabled/);
-    assert.match(html, /fastSkipped/);
-  }
+test("streaming never re-opens Apply and structured input keeps it disabled", () => {
+  const streaming = previewFixture({ streaming: true });
+  assert.doesNotMatch(streaming, />apply<\/button>/, "streamed text is already in the composer");
+  assert.match(streaming, />cancel<\/button>/);
+  const structured = previewFixture({ snapshot: { structured: true } });
+  const button = structured.match(/<button[^>]*>apply<\/button>/)?.[0]; assert.ok(button); assert.match(button, /disabled/);
+  assert.match(structured, /fastSkipped/);
 });
 
 test("both languages provide specific failures and readable safe-code fallback diagnostics", () => {

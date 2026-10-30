@@ -25,7 +25,9 @@ export function AssistPanel(p){
  const visible=shouldShowPanel({open:false,result:r.result,undo:source,input:r.input,sessionId:p.sessionId});
  if(r.session?.subagent||r.session?.removed||!visible)return null;
  const button=(key,onClick,disabled=false)=>h('button',{type:'button',className:'lpa-button',onClick,disabled},t(key));
- const validUndo=ownsResult(source,p.sessionId)&&r.input.draft===source.original&&r.input.draftRev===source.draftRev;
+ // The draft text decides whether an undo is still meaningful; a recorded revision lags the Host's
+ // async insert and would hide the button right after a successful landing.
+ const validUndo=ownsResult(source,p.sessionId)&&r.input.draft===source.original;
  const undoApply=()=>{const result=undoText(source,r.readInput,p.inputActions);if(result.ok){if(registered)r.controller.clearLanding?.();setUndo(null);}else r.setNotice(result.reason);};
  const dismiss=()=>{r.controller.dismiss();r.setNotice(null);};
  const notice=r.result.error??r.notice;

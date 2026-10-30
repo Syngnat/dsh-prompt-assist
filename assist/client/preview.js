@@ -29,6 +29,14 @@ export function Preview({runtime:r,actions,t,onApplied}){
  const landing=mode==='taken-over'?translate('enhanceTakenOver','stale')
   :mode==='blocked'?translate('enhanceBlocked',writeback.reason==='structured'?'structured':'stale'):null;
  const button=(key,action,disabled=false,primary=false)=>h('button',{type:'button',className:'lpa-button'+(primary?' lpa-button--primary':''),onClick:action,disabled},t(key));
+ // Text that already reached the composer must not come back as a preview card: the reader would have
+ // to dismiss a copy of what they can already see above it. Keep one thin status line while streaming
+ // and after landing; the full card is reserved for states that still need a manual decision.
+ if(value.feature==='enhance'&&(written||value.streaming)){
+  return h('div',{className:'lpa-row lpa-note',role:'status','aria-label':t(value.feature)},
+   h('span',{className:'lpa-preview-status'},status),
+   value.streaming?button('cancel',()=>r.controller.cancel()):button('dismiss',()=>r.controller.dismiss()));
+ }
  function apply(){
   if(value.streaming||unchanged||!ownsResult(value,r.sessionId))return;
   // Once write-back engaged, the controller owns the undo record; never fork a second source.

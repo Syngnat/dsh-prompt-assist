@@ -90,7 +90,14 @@ export function createDraftWriter({ actions, readInput, intervalMs = 150, schedu
   };
 }
 export function undoText(undo, readInput, actions) {
-  return applyText(undo, undo?.replacement, readInput, actions);
+  if (!undo || typeof undo.replacement !== 'string') return { ok: false, reason: 'stale' };
+  // A recorded revision goes stale as soon as the Host editor's async insert lands. The draft text is the
+  // real contract here, so rebuild the span from the live caret state and keep only the content check.
+  const input = readInput();
+  if (!input || input.draft !== undo.original) return { ok: false, reason: 'stale' };
+  const live = actions.captureInsertion();
+  return applyText({ ...undo, structured: false, draftRev: live.draftRev,
+    span: { ...live, start: 0, end: input.draft.length } }, undo.replacement, readInput, actions);
 }
 export function sameInput(a, b) {
   return a.draft === b.draft && a.draftRev === b.draftRev && a.phase === b.phase

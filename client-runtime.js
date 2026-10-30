@@ -367,7 +367,16 @@ function createDraftWriter({ actions, readInput, intervalMs = 150, schedule = se
   };
 }
 function undoText(undo, readInput, actions) {
-  return applyText(undo, undo?.replacement, readInput, actions);
+  if (!undo || typeof undo.replacement !== "string") return { ok: false, reason: "stale" };
+  const input = readInput();
+  if (!input || input.draft !== undo.original) return { ok: false, reason: "stale" };
+  const live = actions.captureInsertion();
+  return applyText({
+    ...undo,
+    structured: false,
+    draftRev: live.draftRev,
+    span: { ...live, start: 0, end: input.draft.length }
+  }, undo.replacement, readInput, actions);
 }
 function sameInput(a, b) {
   return a.draft === b.draft && a.draftRev === b.draftRev && a.phase === b.phase && JSON.stringify(a.attachmentIds) === JSON.stringify(b.attachmentIds) && JSON.stringify(a.occurrences) === JSON.stringify(b.occurrences) && Boolean(a.claim) === Boolean(b.claim);
@@ -2398,6 +2407,14 @@ function Preview({ runtime: r, actions, t, onApplied }) {
   const status = value.streaming ? translate("enhanceStreamingWrite", "streamingShort") : written ? translate("enhanceWritten", "apply") : null;
   const landing = mode === "taken-over" ? translate("enhanceTakenOver", "stale") : mode === "blocked" ? translate("enhanceBlocked", writeback.reason === "structured" ? "structured" : "stale") : null;
   const button = (key, action, disabled = false, primary = false) => h4("button", { type: "button", className: "lpa-button" + (primary ? " lpa-button--primary" : ""), onClick: action, disabled }, t(key));
+  if (value.feature === "enhance" && (written || value.streaming)) {
+    return h4(
+      "div",
+      { className: "lpa-row lpa-note", role: "status", "aria-label": t(value.feature) },
+      h4("span", { className: "lpa-preview-status" }, status),
+      value.streaming ? button("cancel", () => r.controller.cancel()) : button("dismiss", () => r.controller.dismiss())
+    );
+  }
   function apply2() {
     if (value.streaming || unchanged || !ownsResult(value, r.sessionId)) return;
     if (value.feature === "enhance" && writeback && typeof r.controller?.applyStaged === "function") {
@@ -2487,7 +2504,7 @@ function AssistPanel(p) {
   const visible = shouldShowPanel({ open: false, result: r.result, undo: source, input: r.input, sessionId: p.sessionId });
   if (r.session?.subagent || r.session?.removed || !visible) return null;
   const button = (key, onClick, disabled = false) => h5("button", { type: "button", className: "lpa-button", onClick, disabled }, t(key));
-  const validUndo = ownsResult(source, p.sessionId) && r.input.draft === source.original && r.input.draftRev === source.draftRev;
+  const validUndo = ownsResult(source, p.sessionId) && r.input.draft === source.original;
   const undoApply = () => {
     const result2 = undoText(source, r.readInput, p.inputActions);
     if (result2.ok) {

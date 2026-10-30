@@ -2,6 +2,12 @@
 
 [English](<README.md>) | [简体中文](<README.zh-CN.md>)
 
+## 1.3.4 — 写入后不再复述结果 / No preview copy after landing（2026-10-30）
+
+- 修复：增强结果已经写进输入框后，上方仍会弹出完整预览卡片（全文、复制、查看原文、生成详情），看起来像写回没生效。现在「正在写入」与「已写入」只留一行状态条（状态 + 停止或忽略），全文卡片只保留给仍需要手动决定的状态（被接管、写入阻塞、以及未开启自动写回）。
+- 修复：写入成功后「撤销」按钮常常不出现。宿主 `insertAsyncText` 是异步的，撤销记录里保存的 `draftRev` 会在插入落地后过期，于是 `validUndo` 与 `undoText` 双双拒绝。现在改为以草稿内容为准判定撤销资格，撤销时用当前 live span 重建；内容被别人改过仍然拒绝。
+- 测试：`tests/assist-preview.test.js`、`tests/assist-compact-preview.test.js`、`tests/assist-error-mapping.test.js`、`tests/assist-client-controller.test.js` 相应更新；全套 1155 项（1154 通过、1 跳过）。
+
 ## 1.3.3 — 增强结果直接写入输入框 / Enhance lands in the composer（2026-10-30）
 
 - 新增 `autoApply`（默认开）：增强生成完成后自动把结果整段写入输入框，等价于原先手动点「应用到草稿」，并保留一次撤销。
