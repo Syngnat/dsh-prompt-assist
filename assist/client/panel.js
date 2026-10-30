@@ -31,7 +31,7 @@ export function AssistPanel(p){
  const undoApply=()=>{const result=undoText(source,r.readInput,p.inputActions);if(result.ok){if(registered)r.controller.clearLanding?.();setUndo(null);}else r.setNotice(result.reason);};
  const dismiss=()=>{r.controller.dismiss();r.setNotice(null);};
  const notice=r.result.error??r.notice;
- return h(ResultAnchor,null,h('section',{className:'lpa lpa-inline'+compactPanelModifier({pending:r.result.pending,preview:r.result.preview,notice,validUndo}),'aria-label':t('preview')},h('style',null,css),
+ return h(ResultAnchor,null,h('section',{className:'lpa lpa-inline'+compactPanelModifier({pending:r.result.pending,preview:r.result.preview,notice,validUndo,written:r.result.preview?.streaming===true||r.result.writeback?.mode==='auto'||r.result.writeback?.mode==='stream'}),'aria-label':t('preview')},h('style',null,css),
   r.result.pending&&!r.result.preview?h('div',{className:'lpa-row lpa-pending',role:'status'},h('span',{className:'lpa-pending-mark','aria-hidden':true}),t(r.result.pending==='suggest'?'generatingSuggest':'generating'),button('cancel',()=>r.controller.cancel())):null,
   h(NoSuggestion,{runtime:r,t}),
   h(Preview,{runtime:r,actions:p.inputActions,t,onApplied:setUndo}),
