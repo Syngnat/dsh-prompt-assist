@@ -462,6 +462,8 @@ var init_style = __esm({
 /* Landed or streamed text needs no card: the status, ignore and undo share one capsule row. */
 .lpa-inline--written{display:flex;flex-direction:row;align-items:center;gap:8px;width:fit-content;max-width:calc(100% - 32px);padding:6px 12px;border-radius:24px}
 .lpa-inline--written .lpa-undo-actions{justify-content:flex-start}
+/* One control size inside the capsule: a longer label must not grow the button. */
+.lpa-inline--written .lpa-row .lpa-button{box-sizing:border-box;height:24px;min-height:24px;padding:0 8px;display:inline-flex;align-items:center;justify-content:center;align-self:center;flex:none;line-height:1;font-size:12px}
 .lpa-inline--written .lpa-original{flex:none}
 .lpa-inline--written .lpa-original[open]{flex-basis:100%}
 .lpa-inline--written .lpa-original>summary{cursor:pointer;color:var(--dsw-alias-label-secondary);font-size:12px}

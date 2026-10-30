@@ -11,3 +11,7 @@ test('landed and streaming text collapse into one capsule row, never the content
  assert.match(css,/\.lpa-inline--written\{display:flex;flex-direction:row/);
  assert.match(css,/\.lpa-result-anchor>\.lpa-inline--pending,\.lpa-result-anchor>\.lpa-inline--undo,\.lpa-result-anchor>\.lpa-inline--written\{width:fit-content/);
 });
+test('every capsule control shares one height so a longer label never grows the button',()=>{
+ assert.match(css,/\.lpa-inline--written \.lpa-row \.lpa-button\{box-sizing:border-box;height:24px;min-height:24px/);
+ assert.match(css,/align-self:center;flex:none;line-height:1;font-size:12px\}/);
+});
