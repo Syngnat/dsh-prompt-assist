@@ -11,19 +11,14 @@ export function normalizeEnablement(value){
   const config=value.settings[feature];return typeof value.configured[feature]!=='boolean'||!config||typeof config.followSession!=='boolean'||typeof config.fast!=='boolean'||!Number.isInteger(config.rounds)||config.rounds<1||config.rounds>20||['provider','model','reasoningEffort'].some(key=>typeof config[key]!=='string')
    ||['autoApply','streamWrite'].some(key=>config[key]!==undefined&&typeof config[key]!=='boolean');
  })))throw invalid();
- if(value.finalAnswer!==undefined&&typeof value.finalAnswer!=='boolean')throw invalid();
- if(value.finalAnswerRevision!==undefined&&(!Number.isSafeInteger(value.finalAnswerRevision)||value.finalAnswerRevision<0))throw invalid();
- if(value.processFeedback!==undefined&&typeof value.processFeedback!=='boolean')throw invalid();
- if(value.processFeedbackRevision!==undefined&&(!Number.isSafeInteger(value.processFeedbackRevision)||value.processFeedbackRevision<0))throw invalid();
- return Object.freeze({scope:'profile',revision:value.revision,enabled:Object.freeze({suggest:value.enabled.suggest,enhance:value.enabled.enhance}),finalAnswer:value.finalAnswer!==false,finalAnswerRevision:value.finalAnswerRevision??0,
-  processFeedback:value.processFeedback!==false,processFeedbackRevision:value.processFeedbackRevision??0,
+ return Object.freeze({scope:'profile',revision:value.revision,enabled:Object.freeze({suggest:value.enabled.suggest,enhance:value.enabled.enhance}),
   settingsRevision:hasSettings?value.settingsRevision:null,
   settings:Object.freeze(Object.fromEntries(FEATURES.map(feature=>[feature,Object.freeze(sessionSettings(hasSettings?value.settings[feature]:undefined))]))),
   configured:Object.freeze(Object.fromEntries(FEATURES.map(feature=>[feature,hasSettings&&value.configured[feature]])))});
 }
 const initial=()=>({data:null,connected:false,loading:true,pending:null,readError:null,writeError:null,saved:null});
 const empty=Object.freeze(initial());
-export const EMPTY_ENABLEMENT_SOURCE=Object.freeze({getSnapshot:()=>empty,subscribe:()=>()=>{},load:async()=>false,setEnabled:async()=>false,setFinalAnswer:async()=>false,setProcessFeedback:async()=>false,configure:async()=>false});
+export const EMPTY_ENABLEMENT_SOURCE=Object.freeze({getSnapshot:()=>empty,subscribe:()=>()=>{},load:async()=>false,setEnabled:async()=>false,configure:async()=>false});
 /** Session/wire controls and flags are never authority, even before the first global snapshot. */
 export function mergeGlobalSettings(settings,global){
  return Object.fromEntries(FEATURES.map(feature=>[feature,{...sessionSettings(global?.data?.settings?.[feature]),enabled:global?.connected===true&&global.data?.configured?.[feature]===true&&global.data?.enabled[feature]===true}]));
@@ -49,19 +44,12 @@ export function createEnablementSource({send,fetcher=(...args)=>globalThis.fetch
   // Each independent store contributes only its monotonic component; never roll any of them back.
   if(old&&data.revision===old.revision&&FEATURES.some(key=>data.enabled[key]!==old.enabled[key]))throw invalid();
   if(old&&data.settingsRevision===old.settingsRevision&&(JSON.stringify(data.settings)!==JSON.stringify(old.settings)||JSON.stringify(data.configured)!==JSON.stringify(old.configured)))throw invalid();
-  const oldFinalRevision=old?.finalAnswerRevision??0,oldProcessRevision=old?.processFeedbackRevision??0;
-  if(old&&data.finalAnswerRevision===oldFinalRevision&&data.finalAnswer!==old.finalAnswer)throw invalid();
-  if(old&&data.processFeedbackRevision===oldProcessRevision&&data.processFeedback!==old.processFeedback)throw invalid();
-  if(old&&data.revision===old.revision&&data.settingsRevision===old.settingsRevision
-   &&data.finalAnswerRevision===oldFinalRevision&&data.processFeedbackRevision===oldProcessRevision)return true;
+  if(old&&data.revision===old.revision&&data.settingsRevision===old.settingsRevision)return true;
   if(old){
-   const newer=data.revision>old.revision||(data.settingsRevision??-1)>(old.settingsRevision??-1)
-    ||data.finalAnswerRevision>oldFinalRevision||data.processFeedbackRevision>oldProcessRevision;
+   const newer=data.revision>old.revision||(data.settingsRevision??-1)>(old.settingsRevision??-1);
    if(!newer)return false;
    if(data.revision<old.revision)data={...data,revision:old.revision,enabled:old.enabled};
    if((data.settingsRevision??-1)<(old.settingsRevision??-1))data={...data,settingsRevision:old.settingsRevision,settings:old.settings,configured:old.configured};
-   if(data.finalAnswerRevision<oldFinalRevision)data={...data,finalAnswerRevision:oldFinalRevision,finalAnswer:old.finalAnswer};
-   if(data.processFeedbackRevision<oldProcessRevision)data={...data,processFeedbackRevision:oldProcessRevision,processFeedback:old.processFeedback};
    data=Object.freeze(data);
   }
   publish({data,saved:null});return true;
@@ -153,46 +141,10 @@ export function createEnablementSource({send,fetcher=(...args)=>globalThis.fetch
    return false;
   }finally{if(!disposed&&owner===epoch&&writeAbort===abort){writeAbort=null;publish({pending:null});}}
  }
- async function setFinalAnswer(enabled){
-  if(disposed||state.pending||!state.connected||!state.data||typeof enabled!=='boolean')return false;
-  const owner=epoch,expectedRevision=state.data.finalAnswerRevision??0,abort=new AbortController();writeAbort=abort;
-  publish({pending:'final-answer',writeError:null,saved:null});
-  try{
-   const value=await send('set-final-answer',undefined,{enabled,expectedRevision},abort.signal);
-   if(disposed||owner!==epoch||abort.signal.aborted||!state.connected)return false;
-   accept(value);
-   if(state.data.finalAnswer!==enabled){publish({writeError:'stale-enablement'});await load();return false;}
-   publish({saved:{feature:'final-answer',revision:state.data.finalAnswerRevision}});return true;
-  }catch(error){
-   if(!disposed&&owner===epoch&&!abort.signal.aborted){
-    const stale=error?.code==='stale-enablement';publish({writeError:stale?'stale-enablement':'global-save-failed'});
-    if(stale)await load();
-   }
-   return false;
-  }finally{if(!disposed&&owner===epoch&&writeAbort===abort){writeAbort=null;publish({pending:null});}}
- }
- async function setProcessFeedback(enabled){
-  if(disposed||state.pending||!state.connected||!state.data||typeof enabled!=='boolean')return false;
-  const owner=epoch,expectedRevision=state.data.processFeedbackRevision??0,abort=new AbortController();writeAbort=abort;
-  publish({pending:'process-feedback',writeError:null,saved:null});
-  try{
-   const value=await send('set-process-feedback',undefined,{enabled,expectedRevision},abort.signal);
-   if(disposed||owner!==epoch||abort.signal.aborted||!state.connected)return false;
-   accept(value);
-   if(state.data.processFeedback!==enabled){publish({writeError:'stale-enablement'});await load();return false;}
-   publish({saved:{feature:'process-feedback',revision:state.data.processFeedbackRevision}});return true;
-  }catch(error){
-   if(!disposed&&owner===epoch&&!abort.signal.aborted){
-    const stale=error?.code==='stale-enablement';publish({writeError:stale?'stale-enablement':'global-save-failed'});
-    if(stale)await load();
-   }
-   return false;
-  }finally{if(!disposed&&owner===epoch&&writeAbort===abort){writeAbort=null;publish({pending:null});}}
- }
  return {
   getSnapshot:()=>state,subscribe(listener){listeners.add(listener);return()=>listeners.delete(listener);},
   start(){if(!disposed)return Promise.resolve(false);disposed=false;epoch++;publish({connected:false,pending:null,saved:null});void watch();return load();},
-  load,setEnabled,setFinalAnswer,setProcessFeedback,configure,
+  load,setEnabled,configure,
   dispose(){disposed=true;epoch++;readEpoch++;clearRetry();readAbort?.abort();writeAbort?.abort();watchAbort?.abort();void reader?.cancel().catch(()=>{});readAbort=null;writeAbort=null;watchAbort=null;reader=null;state={...state,connected:false,pending:null,saved:null};},
  };
 }
