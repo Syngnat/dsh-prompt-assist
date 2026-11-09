@@ -7,6 +7,7 @@ import { apply as applyFast, inject as fastInject } from "./host-v1.0.4.js";
 import { OpenAIFastService } from "./service-v2.js";
 import { DEFAULT_PROVIDERS, mergeProviders } from "./policy.js";
 import { installAssistHost } from "./assist/bootstrap.js";
+import { installFinalAnswerContract } from "./assist/final-answer-contract.js";
 import { openPriorityProviders } from "./assist/priority-providers.js";
 import { installPriorityRpc } from "./assist/priority-transport.js";
 export const inject = [...fastInject, "webServer", "connection", "fs", "workingDirectory", "fileUploads", "attachments", "sessionController", "storageDomain", "profileContext"];
@@ -28,7 +29,14 @@ export async function apply(ctx, config = {}) {
   const providers = () => mergeProviders(configured, priority.snapshot().authorized);
   await applyFast(ctx, { ...config, adapterEntry, providers });
   const fastService = new OpenAIFastService(ctx, providers, key => key);
-  await installAssistHost(ctx, { z, fastService, providers, createUserMessage });
+  const assist = await installAssistHost(ctx, { z, fastService, providers, createUserMessage });
+  // Liangshen's minimal prompt drops every non-allowlisted system-prompt section, so the Codex-style
+  // closing and progress contracts ride the pre-step decision as durable user reminders instead.
+  // Package config is the hard switch; each profile toggle is read live so the settings page applies at once.
+  const disposeContract = installFinalAnswerContract(ctx, { createUserMessage,
+    enabled: () => config.finalAnswerContract !== false && assist?.enablement?.getSnapshot?.()?.finalAnswer !== false,
+    processEnabled: () => config.processFeedbackContract !== false && assist?.enablement?.getSnapshot?.()?.processFeedback !== false });
+  ctx.effect(() => () => disposeContract());
   installPriorityRpc(ctx, priority, configured);
   installUpdateHost(ctx);
 }

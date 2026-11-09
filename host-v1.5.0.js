@@ -2417,7 +2417,7 @@ function observedSource(value) {
   return typeof value === "string" && value.length > 0 && value.length <= 200 && !/[\u0000-\u001f\u007f]/u.test(value) ? value : null;
 }
 var ReleasePins = class {
-  constructor({ fetch: fetcher = (...args) => globalThis.fetch(...args), wait = (ms) => new Promise((resolve4) => setTimeout(resolve4, ms)) } = {}) {
+  constructor({ fetch: fetcher = (...args) => globalThis.fetch(...args), wait = (ms) => new Promise((resolve5) => setTimeout(resolve5, ms)) } = {}) {
     if (typeof fetcher !== "function" || typeof wait !== "function") throw new Error("Invalid release-pins dependencies");
     this.fetch = fetcher;
     this.wait = wait;
@@ -2494,7 +2494,7 @@ var fingerprint = (row) => JSON.stringify([row?.name, row?.version, row?.source,
 var safeCode = (v) => typeof v === "string" && /^[a-z][a-z0-9-]{0,79}$/.test(v) ? v : null;
 var diagnostic = (r) => safeCode(r?.error?.code) || safeCode(r?.packageResult?.kind) || safeCode(r?.application);
 var OnlineUpdateService = class {
-  constructor({ manager, jobs, currentVersion, updates, hasHmr = true, pins = new ReleasePins(), clock = Date.now, token = () => randomBytes(32).toString("hex"), schedule = (fn) => setImmediate(fn), wait = (ms) => new Promise((resolve4) => setTimeout(resolve4, ms)), activationAttempts = 40, readLoadedVersion }) {
+  constructor({ manager, jobs, currentVersion, updates, hasHmr = true, pins = new ReleasePins(), clock = Date.now, token = () => randomBytes(32).toString("hex"), schedule = (fn) => setImmediate(fn), wait = (ms) => new Promise((resolve5) => setTimeout(resolve5, ms)), activationAttempts = 40, readLoadedVersion }) {
     Object.assign(this, { manager, jobs, currentVersion, updates, hasHmr, pins, clock, token, schedule, wait, activationAttempts, readLoadedVersion });
     this.plans = /* @__PURE__ */ new Map();
     this.disposed = false;
@@ -2591,8 +2591,8 @@ var OnlineUpdateService = class {
           };
           publish("queued");
           initial = { ...state };
-          const done = new Promise((resolve4) => this.schedule(() => {
-            void this.run(plan, control, publish, () => cancelled).catch(() => publish("repair-required", { error: "host-error" })).then(() => resolve4({ status: state.phase === "cancelled" || state.phase === "restored" && state.error === "cancelled" ? "killed" : ["failed", "repair-required", "unknown", "restored"].includes(state.phase) ? "failed" : "completed", detail: state.phase, result: JSON.stringify(state) }));
+          const done = new Promise((resolve5) => this.schedule(() => {
+            void this.run(plan, control, publish, () => cancelled).catch(() => publish("repair-required", { error: "host-error" })).then(() => resolve5({ status: state.phase === "cancelled" || state.phase === "restored" && state.error === "cancelled" ? "killed" : ["failed", "repair-required", "unknown", "restored"].includes(state.phase) ? "failed" : "completed", detail: state.phase, result: JSON.stringify(state) }));
           }));
           return { done, cancel: () => {
             cancelled = true;
@@ -2796,7 +2796,7 @@ function installOnlineUpdateHost(ctx, { updates, currentVersion, manager = ctx.g
 // package.json
 var package_default = {
   name: "@local/dsh-openai-fast",
-  version: "1.4.0",
+  version: "1.5.0",
   private: true,
   description: "Provides prompt enhancement, next-question suggestions, and Priority acceleration for authorized OpenAI and xAI routes, with profile-wide auxiliary model, reasoning, Fast and QA controls.",
   type: "module",
@@ -2806,13 +2806,13 @@ var package_default = {
     node: ">=22"
   },
   exports: {
-    ".": "./host-v1.4.0.js",
+    ".": "./host-v1.5.0.js",
     "./client": "./client-runtime.js",
     "./locale/*.json": "./locale/*.json",
     "./icon": "./icon.svg"
   },
   files: [
-    "host-v1.4.0.js",
+    "host-v1.5.0.js",
     "client-runtime.js",
     "client.js",
     "cordis.patch.yml",
@@ -2826,6 +2826,7 @@ var package_default = {
     "RELEASING.md",
     "docs/confirmed-online-update.md",
     "docs/profile-global-settings.md",
+    "docs/process-feedback.md",
     "docs/result-anchor-layout.md",
     "docs/model-picker.md",
     "docs/fast-route-authorization.md",
@@ -3390,8 +3391,8 @@ async function apply(ctx, config = {}) {
 init_policy();
 
 // assist/profile-store.js
-import { createHash as createHash2 } from "node:crypto";
-import { isAbsolute as isAbsolute3, resolve as resolve2 } from "node:path";
+import { createHash as createHash3 } from "node:crypto";
+import { isAbsolute as isAbsolute4, resolve as resolve3 } from "node:path";
 
 // assist/enablement-store.js
 import { createHash } from "node:crypto";
@@ -3505,6 +3506,148 @@ function createStore(domain, global, loaded) {
   });
 }
 
+// assist/boolean-switch-store.js
+import { createHash as createHash2 } from "node:crypto";
+import { isAbsolute as isAbsolute3, resolve as resolve2 } from "node:path";
+var failure3 = (code) => Object.assign(new Error(code), { code });
+var unavailable2 = () => failure3("global-settings-unavailable");
+var optional2 = (ctx, name) => typeof ctx?.get === "function" ? ctx.get(name) : ctx?.[name];
+var freezeRecord2 = (field, value) => Object.freeze({ revision: value.revision, [field]: value[field] !== false });
+function schemaOf2(z, field) {
+  return z.object({
+    revision: z.number().int().min(0).max(Number.MAX_SAFE_INTEGER),
+    [field]: z.boolean()
+  }).strict();
+}
+function domainName(dir, prefix) {
+  if (typeof dir !== "string" || !isAbsolute3(dir) || dir.includes("\0")) throw unavailable2();
+  const absolute = resolve2(dir);
+  const canonical = process.platform === "win32" ? absolute.toLowerCase() : absolute;
+  return prefix + createHash2("sha256").update(canonical, "utf8").digest("hex");
+}
+function createStore2(domain, global, loaded, field) {
+  let record = loaded, tail = Promise.resolve(), closing = false, disposal;
+  const listeners = /* @__PURE__ */ new Set();
+  const notify = () => {
+    for (const listener of [...listeners]) {
+      try {
+        void Promise.resolve(listener(record)).catch(() => {
+        });
+      } catch {
+      }
+    }
+  };
+  function set(enabled, options = {}) {
+    if (closing) return Promise.reject(unavailable2());
+    let signal, expectedRevision;
+    try {
+      if (typeof enabled !== "boolean") throw failure3("invalid-enabled");
+      if (!options || typeof options !== "object" || Array.isArray(options) || Object.keys(options).some((key) => key !== "signal" && key !== "expectedRevision")) throw failure3("invalid-request");
+      ({ signal, expectedRevision } = options);
+      if (expectedRevision !== void 0 && (!Number.isSafeInteger(expectedRevision) || expectedRevision < 0)) throw failure3("invalid-request");
+      if (signal !== void 0 && (typeof signal?.throwIfAborted !== "function" || typeof signal.aborted !== "boolean")) throw failure3("invalid-request");
+      signal?.throwIfAborted();
+    } catch (error) {
+      return Promise.reject(error);
+    }
+    const operation = tail.then(async () => {
+      signal?.throwIfAborted();
+      if (expectedRevision !== void 0 && expectedRevision !== record.revision) throw failure3("stale-enablement");
+      if (record[field] === enabled) return record;
+      if (record.revision === Number.MAX_SAFE_INTEGER) throw unavailable2();
+      const next = freezeRecord2(field, { revision: record.revision + 1, [field]: enabled });
+      try {
+        await global.set(next);
+      } catch {
+        throw unavailable2();
+      }
+      record = next;
+      notify();
+      return record;
+    });
+    tail = operation.then(() => {
+    }, () => {
+    });
+    return operation;
+  }
+  return Object.freeze({
+    getSnapshot: () => record,
+    set,
+    subscribe(listener) {
+      if (closing) throw unavailable2();
+      if (typeof listener !== "function") throw failure3("invalid-request");
+      listeners.add(listener);
+      return () => listeners.delete(listener);
+    },
+    close() {
+      closing = true;
+      disposal ??= tail.then(async () => {
+        try {
+          await domain.close();
+        } catch {
+          throw unavailable2();
+        } finally {
+          listeners.clear();
+        }
+      });
+      return disposal;
+    }
+  });
+}
+async function openBooleanSwitch(ctx, z, { prefix, field, initial = true }) {
+  let domain;
+  try {
+    const facility = optional2(ctx, "storageDomain"), profile = optional2(ctx, "profileContext");
+    if (typeof facility?.open !== "function") throw unavailable2();
+    const schema = schemaOf2(z, field);
+    domain = await facility.open({
+      name: domainName(profile?.dir, prefix),
+      version: 1,
+      global: { schema, initial: freezeRecord2(field, { revision: 0, [field]: initial }) },
+      tables: {}
+    });
+    const global = domain?.global;
+    if (typeof global?.get !== "function" || typeof global?.set !== "function" || typeof domain.close !== "function") throw unavailable2();
+    return createStore2(domain, global, freezeRecord2(field, schema.parse(global.get())), field);
+  } catch {
+    try {
+      await domain?.close();
+    } catch {
+    }
+    throw unavailable2();
+  }
+}
+
+// assist/closing-contract-store.js
+async function openClosingContract(ctx, z) {
+  const store = await openBooleanSwitch(ctx, z, {
+    prefix: "local_prompt_assist_final_answer_",
+    field: "finalAnswer",
+    initial: true
+  });
+  return Object.freeze({
+    getSnapshot: store.getSnapshot,
+    setFinalAnswer: store.set,
+    subscribe: store.subscribe,
+    close: store.close
+  });
+}
+
+// assist/process-feedback-store.js
+async function openProcessFeedback(ctx, z) {
+  const store = await openBooleanSwitch(ctx, z, {
+    prefix: "local_prompt_assist_process_feedback_",
+    field: "processFeedback",
+    initial: true
+  });
+  return Object.freeze({
+    getSnapshot: store.getSnapshot,
+    setProcessFeedback: store.set,
+    subscribe: store.subscribe,
+    close: store.close
+  });
+}
+
 // assist/config.js
 var DEFAULT_CONFIG = Object.freeze({
   enabled: false,
@@ -3551,25 +3694,25 @@ function initialSettings() {
 // assist/profile-store.js
 var FEATURES = ["suggest", "enhance"];
 var FIELDS = ["followSession", "provider", "model", "reasoningEffort", "fast", "rounds", "autoApply", "streamWrite"];
-var failure3 = (code) => Object.assign(new Error(code), { code });
-var unavailable2 = () => failure3("global-settings-unavailable");
-var optional2 = (ctx, name) => typeof ctx?.get === "function" ? ctx.get(name) : ctx?.[name];
+var failure4 = (code) => Object.assign(new Error(code), { code });
+var unavailable3 = () => failure4("global-settings-unavailable");
+var optional3 = (ctx, name) => typeof ctx?.get === "function" ? ctx.get(name) : ctx?.[name];
 function configOf(input, complete = true) {
-  if (complete && (!input || FIELDS.some((key) => !Object.hasOwn(input, key)))) throw failure3("invalid-config");
+  if (complete && (!input || FIELDS.some((key) => !Object.hasOwn(input, key)))) throw failure4("invalid-config");
   const { enabled: _ignored, ...config } = normalizeConfig(input);
   return Object.freeze(config);
 }
 function completedRecord(record) {
   return { ...record, settings: Object.fromEntries(FEATURES.map((feature) => [feature, configOf(record.settings[feature], false)])) };
 }
-function freezeRecord2(record) {
+function freezeRecord3(record) {
   return Object.freeze({
     revision: record.revision,
     settings: Object.freeze({ suggest: Object.freeze(record.settings.suggest), enhance: Object.freeze(record.settings.enhance) }),
     configured: Object.freeze({ ...record.configured })
   });
 }
-function schemaOf2(z) {
+function schemaOf3(z) {
   const config = z.object({
     followSession: z.boolean(),
     provider: z.string(),
@@ -3594,27 +3737,31 @@ function schemaOf2(z) {
     configured: z.object({ suggest: z.boolean(), enhance: z.boolean() }).strict()
   }).strict();
 }
-function domainName(dir) {
-  if (typeof dir !== "string" || !isAbsolute3(dir) || dir.includes("\0")) throw unavailable2();
-  const absolute = resolve2(dir), canonical = process.platform === "win32" ? absolute.toLowerCase() : absolute;
-  return "local_prompt_assist_controls_" + createHash2("sha256").update(canonical, "utf8").digest("hex");
+function domainName2(dir) {
+  if (typeof dir !== "string" || !isAbsolute4(dir) || dir.includes("\0")) throw unavailable3();
+  const absolute = resolve3(dir), canonical = process.platform === "win32" ? absolute.toLowerCase() : absolute;
+  return "local_prompt_assist_controls_" + createHash3("sha256").update(canonical, "utf8").digest("hex");
 }
 async function openProfileStore(ctx, z) {
-  let flags, domain, controls;
+  let flags, contract, feedback, domain, controls;
   try {
     flags = await openEnablement(ctx, z);
-    const facility = optional2(ctx, "storageDomain"), schema = schemaOf2(z);
-    const initial = freezeRecord2({ revision: 0, settings: { suggest: configOf({}, false), enhance: configOf({}, false) }, configured: { suggest: true, enhance: true } });
-    domain = await facility.open({ name: domainName(optional2(ctx, "profileContext")?.dir), version: 1, global: { schema, initial }, tables: {} });
-    if (typeof domain?.global?.get !== "function" || typeof domain?.global?.set !== "function" || typeof domain?.close !== "function") throw unavailable2();
-    controls = controlsStore(domain, freezeRecord2(completedRecord(schema.parse(domain.global.get()))));
-    return combine(flags, controls);
+    contract = await openClosingContract(ctx, z);
+    feedback = await openProcessFeedback(ctx, z);
+    const facility = optional3(ctx, "storageDomain"), schema = schemaOf3(z);
+    const initial = freezeRecord3({ revision: 0, settings: { suggest: configOf({}, false), enhance: configOf({}, false) }, configured: { suggest: true, enhance: true } });
+    domain = await facility.open({ name: domainName2(optional3(ctx, "profileContext")?.dir), version: 1, global: { schema, initial }, tables: {} });
+    if (typeof domain?.global?.get !== "function" || typeof domain?.global?.set !== "function" || typeof domain?.close !== "function") throw unavailable3();
+    controls = controlsStore(domain, freezeRecord3(completedRecord(schema.parse(domain.global.get()))));
+    return combine(flags, contract, feedback, controls);
   } catch {
     await Promise.allSettled([
       Promise.resolve().then(() => flags?.close()),
+      Promise.resolve().then(() => contract?.close()),
+      Promise.resolve().then(() => feedback?.close()),
       Promise.resolve().then(() => controls ? controls.close() : domain?.close())
     ]);
-    throw unavailable2();
+    throw unavailable3();
   }
 }
 function controlsStore(domain, loaded) {
@@ -3623,14 +3770,14 @@ function controlsStore(domain, loaded) {
   return Object.freeze({
     getSnapshot: () => snapshot,
     configure(feature, input, options) {
-      if (closing) return Promise.reject(unavailable2());
+      if (closing) return Promise.reject(unavailable3());
       let config, signal, expectedRevision;
       try {
-        if (!FEATURES.includes(feature)) throw failure3("invalid-feature");
-        if (!options || typeof options !== "object" || Array.isArray(options) || Object.keys(options).some((key) => !["expectedRevision", "signal"].includes(key))) throw failure3("invalid-request");
+        if (!FEATURES.includes(feature)) throw failure4("invalid-feature");
+        if (!options || typeof options !== "object" || Array.isArray(options) || Object.keys(options).some((key) => !["expectedRevision", "signal"].includes(key))) throw failure4("invalid-request");
         ({ signal, expectedRevision } = options);
-        if (!Number.isSafeInteger(expectedRevision) || expectedRevision < 0) throw failure3("invalid-request");
-        if (signal !== void 0 && (typeof signal?.throwIfAborted !== "function" || typeof signal.aborted !== "boolean")) throw failure3("invalid-request");
+        if (!Number.isSafeInteger(expectedRevision) || expectedRevision < 0) throw failure4("invalid-request");
+        if (signal !== void 0 && (typeof signal?.throwIfAborted !== "function" || typeof signal.aborted !== "boolean")) throw failure4("invalid-request");
         signal?.throwIfAborted();
         config = configOf(input);
       } catch (error) {
@@ -3638,14 +3785,14 @@ function controlsStore(domain, loaded) {
       }
       const operation = tail.then(async () => {
         signal?.throwIfAborted();
-        if (expectedRevision !== snapshot.revision) throw failure3("stale-global-settings");
+        if (expectedRevision !== snapshot.revision) throw failure4("stale-global-settings");
         if (snapshot.configured[feature] && FIELDS.every((key) => snapshot.settings[feature][key] === config[key])) return snapshot;
-        if (snapshot.revision === Number.MAX_SAFE_INTEGER) throw unavailable2();
-        const record = freezeRecord2({ revision: snapshot.revision + 1, settings: { ...snapshot.settings, [feature]: config }, configured: { ...snapshot.configured, [feature]: true } });
+        if (snapshot.revision === Number.MAX_SAFE_INTEGER) throw unavailable3();
+        const record = freezeRecord3({ revision: snapshot.revision + 1, settings: { ...snapshot.settings, [feature]: config }, configured: { ...snapshot.configured, [feature]: true } });
         try {
           await domain.global.set(record);
         } catch {
-          throw unavailable2();
+          throw unavailable3();
         }
         snapshot = record;
         for (const listener of [...listeners]) if (listeners.has(listener)) {
@@ -3663,8 +3810,8 @@ function controlsStore(domain, loaded) {
       return operation;
     },
     subscribe(listener) {
-      if (closing) throw unavailable2();
-      if (typeof listener !== "function") throw failure3("invalid-request");
+      if (closing) throw unavailable3();
+      if (typeof listener !== "function") throw failure4("invalid-request");
       listeners.add(listener);
       return () => listeners.delete(listener);
     },
@@ -3674,7 +3821,7 @@ function controlsStore(domain, loaded) {
         try {
           await domain.close();
         } catch {
-          throw unavailable2();
+          throw unavailable3();
         } finally {
           listeners.clear();
         }
@@ -3683,15 +3830,19 @@ function controlsStore(domain, loaded) {
     }
   });
 }
-function combine(flags, controls) {
+function combine(flags, contract, feedback, controls) {
   const listeners = /* @__PURE__ */ new Set();
   let snapshot, closing = false, disposal;
   function refresh() {
-    const flag = flags.getSnapshot(), control = controls.getSnapshot();
+    const flag = flags.getSnapshot(), switchValue = contract.getSnapshot(), feedbackValue = feedback.getSnapshot(), control = controls.getSnapshot();
     snapshot = Object.freeze({
       scope: "profile",
       revision: flag.revision,
       enabled: flag.enabled,
+      finalAnswer: switchValue.finalAnswer,
+      finalAnswerRevision: switchValue.revision,
+      processFeedback: feedbackValue.processFeedback,
+      processFeedbackRevision: feedbackValue.revision,
       settingsRevision: control.revision,
       settings: control.settings,
       configured: control.configured
@@ -3706,34 +3857,56 @@ function combine(flags, controls) {
   }
   refresh();
   const stopFlags = flags.subscribe(refresh);
+  const stopContract = contract.subscribe(refresh);
+  let stopFeedback;
+  try {
+    stopFeedback = feedback.subscribe(refresh);
+  } catch (error) {
+    stopFlags();
+    stopContract();
+    throw error;
+  }
   let stopControls;
   try {
     stopControls = controls.subscribe(refresh);
   } catch (error) {
     stopFlags();
+    stopContract();
+    stopFeedback();
     throw error;
   }
   return Object.freeze({
     getSnapshot: () => snapshot,
     // Preserve flag validation, CAS semantics and return value for rollback compatibility.
     set: (feature, enabled, options) => flags.set(feature, enabled, options),
+    // Return the merged snapshot, mirroring set(): callers always publish one profile view.
+    async setFinalAnswer(enabled, options) {
+      await contract.setFinalAnswer(enabled, options);
+      return snapshot;
+    },
+    async setProcessFeedback(enabled, options) {
+      await feedback.setProcessFeedback(enabled, options);
+      return snapshot;
+    },
     async configure(feature, config, options) {
       await controls.configure(feature, config, options);
       return snapshot;
     },
     subscribe(listener) {
-      if (closing) throw unavailable2();
-      if (typeof listener !== "function") throw failure3("invalid-request");
+      if (closing) throw unavailable3();
+      if (typeof listener !== "function") throw failure4("invalid-request");
       listeners.add(listener);
       return () => listeners.delete(listener);
     },
     close() {
       closing = true;
-      disposal ??= Promise.allSettled([flags.close(), controls.close()]).then((results) => {
+      disposal ??= Promise.allSettled([flags.close(), contract.close(), feedback.close(), controls.close()]).then((results) => {
         stopFlags();
+        stopContract();
+        stopFeedback();
         stopControls();
         listeners.clear();
-        if (results.some((result2) => result2.status === "rejected")) throw unavailable2();
+        if (results.some((result2) => result2.status === "rejected")) throw unavailable3();
       });
       return disposal;
     }
@@ -3868,11 +4041,11 @@ function installAssistStream(ctx, service) {
 var COMMAND_NAME2 = ASSIST_COMMAND;
 var QA_ROUND_LIMIT = 20;
 var MAX_PENDING_COMMANDS = 64;
-function failure4(code) {
+function failure5(code) {
   return Object.assign(new Error(code), { code });
 }
 function initialContextState(_header, floor = 0) {
-  if (!Number.isSafeInteger(floor) || floor < 0) throw failure4("invalid-context-floor");
+  if (!Number.isSafeInteger(floor) || floor < 0) throw failure5("invalid-context-floor");
   return {
     settings: initialSettings(),
     qaId: null,
@@ -3962,25 +4135,25 @@ function foldContextState(state, event) {
   return { ...state, answer };
 }
 function selectQA(state, count) {
-  if (!Number.isInteger(count) || count < 1 || count > QA_ROUND_LIMIT) throw failure4("invalid-rounds");
+  if (!Number.isInteger(count) || count < 1 || count > QA_ROUND_LIMIT) throw failure5("invalid-rounds");
   const rounds = state.rounds.slice(-count);
-  if (rounds.some((round) => typeof round.question !== "string" || typeof round.answer !== "string" || !round.question.trim() || !round.answer.trim())) throw failure4("invalid-context");
-  if (rounds.some((round) => round.truncated)) throw failure4("context-overflow");
+  if (rounds.some((round) => typeof round.question !== "string" || typeof round.answer !== "string" || !round.question.trim() || !round.answer.trim())) throw failure5("invalid-context");
+  if (rounds.some((round) => round.truncated)) throw failure5("context-overflow");
   return rounds.map((round) => ({ ...round }));
 }
 
 // assist/runtime.js
-import { createHash as createHash3 } from "node:crypto";
+import { createHash as createHash4 } from "node:crypto";
 
 // assist/files.js
 var FILE_BYTES = 65536;
 var TOTAL_BYTES = 131072;
 var FILE_LIMITS = Object.freeze({ fileBytes: FILE_BYTES, totalBytes: TOTAL_BYTES });
-function failure5(code) {
+function failure6(code) {
   return Object.assign(new Error(code), { code });
 }
 function checkAbort(signal) {
-  if (signal?.aborted) throw failure5("aborted");
+  if (signal?.aborted) throw failure6("aborted");
 }
 function sensitiveName(name) {
   const parts = name.replaceAll("\\", "/").toLowerCase().split("/").map((part) => part.replace(/[ .]+$/u, ""));
@@ -3990,49 +4163,49 @@ function unsupportedName(name) {
   return /\.(?:png|jpe?g|gif|webp|ico|bmp|tiff?|pdf|zip|gz|bz2|xz|7z|rar|tar|woff2?|ttf|otf|eot|mp[34]|wav|avi|mov|mkv|exe|dll|so|dylib|class|jar|wasm|db|sqlite3?|docx?|xlsx?|pptx?|bin)$/iu.test(name);
 }
 function validatePath(path) {
-  if (typeof path !== "string" || !path || path !== path.trim() || path.length > 32768 || /[\u0000-\u001f\u007f*?]/u.test(path) || /[\\/]$/u.test(path) || path.startsWith("\\\\") || path.startsWith("//")) throw failure5("invalid-file-path");
+  if (typeof path !== "string" || !path || path !== path.trim() || path.length > 32768 || /[\u0000-\u001f\u007f*?]/u.test(path) || /[\\/]$/u.test(path) || path.startsWith("\\\\") || path.startsWith("//")) throw failure6("invalid-file-path");
   const drive = /^[a-z]:[\\/]/iu.test(path);
-  if (/^[a-z][a-z\d+.-]*:/iu.test(path) && !drive) throw failure5("invalid-file-path");
-  if ((drive ? path.slice(2) : path).includes(":")) throw failure5("invalid-file-path");
-  if ([".", ".."].includes(path.split(/[\\/]/u).at(-1))) throw failure5("invalid-file-path");
+  if (/^[a-z][a-z\d+.-]*:/iu.test(path) && !drive) throw failure6("invalid-file-path");
+  if ((drive ? path.slice(2) : path).includes(":")) throw failure6("invalid-file-path");
+  if ([".", ".."].includes(path.split(/[\\/]/u).at(-1))) throw failure6("invalid-file-path");
 }
 function validateFileEntry(entry) {
-  if (!entry || typeof entry !== "object" || Array.isArray(entry)) throw failure5("invalid-file-entry");
-  if (Object.keys(entry).some((key) => !["path", "receiptId", "name"].includes(key))) throw failure5("invalid-file-entry");
-  if (typeof entry.name !== "string" || !entry.name || entry.name !== entry.name.trim() || entry.name.length > 1024 || /[\u0000-\u001f\u007f]/u.test(entry.name)) throw failure5("invalid-file-entry");
+  if (!entry || typeof entry !== "object" || Array.isArray(entry)) throw failure6("invalid-file-entry");
+  if (Object.keys(entry).some((key) => !["path", "receiptId", "name"].includes(key))) throw failure6("invalid-file-entry");
+  if (typeof entry.name !== "string" || !entry.name || entry.name !== entry.name.trim() || entry.name.length > 1024 || /[\u0000-\u001f\u007f]/u.test(entry.name)) throw failure6("invalid-file-entry");
   const hasPath = Object.hasOwn(entry, "path");
   const hasReceipt = Object.hasOwn(entry, "receiptId");
-  if (hasPath === hasReceipt) throw failure5("invalid-file-entry");
+  if (hasPath === hasReceipt) throw failure6("invalid-file-entry");
   if (hasPath) validatePath(entry.path);
-  if (hasReceipt && (typeof entry.receiptId !== "string" || !entry.receiptId || entry.receiptId.length > 1024 || entry.receiptId !== entry.receiptId.trim() || /[\u0000-\u001f\u007f]/u.test(entry.receiptId))) throw failure5("invalid-file-entry");
-  if (sensitiveName(entry.name) || hasPath && sensitiveName(entry.path)) throw failure5("sensitive-file");
-  if (unsupportedName(entry.name) || hasPath && unsupportedName(entry.path)) throw failure5("unsupported-file");
+  if (hasReceipt && (typeof entry.receiptId !== "string" || !entry.receiptId || entry.receiptId.length > 1024 || entry.receiptId !== entry.receiptId.trim() || /[\u0000-\u001f\u007f]/u.test(entry.receiptId))) throw failure6("invalid-file-entry");
+  if (sensitiveName(entry.name) || hasPath && sensitiveName(entry.path)) throw failure6("sensitive-file");
+  if (unsupportedName(entry.name) || hasPath && unsupportedName(entry.path)) throw failure6("unsupported-file");
 }
 function decodeText(bytes) {
   let text;
   try {
     text = new TextDecoder("utf-8", { fatal: true }).decode(bytes);
   } catch {
-    throw failure5("unsupported-file");
+    throw failure6("unsupported-file");
   }
-  if (/[\u0000-\u0008\u000b\u000e-\u001f\u007f]/u.test(text) || /^(?:%PDF-|GIF8[79]a)/u.test(text)) throw failure5("unsupported-file");
-  if (/-----BEGIN (?:[A-Z\d]+ )*PRIVATE KEY-----/u.test(text) || /\b(?:AKIA|ASIA)[A-Z\d]{16}\b/u.test(text) || /\b(?:sk-[A-Za-z\d_-]{20,}|gh[pousr]_[A-Za-z\d]{30,}|github_pat_[A-Za-z\d_]{30,}|xox[baprs]-[A-Za-z\d-]{20,})\b/u.test(text) || /\b(?:api[_-]?key|access[_-]?token|client[_-]?secret|password)["\x27]?\s*[:=]\s*["\x27][A-Za-z\d+/_=-]{16,}["\x27]/iu.test(text)) throw failure5("sensitive-file");
+  if (/[\u0000-\u0008\u000b\u000e-\u001f\u007f]/u.test(text) || /^(?:%PDF-|GIF8[79]a)/u.test(text)) throw failure6("unsupported-file");
+  if (/-----BEGIN (?:[A-Z\d]+ )*PRIVATE KEY-----/u.test(text) || /\b(?:AKIA|ASIA)[A-Z\d]{16}\b/u.test(text) || /\b(?:sk-[A-Za-z\d_-]{20,}|gh[pousr]_[A-Za-z\d]{30,}|github_pat_[A-Za-z\d_]{30,}|xox[baprs]-[A-Za-z\d-]{20,})\b/u.test(text) || /\b(?:api[_-]?key|access[_-]?token|client[_-]?secret|password)["\x27]?\s*[:=]\s*["\x27][A-Za-z\d+/_=-]{16,}["\x27]/iu.test(text)) throw failure6("sensitive-file");
   return text;
 }
 async function readEntry(entry, options, maxBytes) {
   const reader = Object.hasOwn(entry, "path") ? options.readBytes : options.readReceipt;
-  if (typeof reader !== "function") throw failure5("file-reader-unavailable");
+  if (typeof reader !== "function") throw failure6("file-reader-unavailable");
   try {
     return await reader(entry.path ?? entry.receiptId, options.signal, maxBytes);
   } catch (error) {
-    if (options.signal?.aborted || error?.name === "AbortError" || error?.code === "aborted") throw failure5("aborted");
-    if (["sensitive-file", "not-a-file", "invalid-receipt", "unsupported-file", "invalid-file-path", "files-too-large"].includes(error?.code)) throw failure5(error.code);
-    if (error?.code === "file-too-large" || error?.code === "FS_TOO_LARGE") throw failure5(maxBytes <= FILE_BYTES ? "files-too-large" : "file-too-large");
-    throw failure5("file-read-failed");
+    if (options.signal?.aborted || error?.name === "AbortError" || error?.code === "aborted") throw failure6("aborted");
+    if (["sensitive-file", "not-a-file", "invalid-receipt", "unsupported-file", "invalid-file-path", "files-too-large"].includes(error?.code)) throw failure6(error.code);
+    if (error?.code === "file-too-large" || error?.code === "FS_TOO_LARGE") throw failure6(maxBytes <= FILE_BYTES ? "files-too-large" : "file-too-large");
+    throw failure6("file-read-failed");
   }
 }
 async function readSelectedFiles(entries = [], options = {}) {
-  if (!Array.isArray(entries) || !options || typeof options !== "object") throw failure5("invalid-file-entry");
+  if (!Array.isArray(entries) || !options || typeof options !== "object") throw failure6("invalid-file-entry");
   checkAbort(options.signal);
   options = { readBytes: options.readBytes, readReceipt: options.readReceipt, signal: options.signal };
   const selected = entries.map((entry) => {
@@ -4047,9 +4220,9 @@ async function readSelectedFiles(entries = [], options = {}) {
     const maxBytes = Math.min(FILE_BYTES, TOTAL_BYTES - total) + 1;
     const bytes = await readEntry(entry, options, maxBytes);
     checkAbort(options.signal);
-    if (!(bytes instanceof Uint8Array)) throw failure5("invalid-file-bytes");
-    if (bytes.byteLength > FILE_BYTES) throw failure5("file-too-large");
-    if (total + bytes.byteLength > TOTAL_BYTES) throw failure5("files-too-large");
+    if (!(bytes instanceof Uint8Array)) throw failure6("invalid-file-bytes");
+    if (bytes.byteLength > FILE_BYTES) throw failure6("file-too-large");
+    if (total + bytes.byteLength > TOTAL_BYTES) throw failure6("files-too-large");
     const text = decodeText(bytes);
     total += bytes.byteLength;
     files.push({ name: entry.name, text, bytes: bytes.byteLength });
@@ -4178,43 +4351,43 @@ var ENHANCE_ROLE_PROMPT = `\u4F60\u662F\u4E00\u540D\u201C\u4FDD\u7559\u610F\u56F
 \u5355\u4E00\u4E14\u6E05\u6670\u7684\u77ED\u8BF7\u6C42\uFF0C\u5982\u201C\u53EA\u6539\u6309\u94AE\u6587\u5B57\uFF0C\u4E0D\u8981\u8C03\u6574\u5E03\u5C40\u3002\u201D\uFF0C\u4E0D\u9700\u8981\u6269\u5C55\u6210\u6A21\u677F\uFF0C\u4F46\u4ECD\u8981\u6309\u3010\u6DA6\u8272\u8868\u8FBE\u3011\u68C0\u67E5\u586B\u5145\u8BCD\u4E0E\u5197\u4F59\u865A\u8BCD\uFF1B\u53EA\u6709\u9010\u9879\u68C0\u67E5\u540E\u786E\u5B9E\u65E0\u53EF\u6539\u5584\u65F6\u624D\u4FDD\u7559\u539F\u53E5\u3002`;
 
 // assist/prompts.js
-function failure6(code) {
+function failure7(code) {
   return Object.assign(new Error(code), { code });
 }
 function qaData(qa) {
-  if (!Array.isArray(qa) || qa.length > QA_ROUND_LIMIT) throw failure6("invalid-context");
+  if (!Array.isArray(qa) || qa.length > QA_ROUND_LIMIT) throw failure7("invalid-context");
   return qa.map((round) => {
-    if (!round || typeof round.question !== "string" || typeof round.answer !== "string" || !round.question.trim() || !round.answer.trim()) throw failure6("invalid-context");
-    if (round.truncated) throw failure6("context-overflow");
+    if (!round || typeof round.question !== "string" || typeof round.answer !== "string" || !round.question.trim() || !round.answer.trim()) throw failure7("invalid-context");
+    if (round.truncated) throw failure7("context-overflow");
     return { question: round.question, answer: round.answer };
   });
 }
 function fileData(files) {
-  if (!Array.isArray(files)) throw failure6("invalid-file-entry");
+  if (!Array.isArray(files)) throw failure7("invalid-file-entry");
   let total = 0;
   return files.map((file) => {
-    if (!file || typeof file.name !== "string" || !file.name || typeof file.text !== "string" || !Number.isSafeInteger(file.bytes) || file.bytes < 0) throw failure6("invalid-file-entry");
-    if (file.text.length > FILE_BYTES) throw failure6("file-too-large");
+    if (!file || typeof file.name !== "string" || !file.name || typeof file.text !== "string" || !Number.isSafeInteger(file.bytes) || file.bytes < 0) throw failure7("invalid-file-entry");
+    if (file.text.length > FILE_BYTES) throw failure7("file-too-large");
     const textBytes = new TextEncoder().encode(file.text).byteLength;
-    if (file.bytes > FILE_BYTES || textBytes > FILE_BYTES) throw failure6("file-too-large");
-    if (textBytes > file.bytes) throw failure6("invalid-file-bytes");
+    if (file.bytes > FILE_BYTES || textBytes > FILE_BYTES) throw failure7("file-too-large");
+    if (textBytes > file.bytes) throw failure7("invalid-file-bytes");
     total += file.bytes;
-    if (total > TOTAL_BYTES) throw failure6("files-too-large");
+    if (total > TOTAL_BYTES) throw failure7("files-too-large");
     return { name: file.name, text: file.text };
   });
 }
 function referenceData(references) {
-  if (!Array.isArray(references)) throw failure6("invalid-reference");
+  if (!Array.isArray(references)) throw failure7("invalid-reference");
   return references.map((reference) => {
     const name = typeof reference === "string" ? reference : reference?.name ?? reference?.displayName ?? reference?.label ?? reference?.title;
-    if (typeof name !== "string" || !name.trim() || name.length > 1024 || /[\u0000-\u001f\u007f]/u.test(name)) throw failure6("invalid-reference");
+    if (typeof name !== "string" || !name.trim() || name.length > 1024 || /[\u0000-\u001f\u007f]/u.test(name)) throw failure7("invalid-reference");
     return { name };
   });
 }
 function buildAssistPrompt(feature, draft, qa = [], files = [], references = []) {
-  if (feature !== "suggest" && feature !== "enhance") throw failure6("invalid-feature");
-  if (typeof draft !== "string") throw failure6("invalid-draft");
-  if (feature === "enhance" && !draft.trim()) throw failure6("empty-draft");
+  if (feature !== "suggest" && feature !== "enhance") throw failure7("invalid-feature");
+  if (typeof draft !== "string") throw failure7("invalid-draft");
+  if (feature === "enhance" && !draft.trim()) throw failure7("empty-draft");
   const data = { feature, draft, qa: qaData(qa), files: fileData(files), references: referenceData(references) };
   if (feature === "enhance") return { system: ENHANCE_ROLE_PROMPT, user: JSON.stringify(data) };
   return { system: SUGGEST_ROLE_PROMPT, user: JSON.stringify(data) };
@@ -4286,7 +4459,7 @@ function providerFailureCode(value) {
 }
 
 // assist/model-call.js
-function failure7(code) {
+function failure8(code) {
   return Object.assign(new Error(code), { code });
 }
 function abortFailure(signal) {
@@ -4295,13 +4468,13 @@ function abortFailure(signal) {
 }
 function raceAbort(promise, signal) {
   if (!signal) return promise;
-  return new Promise((resolve4, reject) => {
+  return new Promise((resolve5, reject) => {
     const onAbort = () => reject(abortFailure(signal));
     signal.addEventListener("abort", onAbort, { once: true });
     promise.then(
       (value) => {
         signal.removeEventListener("abort", onAbort);
-        resolve4(value);
+        resolve5(value);
       },
       (error) => {
         signal.removeEventListener("abort", onAbort);
@@ -4318,32 +4491,32 @@ function polishEffort(metadata) {
 }
 async function resolveAssistRoute(ctx, agent, settings, fastService, providers, signal) {
   const selected = settings.followSession ? fastService.selection(agent) : settings;
-  if (!selected?.provider || !selected?.model) throw failure7("not-configured");
+  if (!selected?.provider || !selected?.model) throw failure8("not-configured");
   const route = { provider: selected.provider, model: selected.model };
   const effort = selected.reasoningEffort;
   if (effort) route.reasoningEffort = effort;
   const metadata = await ctx.llm.resolveModelInfo(route.provider, route.model, signal);
-  if (effort && !metadata.reasoning?.efforts.some((item) => item.id === effort)) throw failure7("unsupported-effort");
+  if (effort && !metadata.reasoning?.efforts.some((item) => item.id === effort)) throw failure8("unsupported-effort");
   const fastSkipped = settings.fast === true && !isOpenAISelection(route, providers);
   return { ...route, fast: settings.fast === true && !fastSkipped, fastSkipped, metadata };
 }
 async function callAssistModel(ctx, agent, route, prompt, feature, signal, createUserMessage, onText, onPrepared) {
-  if (typeof createUserMessage !== "function") throw failure7("not-configured");
+  if (typeof createUserMessage !== "function") throw failure8("not-configured");
   const config = { provider: route.provider, model: route.model };
   if (route.reasoningEffort) config.reasoningEffort = route.reasoningEffort;
   const prepared = await ctx.llm.prepareCall(config, signal);
   const available = prepared.context?.contextWindow;
   const outputBudget = prepared.config.maxTokens;
-  if (!Number.isFinite(available) || available <= 0) throw failure7("context-unknown");
-  if (outputBudget !== void 0 && (!Number.isSafeInteger(outputBudget) || outputBudget <= 0)) throw failure7("invalid-config");
+  if (!Number.isFinite(available) || available <= 0) throw failure8("context-unknown");
+  if (outputBudget !== void 0 && (!Number.isSafeInteger(outputBudget) || outputBudget <= 0)) throw failure8("invalid-config");
   const meter = typeof ctx.get === "function" ? ctx.get("tokenMeter") : ctx.tokenMeter;
-  if (typeof meter?.estimateMessage !== "function") throw failure7("context-unknown");
+  if (typeof meter?.estimateMessage !== "function") throw failure8("context-unknown");
   const message = createUserMessage({ content: [{ type: "text", text: prompt.user }], source: { kind: "plugin", plugin: "@local/dsh-openai-fast" } });
   const system = { ...message, role: "system", source: { kind: "system-prompt" }, content: [{ type: "text", text: prompt.system }] };
   const counts = [meter.estimateMessage(system), meter.estimateMessage(message)];
-  if (counts.some((value) => !Number.isFinite(value) || value < 0)) throw failure7("context-unknown");
+  if (counts.some((value) => !Number.isFinite(value) || value < 0)) throw failure8("context-unknown");
   const inputTokensEstimate = counts[0] + counts[1];
-  if (inputTokensEstimate > available) throw failure7("context-overflow");
+  if (inputTokensEstimate > available) throw failure8("context-overflow");
   if (signal?.aborted) throw abortFailure(signal);
   onPrepared?.({
     outputBudget: outputBudget ?? null,
@@ -4368,7 +4541,7 @@ async function callAssistModel(ctx, agent, route, prompt, feature, signal, creat
           if (chunk.text && feature !== "suggest") onText?.(text);
         }
         if (chunk.type === "finish") {
-          if (chunk.reason.kind !== "stop") throw failure7(chunk.reason.kind === "aborted" ? "cancelled" : chunk.reason.kind === "max-tokens" ? "output-limit" : chunk.reason.kind === "error" ? providerFailureCode(chunk.reason.failure) : "model-failed");
+          if (chunk.reason.kind !== "stop") throw failure8(chunk.reason.kind === "aborted" ? "cancelled" : chunk.reason.kind === "max-tokens" ? "output-limit" : chunk.reason.kind === "error" ? providerFailureCode(chunk.reason.failure) : "model-failed");
           completed = true;
         }
       }
@@ -4378,7 +4551,7 @@ async function callAssistModel(ctx, agent, route, prompt, feature, signal, creat
       } catch {
       }
     }
-    if (!completed || !text.trim()) throw failure7("empty-result");
+    if (!completed || !text.trim()) throw failure8("empty-result");
     if (signal?.aborted) throw abortFailure(signal);
     const result2 = feature === "suggest" ? parseSuggestionOutput(text) : { text: text.trim() };
     return {
@@ -4401,27 +4574,27 @@ function fileReaders(ctx, agent) {
   const cwd = ctx.workingDirectory.get(agent.session);
   return {
     async readBytes(path, signal, maxBytes) {
-      if (sensitivePath(path)) throw failure7("sensitive-file");
+      if (sensitivePath(path)) throw failure8("sensitive-file");
       const target = await fs.resolve(path, { cwd, signal });
       const canonical = fs.processPath(target);
       validateFileEntry({ path: canonical, name: canonical.replaceAll("\\", "/").split("/").at(-1) });
-      if (sensitivePath(canonical)) throw failure7("sensitive-file");
+      if (sensitivePath(canonical)) throw failure8("sensitive-file");
       const info = await fs.stat(target, signal);
-      if (info?.type !== "file") throw failure7("not-a-file");
-      if (info.size > maxBytes) throw failure7("file-too-large");
+      if (info?.type !== "file") throw failure8("not-a-file");
+      if (info.size > maxBytes) throw failure8("file-too-large");
       return fs.readBytes(target, signal, maxBytes);
     },
     async readReceipt(id, signal, maxBytes) {
       const ref = ctx.fileUploads.resolve(agent, id);
-      if (!ref) throw failure7("invalid-receipt");
+      if (!ref) throw failure8("invalid-receipt");
       validateFileEntry({ receiptId: id, name: ref.name });
-      if (sensitivePath(ref.name)) throw failure7("sensitive-file");
-      if (ref.bytes > maxBytes) throw failure7("file-too-large");
+      if (sensitivePath(ref.name)) throw failure8("sensitive-file");
+      if (ref.bytes > maxBytes) throw failure8("file-too-large");
       const chunks = [];
       let size = 0;
       for await (const chunk of ctx.attachments.readFileStream(ref, signal)) {
         size += chunk.byteLength;
-        if (size > maxBytes) throw failure7("file-too-large");
+        if (size > maxBytes) throw failure8("file-too-large");
         chunks.push(chunk);
       }
       return Buffer.concat(chunks, size);
@@ -4436,6 +4609,10 @@ var CLOSED_ENABLEMENT = Object.freeze({
   scope: "profile",
   revision: 0,
   enabled: Object.freeze({ suggest: false, enhance: false }),
+  finalAnswer: true,
+  finalAnswerRevision: 0,
+  processFeedback: true,
+  processFeedbackRevision: 0,
   settingsRevision: 0,
   settings: Object.freeze({ suggest: CLOSED_CONFIG, enhance: CLOSED_CONFIG }),
   configured: Object.freeze({ suggest: false, enhance: false })
@@ -4464,16 +4641,16 @@ var AssistRuntime = class {
     });
   }
   async agent(id) {
-    if (typeof id !== "string" || id.length > 180) throw failure7("invalid-request");
+    if (typeof id !== "string" || id.length > 180) throw failure8("invalid-request");
     let agent = this.ctx.agents.get(id);
     if (!agent) {
       const controller = this.ctx.get("sessionController");
-      if (!controller) throw failure7("forbidden");
+      if (!controller) throw failure8("forbidden");
       const resolved = await controller.resolveAgent(id);
-      if ("error" in resolved) throw failure7("forbidden");
+      if ("error" in resolved) throw failure8("forbidden");
       agent = resolved.agent;
     }
-    if (!agent || agent.session.header.origin === "subagent") throw failure7("forbidden");
+    if (!agent || agent.session.header.origin === "subagent") throw failure8("forbidden");
     return agent;
   }
   projection(agent) {
@@ -4498,9 +4675,23 @@ var AssistRuntime = class {
     return settings;
   }
   async setEnabled(input, options) {
-    if (options.agent?.session?.header?.origin === "subagent") throw failure7("forbidden");
-    if (!this.enablement) throw failure7("global-settings-unavailable");
+    if (options.agent?.session?.header?.origin === "subagent") throw failure8("forbidden");
+    if (!this.enablement) throw failure8("global-settings-unavailable");
     await this.enablement.set(input.feature, input.enabled, { signal: options.signal, expectedRevision: input.expectedRevision });
+    return this.globalEnablement();
+  }
+  /** Profile-wide switch for the injected final-answer contract; prompts only, never a model call. */
+  async setFinalAnswer(input, options) {
+    if (options.agent?.session?.header?.origin === "subagent") throw failure8("forbidden");
+    if (!this.enablement) throw failure8("global-settings-unavailable");
+    await this.enablement.setFinalAnswer(input.enabled, { signal: options.signal, expectedRevision: input.expectedRevision });
+    return this.globalEnablement();
+  }
+  /** Profile-wide switch for the injected progress narration; prompts only, never a model call. */
+  async setProcessFeedback(input, options) {
+    if (options.agent?.session?.header?.origin === "subagent") throw failure8("forbidden");
+    if (!this.enablement) throw failure8("global-settings-unavailable");
+    await this.enablement.setProcessFeedback(input.enabled, { signal: options.signal, expectedRevision: input.expectedRevision });
     return this.globalEnablement();
   }
   noteTransportRead(id) {
@@ -4526,33 +4717,33 @@ var AssistRuntime = class {
   }
   async validateConfig(_agent, input, signal) {
     signal?.throwIfAborted();
-    if (!input || ["followSession", "provider", "model", "reasoningEffort", "fast", "rounds"].some((key) => !Object.hasOwn(input, key))) throw failure7("invalid-config");
+    if (!input || ["followSession", "provider", "model", "reasoningEffort", "fast", "rounds"].some((key) => !Object.hasOwn(input, key))) throw failure8("invalid-config");
     const { enabled: _ignored, ...config } = normalizeConfig(input);
     if (!config.followSession) {
-      if (!config.provider || !config.model) throw failure7("model-required");
-      if (!this.ctx.llm.listProviders().some((item) => item.id === config.provider)) throw failure7("not-configured");
+      if (!config.provider || !config.model) throw failure8("model-required");
+      if (!this.ctx.llm.listProviders().some((item) => item.id === config.provider)) throw failure8("not-configured");
       const route = await resolveAssistRoute(this.ctx, void 0, config, this.fastService, this.providers, signal);
-      if (config.fast && route.fastSkipped) throw failure7("fast-unsupported");
+      if (config.fast && route.fastSkipped) throw failure8("fast-unsupported");
     }
     signal?.throwIfAborted();
     return config;
   }
   async save() {
-    throw failure7("global-config-required");
+    throw failure8("global-config-required");
   }
   async saveGlobal(input, options = {}) {
-    if (options.agent?.session?.header?.origin === "subagent") throw failure7("forbidden");
-    if (!this.enablement?.configure || !this.globalEnablement().settings) throw failure7("global-settings-unavailable");
-    if (!FEATURES2.includes(input.feature)) throw failure7("invalid-feature");
-    if (!Number.isSafeInteger(input.expectedRevision) || input.expectedRevision < 0) throw failure7("invalid-request");
-    if (input.expectedRevision !== this.globalEnablement().settingsRevision) throw failure7("stale-global-settings");
+    if (options.agent?.session?.header?.origin === "subagent") throw failure8("forbidden");
+    if (!this.enablement?.configure || !this.globalEnablement().settings) throw failure8("global-settings-unavailable");
+    if (!FEATURES2.includes(input.feature)) throw failure8("invalid-feature");
+    if (!Number.isSafeInteger(input.expectedRevision) || input.expectedRevision < 0) throw failure8("invalid-request");
+    if (input.expectedRevision !== this.globalEnablement().settingsRevision) throw failure8("stale-global-settings");
     const config = await this.validateConfig(void 0, input.config, options.signal);
     return this.enablement.configure(input.feature, config, { expectedRevision: input.expectedRevision, signal: options.signal });
   }
   async catalog(provider) {
     const providers = this.ctx.llm.listProviders();
     if (!provider) return { providers, models: [] };
-    if (!providers.some((item) => item.id === provider)) throw failure7("not-configured");
+    if (!providers.some((item) => item.id === provider)) throw failure8("not-configured");
     const models = await this.ctx.llm.listModels(provider);
     return { providers, models: models.map((item) => ({ provider, id: item.id, name: item.name })) };
   }
@@ -4566,11 +4757,13 @@ var AssistRuntime = class {
     };
   }
   async dispatch(input, options = {}) {
-    if (!input || typeof input !== "object" || Array.isArray(input)) throw failure7("invalid-request");
+    if (!input || typeof input !== "object" || Array.isArray(input)) throw failure8("invalid-request");
     if (input.action === "enablement") return this.globalEnablement();
     if (input.action === "set-enabled") return this.setEnabled(input, options);
+    if (input.action === "set-final-answer") return this.setFinalAnswer(input, options);
+    if (input.action === "set-process-feedback") return this.setProcessFeedback(input, options);
     if (input.action === "save-global") return this.saveGlobal(input, options);
-    if (input.action === "save") throw failure7("global-config-required");
+    if (input.action === "save") throw failure8("global-config-required");
     if (input.action === "catalog") return this.catalog(input.provider);
     if (input.action === "model") return this.model(input.provider, input.model, options.signal);
     const agent = options.agent ?? await this.agent(input.sessionId);
@@ -4581,37 +4774,37 @@ var AssistRuntime = class {
       case "generate":
         return this.ctx.agents.withInitiator(agent, () => this.generate(agent, input, options));
       default:
-        throw failure7("unknown-action");
+        throw failure8("unknown-action");
     }
   }
   async generate(agent, input, options) {
-    if (!FEATURES2.includes(input.feature)) throw failure7("invalid-request");
+    if (!FEATURES2.includes(input.feature)) throw failure8("invalid-request");
     const global = this.globalEnablement();
-    if (!this.enablement || !global.settings?.[input.feature] || !global.configured) throw failure7("global-settings-unavailable");
-    if (!global.configured[input.feature]) throw failure7("global-config-required");
+    if (!this.enablement || !global.settings?.[input.feature] || !global.configured) throw failure8("global-settings-unavailable");
+    if (!global.configured[input.feature]) throw failure8("global-config-required");
     const state = this.projection(agent), settings = this.settingsOf(agent)[input.feature];
-    if (!settings?.enabled) throw failure7("disabled");
-    if (typeof input.draft !== "string" || !Number.isSafeInteger(input.draftRev)) throw failure7("invalid-request");
-    if (input.feature === "enhance" && !input.draft.trim()) throw failure7("invalid-request");
-    if (input.feature === "suggest" && (this.state(agent).busy || input.draft !== "" || input.qaId !== state.qaId)) throw failure7("stale-context");
+    if (!settings?.enabled) throw failure8("disabled");
+    if (typeof input.draft !== "string" || !Number.isSafeInteger(input.draftRev)) throw failure8("invalid-request");
+    if (input.feature === "enhance" && !input.draft.trim()) throw failure8("invalid-request");
+    if (input.feature === "suggest" && (this.state(agent).busy || input.draft !== "" || input.qaId !== state.qaId)) throw failure8("stale-context");
     const entries = input.files ?? [];
-    if (!Array.isArray(entries) || entries.length > 32 || entries.length && !options.fromUI) throw failure7("file-consent-required");
-    if (input.references !== void 0 && (!Array.isArray(input.references) || input.references.length > 100)) throw failure7("invalid-request");
+    if (!Array.isArray(entries) || entries.length > 32 || entries.length && !options.fromUI) throw failure8("file-consent-required");
+    if (input.references !== void 0 && (!Array.isArray(input.references) || input.references.length > 100)) throw failure8("invalid-request");
     const request = { ...input, files: entries.map((entry) => ({ ...entry })), references: (input.references ?? []).map((ref) => typeof ref === "object" && ref ? { ...ref } : ref) };
     const session = this.fastService.selection(agent);
     const selected = settings.followSession ? input.feature === "enhance" ? { provider: session?.provider, model: session?.model } : { ...session } : { ...settings };
     const explicit = { ...settings, followSession: false, provider: selected.provider, model: selected.model, reasoningEffort: selected.reasoningEffort ?? "" };
     const qa = selectQA(state, settings.rounds), qaId = state.qaId;
-    if (!qa.length && input.feature === "suggest") throw failure7("no-context");
+    if (!qa.length && input.feature === "suggest") throw failure8("no-context");
     const readers = entries.length ? fileReaders(this.ctx, agent) : {};
     const slot = agent.id + ":" + input.feature;
-    const rawKey = createHash3("sha256").update(JSON.stringify([input.feature, input.draft, qaId, request.files, request.references, settings, selected])).digest("hex");
+    const rawKey = createHash4("sha256").update(JSON.stringify([input.feature, input.draft, qaId, request.files, request.references, settings, selected])).digest("hex");
     const active = this.jobs.get(slot);
     if (active?.rawKey === rawKey && !active.signal.aborted) {
       const listener = (text) => {
         if (!options.signal?.aborted) options.onText?.(text);
       };
-      if (active.listeners.size >= 64) throw failure7("busy");
+      if (active.listeners.size >= 64) throw failure8("busy");
       active.listeners.add(listener);
       return active.promise.then((value) => ({ ...value, draftRev: input.draftRev })).finally(() => active.listeners.delete(listener));
     }
@@ -4627,7 +4820,7 @@ var AssistRuntime = class {
     this.jobs.set(slot, job);
     job.promise = Promise.resolve().then(() => this.preflight(agent, request, settings, explicit, qa, qaId, readers, slot, signal, onText)).catch((error) => {
       signal.throwIfAborted();
-      throw failure7(this.errorCode(error));
+      throw failure8(this.errorCode(error));
     }).finally(() => {
       if (this.jobs.get(slot) === job) this.jobs.delete(slot);
     });
@@ -4636,7 +4829,7 @@ var AssistRuntime = class {
   async preflight(agent, input, settings, explicit, qa, qaId, readers, slot, signal, onText) {
     const check = () => {
       signal.throwIfAborted();
-      if (this.settingsOf(agent)[input.feature] !== settings || input.feature === "suggest" && this.projection(agent).qaId !== qaId) throw failure7("stale-context");
+      if (this.settingsOf(agent)[input.feature] !== settings || input.feature === "suggest" && this.projection(agent).qaId !== qaId) throw failure8("stale-context");
     };
     check();
     let route = await resolveAssistRoute(this.ctx, agent, explicit, this.fastService, this.providers, signal);
@@ -4649,7 +4842,7 @@ var AssistRuntime = class {
     check();
     const prompt = buildAssistPrompt(input.feature, input.draft, qa, files.files, input.references);
     const identity = { provider: route.provider, model: route.model, effort: route.reasoningEffort ?? route.metadata.reasoning?.defaultEffort ?? "", fast: route.fast, fastSkipped: route.fastSkipped === true, outputBudget: route.metadata.defaultMaxTokens ?? null, contextWindow: route.metadata.context?.contextWindow ?? null };
-    const key = createHash3("sha256").update(JSON.stringify([input.feature, input.draft, qaId, settings, prompt, identity])).digest("hex");
+    const key = createHash4("sha256").update(JSON.stringify([input.feature, input.draft, qaId, settings, prompt, identity])).digest("hex");
     const cached = this.cache.get(slot);
     if (cached?.key === key && cached.expires > Date.now()) return { ...cached.value, draftRev: input.draftRev, cached: true };
     check();
@@ -4665,7 +4858,7 @@ var AssistRuntime = class {
   }
   async finish(agent, input, route, prompt, files, qaId, signal, onText, onPrepared) {
     const generated = await callAssistModel(this.ctx, agent, route, prompt, input.feature, signal, this.createUserMessage, onText, onPrepared);
-    if (input.feature === "suggest" && this.projection(agent).qaId !== qaId) throw failure7("stale-context");
+    if (input.feature === "suggest" && this.projection(agent).qaId !== qaId) throw failure8("stale-context");
     return {
       ...generated,
       original: input.draft,
@@ -4760,7 +4953,7 @@ function installTool(ctx, service) {
     name: "prompt_assist",
     description: "Read prompt assistance or change profile-wide feature switches, auxiliary model controls and QA scope for all conversations. Generate only when explicitly requested; generation may incur model charges and never edits the composer. Reading files requires the user-only UI selection flow.",
     parameters: { type: "object", properties: {
-      action: { type: "string", enum: ["status", "catalog", "model", "configure", "set-enabled", "suggest", "enhance"] },
+      action: { type: "string", enum: ["status", "catalog", "model", "configure", "set-enabled", "set-final-answer", "set-process-feedback", "suggest", "enhance"] },
       provider: { type: "string" },
       model: { type: "string" },
       feature: { type: "string", enum: ["suggest", "enhance"], description: "Required for configure or set-enabled." },
@@ -4772,12 +4965,14 @@ function installTool(ctx, service) {
         fast: { type: "boolean" },
         rounds: { type: "integer", minimum: 1, maximum: 20 }
       }, required: ["followSession", "provider", "model", "reasoningEffort", "fast", "rounds"], additionalProperties: false },
-      enabled: { type: "boolean", description: "Required for set-enabled. Persists for every conversation in this profile. Enabling suggestions permits eligible future automatic model requests and does not replay old Q&A." },
+      enabled: { type: "boolean", description: "Required for set-enabled, set-final-answer and set-process-feedback. set-final-answer toggles the injected Codex-style closing contract; set-process-feedback toggles the injected per-step progress narration. Both persist for every conversation in this profile. Enabling suggestions permits eligible future automatic model requests and does not replay old Q&A." },
       draft: { type: "string", description: "Original prompt for enhance; omitted for suggest." }
     }, required: ["action"], additionalProperties: false },
     output: { schema: { type: "object" }, render: (_args, value) => [{ type: "text", text: JSON.stringify(value) }] },
     execute: async (args, exec) => {
       if (args.action === "set-enabled") return service.dispatch({ action: "set-enabled", feature: args.feature, enabled: args.enabled }, { agent: exec.agent, signal: exec.signal });
+      if (args.action === "set-final-answer") return service.dispatch({ action: "set-final-answer", enabled: args.enabled }, { agent: exec.agent, signal: exec.signal });
+      if (args.action === "set-process-feedback") return service.dispatch({ action: "set-process-feedback", enabled: args.enabled }, { agent: exec.agent, signal: exec.signal });
       if (args.action === "configure") return service.dispatch({
         action: "save-global",
         feature: args.feature,
@@ -4844,33 +5039,117 @@ async function installAssistHost(ctx, { z, fastService, providers, createUserMes
   return service;
 }
 
+// assist/final-answer-contract.js
+var FINAL_ANSWER_CONTRACT = [
+  '- Final Answer Contract: \u4EFB\u52A1\u5B8C\u6210\u540E\u7684\u6700\u540E\u4E00\u6761\u6D88\u606F\u53EA\u7ED9\u7ED3\u8BBA\uFF0C\u4E0D\u590D\u8FF0\u8FC7\u7A0B\u3002\u9ED8\u8BA4\u4E0D\u8D85\u8FC7 10 \u884C\uFF1B\u8981\u70B9 4\u20136 \u6761\u3001\u6309\u91CD\u8981\u6027\u6392\u5E8F\u3001\u4E00\u884C\u4E00\u6761\u3001\u7981\u6B62\u5D4C\u5957\uFF1B\u4E0D\u52A0"\u603B\u7ED3/\u5B8C\u6210\u60C5\u51B5/\u5C0F\u7ED3"\u8FD9\u7C7B\u5C0F\u6807\u9898\uFF0C\u4E0D\u4ECE"\u603B\u7ED3"\u4E8C\u5B57\u8D77\u7B14\uFF1B\u4E0D\u91CD\u8D34\u5DF2\u5199\u8FC7\u7684\u6587\u4EF6\u5185\u5BB9\uFF0C\u53EA\u7ED9 `\u8DEF\u5F84:\u884C\u53F7`\uFF1B\u7ED3\u5C3E\u6700\u591A 1\u20133 \u4E2A\u7F16\u53F7\u7684\u4E0B\u4E00\u6B65\uFF1B\u5355\u4E2A\u52A8\u4F5C\u6216\u5355\u6B21\u56DE\u7B54\u76F4\u63A5\u7528\u4E00\u53E5\u8BDD\uFF0C\u4E0D\u4E0A\u7ED3\u6784\u3002',
+  '- \u8FC7\u7A0B\u4E0E\u7ED3\u8BBA\u5206\u6D41\uFF1A\u6267\u884C\u671F\u95F4\u7684\u8FDB\u5EA6\u8BF4\u660E\u538B\u5230\u4E00\u53E5\u30018\u201310 \u8BCD\uFF0C\u53EA\u8BF4\u660E"\u4E0B\u4E00\u6B65\u505A\u4EC0\u4E48"\uFF1B\u7ED3\u8BBA\u5728\u6700\u540E\u4E00\u6761\u6D88\u606F\u4E00\u6B21\u6027\u7ED9\u51FA\uFF0C\u4E2D\u9014\u4E0D\u9884\u544A\u7ED3\u8BBA\u3001\u7ED3\u5C3E\u4E0D\u91CD\u590D\u3002'
+].join("\n");
+var PROCESS_FEEDBACK_CONTRACT = [
+  "- \u8FC7\u7A0B\u53CD\u9988\u5951\u7EA6\uFF08\u786C\u6027\u8981\u6C42\uFF09\uFF1A",
+  "  1. \u6BCF\u6B21\u56DE\u590D\u4E2D\uFF0C\u53EA\u8981\u8FD9\u4E00\u8F6E\u8981\u8C03\u7528\u5DE5\u5177\uFF0C\u5C31\u5FC5\u987B\u5728\u8C03\u7528\u524D\u5148\u8F93\u51FA\u4E00\u53E5\u9762\u5411\u7528\u6237\u7684\u8FDB\u5EA6\u8BF4\u660E\uFF08\u7EA6 8\u201320 \u4E2A\u8BCD\uFF0C\u4F7F\u7528\u4E0E\u7528\u6237\u76F8\u540C\u7684\u8BED\u8A00\uFF09\uFF0C\u8BF4\u660E\u8FD9\u4E00\u6B65\u8981\u505A\u4EC0\u4E48\uFF1B\u7981\u6B62\u53EA\u7ED9\u5DE5\u5177\u8C03\u7528\u800C\u6CA1\u6709\u6587\u5B57\u3002",
+  "  2. \u6BCF\u4E2A\u5DE5\u5177\u7ED3\u679C\u8FD4\u56DE\u540E\uFF0C\u5148\u7528\u4E00\u53E5\u8BDD\u8BF4\u660E\u770B\u5230\u4E86\u4EC0\u4E48\u6216\u4E0B\u4E00\u6B65\u505A\u4EC0\u4E48\uFF0C\u518D\u53D1\u8D77\u4E0B\u4E00\u6B21\u5DE5\u5177\u8C03\u7528\uFF1B\u4E0D\u8981\u8FDE\u7EED\u4E24\u6B21\u5DE5\u5177\u8C03\u7528\u4E4B\u95F4\u6CA1\u6709\u6587\u5B57\u3002",
+  "  3. \u8FDB\u5EA6\u8BF4\u660E\u53EA\u8BB2\u4E0B\u4E00\u6B65\u52A8\u4F5C\u6216\u521A\u53D1\u73B0\u7684\u4E8B\u5B9E\uFF0C\u4E0D\u9884\u544A\u7ED3\u8BBA\uFF0C\u4E0D\u5199\u957F\u6BB5\u843D\uFF0C\u4E0D\u5217\u6E05\u5355\u3002",
+  "  4. \u4E0D\u8C03\u7528\u5DE5\u5177\u7684\u6700\u540E\u4E00\u8F6E\u4E0D\u8981\u5199\u8FDB\u5EA6\u8BF4\u660E\uFF0C\u76F4\u63A5\u7ED9\u7ED3\u8BBA\u3001\u4E0D\u590D\u8FF0\u8FC7\u7A0B\uFF1B\u4E0D\u8981\u7528\u8FDB\u5EA6\u8BF4\u660E\u4EE3\u66FF\u7ED3\u8BBA\u3002"
+].join("\n");
+function buildContractReminder({ finalAnswer = true, processFeedback = false } = {}) {
+  const sections = [];
+  if (finalAnswer !== false) sections.push(FINAL_ANSWER_CONTRACT);
+  if (processFeedback === true) sections.push(PROCESS_FEEDBACK_CONTRACT);
+  if (sections.length === 0) return "";
+  return "<system-reminder>\n" + sections.join("\n") + "\n</system-reminder>";
+}
+var FINAL_ANSWER_REMINDER = buildContractReminder({ finalAnswer: true, processFeedback: false });
+var PROCESS_FEEDBACK_REMINDER = buildContractReminder({ finalAnswer: false, processFeedback: true });
+var FULL_CONTRACT_REMINDER = buildContractReminder({ finalAnswer: true, processFeedback: true });
+var FINAL_ANSWER_SOURCE = Object.freeze({ kind: "dsh-prompt-assist" });
+function asEnabled(value, fallback) {
+  const resolved = typeof value === "function" ? value() : value;
+  return resolved === void 0 ? fallback : resolved !== false;
+}
+function buildReminder(text, createUserMessage) {
+  const content = [{ type: "text", text }];
+  if (typeof createUserMessage === "function") return createUserMessage({ content, source: { ...FINAL_ANSWER_SOURCE } });
+  const id = typeof globalThis.crypto?.randomUUID === "function" ? globalThis.crypto.randomUUID() : "final-answer-contract-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2);
+  return { id, role: "user", content, source: { ...FINAL_ANSWER_SOURCE } };
+}
+function installFinalAnswerContract(ctx, { enabled = true, processEnabled = false, createUserMessage } = {}) {
+  const sent = /* @__PURE__ */ new WeakMap();
+  const sentById = /* @__PURE__ */ new Map();
+  const wants = () => {
+    const finalAnswer = asEnabled(enabled, true);
+    const processFeedback = asEnabled(processEnabled, false);
+    return (finalAnswer ? "f" : "") + (processFeedback ? "p" : "");
+  };
+  const sentinel = (session) => session && typeof session === "object" ? sent.get(session) : void 0;
+  const remember = (session, id, signature) => {
+    if (session && typeof session === "object") sent.set(session, signature);
+    if (typeof id === "string" && id) sentById.set(id, signature);
+  };
+  const forget = (session, id) => {
+    if (session && typeof session === "object") sent.delete(session);
+    if (typeof id === "string" && id) sentById.delete(id);
+  };
+  const offPreStep = ctx.on("agent/pre-step", async (payload, next) => {
+    const decision = await next();
+    if (!decision || decision.kind !== "enter" || payload?.signal?.aborted) return decision;
+    const wanted = wants();
+    if (!wanted) return decision;
+    const session = payload?.agent?.session;
+    const id = payload?.agent?.sessionId ?? session?.id;
+    const previous = sentinel(session) ?? (typeof id === "string" ? sentById.get(id) : void 0) ?? "";
+    const missing = wanted.split("").filter((letter) => !previous.includes(letter));
+    if (missing.length === 0) return decision;
+    if (decision.messages.length === 0) return decision;
+    try {
+      const reminder = buildReminder(buildContractReminder({
+        finalAnswer: missing.includes("f"),
+        processFeedback: missing.includes("p")
+      }), createUserMessage);
+      const nextDecision = { ...decision, messages: [...decision.messages, reminder] };
+      const union = ["f", "p"].filter((letter) => previous.includes(letter) || missing.includes(letter)).join("");
+      remember(session, id, union);
+      return nextDecision;
+    } catch (error) {
+      forget(session, id);
+      throw error;
+    }
+  }, { prepend: true });
+  const offSession = ctx.on("session/event", (session, event) => {
+    if (event?.type === "compaction/end") forget(session, session?.id);
+  });
+  return () => {
+    offPreStep?.();
+    offSession?.();
+  };
+}
+
 // assist/priority-providers.js
 init_policy();
 init_policy();
-import { createHash as createHash4 } from "node:crypto";
-import { isAbsolute as isAbsolute4, resolve as resolve3 } from "node:path";
-var failure8 = (code) => Object.assign(new Error(code), { code });
-var unavailable3 = () => failure8("global-settings-unavailable");
-var optional3 = (ctx, name) => typeof ctx?.get === "function" ? ctx.get(name) : ctx?.[name];
+import { createHash as createHash5 } from "node:crypto";
+import { isAbsolute as isAbsolute5, resolve as resolve4 } from "node:path";
+var failure9 = (code) => Object.assign(new Error(code), { code });
+var unavailable4 = () => failure9("global-settings-unavailable");
+var optional4 = (ctx, name) => typeof ctx?.get === "function" ? ctx.get(name) : ctx?.[name];
 var PROVIDER_ID = /^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$/u;
 var validProvider = (value) => typeof value === "string" && value.trim() === value && PROVIDER_ID.test(value);
 var snapshotOf2 = (record) => Object.freeze({ revision: record.revision, authorized: Object.freeze([...record.providers]) });
 function profileDomain2(dir) {
-  if (typeof dir !== "string" || !isAbsolute4(dir) || dir.includes("\0")) throw unavailable3();
-  const absolute = resolve3(dir), canonical = process.platform === "win32" ? absolute.toLowerCase() : absolute;
-  return "local_prompt_assist_priority_" + createHash4("sha256").update(canonical, "utf8").digest("hex");
+  if (typeof dir !== "string" || !isAbsolute5(dir) || dir.includes("\0")) throw unavailable4();
+  const absolute = resolve4(dir), canonical = process.platform === "win32" ? absolute.toLowerCase() : absolute;
+  return "local_prompt_assist_priority_" + createHash5("sha256").update(canonical, "utf8").digest("hex");
 }
 function readRecord(schema, value) {
   const parsed = schema.parse(value);
-  if (new Set(parsed.providers).size !== parsed.providers.length) throw unavailable3();
-  for (const provider of parsed.providers) if (!validProvider(provider)) throw unavailable3();
+  if (new Set(parsed.providers).size !== parsed.providers.length) throw unavailable4();
+  for (const provider of parsed.providers) if (!validProvider(provider)) throw unavailable4();
   return Object.freeze({ revision: parsed.revision, providers: Object.freeze([...parsed.providers]) });
 }
 async function openPriorityProviders(ctx, z, configured) {
   let domain;
   try {
-    const facility = optional3(ctx, "storageDomain"), profile = optional3(ctx, "profileContext");
-    if (typeof facility?.open !== "function") throw unavailable3();
+    const facility = optional4(ctx, "storageDomain"), profile = optional4(ctx, "profileContext");
+    if (typeof facility?.open !== "function") throw unavailable4();
     const schema = z.object({
       revision: z.number().int().min(0).max(Number.MAX_SAFE_INTEGER),
       providers: z.array(z.string().regex(PROVIDER_ID)).max(32)
@@ -4878,28 +5157,28 @@ async function openPriorityProviders(ctx, z, configured) {
     const initial = readRecord(schema, { revision: 0, providers: [] });
     domain = await facility.open({ name: profileDomain2(profile?.dir), version: 1, global: { schema, initial }, tables: {} });
     const global = domain?.global;
-    if (typeof global?.get !== "function" || typeof global?.set !== "function" || typeof domain.close !== "function") throw unavailable3();
-    return createStore2(ctx, domain, global, schema, readRecord(schema, global.get()), mergeProviders(configured, []));
+    if (typeof global?.get !== "function" || typeof global?.set !== "function" || typeof domain.close !== "function") throw unavailable4();
+    return createStore3(ctx, domain, global, schema, readRecord(schema, global.get()), mergeProviders(configured, []));
   } catch {
     try {
       await domain?.close();
     } catch {
     }
-    throw unavailable3();
+    throw unavailable4();
   }
 }
 function checkSignal(signal) {
-  if (signal !== void 0 && (typeof signal?.throwIfAborted !== "function" || typeof signal.aborted !== "boolean")) throw failure8("invalid-request");
+  if (signal !== void 0 && (typeof signal?.throwIfAborted !== "function" || typeof signal.aborted !== "boolean")) throw failure9("invalid-request");
   signal?.throwIfAborted();
 }
 async function registry(ctx, signal) {
   checkSignal(signal);
   try {
-    const llm = optional3(ctx, "llm");
-    if (typeof llm?.listProviders !== "function") throw failure8("provider-unknown");
+    const llm = optional4(ctx, "llm");
+    if (typeof llm?.listProviders !== "function") throw failure9("provider-unknown");
     const entries = await llm.listProviders();
     checkSignal(signal);
-    if (!Array.isArray(entries)) throw failure8("provider-unknown");
+    if (!Array.isArray(entries)) throw failure9("provider-unknown");
     const seen = /* @__PURE__ */ new Set();
     return { llm, entries: entries.filter((item) => {
       if (!validProvider(item?.id) || seen.has(item.id)) return false;
@@ -4908,7 +5187,7 @@ async function registry(ctx, signal) {
     }) };
   } catch {
     checkSignal(signal);
-    throw failure8("provider-unknown");
+    throw failure9("provider-unknown");
   }
 }
 async function recognizedModels(llm, provider, signal) {
@@ -4935,7 +5214,7 @@ async function recognizedModels(llm, provider, signal) {
     return [];
   }
 }
-function createStore2(ctx, domain, global, schema, loaded, configured) {
+function createStore3(ctx, domain, global, schema, loaded, configured) {
   let snapshot = snapshotOf2(loaded), tail = Promise.resolve(), closing = false, disposal;
   const listeners = /* @__PURE__ */ new Set(), builtins = new Set(configured);
   function notify() {
@@ -4949,11 +5228,11 @@ function createStore2(ctx, domain, global, schema, loaded, configured) {
     }
   }
   async function candidates(signal) {
-    if (closing) throw unavailable3();
+    if (closing) throw unavailable4();
     const { llm, entries } = await registry(ctx, signal), values = [];
     for (const entry of entries) {
       const models = await recognizedModels(llm, entry.id, signal);
-      if (closing) throw unavailable3();
+      if (closing) throw unavailable4();
       if (models.length) values.push({
         id: entry.id,
         name: typeof entry.name === "string" ? entry.name : entry.id,
@@ -4961,43 +5240,43 @@ function createStore2(ctx, domain, global, schema, loaded, configured) {
         openAIModels: models
       });
     }
-    if (closing) throw unavailable3();
+    if (closing) throw unavailable4();
     return values;
   }
   function mutate(action, provider, options = {}) {
-    if (closing) return Promise.reject(unavailable3());
+    if (closing) return Promise.reject(unavailable4());
     let signal, expectedRevision;
     try {
-      if (!validProvider(provider)) throw failure8("invalid-provider");
-      if (!options || typeof options !== "object" || Array.isArray(options) || Object.keys(options).some((key) => !(action === "authorize" ? ["consent", "expectedRevision", "signal"] : ["expectedRevision"]).includes(key))) throw failure8("invalid-request");
-      if (action === "authorize" && options.consent !== true) throw failure8("consent-required");
-      if (builtins.has(provider)) throw failure8("configured-provider");
+      if (!validProvider(provider)) throw failure9("invalid-provider");
+      if (!options || typeof options !== "object" || Array.isArray(options) || Object.keys(options).some((key) => !(action === "authorize" ? ["consent", "expectedRevision", "signal"] : ["expectedRevision"]).includes(key))) throw failure9("invalid-request");
+      if (action === "authorize" && options.consent !== true) throw failure9("consent-required");
+      if (builtins.has(provider)) throw failure9("configured-provider");
       ({ signal, expectedRevision } = options);
       checkSignal(signal);
-      if (!Number.isSafeInteger(expectedRevision) || expectedRevision < 0) throw failure8("stale-revision");
+      if (!Number.isSafeInteger(expectedRevision) || expectedRevision < 0) throw failure9("stale-revision");
     } catch (error) {
       return Promise.reject(error);
     }
     const operation = tail.then(async () => {
       checkSignal(signal);
-      if (expectedRevision !== snapshot.revision) throw failure8("stale-revision");
+      if (expectedRevision !== snapshot.revision) throw failure9("stale-revision");
       if (action === "authorize") {
         const { llm, entries } = await registry(ctx, signal);
-        if (!entries.some((entry) => entry.id === provider)) throw failure8("provider-unknown");
-        if (!(await recognizedModels(llm, provider, signal)).length) throw failure8("provider-not-openai");
+        if (!entries.some((entry) => entry.id === provider)) throw failure9("provider-unknown");
+        if (!(await recognizedModels(llm, provider, signal)).length) throw failure9("provider-not-openai");
       }
       checkSignal(signal);
       const present = snapshot.authorized.includes(provider);
       if (present === (action === "authorize")) return snapshot;
-      if (action === "authorize" && snapshot.authorized.length >= 32) throw failure8("provider-limit");
-      if (snapshot.revision === Number.MAX_SAFE_INTEGER) throw unavailable3();
+      if (action === "authorize" && snapshot.authorized.length >= 32) throw failure9("provider-limit");
+      if (snapshot.revision === Number.MAX_SAFE_INTEGER) throw unavailable4();
       let record;
       try {
         record = readRecord(schema, { revision: snapshot.revision + 1, providers: action === "authorize" ? [...snapshot.authorized, provider] : snapshot.authorized.filter((id) => id !== provider) });
         await global.set(record);
         record = readRecord(schema, record);
       } catch {
-        throw unavailable3();
+        throw unavailable4();
       }
       snapshot = snapshotOf2(record);
       notify();
@@ -5014,8 +5293,8 @@ function createStore2(ctx, domain, global, schema, loaded, configured) {
     authorize: (provider, options) => mutate("authorize", provider, options),
     revoke: (provider, options) => mutate("revoke", provider, options),
     subscribe(listener) {
-      if (closing) throw unavailable3();
-      if (typeof listener !== "function") throw failure8("invalid-request");
+      if (closing) throw unavailable4();
+      if (typeof listener !== "function") throw failure9("invalid-request");
       listeners.add(listener);
       return () => listeners.delete(listener);
     },
@@ -5025,7 +5304,7 @@ function createStore2(ctx, domain, global, schema, loaded, configured) {
         try {
           await domain.close();
         } catch {
-          throw unavailable3();
+          throw unavailable4();
         } finally {
           listeners.clear();
         }
@@ -5048,7 +5327,7 @@ var PUBLIC_CODES = /* @__PURE__ */ new Set([
   "provider-limit",
   "global-settings-unavailable"
 ]);
-var failure9 = (code) => ({ ok: false, error: { code, message: code, details: {} } });
+var failure10 = (code) => ({ ok: false, error: { code, message: code, details: {} } });
 var fields = Object.freeze({
   snapshot: ["action"],
   candidates: ["action"],
@@ -5056,11 +5335,11 @@ var fields = Object.freeze({
   revoke: ["action", "provider", "expectedRevision"]
 });
 var PROVIDER_ID2 = /^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$/u;
-var optional4 = (ctx, name) => typeof ctx?.get === "function" ? ctx.get(name) : ctx?.[name];
+var optional5 = (ctx, name) => typeof ctx?.get === "function" ? ctx.get(name) : ctx?.[name];
 var displayName = (value) => typeof value === "string" ? value.replace(/[\u0000-\u001f\u007f]/gu, " ").trim().slice(0, 80) : "";
 async function providerNames(ctx, wanted) {
   try {
-    const llm = optional4(ctx, "llm");
+    const llm = optional5(ctx, "llm");
     if (typeof llm?.listProviders !== "function") return {};
     const entries = await llm.listProviders();
     const names = {};
@@ -5093,7 +5372,7 @@ function installPriorityRpc(ctx, store, configured) {
   async function handle(payload, signal) {
     try {
       signal?.throwIfAborted();
-      if (!payload || typeof payload !== "object" || Array.isArray(payload) || typeof payload.action !== "string" || !Object.hasOwn(fields, payload.action) || Object.keys(payload).some((key) => !fields[payload.action].includes(key))) return failure9("invalid-request");
+      if (!payload || typeof payload !== "object" || Array.isArray(payload) || typeof payload.action !== "string" || !Object.hasOwn(fields, payload.action) || Object.keys(payload).some((key) => !fields[payload.action].includes(key))) return failure10("invalid-request");
       let snapshot, candidates;
       switch (payload.action) {
         case "snapshot":
@@ -5113,7 +5392,7 @@ function installPriorityRpc(ctx, store, configured) {
       return { ok: true, value: await valueOf(snapshot, candidates) };
     } catch (error) {
       const code = signal?.aborted || error?.name === "AbortError" ? "cancelled" : error?.name === "TimeoutError" ? "timeout" : PUBLIC_CODES.has(error?.code) ? error.code : "global-settings-unavailable";
-      return failure9(code);
+      return failure10(code);
     }
   }
   return ctx.connection.fetch.register({
@@ -5154,7 +5433,13 @@ async function apply2(ctx, config = {}) {
   const providers = () => mergeProviders(configured, priority.snapshot().authorized);
   await apply(ctx, { ...config, adapterEntry, providers });
   const fastService = new OpenAIFastService(ctx, providers, (key) => key);
-  await installAssistHost(ctx, { z, fastService, providers, createUserMessage });
+  const assist = await installAssistHost(ctx, { z, fastService, providers, createUserMessage });
+  const disposeContract = installFinalAnswerContract(ctx, {
+    createUserMessage,
+    enabled: () => config.finalAnswerContract !== false && assist?.enablement?.getSnapshot?.()?.finalAnswer !== false,
+    processEnabled: () => config.processFeedbackContract !== false && assist?.enablement?.getSnapshot?.()?.processFeedback !== false
+  });
+  ctx.effect(() => () => disposeContract());
   installPriorityRpc(ctx, priority, configured);
   installUpdateHost(ctx);
 }
