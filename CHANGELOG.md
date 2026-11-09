@@ -2,13 +2,13 @@
 
 [English](<README.md>) | [简体中文](<README.zh-CN.md>)
 
-## 1.4.0 — 移除收尾契约与过程反馈 / Removing both prompt contracts（2026-11-08）
+## 1.5.0 — 恢复收尾契约与过程反馈 / Restoring both prompt contracts（2026-11-09）
 
-- 删除两段注入：不再在 `agent/pre-step` 追加「收尾契约」与「过程反馈」的 `<system-reminder>`，并删除 `assist/final-answer-contract.js`。
-- 设置页「全局功能开关」回到两个开关（下一问建议、提示词增强）；不再打开 `local_prompt_assist_final_answer_*` 与 `local_prompt_assist_process_feedback_*` 两个存储域。旧域记录留在磁盘上不再读取，降级回 1.3.x 仍能按原形状解析。
-- 工具 `prompt_assist` 移除 `set-final-answer` 与 `set-process-feedback` 动作，旧调用现在返回 `unknown-action`；包配置 `finalAnswerContract` / `processFeedbackContract` 不再生效，保留键名不会报错。
-- 删除 `docs/process-feedback.md`，README 中英两版同步去掉对应章节与 v1.3.0 横幅。
-- 测试：删除收尾契约用例，enablement 快照、profile-store 域数量（四个 → 两个）与设置页开关断言同步收敛。
+- 撤销 1.4.0 的移除：重新在 `agent/pre-step` 注入「收尾契约」与「过程反馈」两段 `<system-reminder>`，恢复 `assist/final-answer-contract.js`、两个独立开关存储域与设置页对应的两个开关（连同下一问建议、提示词增强共四个）。
+- 工具 `prompt_assist` 恢复 `set-final-answer` / `set-process-feedback` 动作；包配置 `finalAnswerContract` / `processFeedbackContract` 重新作为硬开关生效。两个开关仍分别存放在 `local_prompt_assist_final_answer_*` / `local_prompt_assist_process_feedback_*`，并各自走 revision CAS。
+- 恢复 `docs/process-feedback.md`、README 中英对应章节和 v1.5.0 横幅；构建产物改为 `host-v1.5.0.js`。
+- 测试恢复收尾契约用例，enablement 快照、profile-store 四域与设置页四开关断言回到移除前。
+- 1.4.0 从未发布，不保留其构建产物；这一来一回完整留在 git 历史中。
 
 ## 1.3.9 — 检查时间按本机时区显示 / Local check time（2026-10-30）
 
@@ -71,7 +71,7 @@
 ## 1.3.0 — Codex 式过程反馈 / Progress narration（2026-10-27）
 
 - 新增独立的过程反馈契约：每轮要调用工具时，先输出一句用户可见的进度说明；每个工具结果后先说明再继续；不调用工具的最后一轮直接给结论、不复述过程。与收尾契约组合注入，两段各自开关。
-- 实测（同一路由 `cpa/deepseek-v4.1-flash:1017`，真实 DSH system prompt，3 轮工具回放）：旧「进度压到一句」组 0 条文字、只有工具调用；新硬性规则组 3/3 轮都有进度句。这是离线探针，不是 GUI 视觉验收或统计评测。过程反馈契约的设计说明已随该功能在 1.4.0 移除。
+- 实测（同一路由 `cpa/deepseek-v4.1-flash:1017`，真实 DSH system prompt，3 轮工具回放）：旧「进度压到一句」组 0 条文字、只有工具调用；新硬性规则组 3/3 轮都有进度句。这是离线探针，不是 GUI 视觉验收或统计评测。详见[过程反馈契约](<docs/process-feedback.md>)。
 - 开关 `processFeedback` 存在独立存储域 `local_prompt_assist_process_feedback_*`（默认开），enablement、收尾契约与 controls 的严格记录形状保持不变；新增 `set-process-feedback` 工具动作与设置页第四个开关，各自走 revision CAS；`config.processFeedbackContract === false` 是硬开关。
 - 注入改为按「历史中尚未收到的 section」追加：先开收尾后开过程时只补过程段，关闭不撤回历史，重新开启不重复；`compaction/end` 后按当前开关重注缺失段。
 - 客户端修复实时帧只改变提示开关 revision 时的接受逻辑：`finalAnswerRevision` / `processFeedbackRevision` 独立参与单调比较，不再要求 flags 或 controls revision 同时增加；同一 revision 下值变化仍判非法。保存反馈按各自 revision 匹配，收尾/过程开关不再误报 stale。
