@@ -2,6 +2,13 @@
 
 [English](<README.md>) | [简体中文](<README.zh-CN.md>)
 
+## 1.5.1 — 开关显示回读宿主真值 / Switches mirror the host value（2026-11-10）
+
+- 修复：设置页「收尾契约」「过程反馈」两个开关此前按「不是 false 就算开」渲染（`assist/client/enablement-panel.js:19,22`），归一化快照时也补了同样的默认值（`assist/client/enablement-source.js:18,19`）。快照缺字段——旧宿主、尚未下发、加载中或断线重连——界面照样是一个绿的 ON，而宿主一行契约都没注入，正是「看着开着却没效果」的来源。
+- 现在只有宿主明确回传 `true` 才显示为开；缺字段一律为关，快照为 `null` 时开关同时保持禁用。写入路径未变，仍按 `finalAnswerRevision` / `processFeedbackRevision` 做 CAS，不一致报 `stale-enablement` 并重读。
+- 测试：新增「缺字段为关、显式 true 为开、空快照不勾选」回归用例，更新设置页布局用例的旧默认值断言；全套 1161 项（1160 通过、1 跳过）。
+- 构建产物 `host-v1.5.1.js`；宿主逻辑无改动，只有客户端两个开关的读值口径变了。
+
 ## 1.5.0 — 恢复收尾契约与过程反馈 / Restoring both prompt contracts（2026-11-09）
 
 - 撤销 1.4.0 的移除：重新在 `agent/pre-step` 注入「收尾契约」与「过程反馈」两段 `<system-reminder>`，恢复 `assist/final-answer-contract.js`、两个独立开关存储域与设置页对应的两个开关（连同下一问建议、提示词增强共四个）。
