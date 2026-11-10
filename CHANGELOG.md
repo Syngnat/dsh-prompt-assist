@@ -2,6 +2,14 @@
 
 [English](<README.md>) | [简体中文](<README.zh-CN.md>)
 
+## 1.5.2 — 过程反馈每轮重发 / Contract re-stated every turn（2026-11-10）
+
+- 修复「偶尔有过程反馈、偶尔没有」：`agent/pre-step` 此前每会话只注入一次契约（WeakMap/Map 标记只在 compaction 时清），长会话里那条提醒很快退到几百条消息之前。实测 Wails 3 会话 `session-82bc26aa`（11 轮、379 step、368 次工具调用）只有 turn 3、turn 5 两条注入，turn 6–11 零注入；「工具调用前有文字」的步数 turn3 4/12、turn5 2/22，正是用户看到的「偶尔」。
+- 现在 `assist/final-answer-contract.js` 标记改为 `{signature, turn, step}`：每轮 step 1 重发完整契约，同一轮内每 40 step（`REFRESH_STEPS`）刷新一次；同一步的重复调用不会重复注入，会话中途打开开关仍只追加缺失段。
+- 代价：每轮多一条约 200 token 的 durable user 消息，而不是每次工具循环都注入。
+- 测试：`tests/final-answer-contract.test.js` 增加「下一轮重发」「40 步刷新」用例，把「每会话一次」改为「每轮一次」；全套 1162 项。
+- 构建产物 `host-v1.5.2.js`。
+
 ## 1.5.1 — 开关显示回读宿主真值 / Switches mirror the host value（2026-11-10）
 
 - 修复：设置页「收尾契约」「过程反馈」两个开关此前按「不是 false 就算开」渲染（`assist/client/enablement-panel.js:19,22`），归一化快照时也补了同样的默认值（`assist/client/enablement-source.js:18,19`）。快照缺字段——旧宿主、尚未下发、加载中或断线重连——界面照样是一个绿的 ON，而宿主一行契约都没注入，正是「看着开着却没效果」的来源。
