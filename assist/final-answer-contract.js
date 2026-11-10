@@ -52,16 +52,23 @@ function buildReminder(text, createUserMessage) {
 /**
  * Append the output contracts to the messages entering a step.
  *
- * The reminder is injected once per session/signature. The signature records which sections the
- * model has already received, so turning a switch on mid-session appends the new section at the
- * next step instead of waiting for a new session; turning one off cannot retract text already in
- * the derived history. A compaction rewrites that history, so the marker is dropped on
- * `compaction/end` and the current contract is injected again on the next step.
+ * The reminder is re-stated at the first step of every turn and again every REFRESH_STEPS steps
+ * inside a long turn. One copy per session was measured insufficient: in an 11-turn, 368-tool-call
+ * session the contract was injected twice, and progress narration decayed to a handful of steps
+ * because the only reminder sat hundreds of messages back. Re-stating it costs one short durable
+ * message per turn and keeps the rules in the model's recent attention. The signature still records
+ * which sections the model has received, so turning a switch on appends just the new section
+ * mid-session; turning one off cannot retract text already in the derived history. A compaction
+ * rewrites that history, so the marker is dropped on `compaction/end` and the current contract is
+ * injected again on the next step.
  *
  * Liangshen's minimal prompt keeps a hardcoded allowlist of system-prompt sections, so a registered
  * section (and personaSuffix) never reaches the model; the only channel left is the pre-step
  * decision's own message list.
  */
+/** Steps inside one turn between two re-statements of the contract. */
+export const REFRESH_STEPS = 40;
+
 export function installFinalAnswerContract(ctx, { enabled = true, processEnabled = false, createUserMessage } = {}) {
   const sent = new WeakMap();
   const sentById = new Map();
@@ -87,21 +94,33 @@ export function installFinalAnswerContract(ctx, { enabled = true, processEnabled
     if (!wanted) return decision;
     const session = payload?.agent?.session;
     const id = payload?.agent?.sessionId ?? session?.id;
-    const previous = sentinel(session) ?? (typeof id === 'string' ? sentById.get(id) : undefined) ?? '';
+    const before = sentinel(session) ?? (typeof id === 'string' ? sentById.get(id) : undefined) ?? null;
+    const previous = typeof before?.signature === 'string' ? before.signature : typeof before === 'string' ? before : '';
+    const step = Number.isSafeInteger(payload?.step) ? payload.step : null;
+    const turn = Number.isSafeInteger(payload?.turn) ? payload.turn : null;
     // Only send sections this history has not received yet; turning a switch off cannot retract
     // text that is already there, and re-sending the other section would only duplicate it.
     const missing = wanted.split('').filter(letter => !previous.includes(letter));
-    if (missing.length === 0) return decision;
+    // Re-state a complete contract at the first step of each turn, and refresh it when a turn runs
+    // long enough that the previous statement has scrolled out of the model's working attention.
+    const sameStep = before !== null && before.step === step && before.turn === turn;
+    const turnStart = step === 1 && !sameStep;
+    const stale = before !== null && step !== null && Number.isSafeInteger(before.step) && before.turn === turn
+      && step - before.step >= REFRESH_STEPS;
+    if (missing.length === 0 && !turnStart && !stale) return decision;
     // The loop admits an empty decision for a skipped first step; adding the reminder there would
     // create a step of its own, so wait for messages that are already going out.
     if (decision.messages.length === 0) return decision;
     try {
-      const reminder = buildReminder(buildContractReminder({
-        finalAnswer: missing.includes('f'), processFeedback: missing.includes('p'),
-      }), createUserMessage);
+      // A switch turned on mid-turn appends just its own section; a turn start or a long-turn
+      // refresh re-states the whole enabled contract.
+      const sections = missing.length > 0
+        ? { finalAnswer: missing.includes('f'), processFeedback: missing.includes('p') }
+        : { finalAnswer: wanted.includes('f'), processFeedback: wanted.includes('p') };
+      const reminder = buildReminder(buildContractReminder(sections), createUserMessage);
       const nextDecision = { ...decision, messages: [...decision.messages, reminder] };
       const union = ['f', 'p'].filter(letter => previous.includes(letter) || missing.includes(letter)).join('');
-      remember(session, id, union);
+      remember(session, id, { signature: union || wanted, turn, step });
       return nextDecision;
     } catch (error) {
       forget(session, id);

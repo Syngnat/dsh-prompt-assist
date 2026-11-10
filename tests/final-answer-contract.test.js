@@ -30,7 +30,8 @@ function fakeCtx() {
 const userMessage = text => ({id: 'm-' + text, role: 'user', content: [{type: 'text', text}], source: {kind: 'user'}});
 const enter = messages => ({kind: 'enter', messages});
 const session = {id: 'session-1'};
-const payload = (decision, target = session) => ({agent: {session: target, sessionId: target.id}, messages: [], step: 1, signal: {aborted: false}, decision});
+const payload = (decision, target = session, position = {turn: 1, step: 1}) =>
+  ({agent: {session: target, sessionId: target.id}, messages: [], ...position, signal: {aborted: false}, decision});
 
 test('the reminder carries the contract verbatim', () => {
   assert.ok(FINAL_ANSWER_REMINDER.startsWith('<system-reminder>\n'));
@@ -48,7 +49,7 @@ test('a rejected step passes through untouched', async () => {
   assert.equal(await preStep(payload(rejected)), rejected);
 });
 
-test('an admitted step gets exactly one reminder per session', async () => {
+test('an admitted step gets the reminder, repeated steps of the turn stay quiet, a new turn re-states it', async () => {
   const {ctx, preStep} = fakeCtx();
   installFinalAnswerContract(ctx, {});
   const first = await preStep(payload(enter([userMessage('hello')])));
@@ -61,12 +62,29 @@ test('an admitted step gets exactly one reminder per session', async () => {
   assert.ok(injected.id.length > 0);
   assert.equal(injected.content[0].type, 'text');
   assert.equal(injected.content[0].text, FINAL_ANSWER_REMINDER);
-  // A second step in the same session must not double the reminder.
-  const second = await preStep(payload(enter([userMessage('again')])));
+  // A later step of the same turn must not double the reminder.
+  const second = await preStep(payload(enter([userMessage('again')]), session, {turn: 1, step: 2}));
   assert.equal(second.messages.length, 1);
+  // The next turn re-states the contract where the model is about to act again.
+  const nextTurn = await preStep(payload(enter([userMessage('next')]), session, {turn: 2, step: 1}));
+  assert.equal(nextTurn.messages.length, 2);
+  assert.equal(nextTurn.messages.at(-1).content[0].text, FINAL_ANSWER_REMINDER);
   // Another session still gets its own copy.
   const other = await preStep(payload(enter([userMessage('other')]), {id: 'session-2'}));
   assert.equal(other.messages.length, 2);
+});
+
+test('a long turn refreshes the contract every REFRESH_STEPS steps', async () => {
+  const {ctx, preStep} = fakeCtx();
+  installFinalAnswerContract(ctx, {});
+  assert.equal((await preStep(payload(enter([userMessage('one')])))).messages.length, 2);
+  assert.equal((await preStep(payload(enter([userMessage('mid')]), session, {turn: 1, step: 20}))).messages.length, 1);
+  assert.equal((await preStep(payload(enter([userMessage('near')]), session, {turn: 1, step: 40}))).messages.length, 1);
+  const refreshed = await preStep(payload(enter([userMessage('far')]), session, {turn: 1, step: 41}));
+  assert.equal(refreshed.messages.length, 2);
+  assert.equal(refreshed.messages.at(-1).content[0].text, FINAL_ANSWER_REMINDER);
+  // The refreshed step restarts the interval.
+  assert.equal((await preStep(payload(enter([userMessage('after')]), session, {turn: 1, step: 60}))).messages.length, 1);
 });
 
 test('a compaction drops the marker so the contract is re-injected', async () => {
@@ -126,10 +144,10 @@ test('turning process feedback on mid-session appends only the missing section',
   const first = await preStep(payload(enter([userMessage('hello')])));
   assert.equal(first.messages.at(-1).content[0].text, FINAL_ANSWER_REMINDER);
   process = true;
-  const second = await preStep(payload(enter([userMessage('again')])));
+  const second = await preStep(payload(enter([userMessage('again')]), session, {turn: 1, step: 2}));
   assert.equal(second.messages.length, 2);
   assert.equal(second.messages.at(-1).content[0].text, PROCESS_FEEDBACK_REMINDER);
-  assert.equal((await preStep(payload(enter([userMessage('third')])))).messages.length, 1);
+  assert.equal((await preStep(payload(enter([userMessage('third')]), session, {turn: 1, step: 3}))).messages.length, 1);
 });
 
 test('turning a switch off appends nothing, and re-enabling a section already sent stays quiet', async () => {
