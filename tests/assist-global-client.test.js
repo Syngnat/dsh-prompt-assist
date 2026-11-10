@@ -186,3 +186,18 @@ test('non-OK watch responses release their response body before scheduling recon
  const source=createEnablementSource({send:async()=>snapshot(),fetcher:async()=>({...stream.response,ok:false}),setTimer:fn=>{timers.push(fn);return timers.length;},clearTimer(){}});
  await source.start();await tick();assert.equal(stream.cancelled,true);assert.equal(source.getSnapshot().connected,false);source.dispose();
 });
+
+test('prompt contract switches mirror the host value instead of painting a missing field as on',()=>{
+ const legacy=snapshot(3,true,false);
+ assert.equal(normalizeEnablement(legacy).finalAnswer,false);
+ assert.equal(normalizeEnablement(legacy).processFeedback,false);
+ const explicit=normalizeEnablement({...legacy,finalAnswer:true,processFeedback:true});
+ assert.equal(explicit.finalAnswer,true);assert.equal(explicit.processFeedback,true);
+ const missing=renderToStaticMarkup(React.createElement(EnablementPanelContent,{snapshot:globalView(legacy),t:key=>key}));
+ assert.equal((missing.match(/type="checkbox"/g)||[]).length,4);
+ assert.equal((missing.match(/checked=""/g)||[]).length,1,'only the suggest switch is on');
+ const unknown=renderToStaticMarkup(React.createElement(EnablementPanelContent,{snapshot:globalView(null),t:key=>key}));
+ assert.equal((unknown.match(/checked=""/g)||[]).length,0,'no snapshot must not paint any switch as on');
+ const on=renderToStaticMarkup(React.createElement(EnablementPanelContent,{snapshot:globalView({...legacy,finalAnswer:true,processFeedback:true}),t:key=>key}));
+ assert.equal((on.match(/checked=""/g)||[]).length,3);
+});

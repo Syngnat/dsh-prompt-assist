@@ -15,8 +15,8 @@ export function normalizeEnablement(value){
  if(value.finalAnswerRevision!==undefined&&(!Number.isSafeInteger(value.finalAnswerRevision)||value.finalAnswerRevision<0))throw invalid();
  if(value.processFeedback!==undefined&&typeof value.processFeedback!=='boolean')throw invalid();
  if(value.processFeedbackRevision!==undefined&&(!Number.isSafeInteger(value.processFeedbackRevision)||value.processFeedbackRevision<0))throw invalid();
- return Object.freeze({scope:'profile',revision:value.revision,enabled:Object.freeze({suggest:value.enabled.suggest,enhance:value.enabled.enhance}),finalAnswer:value.finalAnswer!==false,finalAnswerRevision:value.finalAnswerRevision??0,
-  processFeedback:value.processFeedback!==false,processFeedbackRevision:value.processFeedbackRevision??0,
+ return Object.freeze({scope:'profile',revision:value.revision,enabled:Object.freeze({suggest:value.enabled.suggest,enhance:value.enabled.enhance}),finalAnswer:value.finalAnswer===true,finalAnswerRevision:value.finalAnswerRevision??0,
+  processFeedback:value.processFeedback===true,processFeedbackRevision:value.processFeedbackRevision??0,
   settingsRevision:hasSettings?value.settingsRevision:null,
   settings:Object.freeze(Object.fromEntries(FEATURES.map(feature=>[feature,Object.freeze(sessionSettings(hasSettings?value.settings[feature]:undefined))]))),
   configured:Object.freeze(Object.fromEntries(FEATURES.map(feature=>[feature,hasSettings&&value.configured[feature]])))});

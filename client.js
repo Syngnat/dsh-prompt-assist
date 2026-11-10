@@ -1920,9 +1920,9 @@ function normalizeEnablement(value) {
     scope: "profile",
     revision: value.revision,
     enabled: Object.freeze({ suggest: value.enabled.suggest, enhance: value.enabled.enhance }),
-    finalAnswer: value.finalAnswer !== false,
+    finalAnswer: value.finalAnswer === true,
     finalAnswerRevision: value.finalAnswerRevision ?? 0,
-    processFeedback: value.processFeedback !== false,
+    processFeedback: value.processFeedback === true,
     processFeedbackRevision: value.processFeedbackRevision ?? 0,
     settingsRevision: hasSettings ? value.settingsRevision : null,
     settings: Object.freeze(Object.fromEntries(FEATURES.map((feature) => [feature, Object.freeze(sessionSettings(hasSettings ? value.settings[feature] : void 0))]))),
@@ -3435,13 +3435,13 @@ function EnablementPanelContent({ snapshot, t, onSet, onReload, onFinalAnswer, o
       "label",
       { className: "lpa-check lpa-switch-row", key: "final-answer" },
       h9("span", { className: "lpa-switch-copy" }, h9("strong", null, t("global.finalAnswer")), h9("span", { className: "lpa-note" }, t("global.finalAnswerHint"))),
-      h9("input", { className: "lpa-switch", type: "checkbox", checked: data?.finalAnswer !== false, disabled, onChange: (event) => onFinalAnswer?.(event.target.checked) })
+      h9("input", { className: "lpa-switch", type: "checkbox", checked: data?.finalAnswer === true, disabled, onChange: (event) => onFinalAnswer?.(event.target.checked) })
     ),
     h9(
       "label",
       { className: "lpa-check lpa-switch-row", key: "process-feedback" },
       h9("span", { className: "lpa-switch-copy" }, h9("strong", null, t("global.processFeedback")), h9("span", { className: "lpa-note" }, t("global.processFeedbackHint"))),
-      h9("input", { className: "lpa-switch", type: "checkbox", checked: data?.processFeedback !== false, disabled, onChange: (event) => onProcessFeedback?.(event.target.checked) })
+      h9("input", { className: "lpa-switch", type: "checkbox", checked: data?.processFeedback === true, disabled, onChange: (event) => onProcessFeedback?.(event.target.checked) })
     ),
     pending ? h9("p", { role: "status" }, t("global.saving")) : null,
     !connected && !message ? h9("p", { role: "status", className: "lpa-note" }, t(loading ? "global.loading" : "global.disconnected")) : null,

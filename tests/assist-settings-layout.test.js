@@ -28,10 +28,14 @@ test("settings page exposes four ordered card sections and a useful empty-sessio
   assert.match(html, /settings.subtitle/);
   assert.match(html, /settings.unconfigured/);
   assert.match(html, /settings.modelUnknown/);
-  const off = render(EnablementPanelContent, {snapshot: {...live, data: {...live.data, finalAnswer: false}}});
-  const offInputs = off.match(/<input[^>]+>/g) ?? [];
-  assert.doesNotMatch(offInputs[2], /checked=""/);
-  assert.match(offInputs[3], /checked=""/);
+  const missing = render(EnablementPanelContent, {snapshot: live});
+  const missingInputs = missing.match(/<input[^>]+>/g) ?? [];
+  assert.doesNotMatch(missingInputs[2], /checked=""/);
+  assert.doesNotMatch(missingInputs[3], /checked=""/);
+  const on = render(EnablementPanelContent, {snapshot: {...live, data: {...live.data, finalAnswer: true, processFeedback: true}}});
+  const onInputs = on.match(/<input[^>]+>/g) ?? [];
+  assert.match(onInputs[2], /checked=""/);
+  assert.match(onInputs[3], /checked=""/);
 });
 
 test("settings page does not render a model notes card", () => {
@@ -46,8 +50,9 @@ test("global switches remain real checked/disabled checkboxes with labeled switc
   assert.equal(inputs.length, 4);
   assert.ok(inputs.every(input => /type="checkbox"/.test(input) && /class="lpa-switch"/.test(input)));
   assert.match(inputs[0], /checked=""/); assert.doesNotMatch(inputs[1], /checked=""/);
-  // The closing-contract switch is on unless the profile record says otherwise.
-  assert.match(inputs[2], /checked=""/);
+  // Prompt-contract switches mirror the host value: a missing field stays off instead of painting a default on.
+  assert.doesNotMatch(inputs[2], /checked=""/);
+  assert.doesNotMatch(inputs[3], /checked=""/);
   assert.equal((html.match(/lpa-switch-row/g) ?? []).length, 4);
   assert.match(html, /global.suggestHint/); assert.match(html, /global.enhanceHint/); assert.match(html, /global.finalAnswerHint/); assert.match(html, /global.processFeedbackHint/);
   assert.match(html, /class="lpa-footnote"/);
